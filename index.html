@@ -241,6 +241,19 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .post-btn{background:var(--gold);color:#08090C;border-radius:20px;padding:8px 20px;font-size:14px;font-weight:700;transition:all .2s;}
 .post-btn:hover{opacity:.88;}
 .post-btn:disabled{opacity:.4;cursor:not-allowed;}
+.img-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.img-preview-wrap{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
+.img-preview-wrap img{width:100%;height:100%;object-fit:cover;}
+.img-preview-del{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.7);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.post-images{display:grid;gap:4px;margin-bottom:10px;border-radius:10px;overflow:hidden;}
+.post-images img{width:100%;object-fit:cover;max-height:300px;cursor:pointer;}
+.post-images.grid-2{grid-template-columns:1fr 1fr;}
+.post-images.grid-2 img,.post-images.grid-3 img,.post-images.grid-4 img{max-height:150px;}
+.post-images.grid-3{grid-template-columns:1fr 1fr;}
+.post-images.grid-4{grid-template-columns:1fr 1fr;}
+.upload-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .2s;}
+.upload-btn:hover{color:var(--gold);}
+.uploading-indicator{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;}
 .post-card{padding:16px 20px;border-bottom:1px solid var(--border);transition:background .15s;}
 .post-card:hover{background:rgba(255,255,255,0.015);}
 .post-inner{display:flex;gap:12px;}
@@ -565,10 +578,16 @@ textarea.form-inp{resize:vertical;min-height:80px;}
           <div class="comp-av" id="compAv">🧑</div>
           <div class="comp-body">
             <textarea class="comp-input" id="postText" placeholder="What's on your mind?" maxlength="500" oninput="updateComposer()"></textarea>
+            <div id="imgPreviews" class="img-previews"></div>
             <div class="comp-footer">
-              <span class="char-cnt" id="charCnt">0/500</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button class="upload-btn" onclick="document.getElementById('imgInput').click()" title="Add photo">🖼️</button>
+                <span class="char-cnt" id="charCnt">0/500</span>
+                <span class="uploading-indicator" id="uploadingTxt" style="display:none;">Uploading...</span>
+              </div>
               <button class="post-btn" id="postBtn" onclick="createPost()" disabled>Post</button>
             </div>
+            <input type="file" id="imgInput" accept="image/*" multiple style="display:none;" onchange="handleImages(this)"/>
           </div>
         </div>
         <div id="postsList"><div class="app-loader">Loading posts...</div></div>
@@ -615,6 +634,7 @@ const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const MINT_ABI   = ['function getMintPriceBNB() view returns(uint256)','function mint(uint256) payable'];
 const GATE_ABI   = ['function transfer(address,uint256) returns(bool)','function balanceOf(address) view returns(uint256)'];
+const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNmY5ZWM5OC0wNmMyLTRiYjYtOWE0OS1hYzkyZmRiY2YwMzIiLCJlbWFpbCI6ImJ0Y2ZpbHNzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI3YTE4OTZlZjgyNDAwYzA2NTI4NyIsInNjb3BlZEtleVNlY3JldCI6IjM5MjMzNWVmYmQyYzJiYzZlNDk5NDIzYzk1YzMxZWM5NDA3NzgxMjhkYmZiNTE1NzQyODkzMmU4OWFkY2Y1YzciLCJleHAiOjE4MTI1NjgzMzF9.WkiIwhZqxvx3hz_xymtuv2257hVdRg-Bxo_1Vee3fl0';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let provider, signer, userAddr, currentUser, mintPrice, mintType;
@@ -708,6 +728,56 @@ function updateComposer(){
   document.getElementById('postBtn').disabled=v.trim().length===0;
 }
 function focusComposer(){ document.getElementById('postText').focus(); }
+let pendingImages = [];
+
+async function uploadToPinata(file){
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('pinataMetadata', JSON.stringify({name: 'opengate-post-' + Date.now()}));
+  const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + PINATA_JWT },
+    body: formData
+  });
+  if(!res.ok) throw new Error('Upload failed');
+  const data = await res.json();
+  return 'https://gateway.pinata.cloud/ipfs/' + data.IpfsHash;
+}
+
+async function handleImages(input){
+  const files = Array.from(input.files);
+  if(files.length === 0) return;
+  const maxImgs = currentUser?.pass_type === 'gold' ? 10 : currentUser?.pass_type === 'silver' ? 10 : 2;
+  if(pendingImages.length + files.length > maxImgs){
+    showToast('Max ' + maxImgs + ' images allowed','err'); return;
+  }
+  document.getElementById('uploadingTxt').style.display = 'inline';
+  document.getElementById('postBtn').disabled = true;
+  for(const file of files){
+    try{
+      const url = await uploadToPinata(file);
+      pendingImages.push(url);
+      renderImgPreviews();
+    }catch(e){ showToast('Failed to upload image','err'); }
+  }
+  document.getElementById('uploadingTxt').style.display = 'none';
+  updateComposer();
+  input.value = '';
+}
+
+function renderImgPreviews(){
+  const el = document.getElementById('imgPreviews');
+  el.innerHTML = pendingImages.map((url,i) => 
+    `<div class="img-preview-wrap"><img src="${url}"/><button class="img-preview-del" onclick="removeImg(${i})">✕</button></div>`
+  ).join('');
+}
+
+function removeImg(i){
+  pendingImages.splice(i,1);
+  renderImgPreviews();
+  updateComposer();
+}
+
 async function createPost(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const content=document.getElementById('postText').value.trim();
@@ -715,7 +785,9 @@ async function createPost(){
   const btn=document.getElementById('postBtn');
   btn.disabled=true; btn.textContent='Posting...';
   try{
-    await sb.from('posts').insert({author_wallet:userAddr,content});
+    await sb.from('posts').insert({author_wallet:userAddr,content,image_urls:pendingImages});
+    pendingImages = [];
+    renderImgPreviews();
     document.getElementById('postText').value='';
     updateComposer();
     showToast('Posted! ✓','ok');
@@ -735,12 +807,19 @@ async function loadPosts(){
     list.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id))).join('');
   }catch(e){list.innerHTML='<div class="app-empty">Failed to load posts</div>';}
 }
+function renderImages(urls){
+  if(!urls||urls.length===0) return '';
+  const cls = urls.length===1?'':'grid-'+Math.min(urls.length,4);
+  const imgs = urls.slice(0,4).map(u=>`<img src="${u}" onclick="window.open('${u}','_blank')" loading="lazy"/>`).join('');
+  return `<div class="post-images ${cls}">${imgs}</div>`;
+}
+
 function renderPost(post,liked){
   const u=post.users||{};
   const name=u.username||sAddr(post.author_wallet);
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
-  return `<div class="post-card"><div class="post-inner"><div class="post-av">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name">${esc(name)}</span>${badge}<span class="post-wlt">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span></div><div class="post-txt">${esc(post.content)}</div><div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post.likes_count||0}</span></button><button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button></div></div></div></div>`;
+  return `<div class="post-card"><div class="post-inner"><div class="post-av">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name">${esc(name)}</span>${badge}<span class="post-wlt">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span></div><div class="post-txt">${esc(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post.likes_count||0}</span></button><button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button></div></div></div></div>`;
 }
 async function likePost(postId,authorWallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
