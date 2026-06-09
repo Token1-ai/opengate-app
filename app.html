@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OpenGate — Social</title>
+<script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#08090C;--bg2:#0E1018;--bg3:#141720;
+  --gold:#F5C842;--silver:#A8BDD0;--green:#26D98A;
+  --red:#FF4D4D;--text:#EDF0F5;--muted:#5A6478;
+  --border:rgba(255,255,255,0.06);--border-g:rgba(245,200,66,0.25);
+  --r:12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+a{text-decoration:none;color:inherit;}
+button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline:none;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-thumb{background:var(--muted);border-radius:2px;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;background:rgba(8,9,12,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.logo-box{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--gold),var(--green));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#08090C;font-family:'Space Mono',monospace;}
+.nav-right{display:flex;align-items:center;gap:10px;}
+#connectBtn{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:7px 16px;font-size:13px;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:7px;}
+#connectBtn:hover{border-color:var(--gold);color:var(--gold);}
+#connectBtn.connected{border-color:var(--green);color:var(--green);}
+.w-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);}
+#connectBtn.connected .w-dot{background:var(--green);box-shadow:0 0 6px var(--green);}
+.new-post-btn{background:var(--gold);color:#08090C;border-radius:9px;padding:7px 16px;font-size:13px;font-weight:700;transition:all .2s;display:none;}
+.new-post-btn:hover{opacity:.88;}
+.new-post-btn.show{display:block;}
+
+/* LAYOUT */
+.app{display:grid;grid-template-columns:240px 1fr 280px;gap:0;min-height:100vh;padding-top:56px;max-width:1100px;margin:0 auto;}
+@media(max-width:900px){.app{grid-template-columns:1fr;}.sidebar-left,.sidebar-right{display:none;}}
+
+/* SIDEBAR LEFT */
+.sidebar-left{padding:20px 16px;border-right:1px solid var(--border);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.sidebar-right{padding:20px 16px;border-left:1px solid var(--border);position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto;}
+.side-section{margin-bottom:24px;}
+.side-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+.side-link{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .2s;border:none;background:none;width:100%;text-align:left;}
+.side-link:hover,.side-link.active{background:var(--bg2);color:var(--text);}
+.side-link-icon{font-size:16px;width:20px;text-align:center;}
+
+/* FEED */
+.feed{border-right:1px solid var(--border);min-height:calc(100vh - 56px);}
+.feed-header{padding:16px 20px;border-bottom:1px solid var(--border);font-size:16px;font-weight:700;position:sticky;top:56px;background:rgba(8,9,12,0.95);backdrop-filter:blur(20px);z-index:10;}
+.feed-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.feed-tab{flex:1;padding:13px;font-size:14px;font-weight:600;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;}
+.feed-tab.active{color:var(--text);border-bottom-color:var(--gold);}
+.posts-list{padding:0;}
+
+/* POST COMPOSER */
+.composer{padding:16px 20px;border-bottom:1px solid var(--border);display:none;}
+.composer.show{display:flex;gap:12px;}
+.composer-avatar{width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;}
+.composer-avatar img{width:100%;height:100%;object-fit:cover;}
+.composer-body{flex:1;}
+.composer-input{width:100%;background:transparent;border:none;outline:none;font-size:16px;color:var(--text);resize:none;min-height:60px;font-family:'Space Grotesk',sans-serif;line-height:1.5;}
+.composer-input::placeholder{color:var(--muted);}
+.composer-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.composer-actions{display:flex;gap:8px;}
+.composer-action{background:none;border:none;color:var(--muted);font-size:16px;padding:4px 8px;border-radius:6px;cursor:pointer;transition:color .2s;}
+.composer-action:hover{color:var(--gold);}
+.char-count{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;}
+.post-btn{background:var(--gold);color:#08090C;border-radius:20px;padding:8px 20px;font-size:14px;font-weight:700;transition:all .2s;}
+.post-btn:hover{opacity:.88;}
+.post-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* POST CARD */
+.post-card{padding:16px 20px;border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer;}
+.post-card:hover{background:rgba(255,255,255,0.015);}
+.post-inner{display:flex;gap:12px;}
+.post-avatar{width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;}
+.post-avatar img{width:100%;height:100%;object-fit:cover;}
+.post-body{flex:1;min-width:0;}
+.post-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.post-name{font-size:14px;font-weight:700;color:var(--text);}
+.post-wallet{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;}
+.post-time{font-size:12px;color:var(--muted);margin-left:auto;}
+.post-badge{font-size:10px;padding:2px 7px;border-radius:100px;font-weight:700;}
+.badge-gold{background:rgba(245,200,66,.15);color:var(--gold);}
+.badge-silver{background:rgba(168,189,208,.15);color:var(--silver);}
+.post-content{font-size:15px;line-height:1.6;color:var(--text);margin-bottom:10px;word-break:break-word;}
+.post-images{display:grid;gap:4px;margin-bottom:10px;border-radius:10px;overflow:hidden;}
+.post-images.one img{width:100%;max-height:300px;object-fit:cover;}
+.post-images.two{grid-template-columns:1fr 1fr;}
+.post-images.two img,.post-images.three img,.post-images.four img{width:100%;height:150px;object-fit:cover;}
+.post-images.three{grid-template-columns:1fr 1fr;}
+.post-images.four{grid-template-columns:1fr 1fr;}
+.post-actions{display:flex;gap:20px;}
+.post-action{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;transition:color .2s;padding:4px 0;}
+.post-action:hover{color:var(--gold);}
+.post-action.liked{color:var(--gold);}
+.post-action.liked .action-icon{color:var(--gold);}
+.action-icon{font-size:15px;}
+.action-count{font-family:'Space Mono',monospace;font-size:12px;}
+
+/* PROFILE */
+.profile-header{padding:20px;border-bottom:1px solid var(--border);}
+.profile-cover{height:100px;background:linear-gradient(135deg,rgba(245,200,66,.15),rgba(38,217,138,.08));border-radius:var(--r);margin-bottom:-30px;}
+.profile-avatar-wrap{padding:0 16px;}
+.profile-avatar{width:64px;height:64px;border-radius:50%;border:3px solid var(--bg);background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;}
+.profile-info{padding:10px 16px 0;}
+.profile-name{font-size:18px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:8px;}
+.profile-wallet{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:8px;}
+.profile-bio{font-size:14px;color:var(--muted);line-height:1.5;margin-bottom:12px;}
+.profile-stats{display:flex;gap:20px;}
+.profile-stat{text-align:center;}
+.profile-stat-num{font-size:16px;font-weight:700;}
+.profile-stat-label{font-size:12px;color:var(--muted);}
+.edit-profile-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;margin-top:12px;transition:all .2s;}
+.edit-profile-btn:hover{border-color:var(--gold);color:var(--gold);}
+.follow-btn{background:var(--text);color:var(--bg);border-radius:20px;padding:7px 20px;font-size:13px;font-weight:700;margin-top:12px;transition:all .2s;}
+.follow-btn:hover{opacity:.88;}
+.follow-btn.following{background:transparent;color:var(--text);border:1px solid var(--border);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:480px;position:relative;}
+.modal-close{position:absolute;top:12px;right:12px;background:var(--bg3);border:none;color:var(--muted);width:28px;height:28px;border-radius:7px;font-size:14px;cursor:pointer;}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:20px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;color:var(--muted);margin-bottom:6px;display:block;font-weight:600;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;transition:border .2s;}
+.form-input:focus{border-color:var(--gold);}
+textarea.form-input{resize:vertical;min-height:80px;}
+.form-btn{width:100%;padding:12px;border-radius:10px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;margin-top:6px;transition:all .2s;}
+.form-btn:hover{opacity:.88;}
+
+/* TOAST */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s;white-space:nowrap;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast.ok{border-color:rgba(38,217,138,.3);color:var(--green);}
+#toast.err{border-color:rgba(255,77,77,.3);color:var(--red);}
+
+/* LOADER */
+.loader{display:flex;justify-content:center;padding:40px;color:var(--muted);font-size:13px;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+.empty-text{font-size:15px;}
+
+/* RIGHT SIDEBAR */
+.widget{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;}
+.widget-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text);}
+.gate-balance{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;color:var(--gold);}
+.gate-label{font-size:11px;color:var(--muted);margin-top:2px;}
+.tip-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.tip-row:last-child{border-bottom:none;}
+.tip-label{color:var(--muted);}
+.tip-val{color:var(--text);font-family:'Space Mono',monospace;font-weight:700;}
+
+/* LIKE ANIMATION */
+@keyframes pop{0%{transform:scale(1);}50%{transform:scale(1.4);}100%{transform:scale(1);}}
+.pop{animation:pop .2s ease;}
+
+/* MOBILE NAV */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(8,9,12,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);padding:8px 0;z-index:100;}
+@media(max-width:900px){
+  .mob-nav{display:flex;}
+  .mob-nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;transition:color .2s;}
+  .mob-nav-btn.active,.mob-nav-btn:hover{color:var(--gold);}
+  .mob-nav-icon{font-size:20px;}
+  body{padding-bottom:70px;}
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- EDIT PROFILE MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('editModal')">✕</button>
+    <div class="modal-title">Edit Profile</div>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input class="form-input" id="editUsername" placeholder="@username" maxlength="30"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bio</label>
+      <textarea class="form-input" id="editBio" placeholder="Tell the world about yourself..." maxlength="160"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Avatar URL (optional)</label>
+      <input class="form-input" id="editAvatar" placeholder="https://..."/>
+    </div>
+    <button class="form-btn" onclick="saveProfile()">Save Profile</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="logo-box">OG</div>
+    OpenGate
+  </div>
+  <div class="nav-right">
+    <button class="new-post-btn" id="newPostBtn" onclick="focusComposer()">✍️ Post</button>
+    <button id="connectBtn" onclick="connectWallet()">
+      <div class="w-dot"></div>
+      Connect Wallet
+    </button>
+  </div>
+</nav>
+
+<!-- APP LAYOUT -->
+<div class="app">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar-left">
+    <div class="side-section">
+      <div class="side-title">Menu</div>
+      <button class="side-link active" id="tab-feed" onclick="showTab('feed')">
+        <span class="side-link-icon">🏠</span> Home Feed
+      </button>
+      <button class="side-link" id="tab-profile" onclick="showTab('profile')">
+        <span class="side-link-icon">👤</span> My Profile
+      </button>
+      <button class="side-link" onclick="window.open('https://www.easyswap.life','_blank')">
+        <span class="side-link-icon">🔄</span> Easy Swap
+      </button>
+      <button class="side-link" onclick="window.open('https://www.easyswap.life/#gate','_blank')">
+        <span class="side-link-icon">🟡</span> Buy GATE
+      </button>
+    </div>
+    <div class="side-section">
+      <div class="side-title">Info</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;padding:0 12px;">
+        Like a post → sends <span style="color:var(--gold);font-weight:700;">0.1 GATE</span> to the author.<br><br>
+        Gold Pass = <span style="color:var(--gold);">2× rewards</span><br>
+        Silver Pass = <span style="color:var(--silver);">1.3× rewards</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN FEED -->
+  <div class="feed">
+    <!-- FEED TAB -->
+    <div id="view-feed">
+      <div class="feed-header">Home</div>
+      <div class="feed-tabs">
+        <button class="feed-tab active" onclick="switchFeedTab('all',this)">All Posts</button>
+        <button class="feed-tab" onclick="switchFeedTab('following',this)">Following</button>
+      </div>
+      <div class="composer" id="composer">
+        <div class="composer-avatar" id="composerAvatar">🧑</div>
+        <div class="composer-body">
+          <textarea class="composer-input" id="postText" placeholder="What's on your mind?" maxlength="500" oninput="updateComposer()"></textarea>
+          <div class="composer-footer">
+            <div class="composer-actions">
+              <span class="char-count" id="charCount">0/500</span>
+            </div>
+            <button class="post-btn" id="postBtn" onclick="createPost()" disabled>Post</button>
+          </div>
+        </div>
+      </div>
+      <div id="postsList"><div class="loader">Loading posts...</div></div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="view-profile" style="display:none;">
+      <div id="profileContent"><div class="loader">Connect wallet to view profile</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDEBAR -->
+  <div class="sidebar-right">
+    <div class="widget" id="gateWidget">
+      <div class="widget-title">🟡 Your GATE</div>
+      <div class="gate-balance" id="gateBalance">—</div>
+      <div class="gate-label">GATE tokens earned</div>
+    </div>
+    <div class="widget">
+      <div class="widget-title">📊 How it works</div>
+      <div class="tip-row"><span class="tip-label">Post a like</span><span class="tip-val">0.1 GATE</span></div>
+      <div class="tip-row"><span class="tip-label">Gold Pass bonus</span><span class="tip-val">2×</span></div>
+      <div class="tip-row"><span class="tip-label">Silver Pass bonus</span><span class="tip-val">1.3×</span></div>
+      <div class="tip-row"><span class="tip-label">Staking fee</span><span class="tip-val">0%</span></div>
+      <div class="tip-row"><span class="tip-label">DEX swap fee</span><span class="tip-val">0.3%</span></div>
+    </div>
+    <div class="widget">
+      <div class="widget-title">🔗 Contracts</div>
+      <div class="tip-row"><span class="tip-label">GATE Token</span><span class="tip-val" style="font-size:10px;cursor:pointer;" onclick="copy('0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af')">0xf383...af ⧉</span></div>
+      <div class="tip-row"><span class="tip-label">Network</span><span class="tip-val">LitVM</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- MOBILE NAV -->
+<div class="mob-nav">
+  <button class="mob-nav-btn active" onclick="showTab('feed')"><span class="mob-nav-icon">🏠</span>Feed</button>
+  <button class="mob-nav-btn" onclick="showTab('profile')"><span class="mob-nav-icon">👤</span>Profile</button>
+  <button class="mob-nav-btn" onclick="focusComposer();showTab('feed')"><span class="mob-nav-icon">✍️</span>Post</button>
+  <button class="mob-nav-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="mob-nav-icon">🔄</span>Swap</button>
+</div>
+
+<script>
+// ── CONFIG ──
+const SUPABASE_URL = 'https://hgzthbidfdqomuotdocb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnenRoYmlkZmRxb211b3Rkb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTI2NjEsImV4cCI6MjA5NjU4ODY2MX0.otgk-jq2k0COrIE3cUEnRBPYKGnzAHRi3LEIQhE7khA';
+const GATE_TOKEN  = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
+const GATE_SWAP   = '0xbeC5C89d76dbee96C1a2bd3EF9701694590BF7E8';
+const LITVM_NET   = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
+const GATE_ABI    = ['function transfer(address,uint256) returns(bool)','function balanceOf(address) view returns(uint256)'];
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let provider, signer, userAddr, currentUser;
+let feedTab = 'all';
+
+// ── WALLET ──
+async function connectWallet() {
+  if (!window.ethereum) { toast('Install MetaMask', 'err'); return; }
+  try {
+    provider = new ethers.providers.Web3Provider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    signer = provider.getSigner();
+    userAddr = (await signer.getAddress()).toLowerCase();
+    const btn = document.getElementById('connectBtn');
+    btn.classList.add('connected');
+    btn.innerHTML = `<div class="w-dot"></div>${userAddr.slice(0,6)}...${userAddr.slice(-4)}`;
+    document.getElementById('newPostBtn').classList.add('show');
+    document.getElementById('composer').classList.add('show');
+    await ensureUser();
+    loadGateBalance();
+    loadPosts();
+    loadProfile();
+  } catch(e) { toast('Connection cancelled', 'err'); }
+}
+
+async function switchToLitVM() {
+  try {
+    await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x1159'}]});
+  } catch(e) {
+    if (e.code === 4902) await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM_NET]});
+  }
+  provider = new ethers.providers.Web3Provider(window.ethereum);
+  signer = provider.getSigner();
+}
+
+// ── USER ──
+async function ensureUser() {
+  const { data } = await sb.from('users').select('*').eq('wallet', userAddr).single();
+  if (!data) {
+    const { data: newUser } = await sb.from('users').insert({ wallet: userAddr }).select().single();
+    currentUser = newUser;
+  } else {
+    currentUser = data;
+  }
+  updateComposerAvatar();
+}
+
+function updateComposerAvatar() {
+  if (!currentUser) return;
+  const el = document.getElementById('composerAvatar');
+  if (currentUser.avatar_url) {
+    el.innerHTML = `<img src="${currentUser.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`;
+  } else {
+    el.textContent = currentUser.username ? currentUser.username[0].toUpperCase() : '🧑';
+  }
+}
+
+async function loadGateBalance() {
+  if (!userAddr) return;
+  try {
+    const p = new ethers.providers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const gate = new ethers.Contract(GATE_TOKEN, GATE_ABI, p);
+    const bal = await gate.balanceOf(userAddr);
+    document.getElementById('gateBalance').textContent = parseFloat(ethers.utils.formatEther(bal)).toFixed(2);
+  } catch(e) {}
+}
+
+// ── TABS ──
+function showTab(tab) {
+  document.getElementById('view-feed').style.display = tab === 'feed' ? 'block' : 'none';
+  document.getElementById('view-profile').style.display = tab === 'profile' ? 'block' : 'none';
+  document.querySelectorAll('.side-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('tab-' + tab)?.classList.add('active');
+  document.querySelectorAll('.mob-nav-btn').forEach((b,i) => b.classList.toggle('active', (tab==='feed'&&i===0)||(tab==='profile'&&i===1)));
+  if (tab === 'profile') loadProfile();
+}
+
+function switchFeedTab(tab, el) {
+  feedTab = tab;
+  document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadPosts();
+}
+
+// ── POSTS ──
+function updateComposer() {
+  const val = document.getElementById('postText').value;
+  document.getElementById('charCount').textContent = val.length + '/500';
+  document.getElementById('postBtn').disabled = val.trim().length === 0;
+}
+
+function focusComposer() {
+  document.getElementById('postText').focus();
+}
+
+async function createPost() {
+  if (!userAddr) { toast('Connect wallet first', 'err'); return; }
+  const content = document.getElementById('postText').value.trim();
+  if (!content) return;
+  const btn = document.getElementById('postBtn');
+  btn.disabled = true; btn.textContent = 'Posting...';
+  try {
+    await sb.from('posts').insert({ author_wallet: userAddr, content });
+    document.getElementById('postText').value = '';
+    updateComposer();
+    toast('Posted! ✓', 'ok');
+    loadPosts();
+  } catch(e) { toast('Failed to post', 'err'); }
+  btn.disabled = false; btn.textContent = 'Post';
+}
+
+async function loadPosts() {
+  const list = document.getElementById('postsList');
+  list.innerHTML = '<div class="loader">Loading...</div>';
+  try {
+    let query = sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').order('created_at', { ascending: false }).limit(50);
+    const { data: posts, error } = await query;
+    if (error) throw error;
+    if (!posts || posts.length === 0) {
+      list.innerHTML = '<div class="empty"><div class="empty-icon">✍️</div><div class="empty-text">No posts yet. Be the first!</div></div>';
+      return;
+    }
+    let likedSet = new Set();
+    if (userAddr) {
+      const postIds = posts.map(p => p.id);
+      const { data: likes } = await sb.from('likes').select('post_id').eq('liker_wallet', userAddr).in('post_id', postIds);
+      if (likes) likes.forEach(l => likedSet.add(l.post_id));
+    }
+    list.innerHTML = posts.map(p => renderPost(p, likedSet.has(p.id))).join('');
+  } catch(e) {
+    list.innerHTML = '<div class="empty"><div class="empty-text">Failed to load posts</div></div>';
+  }
+}
+
+function renderPost(post, liked) {
+  const user = post.users || {};
+  const name = user.username || shortAddr(post.author_wallet);
+  const avatar = user.avatar_url ? `<img src="${user.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>` : '🧑';
+  const badge = user.pass_type === 'gold' ? '<span class="post-badge badge-gold">🥇 Gold</span>' : user.pass_type === 'silver' ? '<span class="post-badge badge-silver">🥈 Silver</span>' : '';
+  const time = timeAgo(post.created_at);
+  const likeClass = liked ? 'post-action liked' : 'post-action';
+  return `
+  <div class="post-card" data-id="${post.id}">
+    <div class="post-inner">
+      <div class="post-avatar">${avatar}</div>
+      <div class="post-body">
+        <div class="post-header">
+          <span class="post-name">${escHtml(name)}</span>
+          ${badge}
+          <span class="post-wallet">${shortAddr(post.author_wallet)}</span>
+          <span class="post-time">${time}</span>
+        </div>
+        <div class="post-content">${escHtml(post.content)}</div>
+        <div class="post-actions">
+          <button class="${likeClass}" onclick="likePost('${post.id}','${post.author_wallet}',this)" id="like-${post.id}">
+            <span class="action-icon">${liked ? '❤️' : '🤍'}</span>
+            <span class="action-count" id="likes-${post.id}">${post.likes_count || 0}</span>
+          </button>
+          <button class="post-action" onclick="sharePost('${post.id}')">
+            <span class="action-icon">🔗</span>
+            <span>Share</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+async function likePost(postId, authorWallet, btn) {
+  if (!userAddr) { toast('Connect wallet first', 'err'); return; }
+  if (userAddr === authorWallet.toLowerCase()) { toast("Can't like your own post", 'err'); return; }
+  const liked = btn.classList.contains('liked');
+  if (liked) {
+    await sb.from('likes').delete().eq('post_id', postId).eq('liker_wallet', userAddr);
+    await sb.from('posts').update({ likes_count: Math.max(0, parseInt(document.getElementById('likes-' + postId).textContent) - 1) }).eq('id', postId);
+    btn.classList.remove('liked');
+    btn.querySelector('.action-icon').textContent = '🤍';
+    document.getElementById('likes-' + postId).textContent = Math.max(0, parseInt(document.getElementById('likes-' + postId).textContent) - 1);
+    return;
+  }
+  // Send GATE token
+  btn.disabled = true;
+  try {
+    await switchToLitVM();
+    const gate = new ethers.Contract(GATE_TOKEN, GATE_ABI, signer);
+    const amount = ethers.utils.parseEther('0.1');
+    toast('Sending 0.1 GATE...', 'ok');
+    const tx = await gate.transfer(authorWallet, amount);
+    await tx.wait();
+    await sb.from('likes').insert({ post_id: postId, liker_wallet: userAddr, tx_hash: tx.hash });
+    const newCount = parseInt(document.getElementById('likes-' + postId).textContent) + 1;
+    await sb.from('posts').update({ likes_count: newCount }).eq('id', postId);
+    btn.classList.add('liked');
+    btn.querySelector('.action-icon').textContent = '❤️';
+    btn.querySelector('.action-icon').classList.add('pop');
+    document.getElementById('likes-' + postId).textContent = newCount;
+    toast('❤️ Liked! 0.1 GATE sent to author', 'ok');
+    loadGateBalance();
+  } catch(e) {
+    toast((e.reason || e.message || 'Failed').slice(0, 50), 'err');
+  }
+  btn.disabled = false;
+}
+
+function sharePost(postId) {
+  copy(window.location.href + '?post=' + postId);
+  toast('Link copied!', 'ok');
+}
+
+// ── PROFILE ──
+async function loadProfile(wallet) {
+  const target = wallet || userAddr;
+  const el = document.getElementById('profileContent');
+  if (!target) { el.innerHTML = '<div class="loader">Connect wallet to view profile</div>'; return; }
+  el.innerHTML = '<div class="loader">Loading...</div>';
+  const { data: user } = await sb.from('users').select('*').eq('wallet', target.toLowerCase()).single();
+  if (!user) { el.innerHTML = '<div class="empty"><div class="empty-text">User not found</div></div>'; return; }
+  const { count: postsCount } = await sb.from('posts').select('*', { count: 'exact', head: true }).eq('author_wallet', target.toLowerCase());
+  const { count: followersCount } = await sb.from('follows').select('*', { count: 'exact', head: true }).eq('following_wallet', target.toLowerCase());
+  const { count: followingCount } = await sb.from('follows').select('*', { count: 'exact', head: true }).eq('follower_wallet', target.toLowerCase());
+  const isOwn = userAddr && userAddr.toLowerCase() === target.toLowerCase();
+  let isFollowing = false;
+  if (userAddr && !isOwn) {
+    const { data: f } = await sb.from('follows').select('id').eq('follower_wallet', userAddr).eq('following_wallet', target.toLowerCase()).single();
+    isFollowing = !!f;
+  }
+  const avatar = user.avatar_url ? `<img src="${user.avatar_url}" onerror="this.parentElement.innerHTML='🧑'"/>` : '🧑';
+  const badge = user.pass_type === 'gold' ? '🥇 Gold Pass' : user.pass_type === 'silver' ? '🥈 Silver Pass' : '👤 Free';
+  el.innerHTML = `
+    <div class="profile-header">
+      <div class="profile-cover"></div>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar">${avatar}</div>
+      </div>
+      <div class="profile-info">
+        <div class="profile-name">
+          ${escHtml(user.username || shortAddr(user.wallet))}
+          <span style="font-size:12px;padding:2px 8px;border-radius:100px;background:var(--bg3);color:var(--muted);font-weight:500;">${badge}</span>
+        </div>
+        <div class="profile-wallet">${user.wallet}</div>
+        <div class="profile-bio">${escHtml(user.bio || 'No bio yet.')}</div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="profile-stat-num">${postsCount || 0}</div><div class="profile-stat-label">Posts</div></div>
+          <div class="profile-stat"><div class="profile-stat-num">${followersCount || 0}</div><div class="profile-stat-label">Followers</div></div>
+          <div class="profile-stat"><div class="profile-stat-num">${followingCount || 0}</div><div class="profile-stat-label">Following</div></div>
+        </div>
+        ${isOwn ? `<button class="edit-profile-btn" onclick="openEditModal()">Edit Profile</button>` : `<button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow('${target.toLowerCase()}',this)">${isFollowing ? 'Following' : 'Follow'}</button>`}
+      </div>
+    </div>
+    <div id="profilePosts"><div class="loader">Loading posts...</div></div>`;
+  loadUserPosts(target.toLowerCase());
+}
+
+async function loadUserPosts(wallet) {
+  const { data: posts } = await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').eq('author_wallet', wallet).order('created_at', { ascending: false });
+  const el = document.getElementById('profilePosts');
+  if (!posts || posts.length === 0) { el.innerHTML = '<div class="empty"><div class="empty-icon">✍️</div><div class="empty-text">No posts yet</div></div>'; return; }
+  let likedSet = new Set();
+  if (userAddr) {
+    const { data: likes } = await sb.from('likes').select('post_id').eq('liker_wallet', userAddr).in('post_id', posts.map(p => p.id));
+    if (likes) likes.forEach(l => likedSet.add(l.post_id));
+  }
+  el.innerHTML = posts.map(p => renderPost(p, likedSet.has(p.id))).join('');
+}
+
+async function toggleFollow(wallet, btn) {
+  if (!userAddr) { toast('Connect wallet first', 'err'); return; }
+  const isFollowing = btn.classList.contains('following');
+  if (isFollowing) {
+    await sb.from('follows').delete().eq('follower_wallet', userAddr).eq('following_wallet', wallet);
+    btn.textContent = 'Follow'; btn.classList.remove('following');
+  } else {
+    await sb.from('follows').insert({ follower_wallet: userAddr, following_wallet: wallet });
+    btn.textContent = 'Following'; btn.classList.add('following');
+  }
+}
+
+// ── EDIT PROFILE ──
+function openEditModal() {
+  if (!currentUser) return;
+  document.getElementById('editUsername').value = currentUser.username || '';
+  document.getElementById('editBio').value = currentUser.bio || '';
+  document.getElementById('editAvatar').value = currentUser.avatar_url || '';
+  document.getElementById('editModal').classList.add('open');
+}
+
+async function saveProfile() {
+  const username = document.getElementById('editUsername').value.trim();
+  const bio = document.getElementById('editBio').value.trim();
+  const avatar_url = document.getElementById('editAvatar').value.trim();
+  try {
+    const { error } = await sb.from('users').update({ username, bio, avatar_url }).eq('wallet', userAddr);
+    if (error) throw error;
+    currentUser = { ...currentUser, username, bio, avatar_url };
+    updateComposerAvatar();
+    closeModal('editModal');
+    toast('Profile saved ✓', 'ok');
+    loadProfile();
+  } catch(e) { toast('Username may already be taken', 'err'); }
+}
+
+// ── HELPERS ──
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); }));
+
+let toastT;
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function copy(text) { navigator.clipboard.writeText(text); }
+function shortAddr(addr) { return addr ? addr.slice(0,6)+'...'+addr.slice(-4) : ''; }
+function escHtml(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function timeAgo(ts) {
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60) return 'now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h';
+  return Math.floor(diff/86400) + 'd';
+}
+
+// ── INIT ──
+loadPosts();
+window.ethereum?.on('accountsChanged', () => location.reload());
+</script>
+</body>
+</html>
