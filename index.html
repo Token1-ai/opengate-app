@@ -361,7 +361,38 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <div style="font-size:18px;font-weight:700;margin-bottom:20px;">Edit Profile</div>
     <div class="form-grp"><label class="form-lbl">Username</label><input class="form-inp" id="editUsername" placeholder="@username" maxlength="30"/></div>
     <div class="form-grp"><label class="form-lbl">Bio</label><textarea class="form-inp" id="editBio" placeholder="Tell the world about yourself..." maxlength="160"></textarea></div>
-    <div class="form-grp"><label class="form-lbl">Avatar URL (optional)</label><input class="form-inp" id="editAvatar" placeholder="https://..."/></div>
+    <div class="form-grp">
+      <label class="form-lbl">Avatar</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button onclick="setAvatarTab('url')" id="avatarTabUrl" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:12px;font-weight:600;cursor:pointer;">URL</button>
+        <button onclick="setAvatarTab('nft')" id="avatarTabNft" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">Use NFT 🖼️</button>
+        <button onclick="setAvatarTab('upload')" id="avatarTabUpload" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">Upload 📤</button>
+      </div>
+      <div id="avatarUrlTab"><input class="form-inp" id="editAvatar" placeholder="https://..." style="width:100%;"/></div>
+      <div id="avatarNftTab" style="display:none;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Enter NFT contract and token ID to use as avatar</div>
+        <input class="form-inp" id="nftContract" placeholder="NFT contract address" style="width:100%;margin-bottom:8px;"/>
+        <input class="form-inp" id="nftTokenId" placeholder="Token ID (e.g. 1)" style="width:100%;margin-bottom:8px;"/>
+        <button onclick="loadNFTAvatar()" style="width:100%;padding:9px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer;">Load NFT Image</button>
+        <div id="nftPreview" style="margin-top:8px;"></div>
+      </div>
+      <div id="avatarUploadTab" style="display:none;">
+        <div onclick="document.getElementById('avatarFile').click()" style="border:2px dashed var(--border);border-radius:9px;padding:20px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          Click to upload image
+        </div>
+        <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatarFile(this)"/>
+        <div id="uploadAvatarStatus" style="font-size:12px;color:var(--muted);margin-top:6px;"></div>
+      </div>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">Cover Image URL (optional)</label>
+      <input class="form-inp" id="editCover" placeholder="https://..." style="width:100%;"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px;">Recommended: 1500×500px</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-grp"><label class="form-lbl">Website</label><input class="form-inp" id="editWebsite" placeholder="https://..."/></div>
+      <div class="form-grp"><label class="form-lbl">Twitter</label><input class="form-inp" id="editTwitter" placeholder="@handle"/></div>
+    </div>
     <button class="save-btn" onclick="saveProfile()">Save Profile</button>
   </div>
 </div>
@@ -561,6 +592,12 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🔄</span>Easy Swap</button>
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🟡</span>Buy GATE</button>
         <button class="side-btn" id="tab-staking" onclick="showTab('staking')"><span class="side-ico">💎</span>Staking</button>
+        <button class="side-btn" id="tab-market" onclick="showTab('market')"><span class="side-ico">🛒</span>NFT Market</button>
+        <button class="side-btn" id="tab-explore" onclick="showTab('explore')"><span class="side-ico">🔍</span>Explore</button>
+        <button class="side-btn" id="tab-notifs" onclick="showTab('notifs')"><span class="side-ico">🔔</span>Notifications<span id="notifBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
+        <button class="side-btn" id="tab-launchpad" onclick="showTab('launchpad')"><span class="side-ico">🪙</span>Launchpad</button>
+        <button class="side-btn" id="tab-presale" onclick="showTab('presale')"><span class="side-ico">🚀</span>Presale</button>
+        <button class="side-btn" id="tab-messages" onclick="showTab('messages')"><span class="side-ico">💬</span>Messages<span id="unreadBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
       </div>
       <div class="side-sec">
         <div class="side-lbl">Info</div>
@@ -595,6 +632,260 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       </div>
       <div id="view-profile" style="display:none;">
         <div id="profileContent"><div class="app-loader">Connect wallet to view profile</div></div>
+      </div>
+      <div id="view-market" style="display:none;">
+        <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🛒 NFT Marketplace</span>
+          <button onclick="openListModal()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:6px 14px;font-size:13px;font-weight:700;">+ List NFT</button>
+        </div>
+
+        <!-- Stats -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);">
+          <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gold);" id="mktVolume">—</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Total Volume</div>
+          </div>
+          <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;" id="mktListings">—</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Active Listings</div>
+          </div>
+          <div style="flex:1;padding:12px 20px;text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--green);">2.5%</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Platform Fee</div>
+          </div>
+        </div>
+
+        <!-- Listings grid -->
+        <div id="marketListings" style="padding:16px 20px;">
+          <div class="app-loader">Loading listings...</div>
+        </div>
+      </div>
+
+      <!-- List NFT Modal -->
+      <div class="modal-overlay" id="listNFTModal">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;position:relative;">
+          <button class="modal-close-btn" onclick="document.getElementById('listNFTModal').classList.remove('open')">✕</button>
+          <div style="font-size:20px;font-weight:700;margin-bottom:20px;">List NFT for Sale</div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">NFT Contract Address *</div>
+            <input id="listContract" placeholder="0x..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token ID *</div>
+            <input id="listTokenId" type="number" placeholder="1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <button onclick="loadNFTPreview()" style="width:100%;padding:10px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">Preview NFT</button>
+            <div id="nftListPreview" style="margin-top:10px;"></div>
+          </div>
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Price (zkLTC) *</div>
+            <input id="listPrice" type="number" step="0.01" placeholder="e.g. 1.5" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">2.5% platform fee deducted from sale</div>
+          </div>
+          <button onclick="submitListing()" id="submitListBtn" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;">List for Sale</button>
+        </div>
+      </div>
+
+      <div id="view-explore" style="display:none;">
+        <div class="feed-hdr">🔍 Explore</div>
+        <!-- Search bar -->
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+          <div style="display:flex;gap:8px;">
+            <input id="searchInput" placeholder="Search users, posts..." 
+              style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:10px 16px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"
+              oninput="onSearchInput()" onkeydown="if(event.key==='Enter')doSearch()"/>
+            <button onclick="doSearch()" style="background:var(--gold);color:#08090C;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:700;">Search</button>
+          </div>
+          <!-- Search filters -->
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button id="filterUsers" onclick="setSearchFilter('users')" style="flex:1;padding:6px;border-radius:8px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:12px;font-weight:600;cursor:pointer;">👤 Users</button>
+            <button id="filterPosts" onclick="setSearchFilter('posts')" style="flex:1;padding:6px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">📝 Posts</button>
+          </div>
+        </div>
+        <!-- Results -->
+        <div id="searchResults">
+          <!-- Default: trending users -->
+          <div style="padding:12px 20px;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);">Trending Users</div>
+          <div id="trendingUsers"><div class="app-loader">Loading...</div></div>
+          <div style="padding:12px 20px;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-top:8px;">Latest Posts</div>
+          <div id="latestPosts"><div class="app-loader">Loading...</div></div>
+        </div>
+      </div>
+      <div id="view-notifs" style="display:none;">
+        <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🔔 Notifications</span>
+          <button onclick="markAllRead()" style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">Mark all read</button>
+        </div>
+        <div id="notifsList"><div class="app-loader">Loading...</div></div>
+      </div>
+      <div id="view-launchpad" style="display:none;">
+        <div class="feed-hdr">🪙 Token Launchpad</div>
+        <div style="padding:20px;max-width:560px;margin:0 auto;">
+
+          <!-- VIP badge -->
+          <div id="launchVipBadge" style="display:none;background:linear-gradient(135deg,rgba(245,200,66,0.1),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:24px;">🥇</span>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--gold);">Gold Pass Holder — FREE deployment</div>
+              <div style="font-size:12px;color:var(--muted);">You create tokens for free on LitVM. Others pay 0.003 zkLTC.</div>
+            </div>
+          </div>
+
+          <!-- Create token form -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px;">
+            <div style="font-size:16px;font-weight:700;margin-bottom:20px;">🚀 Launch Your Token</div>
+
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token Name *</div>
+              <input id="ltName" placeholder="e.g. My Awesome Token" maxlength="50"
+                style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+              <div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Symbol *</div>
+                <input id="ltSymbol" placeholder="e.g. MAT" maxlength="10"
+                  style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+              </div>
+              <div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Decimals</div>
+                <input id="ltDecimals" type="number" value="18" min="0" max="18"
+                  style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+              </div>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Total Supply *</div>
+              <input id="ltSupply" type="number" placeholder="e.g. 1000000"
+                style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+            </div>
+
+            <div style="margin-bottom:20px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600;">Features</div>
+              <div style="display:flex;gap:8px;">
+                <button id="ltMint" onclick="toggleLtOpt('ltMint')"
+                  style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">🔨 Mintable</button>
+                <button id="ltBurn" onclick="toggleLtOpt('ltBurn')"
+                  style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">🔥 Burnable</button>
+                <button id="ltPause" onclick="toggleLtOpt('ltPause')"
+                  style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;">⏸ Pausable</button>
+              </div>
+            </div>
+
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;justify-content:space-between;">
+              <span style="font-size:13px;color:var(--muted);">Deployment fee</span>
+              <span style="font-family:'Space Mono',monospace;font-weight:700;color:var(--gold);" id="ltFeeDisplay">Loading...</span>
+            </div>
+
+            <button onclick="launchToken()" id="launchBtn"
+              style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#e9d5ff;font-size:15px;font-weight:700;transition:all .2s;"
+              onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+              🚀 Deploy Token
+            </button>
+          </div>
+
+          <!-- My tokens -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">My Tokens</div>
+            <div id="myTokensList"><div style="font-size:13px;color:var(--muted);">Connect wallet to see your tokens</div></div>
+          </div>
+
+          <!-- Stats -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Platform Stats</div>
+            <div class="w-row"><span class="w-lbl">Total tokens created</span><span class="w-val" id="totalTokensCreated">—</span></div>
+            <div class="w-row"><span class="w-lbl">Network</span><span class="w-val">LitVM LiteForge</span></div>
+            <div class="w-row"><span class="w-lbl">Gold Pass fee</span><span class="w-val" style="color:var(--green);">FREE</span></div>
+            <div class="w-row"><span class="w-lbl">Standard fee</span><span class="w-val">0.003 zkLTC</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="view-presale" style="display:none;">
+        <div class="feed-hdr">🚀 GATE Presale</div>
+        <div style="padding:20px;max-width:560px;margin:0 auto;">
+          <div style="background:linear-gradient(145deg,rgba(245,200,66,0.09),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:24px;margin-bottom:16px;">
+            <div style="font-size:22px;font-weight:700;color:var(--gold);margin-bottom:6px;">Buy GATE at presale price</div>
+            <div style="font-size:14px;color:var(--muted);margin-bottom:20px;line-height:1.6;">
+              Send zkLTC and receive GATE tokens instantly. Lowest price before listing on DEX.
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+                <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--gold);">1,000</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">GATE per zkLTC</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+                <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--green);" id="presaleStatus">Loading...</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Status</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+                <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;" id="presaleRaised">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Raised / 100 zkLTC</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+                <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--silver);" id="myContrib">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">My contribution</div>
+              </div>
+            </div>
+            <!-- Progress bar -->
+            <div style="margin-bottom:20px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
+                <span>Progress</span>
+                <span id="presalePct">0%</span>
+              </div>
+              <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+                <div id="presaleBar" style="height:100%;background:var(--gold);border-radius:3px;width:0%;transition:width .8s ease;"></div>
+              </div>
+            </div>
+            <!-- Buy form -->
+            <div style="margin-bottom:12px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Amount to send (zkLTC) — max 5 per wallet</div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input id="presaleAmt" type="number" placeholder="0.1" step="0.01" min="0.01" max="5"
+                  style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"
+                  oninput="updatePresaleCalc()"/>
+                <button onclick="buyPresale()" id="buyPresaleBtn"
+                  style="background:var(--gold);color:#08090C;border-radius:9px;padding:10px 24px;font-size:14px;font-weight:700;transition:all .2s;"
+                  onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Buy GATE</button>
+              </div>
+              <div id="presaleCalc" style="font-size:13px;color:var(--green);margin-top:8px;font-family:'Space Mono',monospace;"></div>
+            </div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Presale Info</div>
+            <div class="w-row"><span class="w-lbl">Rate</span><span class="w-val" style="color:var(--gold);">1 zkLTC = 1,000 GATE</span></div>
+            <div class="w-row"><span class="w-lbl">Hard cap</span><span class="w-val">100 zkLTC</span></div>
+            <div class="w-row"><span class="w-lbl">Wallet limit</span><span class="w-val">5 zkLTC</span></div>
+            <div class="w-row"><span class="w-lbl">Network</span><span class="w-val">LitVM</span></div>
+            <div class="w-row"><span class="w-lbl">GATE in pool</span><span class="w-val" id="presaleGatePool">—</span></div>
+            <div class="w-row"><span class="w-lbl">Contract</span><span class="w-val" style="font-size:10px;cursor:pointer;" onclick="cpText('0xd1BD1853913F1CA242cD4D88a1F50EB0a6ba0854');showToast('Copied!','ok')">0xd1BD...854 ⧉</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="view-messages" style="display:none;">
+        <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+          <span id="dmTitle">💬 Messages</span>
+          <button id="dmBackBtn" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;" onclick="showConvList()">← Back</button>
+        </div>
+        <!-- Conversation list -->
+        <div id="convList" style="padding:0;">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border);">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Send message to wallet:</div>
+            <div style="display:flex;gap:8px;">
+              <input id="newDmAddr" placeholder="0x..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 14px;color:var(--text);font-size:13px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+              <button onclick="openDMByAddr()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;">Open</button>
+            </div>
+          </div>
+          <div id="convListItems"><div class="app-loader">Loading conversations...</div></div>
+        </div>
+        <!-- Conversation view -->
+        <div id="convView" style="display:none;flex-direction:column;height:calc(100vh - 110px);">
+          <div id="msgList" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;"></div>
+          <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;">
+            <input id="msgInput" placeholder="Type a message..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:10px 16px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;" onkeydown="if(event.key==='Enter')sendDM()"/>
+            <button onclick="sendDM()" style="background:var(--gold);color:#08090C;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:700;">Send</button>
+          </div>
+        </div>
       </div>
       <div id="view-staking" style="display:none;">
         <div class="feed-hdr">💎 GATE Staking</div>
@@ -666,6 +957,12 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <button class="mob-btn" onclick="focusComposer();showTab('feed')"><span class="mob-ico">✍️</span>Post</button>
     <button class="mob-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="mob-ico">🔄</span>Swap</button>
     <button class="mob-btn" onclick="showTab('staking')"><span class="mob-ico">💎</span>Stake</button>
+    <button class="mob-btn" onclick="showTab('market')"><span class="mob-ico">🛒</span>Market</button>
+    <button class="mob-btn" onclick="showTab('explore')"><span class="mob-ico">🔍</span>Explore</button>
+    <button class="mob-btn" onclick="showTab('notifs')"><span class="mob-ico">🔔</span>Notifs</button>
+    <button class="mob-btn" onclick="showTab('launchpad')"><span class="mob-ico">🪙</span>Launch</button>
+    <button class="mob-btn" onclick="showTab('presale')"><span class="mob-ico">🚀</span>Presale</button>
+    <button class="mob-btn" onclick="showTab('messages')"><span class="mob-ico">💬</span>DMs</button>
   </div>
 </div>
 
@@ -680,7 +977,42 @@ const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const MINT_ABI   = ['function getMintPriceBNB() view returns(uint256)','function mint(uint256) payable'];
 const GATE_ABI   = ['function transfer(address,uint256) returns(bool)','function balanceOf(address) view returns(uint256)'];
-const GATE_STAKING = '0xDD2d80b7c31622D084905899b4d40b815cF01bF8';
+const GATE_STAKING  = '0xDD2d80b7c31622D084905899b4d40b815cF01bF8';
+const GATE_PRESALE  = '0xd1BD1853913F1CA242cD4D88a1F50EB0a6ba0854';
+const TOKEN_FACTORY   = '0xb69Df265Ac37A3E6AB2C940cFA395FE7fF0C0A60';
+const NFT_MARKET      = '0x2231E1aDcbb1FB59055d6442207Ac029553e5859';
+const NFT_MARKET_ABI  = [
+  'function listNFT(address,uint256,uint256) returns(uint256)',
+  'function buyNFT(uint256) payable',
+  'function cancelListing(uint256)',
+  'function getListings(uint256,uint256) view returns(tuple(address seller,address nftContract,uint256 tokenId,uint256 price,bool active)[])',
+  'function listingCount() view returns(uint256)',
+  'function totalVolume() view returns(uint256)',
+];
+const ERC721_ABI = [
+  'function setApprovalForAll(address,bool)',
+  'function isApprovedForAll(address,address) view returns(bool)',
+  'function tokenURI(uint256) view returns(string)',
+  'function ownerOf(uint256) view returns(address)',
+  'function name() view returns(string)',
+];
+const GOLD_NFT_ADDR = '0x95D3e857793C1B1EbfA509d1DF3232448f619b27';
+const FACTORY_ABI   = [
+  'function createToken(string,string,uint8,uint256,bool,bool,bool) payable returns(address)',
+  'function creationFee() view returns(uint256)',
+  'function getTokensByCreator(address) view returns(address[])',
+  'function totalTokensCreated() view returns(uint256)',
+];
+const GOLD_NFT_ABI2 = ['function balanceOf(address) view returns(uint256)'];
+const TOKEN_INFO_ABI= ['function name() view returns(string)','function symbol() view returns(string)','function totalSupply() view returns(uint256)'];
+const PRESALE_ABI   = [
+  'function buy() payable',
+  'function getInfo() view returns(uint256,uint256,uint256,bool)',
+  'function contributed(address) view returns(uint256)',
+  'function RATE() view returns(uint256)',
+  'function HARD_CAP() view returns(uint256)',
+  'function WALLET_CAP() view returns(uint256)',
+];
 const STAKING_ABI = [
   'function stake(uint256) nonpayable',
   'function unstake() nonpayable',
@@ -727,6 +1059,7 @@ async function connectWallet(){
     await ensureUser();
     loadGateBal();
     loadPosts();
+    updateNotifBadge();
   } catch(e){ showToast('Connection cancelled','err'); }
 }
 
@@ -768,12 +1101,25 @@ function showTab(tab){
   document.getElementById('view-feed').style.display=tab==='feed'?'block':'none';
   document.getElementById('view-profile').style.display=tab==='profile'?'block':'none';
   document.getElementById('view-staking').style.display=tab==='staking'?'block':'none';
+  document.getElementById('view-messages').style.display=tab==='messages'?'block':'none';
+  document.getElementById('view-presale').style.display=tab==='presale'?'block':'none';
+  document.getElementById('view-launchpad').style.display=tab==='launchpad'?'block':'none';
+  document.getElementById('view-notifs').style.display=tab==='notifs'?'block':'none';
+  document.getElementById('view-explore').style.display=tab==='explore'?'block':'none';
+  document.getElementById('view-market').style.display=tab==='market'?'block':'none';
   document.querySelectorAll('.side-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab)?.classList.add('active');
   document.querySelectorAll('.mob-btn').forEach((b,i)=>b.classList.toggle('active',(tab==='feed'&&i===0)||(tab==='profile'&&i===1)));
   if(tab==='profile') loadProfile();
   if(tab==='staking'){ loadStakingInfo(); clearInterval(stakingTimer); stakingTimer=setInterval(loadStakingInfo,5000); }
   else clearInterval(stakingTimer);
+  if(tab==='messages'){ loadConversations(); }
+  else { clearInterval(dmTimer); }
+  if(tab==='presale') loadPresaleInfo();
+  if(tab==='launchpad') loadLaunchpad();
+  if(tab==='notifs') loadNotifications();
+  if(tab==='explore') loadExploreDefault();
+  if(tab==='market') loadMarketplace();
 }
 function switchFeedTab(tab,el){
   document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
@@ -900,6 +1246,7 @@ async function likePost(postId,authorWallet,btn){
     const tx=await gate.transfer(authorWallet,ethers.parseEther('0.1'));
     await tx.wait();
     await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
+    await createNotif(authorWallet,'like',postId);
     const c=parseInt(document.getElementById('cnt-'+postId).textContent)+1;
     await sb.from('posts').update({likes_count:c}).eq('id',postId);
     btn.classList.add('liked'); btn.querySelector('span').textContent='❤️';
@@ -925,8 +1272,33 @@ async function loadProfile(wallet){
   let isF=false;
   if(userAddr&&!isOwn){const {data:f}=await sb.from('follows').select('id').eq('follower_wallet',userAddr).eq('following_wallet',target).single();isF=!!f;}
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.innerHTML='🧑'"/>`:'🧑';
-  const badge=u.pass_type==='gold'?'🥇 Gold Pass':u.pass_type==='silver'?'🥈 Silver Pass':'👤 Free';
-  el.innerHTML=`<div class="prof-cover"></div><div class="prof-av-wrap"><div class="prof-av">${av}</div></div><div class="prof-info"><div class="prof-name">${esc(u.username||sAddr(u.wallet))}<span style="font-size:12px;padding:2px 8px;border-radius:100px;background:var(--bg3);color:var(--muted);font-weight:500;">${badge}</span></div><div class="prof-wlt">${u.wallet}</div><div class="prof-bio">${esc(u.bio||'No bio yet.')}</div><div class="prof-stats"><div class="pstat"><div class="pstat-n">${pc||0}</div><div class="pstat-l">Posts</div></div><div class="pstat"><div class="pstat-n">${fc||0}</div><div class="pstat-l">Followers</div></div><div class="pstat"><div class="pstat-n">${fic||0}</div><div class="pstat-l">Following</div></div></div>${isOwn?`<button class="edit-prof-btn" onclick="openEditModal()">Edit Profile</button>`:`<button class="follow-btn${isF?' following':''}" onclick="toggleFollow('${target}',this)">${isF?'Following':'Follow'}</button>`}</div><div id="profPosts"><div class="app-loader">Loading...</div></div>`;
+  const coverStyle=u.cover_url?`background:url('${u.cover_url}') center/cover no-repeat`:'background:linear-gradient(135deg,rgba(245,200,66,.15),rgba(38,217,138,.08))';
+  const badgeStyle=u.pass_type==='gold'?'background:rgba(245,200,66,0.15);color:var(--gold);border:1px solid var(--border-g);':u.pass_type==='silver'?'background:rgba(168,189,208,0.15);color:var(--silver);border:1px solid var(--border-s);':'background:var(--bg3);color:var(--muted);border:1px solid var(--border);';
+  const badgeTxt=u.pass_type==='gold'?'🥇 Gold Pass':u.pass_type==='silver'?'🥈 Silver Pass':'👤 Free';
+  const links=[];
+  if(u.website) links.push(`<a href="${u.website}" target="_blank" style="color:var(--muted);font-size:13px;display:flex;align-items:center;gap:4px;transition:color .2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted)'">🌐 ${esc(u.website.replace('https://','').replace('http://',''))}</a>`);
+  if(u.twitter) links.push(`<a href="https://twitter.com/${u.twitter.replace('@','')}" target="_blank" style="color:var(--muted);font-size:13px;display:flex;align-items:center;gap:4px;transition:color .2s;" onmouseover="this.style.color='#1d9bf0'" onmouseout="this.style.color='var(--muted)'">𝕏 ${esc(u.twitter)}</a>`);
+  el.innerHTML=`
+    <div class="prof-cover" style="${coverStyle}"></div>
+    <div class="prof-av-wrap"><div class="prof-av">${av}</div></div>
+    <div class="prof-info">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+        <div>
+          <div class="prof-name">${esc(u.username||sAddr(u.wallet))}</div>
+          <div class="prof-wlt">${u.wallet}</div>
+        </div>
+        <span style="font-size:11px;padding:4px 12px;border-radius:100px;font-weight:700;${badgeStyle}">${badgeTxt}</span>
+      </div>
+      <div class="prof-bio">${esc(u.bio||'No bio yet.')}</div>
+      ${links.length?`<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;">${links.join('')}</div>`:''}
+      <div class="prof-stats">
+        <div class="pstat"><div class="pstat-n">${pc||0}</div><div class="pstat-l">Posts</div></div>
+        <div class="pstat"><div class="pstat-n">${fc||0}</div><div class="pstat-l">Followers</div></div>
+        <div class="pstat"><div class="pstat-n">${fic||0}</div><div class="pstat-l">Following</div></div>
+      </div>
+      ${isOwn?`<button class="edit-prof-btn" onclick="openEditModal()">Edit Profile</button>`:`<button class="follow-btn${isF?' following':''}" onclick="toggleFollow('${target}',this)">${isF?'Following':'Follow'}</button>`}
+    </div>
+    <div id="profPosts"><div class="app-loader">Loading...</div></div>`;
   const {data:posts}=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').eq('author_wallet',target).order('created_at',{ascending:false});
   const pp=document.getElementById('profPosts');
   if(!posts||posts.length===0){pp.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet</div>';return;}
@@ -938,18 +1310,78 @@ async function toggleFollow(wallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const f=btn.classList.contains('following');
   if(f){await sb.from('follows').delete().eq('follower_wallet',userAddr).eq('following_wallet',wallet);btn.textContent='Follow';btn.classList.remove('following');}
-  else{await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});btn.textContent='Following';btn.classList.add('following');}
+  else{await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});btn.textContent='Following';btn.classList.add('following');await createNotif(wallet,'follow');}
 }
 
 // ── EDIT PROFILE ──
-function openEditModal(){if(!currentUser)return;document.getElementById('editUsername').value=currentUser.username||'';document.getElementById('editBio').value=currentUser.bio||'';document.getElementById('editAvatar').value=currentUser.avatar_url||'';document.getElementById('editModal').classList.add('open');}
+function openEditModal(){
+  if(!currentUser)return;
+  document.getElementById('editUsername').value=currentUser.username||'';
+  document.getElementById('editBio').value=currentUser.bio||'';
+  document.getElementById('editAvatar').value=currentUser.avatar_url||'';
+  document.getElementById('editCover').value=currentUser.cover_url||'';
+  document.getElementById('editWebsite').value=currentUser.website||'';
+  document.getElementById('editTwitter').value=currentUser.twitter||'';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function setAvatarTab(tab){
+  ['url','nft','upload'].forEach(t=>{
+    document.getElementById('avatarTab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display=t===tab?'block':'none';
+    const btn=document.getElementById('avatarTab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(t===tab){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+}
+
+async function loadNFTAvatar(){
+  const contract=document.getElementById('nftContract').value.trim();
+  const tokenId=document.getElementById('nftTokenId').value.trim();
+  if(!contract||!tokenId){showToast('Enter contract and token ID','err');return;}
+  const preview=document.getElementById('nftPreview');
+  preview.innerHTML='<div style="font-size:12px;color:var(--muted);">Loading NFT...</div>';
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const nftAbi=['function tokenURI(uint256) view returns(string)'];
+    const nft=new ethers.Contract(contract,nftAbi,p);
+    let uri=await nft.tokenURI(tokenId);
+    if(uri.startsWith('ipfs://')) uri='https://gateway.pinata.cloud/ipfs/'+uri.slice(7);
+    const res=await fetch(uri);
+    const meta=await res.json();
+    let img=meta.image||'';
+    if(img.startsWith('ipfs://')) img='https://gateway.pinata.cloud/ipfs/'+img.slice(7);
+    preview.innerHTML=`<img src="${img}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-top:8px;" onerror="this.parentElement.innerHTML='<div style=color:var(--red);font-size:12px;>Could not load NFT image</div>'"/>`;
+    document.getElementById('editAvatar').value=img;
+    showToast('NFT loaded! ✓','ok');
+  }catch(e){preview.innerHTML='<div style="font-size:12px;color:var(--red);">Could not load NFT</div>';}
+}
+
+async function uploadAvatarFile(input){
+  const file=input.files[0];
+  if(!file) return;
+  const status=document.getElementById('uploadAvatarStatus');
+  status.textContent='Uploading...';
+  try{
+    const url=await uploadToPinata(file);
+    document.getElementById('editAvatar').value=url;
+    status.textContent='✓ Uploaded!';
+    showToast('Avatar uploaded!','ok');
+  }catch(e){status.textContent='Upload failed';showToast('Upload failed','err');}
+}
 function closeEditModal(){document.getElementById('editModal').classList.remove('open');}
 async function saveProfile(){
   const username=document.getElementById('editUsername').value.trim();
   const bio=document.getElementById('editBio').value.trim();
   const avatar_url=document.getElementById('editAvatar').value.trim();
-  try{const {error}=await sb.from('users').update({username,bio,avatar_url}).eq('wallet',userAddr);if(error)throw error;currentUser={...currentUser,username,bio,avatar_url};updateCompAv();closeEditModal();showToast('Profile saved ✓','ok');loadProfile();}
-  catch(e){showToast('Username may already be taken','err');}
+  const cover_url=document.getElementById('editCover').value.trim();
+  const website=document.getElementById('editWebsite').value.trim();
+  const twitter=document.getElementById('editTwitter').value.trim();
+  try{
+    const {error}=await sb.from('users').update({username,bio,avatar_url,cover_url,website,twitter}).eq('wallet',userAddr);
+    if(error)throw error;
+    currentUser={...currentUser,username,bio,avatar_url,cover_url,website,twitter};
+    updateCompAv();closeEditModal();showToast('Profile saved ✓','ok');loadProfile();
+  }catch(e){showToast('Username may already be taken','err');}
 }
 
 // ── MINT MODAL ──
@@ -990,6 +1422,581 @@ async function executeMint(){
     closeMintModal();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
   btn.textContent='Mint Now';btn.disabled=false;
+}
+
+// ── MARKETPLACE ──
+async function loadMarketplace(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
+    const [count,volume]=await Promise.all([market.listingCount(),market.totalVolume()]);
+    document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(volume)).toFixed(4)+' zkLTC';
+
+    if(count===0n){
+      document.getElementById('mktListings').textContent='0';
+      document.getElementById('marketListings').innerHTML='<div class="app-empty"><div class="app-empty-ico">🛒</div>No listings yet.<br>Be the first to list an NFT!</div>';
+      return;
+    }
+
+    const listings=await market.getListings(1,50);
+    const active=listings.filter(l=>l.active);
+    document.getElementById('mktListings').textContent=active.length;
+
+    if(active.length===0){
+      document.getElementById('marketListings').innerHTML='<div class="app-empty"><div class="app-empty-ico">🛒</div>No active listings</div>';
+      return;
+    }
+
+    // Load NFT metadata
+    const cards=await Promise.all(active.map(async (l,i)=>{
+      let img='🖼️';let name='NFT';
+      try{
+        const nft=new ethers.Contract(l.nftContract,ERC721_ABI,p);
+        let uri=await nft.tokenURI(l.tokenId);
+        if(uri.startsWith('ipfs://')) uri='https://gateway.pinata.cloud/ipfs/'+uri.slice(7);
+        const meta=await fetch(uri).then(r=>r.json());
+        if(meta.image){img=meta.image.startsWith('ipfs://')?'https://gateway.pinata.cloud/ipfs/'+meta.image.slice(7):meta.image;}
+        name=meta.name||'NFT #'+l.tokenId.toString();
+      }catch{}
+      const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
+      return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:transform .2s;cursor:pointer;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+        <div style="aspect-ratio:1;background:var(--bg3);overflow:hidden;position:relative;">
+          ${typeof img==='string'&&img.startsWith('http')?`<img src="${img}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" onerror="this.parentElement.innerHTML='<div style=font-size:40px;display:flex;align-items:center;justify-content:center;height:100%;>🖼️</div>'"/>`:'<div style="font-size:40px;display:flex;align-items:center;justify-content:center;height:100%;">🖼️</div>'}
+        </div>
+        <div style="padding:12px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(name)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">by ${sAddr(l.seller)}</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gold);">${parseFloat(ethers.formatEther(l.price)).toFixed(4)} zkLTC</div>
+            ${isOwn?
+              `<button onclick="cancelNFTListing(${i+1})" style="background:var(--bg3);border:1px solid var(--border);color:var(--red);border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;">Cancel</button>`:
+              `<button onclick="buyNFT(${i+1},${l.price})" style="background:var(--gold);color:#08090C;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;">Buy</button>`
+            }
+          </div>
+        </div>
+      </div>`;
+    }));
+    document.getElementById('marketListings').innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">${cards.join('')}</div>`;
+  }catch(e){document.getElementById('marketListings').innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+function openListModal(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  document.getElementById('listNFTModal').classList.add('open');
+}
+
+async function loadNFTPreview(){
+  const contract=document.getElementById('listContract').value.trim();
+  const tokenId=document.getElementById('listTokenId').value.trim();
+  if(!contract||!tokenId){showToast('Enter contract and token ID','err');return;}
+  const preview=document.getElementById('nftListPreview');
+  preview.innerHTML='<div style="font-size:12px;color:var(--muted);">Loading...</div>';
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const nft=new ethers.Contract(contract,ERC721_ABI,p);
+    let uri=await nft.tokenURI(tokenId);
+    if(uri.startsWith('ipfs://')) uri='https://gateway.pinata.cloud/ipfs/'+uri.slice(7);
+    const meta=await fetch(uri).then(r=>r.json());
+    let img=meta.image||'';
+    if(img.startsWith('ipfs://')) img='https://gateway.pinata.cloud/ipfs/'+img.slice(7);
+    preview.innerHTML=`<div style="display:flex;align-items:center;gap:12px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;">
+      <img src="${img}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;" onerror="this.style.display='none'"/>
+      <div><div style="font-size:14px;font-weight:700;">${esc(meta.name||'NFT #'+tokenId)}</div><div style="font-size:11px;color:var(--green);margin-top:2px;">✓ NFT found</div></div>
+    </div>`;
+  }catch(e){preview.innerHTML='<div style="font-size:12px;color:var(--red);">Could not load NFT</div>';}
+}
+
+async function submitListing(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const contract=document.getElementById('listContract').value.trim();
+  const tokenId=document.getElementById('listTokenId').value.trim();
+  const price=document.getElementById('listPrice').value.trim();
+  if(!contract||!tokenId||!price){showToast('Fill all fields','err');return;}
+  const btn=document.getElementById('submitListBtn');
+  try{
+    await switchToLitVM();
+    const nft=new ethers.Contract(contract,ERC721_ABI,signer);
+    const isApproved=await nft.isApprovedForAll(userAddr,NFT_MARKET);
+    if(!isApproved){
+      showToast('Approving marketplace...','ok');
+      await (await nft.setApprovalForAll(NFT_MARKET,true)).wait();
+    }
+    const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);
+    btn.textContent='Listing...';btn.disabled=true;
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await market.listNFT(contract,tokenId,ethers.parseEther(price));
+    await tx.wait();
+    showToast('NFT listed! 🎉','ok');
+    document.getElementById('listNFTModal').classList.remove('open');
+    document.getElementById('listContract').value='';
+    document.getElementById('listTokenId').value='';
+    document.getElementById('listPrice').value='';
+    document.getElementById('nftListPreview').innerHTML='';
+    loadMarketplace();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  btn.textContent='List for Sale';btn.disabled=false;
+}
+
+async function buyNFT(listingId,price){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToLitVM();
+    const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await market.buyNFT(listingId,{value:price});
+    await tx.wait();
+    showToast('NFT purchased! 🎉','ok');
+    loadMarketplace();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+async function cancelNFTListing(listingId){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToLitVM();
+    const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);
+    await (await market.cancelListing(listingId)).wait();
+    showToast('Listing cancelled','ok');
+    loadMarketplace();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+// ── EXPLORE ──
+let searchFilter = 'users';
+let searchTimer = null;
+
+function setSearchFilter(f){
+  searchFilter=f;
+  ['users','posts'].forEach(t=>{
+    const btn=document.getElementById('filter'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(t===f){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+  const q=document.getElementById('searchInput').value.trim();
+  if(q) doSearch();
+}
+
+function onSearchInput(){
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>{
+    const q=document.getElementById('searchInput').value.trim();
+    if(q.length>=2) doSearch();
+    else loadExploreDefault();
+  },400);
+}
+
+async function doSearch(){
+  const q=document.getElementById('searchInput').value.trim();
+  if(!q){loadExploreDefault();return;}
+  const el=document.getElementById('searchResults');
+  el.innerHTML='<div class="app-loader">Searching...</div>';
+  try{
+    if(searchFilter==='users'){
+      const {data:users}=await sb.from('users')
+        .select('*')
+        .or(`username.ilike.%${q}%,wallet.ilike.%${q}%`)
+        .limit(20);
+      if(!users||users.length===0){
+        el.innerHTML='<div class="app-empty"><div class="app-empty-ico">🔍</div>No users found for "'+esc(q)+'"</div>';
+        return;
+      }
+      el.innerHTML=users.map(u=>renderUserCard(u)).join('');
+    } else {
+      const {data:posts}=await sb.from('posts')
+        .select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)')
+        .ilike('content','%'+q+'%')
+        .order('created_at',{ascending:false})
+        .limit(20);
+      if(!posts||posts.length===0){
+        el.innerHTML='<div class="app-empty"><div class="app-empty-ico">🔍</div>No posts found for "'+esc(q)+'"</div>';
+        return;
+      }
+      let ls=new Set();
+      if(userAddr){const {data:lk}=await sb.from('likes').select('post_id').eq('liker_wallet',userAddr).in('post_id',posts.map(p=>p.id));if(lk)lk.forEach(l=>ls.add(l.post_id));}
+      el.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id))).join('');
+    }
+  }catch(e){el.innerHTML='<div class="app-empty">Search failed</div>';}
+}
+
+async function loadExploreDefault(){
+  // Trending users — most followers
+  const trendEl=document.getElementById('trendingUsers');
+  const latestEl=document.getElementById('latestPosts');
+  if(!trendEl) return;
+  document.getElementById('searchResults').innerHTML=`
+    <div style="padding:12px 20px;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);">Trending Users</div>
+    <div id="trendingUsers"><div class="app-loader">Loading...</div></div>
+    <div style="padding:12px 20px;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-top:8px;">Latest Posts</div>
+    <div id="latestPosts"><div class="app-loader">Loading...</div></div>`;
+  try{
+    // Top users by post count
+    const {data:users}=await sb.from('users').select('*').not('username','is',null).limit(10);
+    const tu=document.getElementById('trendingUsers');
+    if(users&&users.length>0) tu.innerHTML=users.map(u=>renderUserCard(u)).join('');
+    else tu.innerHTML='<div style="padding:16px 20px;font-size:13px;color:var(--muted);">No users yet</div>';
+    // Latest posts
+    const {data:posts}=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').order('created_at',{ascending:false}).limit(10);
+    const lp=document.getElementById('latestPosts');
+    if(posts&&posts.length>0){
+      let ls=new Set();
+      if(userAddr){const {data:lk}=await sb.from('likes').select('post_id').eq('liker_wallet',userAddr).in('post_id',posts.map(p=>p.id));if(lk)lk.forEach(l=>ls.add(l.post_id));}
+      lp.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id))).join('');
+    } else lp.innerHTML='<div style="padding:16px 20px;font-size:13px;color:var(--muted);">No posts yet</div>';
+  }catch(e){}
+}
+
+function renderUserCard(u){
+  const av=u.avatar_url?`<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
+  const badge=u.pass_type==='gold'?'<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(245,200,66,0.15);color:var(--gold);font-weight:700;">🥇 Gold</span>':u.pass_type==='silver'?'<span style="font-size:10px;padding:2px 8px;border-radius:100px;background:rgba(168,189,208,0.15);color:var(--silver);font-weight:700;">🥈 Silver</span>':'';
+  return `<div onclick="viewUserProfile('${u.wallet}')" style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+    <div style="width:48px;height:48px;border-radius:50%;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${av}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+        <span style="font-size:15px;font-weight:700;">${esc(u.username||sAddr(u.wallet))}</span>
+        ${badge}
+      </div>
+      <div style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;">${sAddr(u.wallet)}</div>
+      ${u.bio?`<div style="font-size:13px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(u.bio)}</div>`:''}
+    </div>
+    <div style="font-size:18px;color:var(--muted);">→</div>
+  </div>`;
+}
+
+function viewUserProfile(wallet){
+  showTab('profile');
+  loadProfile(wallet);
+}
+
+// ── NOTIFICATIONS ──
+async function loadNotifications(){
+  if(!userAddr) return;
+  const el=document.getElementById('notifsList');
+  el.innerHTML='<div class="app-loader">Loading...</div>';
+  try{
+    const {data:notifs}=await sb.from('notifications')
+      .select('*')
+      .eq('to_wallet',userAddr)
+      .order('created_at',{ascending:false})
+      .limit(50);
+    if(!notifs||notifs.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">🔔</div>No notifications yet</div>';
+      return;
+    }
+    const wallets=[...new Set(notifs.map(n=>n.from_wallet))];
+    const users={};
+    await Promise.all(wallets.map(async w=>{
+      const {data:u}=await sb.from('users').select('username,avatar_url').eq('wallet',w).single();
+      users[w]=u;
+    }));
+    el.innerHTML=notifs.map(n=>{
+      const u=users[n.from_wallet]||{};
+      const name=u.username||sAddr(n.from_wallet);
+      const avatar=u.avatar_url?`<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
+      const icon=n.type==='like'?'❤️':n.type==='follow'?'👤':'💬';
+      const text=n.type==='like'?`<b>${esc(name)}</b> liked your post`:n.type==='follow'?`<b>${esc(name)}</b> followed you`:`<b>${esc(name)}</b> sent you a message`;
+      return `<div onclick="markRead('${n.id}')" style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;background:${n.read?'':'rgba(245,200,66,0.03)'};transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='${n.read?'':'rgba(245,200,66,0.03)'}'">
+        <div style="position:relative;flex-shrink:0;">
+          <div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;">${avatar}</div>
+          <div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:11px;">${icon}</div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;line-height:1.5;">${text}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${tAgo(n.created_at)}</div>
+        </div>
+        ${!n.read?'<div style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;"></div>':''}
+      </div>`;
+    }).join('');
+    updateNotifBadge();
+  }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+async function markRead(id){
+  await sb.from('notifications').update({read:true}).eq('id',id);
+  updateNotifBadge();
+}
+
+async function markAllRead(){
+  if(!userAddr) return;
+  await sb.from('notifications').update({read:true}).eq('to_wallet',userAddr).eq('read',false);
+  loadNotifications();
+}
+
+async function updateNotifBadge(){
+  if(!userAddr) return;
+  const {count}=await sb.from('notifications').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
+  const badge=document.getElementById('notifBadge');
+  if(count>0){badge.style.display='inline';badge.textContent=count;}
+  else badge.style.display='none';
+}
+
+async function createNotif(toWallet, type, postId=null){
+  if(!userAddr||userAddr===toWallet) return;
+  try{
+    await sb.from('notifications').insert({
+      to_wallet:toWallet,
+      from_wallet:userAddr,
+      type,
+      post_id:postId||undefined
+    });
+  }catch(e){}
+}
+
+// ── LAUNCHPAD ──
+let ltOpts = {ltMint:false, ltBurn:false, ltPause:false};
+
+function toggleLtOpt(id){
+  ltOpts[id] = !ltOpts[id];
+  const btn = document.getElementById(id);
+  if(ltOpts[id]){
+    btn.style.borderColor='#7c3aed';btn.style.background='#2d1a4a';btn.style.color='#c4b5fd';
+  } else {
+    btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';
+  }
+}
+
+async function loadLaunchpad(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,p);
+    const fee=await factory.creationFee();
+    const total=await factory.totalTokensCreated();
+    document.getElementById('totalTokensCreated').textContent=total.toString();
+
+    if(userAddr){
+      // Check Gold Pass
+      const goldNFT=new ethers.Contract(GOLD_NFT_ADDR,GOLD_NFT_ABI2,p);
+      const goldBal=await goldNFT.balanceOf(userAddr);
+      const hasGold=goldBal>0n;
+      const badge=document.getElementById('launchVipBadge');
+      badge.style.display=hasGold?'flex':'none';
+      document.getElementById('ltFeeDisplay').textContent=hasGold?'FREE (Gold Pass)':parseFloat(ethers.formatEther(fee)).toFixed(4)+' zkLTC';
+
+      // Load my tokens
+      const tokens=await factory.getTokensByCreator(userAddr);
+      const list=document.getElementById('myTokensList');
+      if(tokens.length===0){
+        list.innerHTML='<div style="font-size:13px;color:var(--muted);">No tokens created yet</div>';
+      } else {
+        const items=await Promise.all(tokens.slice(-5).reverse().map(async addr=>{
+          try{
+            const t=new ethers.Contract(addr,TOKEN_INFO_ABI,p);
+            const [name,symbol,supply]=await Promise.all([t.name(),t.symbol(),t.totalSupply()]);
+            return {addr,name,symbol,supply};
+          }catch{return {addr,name:'Unknown',symbol:'???',supply:0n};}
+        }));
+        list.innerHTML=items.map(t=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#e9d5ff;">${esc(t.symbol.slice(0,2))}</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;">${esc(t.name)} (${esc(t.symbol)})</div>
+                <div style="font-size:10px;color:var(--muted);">${t.addr.slice(0,16)}...</div>
+              </div>
+            </div>
+            <button onclick="cpText('${t.addr}');showToast('Address copied!','ok')"
+              style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);padding:4px 8px;font-size:10px;cursor:pointer;">Copy</button>
+          </div>`).join('');
+      }
+    } else {
+      document.getElementById('ltFeeDisplay').textContent='0.003 zkLTC';
+    }
+  }catch(e){}
+}
+
+async function launchToken(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const name=document.getElementById('ltName').value.trim();
+  const symbol=document.getElementById('ltSymbol').value.trim();
+  const decimals=parseInt(document.getElementById('ltDecimals').value)||18;
+  const supply=document.getElementById('ltSupply').value.trim();
+  if(!name||!symbol||!supply){showToast('Fill all required fields','err');return;}
+  const btn=document.getElementById('launchBtn');
+  try{
+    await switchToLitVM();
+    const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,signer);
+    const fee=await factory.creationFee();
+    btn.textContent='Deploying...';btn.disabled=true;
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await factory.createToken(name,symbol,decimals,supply,ltOpts.ltMint,ltOpts.ltBurn,ltOpts.ltPause,{value:fee});
+    await tx.wait();
+    showToast('🎉 Token '+symbol+' deployed!','ok');
+    document.getElementById('ltName').value='';
+    document.getElementById('ltSymbol').value='';
+    document.getElementById('ltSupply').value='';
+    loadLaunchpad();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  btn.textContent='🚀 Deploy Token';btn.disabled=false;
+}
+
+// ── PRESALE ──
+async function loadPresaleInfo(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const pc=new ethers.Contract(GATE_PRESALE,PRESALE_ABI,p);
+    const [raised,remaining,gateInContract,active]=await pc.getInfo();
+    const raisedF=parseFloat(ethers.formatEther(raised));
+    const pct=Math.min(100,(raisedF/100)*100).toFixed(1);
+    document.getElementById('presaleStatus').textContent=active?'🟢 Active':'🔴 Inactive';
+    document.getElementById('presaleStatus').style.color=active?'var(--green)':'var(--red)';
+    document.getElementById('presaleRaised').textContent=raisedF.toFixed(4)+' / 100';
+    document.getElementById('presalePct').textContent=pct+'%';
+    document.getElementById('presaleBar').style.width=pct+'%';
+    document.getElementById('presaleGatePool').textContent=parseFloat(ethers.formatEther(gateInContract)).toFixed(0)+' GATE';
+    if(userAddr){
+      const contrib=await pc.contributed(userAddr);
+      document.getElementById('myContrib').textContent=parseFloat(ethers.formatEther(contrib)).toFixed(4)+' zkLTC';
+    }
+  }catch(e){}
+}
+
+function updatePresaleCalc(){
+  const amt=parseFloat(document.getElementById('presaleAmt').value);
+  const el=document.getElementById('presaleCalc');
+  if(!amt||amt<=0){el.textContent='';return;}
+  el.textContent='You receive: '+(amt*1000).toLocaleString()+' GATE';
+}
+
+async function buyPresale(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const amt=document.getElementById('presaleAmt').value;
+  if(!amt||parseFloat(amt)<=0){showToast('Enter amount','err');return;}
+  const btn=document.getElementById('buyPresaleBtn');
+  try{
+    await switchToLitVM();
+    const pc=new ethers.Contract(GATE_PRESALE,PRESALE_ABI,signer);
+    const value=ethers.parseEther(amt);
+    btn.textContent='Confirm...';btn.disabled=true;
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await pc.buy({value});
+    btn.textContent='Buying...';
+    await tx.wait();
+    showToast('🎉 GATE purchased! Check your wallet','ok');
+    document.getElementById('presaleAmt').value='';
+    document.getElementById('presaleCalc').textContent='';
+    loadPresaleInfo();
+    loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  btn.textContent='Buy GATE';btn.disabled=false;
+}
+
+// ── MESSAGES ──
+let currentDMWallet = null;
+let dmTimer = null;
+
+async function loadConversations(){
+  if(!userAddr) return;
+  const el = document.getElementById('convListItems');
+  el.innerHTML = '<div class="app-loader">Loading...</div>';
+  try{
+    const {data:sent} = await sb.from('messages').select('to_wallet').eq('from_wallet',userAddr);
+    const {data:recv} = await sb.from('messages').select('from_wallet').eq('to_wallet',userAddr);
+    const wallets = new Set([
+      ...(sent||[]).map(m=>m.to_wallet),
+      ...(recv||[]).map(m=>m.from_wallet)
+    ]);
+    if(wallets.size === 0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">💬</div>No conversations yet.<br>Send the first message!</div>';
+      return;
+    }
+    const items = await Promise.all([...wallets].map(async w=>{
+      const {data:last} = await sb.from('messages')
+        .select('*').or(`and(from_wallet.eq.${userAddr},to_wallet.eq.${w}),and(from_wallet.eq.${w},to_wallet.eq.${userAddr})`)
+        .order('created_at',{ascending:false}).limit(1).single();
+      const {data:user} = await sb.from('users').select('username,avatar_url').eq('wallet',w).single();
+      const {count:unread} = await sb.from('messages').select('*',{count:'exact',head:true})
+        .eq('from_wallet',w).eq('to_wallet',userAddr).eq('read',false);
+      return {wallet:w, last, user, unread:unread||0};
+    }));
+    items.sort((a,b)=>new Date(b.last?.created_at||0)-new Date(a.last?.created_at||0));
+    el.innerHTML = items.map(i=>`
+      <div onclick="openDM('${i.wallet}')" style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background=''">
+        <div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;">
+          ${i.user?.avatar_url?`<img src="${i.user.avatar_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='🧑'"/>`:'🧑'}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+            <span style="font-size:14px;font-weight:700;">${esc(i.user?.username||sAddr(i.wallet))}</span>
+            <span style="font-size:11px;color:var(--muted);">${tAgo(i.last?.created_at||'')}</span>
+          </div>
+          <div style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(i.last?.content||'')}</div>
+        </div>
+        ${i.unread>0?`<span style="background:var(--gold);color:#08090C;font-size:11px;font-weight:700;padding:2px 7px;border-radius:100px;">${i.unread}</span>`:''}
+      </div>`).join('');
+    // update unread badge
+    const totalUnread = items.reduce((s,i)=>s+i.unread,0);
+    const badge = document.getElementById('unreadBadge');
+    if(totalUnread>0){badge.style.display='inline';badge.textContent=totalUnread;}
+    else badge.style.display='none';
+  }catch(e){ el.innerHTML='<div class="app-empty">Failed to load</div>'; }
+}
+
+async function openDM(wallet){
+  if(!userAddr) return;
+  currentDMWallet = wallet;
+  document.getElementById('convList').style.display='none';
+  document.getElementById('convView').style.display='flex';
+  document.getElementById('dmBackBtn').style.display='block';
+  const {data:user} = await sb.from('users').select('username').eq('wallet',wallet).single();
+  document.getElementById('dmTitle').textContent = '💬 '+(user?.username||sAddr(wallet));
+  loadMessages();
+  // mark as read
+  await sb.from('messages').update({read:true}).eq('from_wallet',wallet).eq('to_wallet',userAddr);
+  clearInterval(dmTimer);
+  dmTimer = setInterval(loadMessages, 3000);
+}
+
+function openDMByAddr(){
+  const addr = document.getElementById('newDmAddr').value.trim().toLowerCase();
+  if(!addr||!addr.startsWith('0x')){showToast('Enter valid address','err');return;}
+  openDM(addr);
+}
+
+function showConvList(){
+  currentDMWallet = null;
+  clearInterval(dmTimer);
+  document.getElementById('convList').style.display='block';
+  document.getElementById('convView').style.display='none';
+  document.getElementById('dmBackBtn').style.display='none';
+  document.getElementById('dmTitle').textContent='💬 Messages';
+  loadConversations();
+}
+
+async function loadMessages(){
+  if(!currentDMWallet||!userAddr) return;
+  const el = document.getElementById('msgList');
+  const {data:msgs} = await sb.from('messages')
+    .select('*')
+    .or(`and(from_wallet.eq.${userAddr},to_wallet.eq.${currentDMWallet}),and(from_wallet.eq.${currentDMWallet},to_wallet.eq.${userAddr})`)
+    .order('created_at',{ascending:true});
+  if(!msgs||msgs.length===0){
+    el.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;font-size:14px;">No messages yet. Say hi! 👋</div>';
+    return;
+  }
+  const atBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 50;
+  el.innerHTML = msgs.map(m=>{
+    const mine = m.from_wallet === userAddr;
+    return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'};">
+      <div style="max-width:70%;background:${mine?'var(--gold)':'var(--bg3)'};color:${mine?'#08090C':'var(--text)'};border-radius:${mine?'18px 18px 4px 18px':'18px 18px 18px 4px'};padding:10px 14px;font-size:14px;line-height:1.5;">
+        ${esc(m.content)}
+        <div style="font-size:10px;opacity:.6;margin-top:4px;text-align:${mine?'right':'left'};">${tAgo(m.created_at)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  if(atBottom) el.scrollTop = el.scrollHeight;
+}
+
+async function sendDM(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(!currentDMWallet) return;
+  const input = document.getElementById('msgInput');
+  const content = input.value.trim();
+  if(!content) return;
+  input.value = '';
+  try{
+    await sb.from('messages').insert({from_wallet:userAddr,to_wallet:currentDMWallet,content});
+    await createNotif(currentDMWallet,'dm');
+    loadMessages();
+  }catch(e){showToast('Failed to send','err');input.value=content;}
 }
 
 // ── STAKING ──
