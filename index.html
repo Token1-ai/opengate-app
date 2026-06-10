@@ -560,6 +560,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <button class="side-btn" id="tab-profile" onclick="showTab('profile')"><span class="side-ico">👤</span>My Profile</button>
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🔄</span>Easy Swap</button>
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🟡</span>Buy GATE</button>
+        <button class="side-btn" id="tab-staking" onclick="showTab('staking')"><span class="side-ico">💎</span>Staking</button>
       </div>
       <div class="side-sec">
         <div class="side-lbl">Info</div>
@@ -595,6 +596,50 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <div id="view-profile" style="display:none;">
         <div id="profileContent"><div class="app-loader">Connect wallet to view profile</div></div>
       </div>
+      <div id="view-staking" style="display:none;">
+        <div class="feed-hdr">💎 GATE Staking</div>
+        <div style="padding:20px;max-width:560px;margin:0 auto;">
+          <div style="background:var(--bg2);border:1px solid var(--border-g);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7;">
+              Stake your GATE tokens and earn <span style="color:var(--gold);font-weight:700;">~365% APR</span>.<br>
+              Rewards accumulate every second. Withdraw anytime — no lock period. <span style="color:var(--green);font-weight:700;">0% fee.</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+                <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--gold);" id="myStaked">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">My Staked</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+                <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--green);" id="myPending">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Pending Reward</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
+                <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--silver);" id="totalStakedVal">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Total Staked</div>
+              </div>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Amount to stake (GATE)</div>
+              <div style="display:flex;gap:8px;">
+                <input id="stakeAmount" type="number" placeholder="100" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;" oninput="this.style.borderColor='var(--gold)'"/>
+                <button onclick="stakeGATE()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:10px 20px;font-size:14px;font-weight:700;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Stake</button>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="claimGATE()" style="flex:1;background:var(--bg3);border:1px solid rgba(38,217,138,.3);color:var(--green);border-radius:9px;padding:10px;font-size:14px;font-weight:700;transition:all .2s;">Claim Rewards</button>
+              <button onclick="unstakeGATE()" style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:9px;padding:10px;font-size:14px;font-weight:700;transition:all .2s;">Unstake All</button>
+            </div>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Pool Info</div>
+            <div class="w-row"><span class="w-lbl">APR</span><span class="w-val" style="color:var(--gold);">~365%</span></div>
+            <div class="w-row"><span class="w-lbl">Lock period</span><span class="w-val" style="color:var(--green);">None</span></div>
+            <div class="w-row"><span class="w-lbl">Staking fee</span><span class="w-val" style="color:var(--green);">0%</span></div>
+            <div class="w-row"><span class="w-lbl">Reward pool</span><span class="w-val" id="rewardPoolVal">—</span></div>
+            <div class="w-row"><span class="w-lbl">Contract</span><span class="w-val" style="font-size:10px;cursor:pointer;" onclick="cpText('0xDD2d80b7c31622D084905899b4d40b815cF01bF8');showToast('Copied!','ok')">0xDD2d...bF8 ⧉</span></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="app-sr">
@@ -620,6 +665,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <button class="mob-btn" onclick="showTab('profile')"><span class="mob-ico">👤</span>Profile</button>
     <button class="mob-btn" onclick="focusComposer();showTab('feed')"><span class="mob-ico">✍️</span>Post</button>
     <button class="mob-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="mob-ico">🔄</span>Swap</button>
+    <button class="mob-btn" onclick="showTab('staking')"><span class="mob-ico">💎</span>Stake</button>
   </div>
 </div>
 
@@ -634,6 +680,17 @@ const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const MINT_ABI   = ['function getMintPriceBNB() view returns(uint256)','function mint(uint256) payable'];
 const GATE_ABI   = ['function transfer(address,uint256) returns(bool)','function balanceOf(address) view returns(uint256)'];
+const GATE_STAKING = '0xDD2d80b7c31622D084905899b4d40b815cF01bF8';
+const STAKING_ABI = [
+  'function stake(uint256) nonpayable',
+  'function unstake() nonpayable',
+  'function claim() nonpayable',
+  'function syncRewardPool() nonpayable',
+  'function pendingReward(address) view returns(uint256)',
+  'function getStakeInfo(address) view returns(uint256,uint256,uint256)',
+  'function rewardPool() view returns(uint256)',
+  'function totalStaked() view returns(uint256)',
+];
 const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNmY5ZWM5OC0wNmMyLTRiYjYtOWE0OS1hYzkyZmRiY2YwMzIiLCJlbWFpbCI6ImJ0Y2ZpbHNzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI3YTE4OTZlZjgyNDAwYzA2NTI4NyIsInNjb3BlZEtleVNlY3JldCI6IjM5MjMzNWVmYmQyYzJiYzZlNDk5NDIzYzk1YzMxZWM5NDA3NzgxMjhkYmZiNTE1NzQyODkzMmU4OWFkY2Y1YzciLCJleHAiOjE4MTI1NjgzMzF9.WkiIwhZqxvx3hz_xymtuv2257hVdRg-Bxo_1Vee3fl0';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -710,10 +767,13 @@ async function loadGateBal(){
 function showTab(tab){
   document.getElementById('view-feed').style.display=tab==='feed'?'block':'none';
   document.getElementById('view-profile').style.display=tab==='profile'?'block':'none';
+  document.getElementById('view-staking').style.display=tab==='staking'?'block':'none';
   document.querySelectorAll('.side-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab)?.classList.add('active');
   document.querySelectorAll('.mob-btn').forEach((b,i)=>b.classList.toggle('active',(tab==='feed'&&i===0)||(tab==='profile'&&i===1)));
   if(tab==='profile') loadProfile();
+  if(tab==='staking'){ loadStakingInfo(); clearInterval(stakingTimer); stakingTimer=setInterval(loadStakingInfo,5000); }
+  else clearInterval(stakingTimer);
 }
 function switchFeedTab(tab,el){
   document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
@@ -930,6 +990,74 @@ async function executeMint(){
     closeMintModal();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
   btn.textContent='Mint Now';btn.disabled=false;
+}
+
+// ── STAKING ──
+async function loadStakingInfo(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,p);
+    const rp=await sc.rewardPool();
+    const ts=await sc.totalStaked();
+    document.getElementById('rewardPoolVal').textContent=parseFloat(ethers.formatEther(rp)).toFixed(0)+' GATE';
+    document.getElementById('totalStakedVal').textContent=parseFloat(ethers.formatEther(ts)).toFixed(2);
+    if(userAddr){
+      const [staked,pending]=await sc.getStakeInfo(userAddr);
+      document.getElementById('myStaked').textContent=parseFloat(ethers.formatEther(staked)).toFixed(2);
+      document.getElementById('myPending').textContent=parseFloat(ethers.formatEther(pending)).toFixed(4);
+    }
+  }catch(e){}
+}
+
+let stakingTimer;
+async function stakeGATE(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const amt=document.getElementById('stakeAmount').value;
+  if(!amt||parseFloat(amt)<=0){showToast('Enter amount','err');return;}
+  try{
+    await switchToLitVM();
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,signer);
+    const amount=ethers.parseEther(amt);
+    showToast('Approving GATE...','ok');
+    const approveTx=await gate.approve(GATE_STAKING,amount);
+    await approveTx.wait();
+    showToast('Staking...','ok');
+    const tx=await sc.stake(amount);
+    await tx.wait();
+    showToast('Staked successfully! 💎','ok');
+    document.getElementById('stakeAmount').value='';
+    loadStakingInfo();
+    loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
+}
+
+async function claimGATE(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToLitVM();
+    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,signer);
+    showToast('Claiming rewards...','ok');
+    const tx=await sc.claim();
+    await tx.wait();
+    showToast('Rewards claimed! 🎉','ok');
+    loadStakingInfo();
+    loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
+}
+
+async function unstakeGATE(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToLitVM();
+    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,signer);
+    showToast('Unstaking...','ok');
+    const tx=await sc.unstake();
+    await tx.wait();
+    showToast('Unstaked! Tokens returned 💰','ok');
+    loadStakingInfo();
+    loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
 }
 
 // ── HELPERS ──
