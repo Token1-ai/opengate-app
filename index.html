@@ -421,11 +421,17 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <div id="nftPreview" style="margin-top:8px;"></div>
       </div>
       <div id="avatarUploadTab" style="display:none;">
-        <div onclick="document.getElementById('avatarFile').click()" style="border:2px dashed var(--border);border-radius:9px;padding:20px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-          Click to upload image
+        <div onclick="document.getElementById('avatarFile').click()" style="border:2px dashed var(--border);border-radius:9px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.background='rgba(245,200,66,0.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background=''">
+          <div style="font-size:32px;margin-bottom:8px;">📷</div>
+          <div style="font-weight:600;color:var(--text);margin-bottom:4px;">Click to choose photo</div>
+          <div style="font-size:11px;">From gallery, camera or files</div>
         </div>
-        <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatarFile(this)"/>
-        <div id="uploadAvatarStatus" style="font-size:12px;color:var(--muted);margin-top:6px;"></div>
+        <input type="file" id="avatarFile" accept="image/*" capture="environment" style="display:none;" onchange="uploadAvatarFile(this)"/>
+        <div id="uploadAvatarStatus" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center;"></div>
+        <div id="avatarPreviewBox" style="margin-top:10px;display:none;text-align:center;">
+          <img id="avatarPreviewImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);"/>
+          <div style="font-size:11px;color:var(--green);margin-top:6px;">✓ Photo selected</div>
+        </div>
       </div>
     </div>
     <div class="form-grp">
@@ -609,7 +615,6 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <div class="footer-links">
       <a href="https://www.easyswap.life" target="_blank">Easy Swap</a>
       <a href="https://liteforge.explorer.caldera.xyz" target="_blank">LitVM Explorer</a>
-      <a href="https://github.com/Token1-ai" target="_blank">GitHub</a>
       <a href="https://bscscan.com/address/0x065B95Fd0409C40b9eD27e71E2DD4Ad40aB50096" target="_blank">GoldPass</a>
       <a href="https://bscscan.com/address/0xd3809aaf6eA7cEDEa3364780eE8F789f81cc7Fcc" target="_blank">SilverPass</a>
     </div>
@@ -623,6 +628,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <div class="app-nav-right">
       <button class="back-to-landing" onclick="goLanding()">← Landing</button>
       <button class="new-post-nav-btn" id="newPostBtn" onclick="focusComposer()">✍️ Post</button>
+      <button id="pwaInstallBtn" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="installPWA()">📲 Install</button>
       <button id="connectBtn" onclick="connectWallet()"><div class="w-dot"></div>Connect Wallet</button>
     </div>
   </nav>
@@ -1402,7 +1408,7 @@ const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const MINT_ABI   = ['function getMintPriceBNB() view returns(uint256)','function mint(uint256) payable'];
-const GATE_ABI   = ['function transfer(address,uint256) returns(bool)','function balanceOf(address) view returns(uint256)'];
+const GATE_ABI   = ['function transfer(address,uint256) returns(bool)','function balanceOf(address) view returns(uint256)','function approve(address,uint256) returns(bool)','function allowance(address,address) view returns(uint256)'];
 const GATE_STAKING  = '0xDD2d80b7c31622D084905899b4d40b815cF01bF8';
 const GATE_PRESALE  = '0xd1BD1853913F1CA242cD4D88a1F50EB0a6ba0854';
 const TOKEN_FACTORY   = '0xb69Df265Ac37A3E6AB2C940cFA395FE7fF0C0A60';
@@ -1585,15 +1591,24 @@ async function connectWallet(){
 
 async function switchToBNB(){
   try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BNB_ID}]}); }
-  catch(e){ if(e.code===4902) await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:BNB_ID,chainName:'BNB Smart Chain',rpcUrls:['https://bsc-dataseed.binance.org/'],nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},blockExplorerUrls:['https://bscscan.com']}]}); }
+  catch(e){ 
+    if(e.code===4902){
+      await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:BNB_ID,chainName:'BNB Smart Chain',rpcUrls:['https://bsc-dataseed.binance.org/'],nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},blockExplorerUrls:['https://bscscan.com']}]});
+    } else if(e.code!==4001){ throw e; }
+  }
   provider = new ethers.BrowserProvider(window.ethereum);
   signer = await provider.getSigner();
 }
 async function switchToLitVM(){
   try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x1159'}]}); }
-  catch(e){ if(e.code===4902) await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]}); }
+  catch(e){ 
+    if(e.code===4902){
+      await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
+    } else if(e.code!==4001){ throw e; }
+  }
   provider = new ethers.BrowserProvider(window.ethereum);
   signer = await provider.getSigner();
+  userAddr = (await signer.getAddress()).toLowerCase();
 }
 
 // ── USER ──
@@ -1777,7 +1792,8 @@ async function likePost(postId,authorWallet,btn){
   btn.disabled=true;
   try{
     await switchToLitVM();
-    const rewards=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const rewards=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,freshSigner);
     // Get reward amount for this author (based on Gold/Silver Pass)
     const rewardAmt=await rewards.getRewardFor(authorWallet);
     const rewardFmt=parseFloat(ethers.formatEther(rewardAmt)).toFixed(2);
@@ -1945,13 +1961,24 @@ async function uploadAvatarFile(input){
   const file=input.files[0];
   if(!file) return;
   const status=document.getElementById('uploadAvatarStatus');
-  status.textContent='Uploading...';
+  const previewBox=document.getElementById('avatarPreviewBox');
+  const previewImg=document.getElementById('avatarPreviewImg');
+  // Show local preview immediately
+  const localUrl=URL.createObjectURL(file);
+  if(previewImg){previewImg.src=localUrl;previewBox.style.display='block';}
+  status.textContent='Uploading to IPFS...';
   try{
     const url=await uploadToPinata(file);
     document.getElementById('editAvatar').value=url;
+    if(previewImg) previewImg.src=url;
     status.textContent='✓ Uploaded!';
-    showToast('Avatar uploaded!','ok');
-  }catch(e){status.textContent='Upload failed';showToast('Upload failed','err');}
+    status.style.color='var(--green)';
+    showToast('Avatar uploaded! ✓','ok');
+  }catch(e){
+    status.textContent='Upload failed. Try again.';
+    status.style.color='var(--red)';
+    showToast('Upload failed','err');
+  }
 }
 function closeEditModal(){document.getElementById('editModal').classList.remove('open');}
 async function saveProfile(){
@@ -2043,20 +2070,31 @@ async function loadFaucet(){
 async function claimFaucet(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const btn=document.getElementById('claimFaucetBtn');
+  btn.textContent='Switching network...';btn.disabled=true;
   try{
     await switchToLitVM();
-    const faucet=new ethers.Contract(GATE_FAUCET,FAUCET_ABI,signer);
-    btn.textContent='Claiming...';btn.disabled=true;
+    // Re-create contract with fresh signer after network switch
+    const freshSigner=await provider.getSigner();
+    const faucet=new ethers.Contract(GATE_FAUCET,FAUCET_ABI,freshSigner);
+    btn.textContent='Claiming...';
     showToast('Confirm in MetaMask...','ok');
     const tx=await faucet.claim();
+    btn.textContent='Waiting...';
     await tx.wait();
     showToast('🎉 100 GATE claimed! Welcome to OpenGate!','ok');
     loadFaucet();
     loadGateBal();
+    btn.textContent='Already Claimed ✓';
   }catch(e){
-    showToast((e.reason||e.message||'Failed').slice(0,60),'err');
-    btn.disabled=false;
-    btn.textContent='🚰 Claim 100 GATE';
+    const msg=(e.reason||e.message||'Failed');
+    if(msg.includes('Already claimed')){
+      showToast('Already claimed!','err');
+      btn.textContent='Already Claimed ✓';
+    } else {
+      showToast(msg.slice(0,60),'err');
+      btn.disabled=false;
+      btn.textContent='🚰 Claim 100 GATE';
+    }
   }
 }
 
@@ -2708,8 +2746,9 @@ async function rollDice(){
   const btn=document.getElementById('rollBtn');
   try{
     await switchToLitVM();
-    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
-    const dice=new ethers.Contract(GATE_DICE,DICE_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
+    const dice=new ethers.Contract(GATE_DICE,DICE_ABI,freshSigner);
     const amount=ethers.parseEther(diceBet.toString());
     showToast('Approving GATE...','ok');
     await (await gate.approve(GATE_DICE,amount)).wait();
@@ -2797,8 +2836,9 @@ async function buyLotteryTicket(){
   const btn=document.getElementById('buyTicketBtn');
   try{
     await switchToLitVM();
-    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
-    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
+    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
     const amount=ethers.parseEther((lotteryQty*10).toString());
     showToast('Approving GATE...','ok');
     await (await gate.approve(GATE_LOTTERY,amount)).wait();
@@ -3405,7 +3445,8 @@ async function buyPresale(){
   const btn=document.getElementById('buyPresaleBtn');
   try{
     await switchToLitVM();
-    const pc=new ethers.Contract(GATE_PRESALE,PRESALE_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const pc=new ethers.Contract(GATE_PRESALE,PRESALE_ABI,freshSigner);
     const value=ethers.parseEther(amt);
     btn.textContent='Confirm...';btn.disabled=true;
     showToast('Confirm in MetaMask...','ok');
@@ -3565,9 +3606,10 @@ async function stakeGATE(){
   if(!amt||parseFloat(amt)<=0){showToast('Enter amount','err');return;}
   try{
     await switchToLitVM();
-    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
-    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,signer);
-    const amount=ethers.parseEther(amt);
+    const freshSigner=await provider.getSigner();
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
+    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,freshSigner);
+    const amount=ethers.parseEther(String(amt));
     showToast('Approving GATE...','ok');
     const approveTx=await gate.approve(GATE_STAKING,amount);
     await approveTx.wait();
@@ -3585,7 +3627,8 @@ async function claimGATE(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   try{
     await switchToLitVM();
-    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,freshSigner);
     showToast('Claiming rewards...','ok');
     const tx=await sc.claim();
     await tx.wait();
@@ -3599,7 +3642,8 @@ async function unstakeGATE(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   try{
     await switchToLitVM();
-    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,freshSigner);
     showToast('Unstaking...','ok');
     const tx=await sc.unstake();
     await tx.wait();
@@ -3686,6 +3730,26 @@ document.querySelectorAll('.fade').forEach(el=>obs.observe(el));
 // ── SUPPLY BARS ──
 const sObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.querySelectorAll('.supply-fill[data-target]').forEach(b=>{setTimeout(()=>b.style.width=b.dataset.target,300)});}),{threshold:0.2});
 document.querySelectorAll('.pass-card').forEach(c=>sObs.observe(c));
+
+// ── PWA INSTALL ──
+let pwaPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  pwaPrompt = e;
+  const btn = document.getElementById('pwaInstallBtn');
+  if(btn) btn.style.display = 'block';
+});
+
+async function installPWA(){
+  if(!pwaPrompt) return;
+  pwaPrompt.prompt();
+  const result = await pwaPrompt.userChoice;
+  if(result.outcome === 'accepted'){
+    showToast('App installed! 📲','ok');
+    document.getElementById('pwaInstallBtn').style.display='none';
+  }
+  pwaPrompt = null;
+}
 
 // ── INIT ──
 loadPosts();
