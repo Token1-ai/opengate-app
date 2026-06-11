@@ -2,6 +2,27 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<link rel="icon" type="image/png" href="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
+<link rel="apple-touch-icon" href="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
+<link rel="manifest" href="/manifest.json"/>
+<meta name="theme-color" content="#F5C842"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="OpenGate"/>
+<meta name="application-name" content="OpenGate"/>
+<!-- SEO -->
+<meta name="description" content="OpenGate — Web3 social platform. Post content, earn GATE tokens from likes. Built on LitVM + BNB Chain."/>
+<meta name="keywords" content="OpenGate, GATE token, Web3 social, DeFi, LitVM, BNB Chain, earn crypto"/>
+<meta property="og:title" content="OpenGate — Post. Earn. Own."/>
+<meta property="og:description" content="Social platform where every like sends GATE tokens to your wallet. No ads. No middleman."/>
+<meta property="og:image" content="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
+<meta property="og:url" content="https://opengate.bond"/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="OpenGate — Post. Earn. Own."/>
+<meta name="twitter:description" content="Web3 social platform. Earn GATE tokens from likes."/>
+<meta name="twitter:image" content="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OpenGate — Post. Earn. Own.</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
@@ -354,6 +375,29 @@ textarea.form-inp{resize:vertical;min-height:80px;}
   </div>
 </div>
 
+<!-- WALLET SELECTION MODAL -->
+<div class="modal-overlay" id="walletModal">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:380px;position:relative;">
+    <button class="modal-close-btn" onclick="document.getElementById('walletModal').classList.remove('open')">✕</button>
+    <div style="font-size:20px;font-weight:700;margin-bottom:6px;">Connect Wallet</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Choose your wallet to continue</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button onclick="connectWithWallet('metamask')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-align:left;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" style="width:36px;height:36px;"/>
+        <div><div style="font-size:15px;font-weight:700;color:var(--text);">MetaMask</div><div style="font-size:12px;color:var(--muted);">Most popular browser wallet</div></div>
+      </button>
+      <button onclick="connectWithWallet('trust')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-align:left;" onmouseover="this.style.borderColor='#3375BB'" onmouseout="this.style.borderColor='var(--border)'">
+        <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" style="width:36px;height:36px;border-radius:8px;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><rect width=%2236%22 height=%2236%22 rx=%228%22 fill=%22%233375BB%22/><text y=%2226%22 x=%224%22 font-size=%2222%22>🛡</text></svg>'"/>
+        <div><div style="font-size:15px;font-weight:700;color:var(--text);">Trust Wallet</div><div style="font-size:12px;color:var(--muted);">Mobile & browser wallet</div></div>
+      </button>
+      <button onclick="connectWithWallet('injected')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-align:left;" onmouseover="this.style.borderColor='var(--muted)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;">🔗</div>
+        <div><div style="font-size:15px;font-weight:700;color:var(--text);">Other Wallet</div><div style="font-size:12px;color:var(--muted);">Any injected Web3 wallet</div></div>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- EDIT PROFILE MODAL -->
 <div class="modal-overlay" id="editModal">
   <div class="edit-modal-inner">
@@ -400,7 +444,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 <!-- ══ LANDING ══ -->
 <div id="page-landing" class="page active">
   <nav id="landing-nav">
-    <div class="nav-logo"><div class="logo-box">OG</div>OpenGate</div>
+    <div class="nav-logo"><img src="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy" style="width:34px;height:34px;border-radius:8px;object-fit:cover;" alt="OpenGate"/>OpenGate</div>
     <ul class="nav-links">
       <li><a onclick="scrollSec('#how')">How it works</a></li>
       <li><a onclick="scrollSec('#passes')">Passes</a></li>
@@ -575,7 +619,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 <!-- ══ APP ══ -->
 <div id="page-app" class="page">
   <nav id="app-nav">
-    <div class="app-nav-logo" onclick="goLanding()"><div class="logo-box">OG</div>OpenGate</div>
+    <div class="app-nav-logo" onclick="goLanding()"><img src="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy" style="width:30px;height:30px;border-radius:7px;object-fit:cover;" alt="OpenGate"/>OpenGate</div>
     <div class="app-nav-right">
       <button class="back-to-landing" onclick="goLanding()">← Landing</button>
       <button class="new-post-nav-btn" id="newPostBtn" onclick="focusComposer()">✍️ Post</button>
@@ -592,6 +636,12 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🔄</span>Easy Swap</button>
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🟡</span>Buy GATE</button>
         <button class="side-btn" id="tab-staking" onclick="showTab('staking')"><span class="side-ico">💎</span>Staking</button>
+        <button class="side-btn" id="tab-faucet" onclick="showTab('faucet')"><span class="side-ico">🚰</span>Faucet</button>
+        <button class="side-btn" id="tab-lending" onclick="showTab('lending')"><span class="side-ico">🏦</span>Lending</button>
+        <button class="side-btn" id="tab-battle" onclick="showTab('battle')"><span class="side-ico">⚓</span>Battleship</button>
+        <button class="side-btn" id="tab-dice" onclick="showTab('dice')"><span class="side-ico">🎲</span>Dice Game</button>
+        <button class="side-btn" id="tab-lottery" onclick="showTab('lottery')"><span class="side-ico">🎰</span>Lottery</button>
+        <button class="side-btn" id="tab-dao" onclick="showTab('dao')"><span class="side-ico">🏛️</span>DAO</button>
         <button class="side-btn" id="tab-market" onclick="showTab('market')"><span class="side-ico">🛒</span>NFT Market</button>
         <button class="side-btn" id="tab-explore" onclick="showTab('explore')"><span class="side-ico">🔍</span>Explore</button>
         <button class="side-btn" id="tab-notifs" onclick="showTab('notifs')"><span class="side-ico">🔔</span>Notifications<span id="notifBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
@@ -633,6 +683,376 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <div id="view-profile" style="display:none;">
         <div id="profileContent"><div class="app-loader">Connect wallet to view profile</div></div>
       </div>
+      <div id="view-faucet" style="display:none;">
+        <div class="feed-hdr">🚰 GATE Faucet</div>
+        <div style="padding:20px;max-width:500px;margin:0 auto;">
+          <div style="background:linear-gradient(145deg,rgba(38,217,138,0.07),rgba(38,217,138,0.02));border:1px solid rgba(38,217,138,0.2);border-radius:var(--r);padding:32px;text-align:center;margin-bottom:16px;">
+            <div style="font-size:60px;margin-bottom:16px;">🚰</div>
+            <div style="font-size:22px;font-weight:700;margin-bottom:8px;">Get Free GATE Tokens</div>
+            <div style="font-size:14px;color:var(--muted);margin-bottom:24px;line-height:1.6;">New to OpenGate? Claim your free 100 GATE tokens to start posting, staking, and playing games. One claim per wallet — forever.</div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;">
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+                <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--gold);" id="faucetBalance">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">GATE available</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+                <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--green);">100</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">GATE per claim</div>
+              </div>
+              <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;">
+                <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--silver);" id="faucetClaimCount">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px;">Total claims</div>
+              </div>
+            </div>
+
+            <div id="faucetStatusBox" style="margin-bottom:20px;padding:12px 16px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);font-size:13px;color:var(--muted);">
+              Connect wallet to check eligibility
+            </div>
+
+            <button id="claimFaucetBtn" onclick="claimFaucet()"
+              style="width:100%;padding:16px;border-radius:12px;background:var(--green);color:#08090C;font-size:16px;font-weight:700;transition:all .2s;"
+              onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+              🚰 Claim 100 GATE
+            </button>
+          </div>
+
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">What can you do with GATE?</div>
+            <div class="w-row"><span class="w-lbl">❤️ Like posts</span><span class="w-val" style="color:var(--muted);">Sends 0.1 GATE to author</span></div>
+            <div class="w-row"><span class="w-lbl">💎 Stake</span><span class="w-val" style="color:var(--green);">Earn 365% APR</span></div>
+            <div class="w-row"><span class="w-lbl">🎲 Dice game</span><span class="w-val" style="color:var(--gold);">Win up to 5× your bet</span></div>
+            <div class="w-row"><span class="w-lbl">🎰 Lottery</span><span class="w-val" style="color:var(--gold);">10 GATE per ticket</span></div>
+            <div class="w-row"><span class="w-lbl">🪙 Create token</span><span class="w-val" style="color:var(--muted);">Launch your own token</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="view-lending" style="display:none;">
+        <div class="feed-hdr">🏦 Lending Protocol</div>
+        <div style="padding:20px;max-width:600px;margin:0 auto;">
+
+          <!-- Pool stats -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace;text-transform:uppercase;">GATE Pool</div>
+              <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--gold);" id="lendGatePool">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Available to borrow</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center;">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-family:'Space Mono',monospace;text-transform:uppercase;">Interest Rate</div>
+              <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--green);">10%</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">Per year</div>
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div style="display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;">
+            <button id="lendTab1" onclick="setLendTab(1)" style="flex:1;padding:12px;font-size:14px;font-weight:600;background:none;border:none;border-bottom:2px solid var(--gold);color:var(--text);cursor:pointer;">zkLTC → GATE</button>
+            <button id="lendTab2" onclick="setLendTab(2)" style="flex:1;padding:12px;font-size:14px;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;">GATE → zkLTC</button>
+            <button id="lendTab3" onclick="setLendTab(3)" style="flex:1;padding:12px;font-size:14px;font-weight:600;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);cursor:pointer;">My Loans</button>
+          </div>
+
+          <!-- zkLTC → GATE -->
+          <div id="lendPanel1">
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+              <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Borrow GATE with zkLTC collateral</div>
+              <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Send zkLTC as collateral → receive 70% value in GATE tokens. Rate: 1 zkLTC = 1,000 GATE. Repay with 10% annual interest to get your zkLTC back.</div>
+              <div style="margin-bottom:14px;">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">zkLTC collateral amount</div>
+                <input id="zkCollateralAmt" type="number" step="0.01" placeholder="e.g. 0.1"
+                  style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"
+                  oninput="updateZkBorrowCalc()"/>
+                <div id="zkBorrowCalc" style="font-size:12px;color:var(--green);margin-top:6px;font-family:'Space Mono',monospace;"></div>
+              </div>
+              <button onclick="borrowGATEWithZk()" style="width:100%;padding:13px;border-radius:10px;background:var(--gold);color:#08090C;font-size:14px;font-weight:700;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Borrow GATE →</button>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
+              <div style="font-size:13px;font-weight:700;margin-bottom:10px;">How it works</div>
+              <div class="w-row"><span class="w-lbl">Collateral</span><span class="w-val">zkLTC</span></div>
+              <div class="w-row"><span class="w-lbl">Borrow</span><span class="w-val" style="color:var(--gold);">GATE (70% LTV)</span></div>
+              <div class="w-row"><span class="w-lbl">Rate</span><span class="w-val">1 zkLTC = 1,000 GATE</span></div>
+              <div class="w-row"><span class="w-lbl">Interest</span><span class="w-val" style="color:var(--green);">10% / year</span></div>
+              <div class="w-row"><span class="w-lbl">Liquidation</span><span class="w-val" style="color:var(--red);">at 85% LTV</span></div>
+            </div>
+          </div>
+
+          <!-- GATE → zkLTC -->
+          <div id="lendPanel2" style="display:none;">
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+              <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Borrow zkLTC with GATE collateral</div>
+              <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Send GATE as collateral → receive 70% value in zkLTC. Rate: 1,000 GATE = 1 zkLTC. Repay with 10% annual interest to get your GATE back.</div>
+              <div style="margin-bottom:14px;">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">GATE collateral amount</div>
+                <input id="gateCollateralAmt" type="number" placeholder="e.g. 1000"
+                  style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"
+                  oninput="updateGateBorrowCalc()"/>
+                <div id="gateBorrowCalc" style="font-size:12px;color:var(--green);margin-top:6px;font-family:'Space Mono',monospace;"></div>
+              </div>
+              <button onclick="borrowZkWithGATE()" style="width:100%;padding:13px;border-radius:10px;background:var(--silver);color:#08090C;font-size:14px;font-weight:700;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Borrow zkLTC →</button>
+            </div>
+          </div>
+
+          <!-- My Loans -->
+          <div id="lendPanel3" style="display:none;">
+            <div id="myLoansList"><div class="app-loader">Loading your loans...</div></div>
+          </div>
+
+        </div>
+      </div>
+      <div id="view-battle" style="display:none;">
+        <div class="feed-hdr">⚓ Battleship PvP</div>
+        <div id="battleLobby">
+          <!-- Lobby -->
+          <div style="padding:16px 20px;max-width:600px;margin:0 auto;">
+
+            <!-- Create game -->
+            <div style="background:linear-gradient(145deg,rgba(38,217,138,0.07),rgba(38,217,138,0.02));border:1px solid rgba(38,217,138,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+              <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                <div>
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Bet Amount</div>
+                  <input id="bsBetAmt" type="number" placeholder="e.g. 50" min="1"
+                    style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+                </div>
+                <div>
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token</div>
+                  <div style="display:flex;gap:8px;">
+                    <button id="bsTokenGATE" onclick="setBsToken('GATE')" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;">GATE</button>
+                    <button id="bsTokenZKLTC" onclick="setBsToken('zkLTC')" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">zkLTC</button>
+                  </div>
+                </div>
+              </div>
+              <button onclick="createBattleGame()" style="width:100%;padding:13px;border-radius:10px;background:var(--green);color:#08090C;font-size:14px;font-weight:700;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">⚔️ Create Game</button>
+            </div>
+
+            <!-- Open games -->
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+              <span>🔍 Open Games</span>
+              <button onclick="loadBattleLobby()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
+            </div>
+            <div id="openGamesList"><div class="app-loader">Loading...</div></div>
+          </div>
+        </div>
+
+        <!-- Game board (hidden initially) -->
+        <div id="battleGame" style="display:none;">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <span style="font-size:14px;font-weight:700;" id="battleStatus">Placing ships...</span>
+              <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="battleBetInfo"></span>
+            </div>
+            <button onclick="leaveBattleGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
+          </div>
+
+          <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+            <!-- My board -->
+            <div style="flex:1;min-width:280px;">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
+              <div id="myBoard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+              <div style="text-align:center;margin-top:10px;">
+                <button id="placeShipsBtn" onclick="randomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
+                <button id="readyBtn" onclick="setReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
+              </div>
+            </div>
+
+            <!-- Enemy board -->
+            <div style="flex:1;min-width:280px;">
+              <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;" id="enemyBoardLabel">Enemy Fleet</div>
+              <div id="enemyBoard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+            </div>
+          </div>
+
+          <!-- Ships to place -->
+          <div id="shipsPanel" style="padding:0 16px 16px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center;">Ships: <span id="shipsLeft" style="font-weight:700;color:var(--text);"></span></div>
+            <!-- Ship selector -->
+            <div id="shipSelector" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px;"></div>
+            <!-- Orientation toggle -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;">
+              <button id="orientBtn" onclick="toggleOrientation()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">↔ Horizontal</button>
+              <button onclick="clearMyShips()" style="background:var(--bg3);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">✕ Clear All</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);text-align:center;">Click a ship below, then click on your board to place it</div>
+          </div>
+
+          <div id="battleLog" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <div id="view-dice" style="display:none;">
+        <div class="feed-hdr">🎲 Dice Roll</div>
+        <div style="padding:20px;max-width:500px;margin:0 auto;">
+
+          <!-- Dice display -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:32px;margin-bottom:16px;text-align:center;">
+            <div style="font-size:80px;margin-bottom:16px;transition:all .3s;" id="diceEmoji">🎲</div>
+            <div style="font-size:14px;color:var(--muted);margin-bottom:24px;" id="diceResultText">Pick your number and bet to play</div>
+
+            <!-- Pick number -->
+            <div style="margin-bottom:20px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;">Pick a number (1-6)</div>
+              <div style="display:flex;gap:8px;justify-content:center;">
+                <button onclick="setDiceGuess(1)" id="dguess1" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;">1</button>
+                <button onclick="setDiceGuess(2)" id="dguess2" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;">2</button>
+                <button onclick="setDiceGuess(3)" id="dguess3" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;">3</button>
+                <button onclick="setDiceGuess(4)" id="dguess4" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;">4</button>
+                <button onclick="setDiceGuess(5)" id="dguess5" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;">5</button>
+                <button onclick="setDiceGuess(6)" id="dguess6" style="width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:18px;font-weight:700;cursor:pointer;transition:all .2s;">6</button>
+              </div>
+            </div>
+
+            <!-- Pick bet -->
+            <div style="margin-bottom:20px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;">Pick your bet</div>
+              <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button onclick="setDiceBet(50)" id="dbet50" style="flex:1;min-width:60px;padding:10px;border-radius:10px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;">50</button>
+                <button onclick="setDiceBet(100)" id="dbet100" style="flex:1;min-width:60px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;">100</button>
+                <button onclick="setDiceBet(200)" id="dbet200" style="flex:1;min-width:60px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;">200</button>
+                <button onclick="setDiceBet(500)" id="dbet500" style="flex:1;min-width:60px;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:14px;font-weight:700;cursor:pointer;">500</button>
+              </div>
+              <div style="font-size:13px;color:var(--muted);margin-top:10px;">Win: <span id="diceWinAmt" style="color:var(--green);font-weight:700;">242.5 GATE</span> (5× − 3% fee)</div>
+            </div>
+
+            <button onclick="rollDice()" id="rollBtn"
+              style="width:100%;padding:16px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#e9d5ff;font-size:16px;font-weight:700;transition:all .2s;"
+              onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+              🎲 Roll Dice
+            </button>
+          </div>
+
+          <!-- Stats -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;">
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;">
+              <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gold);" id="diceHousePool">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">House Pool</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;">
+              <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--green);" id="diceMyWins">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">My Wins</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center;">
+              <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--red);" id="diceMyLosses">—</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px;">My Losses</div>
+            </div>
+          </div>
+
+          <!-- Game history -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">My Recent Games</div>
+            <div id="diceHistory"><div style="font-size:13px;color:var(--muted);">Connect wallet to see history</div></div>
+          </div>
+        </div>
+      </div>
+      <div id="view-lottery" style="display:none;">
+        <div class="feed-hdr">🎰 GATE Lottery</div>
+        <div style="padding:20px;max-width:560px;margin:0 auto;">
+
+          <!-- Current Round -->
+          <div style="background:linear-gradient(145deg,rgba(245,200,66,0.09),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:24px;margin-bottom:16px;text-align:center;">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Round #<span id="lotteryRound">—</span></div>
+            <div style="font-size:48px;font-weight:700;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:4px;" id="lotteryPot">— GATE</div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Current Prize Pool</div>
+
+            <!-- Players progress -->
+            <div style="margin-bottom:20px;">
+              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
+                <span>Players</span>
+                <span><span id="lotteryPlayers">0</span> / 20</span>
+              </div>
+              <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
+                <div id="lotteryBar" style="height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:4px;width:0%;transition:width .8s ease;"></div>
+              </div>
+            </div>
+
+            <!-- My tickets -->
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:20px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">My tickets this round</div>
+              <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--gold);" id="myLotteryTickets">—</div>
+            </div>
+
+            <!-- Buy tickets -->
+            <div style="margin-bottom:12px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many tickets? (1-5 per tx, 10 GATE each)</div>
+              <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
+                <button onclick="setLotteryQty(1)" id="lqty1" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:16px;font-weight:700;cursor:pointer;">1</button>
+                <button onclick="setLotteryQty(2)" id="lqty2" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">2</button>
+                <button onclick="setLotteryQty(3)" id="lqty3" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">3</button>
+                <button onclick="setLotteryQty(5)" id="lqty5" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">5</button>
+              </div>
+              <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cost: <span id="lotteryCost" style="color:var(--gold);font-weight:700;">10 GATE</span></div>
+              <button onclick="buyLotteryTicket()" id="buyTicketBtn"
+                style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;transition:all .2s;"
+                onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+                🎟️ Buy Ticket
+              </button>
+            </div>
+          </div>
+
+          <!-- Rules -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">How it works</div>
+            <div class="w-row"><span class="w-lbl">Ticket price</span><span class="w-val" style="color:var(--gold);">10 GATE</span></div>
+            <div class="w-row"><span class="w-lbl">Max players</span><span class="w-val">20</span></div>
+            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">95% of pot</span></div>
+            <div class="w-row"><span class="w-lbl">Platform fee</span><span class="w-val">5%</span></div>
+            <div class="w-row"><span class="w-lbl">Draw</span><span class="w-val">Auto when full</span></div>
+          </div>
+
+          <!-- Past rounds -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Past Winners</div>
+            <div id="pastLotteryRounds"><div style="font-size:13px;color:var(--muted);">Loading...</div></div>
+          </div>
+        </div>
+      </div>
+      <div id="view-dao" style="display:none;">
+        <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🏛️ DAO Voting</span>
+          <button onclick="openNewProposalModal()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:6px 14px;font-size:13px;font-weight:700;">+ Propose</button>
+        </div>
+
+        <!-- Stats -->
+        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);">
+          <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gold);" id="daoProposalCount">—</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Total Proposals</div>
+          </div>
+          <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--green);">100</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">GATE to Propose</div>
+          </div>
+          <div style="flex:1;padding:12px 20px;text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--silver);">1</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">GATE to Vote</div>
+          </div>
+        </div>
+
+        <div id="daoProposals"><div class="app-loader">Loading proposals...</div></div>
+      </div>
+
+      <!-- New Proposal Modal -->
+      <div class="modal-overlay" id="proposalModal">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:480px;position:relative;">
+          <button class="modal-close-btn" onclick="document.getElementById('proposalModal').classList.remove('open')">✕</button>
+          <div style="font-size:20px;font-weight:700;margin-bottom:6px;">New Proposal</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Need 100 GATE to create a proposal. Voting lasts 3 days.</div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Title *</div>
+            <input id="propTitle" placeholder="e.g. Increase staking APR to 500%" maxlength="100"
+              style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Description *</div>
+            <textarea id="propDesc" placeholder="Describe your proposal in detail..." maxlength="1000"
+              style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;resize:vertical;min-height:100px;"></textarea>
+          </div>
+          <button onclick="submitProposal()" id="submitProposalBtn"
+            style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;">
+            Submit Proposal
+          </button>
+        </div>
+      </div>
+
       <div id="view-market" style="display:none;">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span>🛒 NFT Marketplace</span>
@@ -937,11 +1357,11 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <div class="widget"><div class="widget-title">🟡 Your GATE</div><div class="gate-bal" id="gateBal">—</div><div class="gate-bal-lbl">GATE tokens</div></div>
       <div class="widget">
         <div class="widget-title">📊 Rewards</div>
-        <div class="w-row"><span class="w-lbl">Like sent</span><span class="w-val">0.1 GATE</span></div>
-        <div class="w-row"><span class="w-lbl">Gold Pass</span><span class="w-val">2×</span></div>
-        <div class="w-row"><span class="w-lbl">Silver Pass</span><span class="w-val">1.3×</span></div>
-        <div class="w-row"><span class="w-lbl">Staking fee</span><span class="w-val">0%</span></div>
-        <div class="w-row"><span class="w-lbl">DEX fee</span><span class="w-val">0.3%</span></div>
+        <div class="w-row"><span class="w-lbl">Free like</span><span class="w-val" style="color:var(--text);">0.1 GATE</span></div>
+        <div class="w-row"><span class="w-lbl">Silver like</span><span class="w-val" style="color:var(--silver);">0.13 GATE</span></div>
+        <div class="w-row"><span class="w-lbl">Gold like</span><span class="w-val" style="color:var(--gold);">0.2 GATE</span></div>
+        <div class="w-row"><span class="w-lbl">Staking fee</span><span class="w-val" style="color:var(--green);">0%</span></div>
+        <div class="w-row"><span class="w-lbl">Reward pool</span><span class="w-val" id="rewardsPoolBal">—</span></div>
       </div>
       <div class="widget">
         <div class="widget-title">🔗 Contracts</div>
@@ -957,6 +1377,12 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <button class="mob-btn" onclick="focusComposer();showTab('feed')"><span class="mob-ico">✍️</span>Post</button>
     <button class="mob-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="mob-ico">🔄</span>Swap</button>
     <button class="mob-btn" onclick="showTab('staking')"><span class="mob-ico">💎</span>Stake</button>
+    <button class="mob-btn" onclick="showTab('faucet')"><span class="mob-ico">🚰</span>Faucet</button>
+    <button class="mob-btn" onclick="showTab('lending')"><span class="mob-ico">🏦</span>Lend</button>
+    <button class="mob-btn" onclick="showTab('battle')"><span class="mob-ico">⚓</span>Battle</button>
+    <button class="mob-btn" onclick="showTab('dice')"><span class="mob-ico">🎲</span>Dice</button>
+    <button class="mob-btn" onclick="showTab('lottery')"><span class="mob-ico">🎰</span>Lottery</button>
+    <button class="mob-btn" onclick="showTab('dao')"><span class="mob-ico">🏛️</span>DAO</button>
     <button class="mob-btn" onclick="showTab('market')"><span class="mob-ico">🛒</span>Market</button>
     <button class="mob-btn" onclick="showTab('explore')"><span class="mob-ico">🔍</span>Explore</button>
     <button class="mob-btn" onclick="showTab('notifs')"><span class="mob-ico">🔔</span>Notifs</button>
@@ -981,6 +1407,77 @@ const GATE_STAKING  = '0xDD2d80b7c31622D084905899b4d40b815cF01bF8';
 const GATE_PRESALE  = '0xd1BD1853913F1CA242cD4D88a1F50EB0a6ba0854';
 const TOKEN_FACTORY   = '0xb69Df265Ac37A3E6AB2C940cFA395FE7fF0C0A60';
 const NFT_MARKET      = '0x2231E1aDcbb1FB59055d6442207Ac029553e5859';
+const GATE_REWARDS    = '0x1de30bC3490DB9ea1514DA791aA4dAE08e961E91';
+const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
+const GATE_LOTTERY    = '0xe57Af825502EE1E29E1e2027038a0F5E00ee7F7E';
+const GATE_DICE         = '0x3f72225815D7087f7b22A5C9600AEE3B0E5dB798';
+const BATTLESHIP_ADDR   = '0xf4947C9780Df5ab71b1B7825660d3B7a6399d7a3';
+const GATE_LENDING      = '0x7b650B1A6620c5903ccA91fED6a5Ebe53A72347A';
+const GATE_FAUCET       = '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74';
+const FAUCET_ABI        = [
+  'function claim() nonpayable',
+  'function hasClaimed(address) view returns(bool)',
+  'function faucetBalance() view returns(uint256)',
+  'function claimCount() view returns(uint256)',
+];
+const LENDING_ABI       = [
+  'function borrowGateWithZk() payable',
+  'function repayGateWithZk(uint256) nonpayable',
+  'function borrowZkWithGate(uint256) nonpayable',
+  'function repayZkWithGate(uint256) payable',
+  'function calcInterest(uint256,uint256) view returns(uint256)',
+  'function getZkLoanInfo(uint256) view returns(address,uint256,uint256,uint256,uint256,bool)',
+  'function getGateLoanInfo(uint256) view returns(address,uint256,uint256,uint256,uint256,bool)',
+  'function getMyZkLoans() view returns(uint256[])',
+  'function getMyGateLoans() view returns(uint256[])',
+  'function gatePool() view returns(uint256)',
+  'function zkLoanCount() view returns(uint256)',
+  'function gateLoanCount() view returns(uint256)',
+];
+const BATTLESHIP_ABI    = [
+  'function createGame(uint256,uint8) payable returns(uint256)',
+  'function joinGame(uint256) payable',
+  'function cancelGame(uint256)',
+  'function declareWinner(uint256,address)',
+  'function getGame(uint256) view returns(tuple(address player1,address player2,uint256 betAmount,uint8 token,uint8 status,address winner))',
+  'function gameCount() view returns(uint256)',
+];
+const DICE_ABI        = [
+  'function roll(uint8,uint256) nonpayable',
+  'function getStats() view returns(uint256,uint256,uint256)',
+  'function getMyGames(address) view returns(tuple(address player,uint256 bet,uint8 guess,uint8 result,bool won,uint256 payout,uint256 timestamp)[])',
+  'function housePool() view returns(uint256)',
+  'function playerWins(address) view returns(uint256)',
+  'function playerLosses(address) view returns(uint256)',
+];
+const LOTTERY_ABI     = [
+  'function buyTicket(uint256) nonpayable',
+  'function draw() nonpayable',
+  'function getCurrentRound() view returns(uint256,uint256,uint256,bool)',
+  'function getRoundPlayers(uint256) view returns(address[])',
+  'function getMyTickets(uint256) view returns(uint256)',
+  'function rounds(uint256) view returns(uint256,address[],address,uint256,bool,uint256)',
+  'function currentRound() view returns(uint256)',
+  'function TICKET_PRICE() view returns(uint256)',
+  'function MAX_PLAYERS() view returns(uint256)',
+];
+const DAO_ABI         = [
+  'function createProposal(string,string) returns(uint256)',
+  'function vote(uint256,bool)',
+  'function finalize(uint256)',
+  'function cancelProposal(uint256)',
+  'function getProposals(uint256,uint256) view returns(tuple(uint256 id,address proposer,string title,string description,uint256 forVotes,uint256 againstVotes,uint256 endTime,uint8 status)[])',
+  'function proposalCount() view returns(uint256)',
+  'function hasVoted(uint256,address) view returns(bool)',
+  'function votedFor(uint256,address) view returns(bool)',
+  'function MIN_TOKENS_TO_PROPOSE() view returns(uint256)',
+  'function MIN_TOKENS_TO_VOTE() view returns(uint256)',
+];
+const REWARDS_ABI     = [
+  'function sendLikeReward(address author) nonpayable',
+  'function getRewardFor(address author) view returns(uint256)',
+  'function poolBalance() view returns(uint256)',
+];
 const NFT_MARKET_ABI  = [
   'function listNFT(address,uint256,uint256) returns(uint256)',
   'function buyNFT(uint256) payable',
@@ -1044,8 +1541,30 @@ function goLanding(){
 function scrollSec(id){ document.querySelector(id)?.scrollIntoView({behavior:'smooth'}); }
 
 // ── WALLET (ethers v6) ──
+async function connectWithWallet(type){
+  document.getElementById('walletModal').classList.remove('open');
+  if(type==='trust'){
+    // Trust Wallet injects as window.ethereum on mobile
+    if(!window.ethereum){
+      showToast('Open in Trust Wallet browser','err');
+      window.open('https://link.trustwallet.com/open_url?coin_id=60&url='+encodeURIComponent(window.location.href),'_blank');
+      return;
+    }
+  }
+  await connectWallet();
+}
+
 async function connectWallet(){
-  if(!window.ethereum){ showToast('Install MetaMask','err'); return; }
+  if(!window.ethereum){
+    // Check for Trust Wallet specifically
+    if(window.trustwallet){
+      window.ethereum = window.trustwallet;
+    } else {
+      // Show wallet options modal
+      document.getElementById('walletModal').classList.add('open');
+      return;
+    }
+  }
   try{
     provider = new ethers.BrowserProvider(window.ethereum);
     await provider.send('eth_requestAccounts',[]);
@@ -1060,6 +1579,7 @@ async function connectWallet(){
     loadGateBal();
     loadPosts();
     updateNotifBadge();
+    loadRewardsPool();
   } catch(e){ showToast('Connection cancelled','err'); }
 }
 
@@ -1107,6 +1627,12 @@ function showTab(tab){
   document.getElementById('view-notifs').style.display=tab==='notifs'?'block':'none';
   document.getElementById('view-explore').style.display=tab==='explore'?'block':'none';
   document.getElementById('view-market').style.display=tab==='market'?'block':'none';
+  document.getElementById('view-dao').style.display=tab==='dao'?'block':'none';
+  document.getElementById('view-lottery').style.display=tab==='lottery'?'block':'none';
+  document.getElementById('view-dice').style.display=tab==='dice'?'block':'none';
+  document.getElementById('view-battle').style.display=tab==='battle'?'block':'none';
+  document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
+  document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
   document.querySelectorAll('.side-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab)?.classList.add('active');
   document.querySelectorAll('.mob-btn').forEach((b,i)=>b.classList.toggle('active',(tab==='feed'&&i===0)||(tab==='profile'&&i===1)));
@@ -1120,6 +1646,12 @@ function showTab(tab){
   if(tab==='notifs') loadNotifications();
   if(tab==='explore') loadExploreDefault();
   if(tab==='market') loadMarketplace();
+  if(tab==='dao') loadDAO();
+  if(tab==='lottery') loadLottery();
+  if(tab==='dice') loadDice();
+  if(tab==='battle'){ loadBattleLobby(); clearInterval(bsTimer); }
+  if(tab==='lending') loadLending();
+  if(tab==='faucet') loadFaucet();
 }
 function switchFeedTab(tab,el){
   document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
@@ -1194,6 +1726,8 @@ async function createPost(){
     await sb.from('posts').insert({author_wallet:userAddr,content,image_urls:pendingImages});
     pendingImages = [];
     renderImgPreviews();
+    // Check if any follower has bell on for this user
+    checkBellFollowers(userAddr);
     document.getElementById('postText').value='';
     updateComposer();
     showToast('Posted! ✓','ok');
@@ -1225,7 +1759,9 @@ function renderPost(post,liked){
   const name=u.username||sAddr(post.author_wallet);
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
-  return `<div class="post-card"><div class="post-inner"><div class="post-av">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name">${esc(name)}</span>${badge}<span class="post-wlt">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span></div><div class="post-txt">${esc(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post.likes_count||0}</span></button><button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button></div></div></div></div>`;
+  const repostHeader=post.repost_by?`<div style="font-size:11px;color:var(--muted);padding:8px 20px 0;display:flex;align-items:center;gap:5px;"><span>🔁</span><span style="font-weight:600;color:var(--muted);">${esc(post.repost_by_name||sAddr(post.repost_by))} reposted</span></div>`:'';
+  return `${repostHeader}<div class="post-card"><div class="post-inner"><div class="post-av">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name">${esc(name)}</span>${badge}<span class="post-wlt">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span></div><div class="post-txt">${esc(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post.likes_count||0}</span></button><button class="act-btn" onclick="repostPost('${post.id}','${post.author_wallet}',this)" id="rp-${post.id}"><span>🔁</span><span class="act-cnt" id="rpcnt-${post.id}">${post.reposts_count||0}</span></button>
+          <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button></div></div></div></div>`;
 }
 async function likePost(postId,authorWallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
@@ -1241,9 +1777,12 @@ async function likePost(postId,authorWallet,btn){
   btn.disabled=true;
   try{
     await switchToLitVM();
-    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
-    showToast('Sending 0.1 GATE...','ok');
-    const tx=await gate.transfer(authorWallet,ethers.parseEther('0.1'));
+    const rewards=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,signer);
+    // Get reward amount for this author (based on Gold/Silver Pass)
+    const rewardAmt=await rewards.getRewardFor(authorWallet);
+    const rewardFmt=parseFloat(ethers.formatEther(rewardAmt)).toFixed(2);
+    showToast('Sending '+rewardFmt+' GATE...','ok');
+    const tx=await rewards.sendLikeReward(authorWallet);
     await tx.wait();
     await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
     await createNotif(authorWallet,'like',postId);
@@ -1251,7 +1790,7 @@ async function likePost(postId,authorWallet,btn){
     await sb.from('posts').update({likes_count:c}).eq('id',postId);
     btn.classList.add('liked'); btn.querySelector('span').textContent='❤️';
     document.getElementById('cnt-'+postId).textContent=c;
-    showToast('❤️ Liked! 0.1 GATE sent','ok');
+    showToast('❤️ Liked! GATE reward sent to author','ok');
     loadGateBal();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
   btn.disabled=false;
@@ -1296,7 +1835,13 @@ async function loadProfile(wallet){
         <div class="pstat"><div class="pstat-n">${fc||0}</div><div class="pstat-l">Followers</div></div>
         <div class="pstat"><div class="pstat-n">${fic||0}</div><div class="pstat-l">Following</div></div>
       </div>
-      ${isOwn?`<button class="edit-prof-btn" onclick="openEditModal()">Edit Profile</button>`:`<button class="follow-btn${isF?' following':''}" onclick="toggleFollow('${target}',this)">${isF?'Following':'Follow'}</button>`}
+      ${isOwn?
+        `<button class="edit-prof-btn" onclick="openEditModal()">Edit Profile</button>`:
+        `<div style="display:flex;gap:8px;align-items:center;">
+          <button class="follow-btn${isF?' following':''}" onclick="toggleFollow('${target}',this)">${isF?'Following':'Follow'}</button>
+          ${isF?`<button title="${isBellOn('${target}')?'Notifications on':'Get notified of new posts'}" onclick="toggleBell('${target}',this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:14px;cursor:pointer;color:${isBellOn('${target}')?'var(--gold)':'var(--muted)'};transition:all .2s;">🔔</button>`:''}
+        </div>`
+      }
     </div>
     <div id="profPosts"><div class="app-loader">Loading...</div></div>`;
   const {data:posts}=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').eq('author_wallet',target).order('created_at',{ascending:false});
@@ -1309,9 +1854,49 @@ async function loadProfile(wallet){
 async function toggleFollow(wallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const f=btn.classList.contains('following');
-  if(f){await sb.from('follows').delete().eq('follower_wallet',userAddr).eq('following_wallet',wallet);btn.textContent='Follow';btn.classList.remove('following');}
-  else{await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});btn.textContent='Following';btn.classList.add('following');await createNotif(wallet,'follow');}
+  if(f){
+    await sb.from('follows').delete().eq('follower_wallet',userAddr).eq('following_wallet',wallet);
+    btn.textContent='Follow';btn.classList.remove('following');
+    // Remove bell if was set
+    removeBellNotif(wallet);
+  } else {
+    await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});
+    btn.textContent='Following';btn.classList.add('following');
+    await createNotif(wallet,'follow');
+  }
 }
+
+// Bell notifications - stored in localStorage
+function getBellList(){
+  try{ return JSON.parse(localStorage.getItem('og_bells_'+(userAddr||''))||'[]'); }catch{ return []; }
+}
+function saveBellList(list){
+  try{ localStorage.setItem('og_bells_'+(userAddr||''),JSON.stringify(list)); }catch{}
+}
+function toggleBell(wallet, btnEl){
+  const list=getBellList();
+  const idx=list.indexOf(wallet);
+  if(idx>=0){
+    list.splice(idx,1);
+    btnEl.textContent='🔔';
+    btnEl.title='Get notified of new posts';
+    btnEl.style.color='var(--muted)';
+    showToast('Notifications off','ok');
+  } else {
+    list.push(wallet);
+    btnEl.textContent='🔔';
+    btnEl.title='Notifications on';
+    btnEl.style.color='var(--gold)';
+    showToast('You will be notified of new posts!','ok');
+  }
+  saveBellList(list);
+}
+function removeBellNotif(wallet){
+  const list=getBellList();
+  const idx=list.indexOf(wallet);
+  if(idx>=0){ list.splice(idx,1); saveBellList(list); }
+}
+function isBellOn(wallet){ return getBellList().includes(wallet); }
 
 // ── EDIT PROFILE ──
 function openEditModal(){
@@ -1422,6 +2007,939 @@ async function executeMint(){
     closeMintModal();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
   btn.textContent='Mint Now';btn.disabled=false;
+}
+
+// ── FAUCET ──
+async function loadFaucet(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const faucet=new ethers.Contract(GATE_FAUCET,FAUCET_ABI,p);
+    const [bal,count]=await Promise.all([faucet.faucetBalance(),faucet.claimCount()]);
+    document.getElementById('faucetBalance').textContent=parseFloat(ethers.formatEther(bal)).toFixed(0);
+    document.getElementById('faucetClaimCount').textContent=count.toString();
+    if(userAddr){
+      const hasClaimed=await faucet.hasClaimed(userAddr);
+      const statusBox=document.getElementById('faucetStatusBox');
+      const btn=document.getElementById('claimFaucetBtn');
+      if(hasClaimed){
+        statusBox.innerHTML='<span style="color:var(--green);">✓ You already claimed your 100 GATE!</span>';
+        statusBox.style.borderColor='rgba(38,217,138,0.3)';
+        btn.disabled=true;
+        btn.style.opacity='.4';
+        btn.style.cursor='not-allowed';
+        btn.textContent='Already Claimed ✓';
+      } else {
+        statusBox.innerHTML='<span style="color:var(--green);">✓ You are eligible to claim 100 GATE!</span>';
+        statusBox.style.borderColor='rgba(38,217,138,0.3)';
+        btn.disabled=false;
+        btn.style.opacity='1';
+        btn.style.cursor='pointer';
+        btn.textContent='🚰 Claim 100 GATE';
+      }
+    }
+  }catch(e){}
+}
+
+async function claimFaucet(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const btn=document.getElementById('claimFaucetBtn');
+  try{
+    await switchToLitVM();
+    const faucet=new ethers.Contract(GATE_FAUCET,FAUCET_ABI,signer);
+    btn.textContent='Claiming...';btn.disabled=true;
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await faucet.claim();
+    await tx.wait();
+    showToast('🎉 100 GATE claimed! Welcome to OpenGate!','ok');
+    loadFaucet();
+    loadGateBal();
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,60),'err');
+    btn.disabled=false;
+    btn.textContent='🚰 Claim 100 GATE';
+  }
+}
+
+// ── LENDING ──
+let lendTabIdx = 1;
+
+function setLendTab(n){
+  lendTabIdx=n;
+  [1,2,3].forEach(i=>{
+    const tab=document.getElementById('lendTab'+i);
+    const panel=document.getElementById('lendPanel'+i);
+    if(tab){tab.style.borderBottomColor=i===n?'var(--gold)':'transparent';tab.style.color=i===n?'var(--text)':'var(--muted)';}
+    if(panel) panel.style.display=i===n?'block':'none';
+  });
+  if(n===3) loadMyLoans();
+}
+
+function updateZkBorrowCalc(){
+  const amt=parseFloat(document.getElementById('zkCollateralAmt').value)||0;
+  const gate=(amt*1000*0.7).toFixed(0);
+  document.getElementById('zkBorrowCalc').textContent=amt>0?'You receive: '+gate+' GATE':'';
+}
+
+function updateGateBorrowCalc(){
+  const amt=parseFloat(document.getElementById('gateCollateralAmt').value)||0;
+  const zk=((amt/1000)*0.7).toFixed(4);
+  document.getElementById('gateBorrowCalc').textContent=amt>0?'You receive: '+zk+' zkLTC':'';
+}
+
+async function loadLending(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,p);
+    const pool=await lend.gatePool();
+    document.getElementById('lendGatePool').textContent=parseFloat(ethers.formatEther(pool)).toFixed(0)+' GATE';
+  }catch(e){}
+}
+
+async function borrowGATEWithZk(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const amt=document.getElementById('zkCollateralAmt').value.trim();
+  if(!amt||parseFloat(amt)<=0){showToast('Enter collateral amount','err');return;}
+  try{
+    await switchToLitVM();
+    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,signer);
+    const value=ethers.parseEther(amt);
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await lend.borrowGateWithZk({value});
+    await tx.wait();
+    showToast('GATE borrowed successfully! 🎉','ok');
+    document.getElementById('zkCollateralAmt').value='';
+    document.getElementById('zkBorrowCalc').textContent='';
+    loadLending();loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+async function borrowZkWithGATE(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const amt=document.getElementById('gateCollateralAmt').value.trim();
+  if(!amt||parseFloat(amt)<=0){showToast('Enter collateral amount','err');return;}
+  try{
+    await switchToLitVM();
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,signer);
+    const amount=ethers.parseEther(amt);
+    showToast('Approving GATE...','ok');
+    await (await gate.approve(GATE_LENDING,amount)).wait();
+    showToast('Borrowing zkLTC...','ok');
+    const tx=await lend.borrowZkWithGate(amount);
+    await tx.wait();
+    showToast('zkLTC borrowed! 🎉','ok');
+    document.getElementById('gateCollateralAmt').value='';
+    document.getElementById('gateBorrowCalc').textContent='';
+    loadLending();loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+async function loadMyLoans(){
+  if(!userAddr){document.getElementById('myLoansList').innerHTML='<div class="app-loader">Connect wallet</div>';return;}
+  const el=document.getElementById('myLoansList');
+  el.innerHTML='<div class="app-loader">Loading...</div>';
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,p);
+    const [zkIds,gateIds]=await Promise.all([lend.getMyZkLoans(),lend.getMyGateLoans()]);
+    let html='';
+    // ZK loans
+    for(const id of zkIds){
+      const [,collateral,borrowed,interest,totalDue,active]=await lend.getZkLoanInfo(id);
+      if(!active) continue;
+      html+=`<div style="background:var(--bg2);border:1px solid var(--border-g);border-radius:var(--r);padding:16px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:14px;font-weight:700;">Loan #${id} — zkLTC → GATE</div>
+          <span style="font-size:11px;padding:2px 8px;border-radius:100px;background:rgba(38,217,138,0.1);color:var(--green);">Active</span>
+        </div>
+        <div class="w-row"><span class="w-lbl">Collateral</span><span class="w-val">${parseFloat(ethers.formatEther(collateral)).toFixed(4)} zkLTC</span></div>
+        <div class="w-row"><span class="w-lbl">Borrowed</span><span class="w-val" style="color:var(--gold);">${parseFloat(ethers.formatEther(borrowed)).toFixed(2)} GATE</span></div>
+        <div class="w-row"><span class="w-lbl">Interest</span><span class="w-val" style="color:var(--red);">${parseFloat(ethers.formatEther(interest)).toFixed(4)} GATE</span></div>
+        <div class="w-row"><span class="w-lbl">Total due</span><span class="w-val">${parseFloat(ethers.formatEther(totalDue)).toFixed(4)} GATE</span></div>
+        <button onclick="repayZkLoan(${id},'${ethers.formatEther(totalDue)}')" style="width:100%;margin-top:12px;padding:10px;border-radius:9px;background:var(--green);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Repay & Get zkLTC Back</button>
+      </div>`;
+    }
+    // GATE loans
+    for(const id of gateIds){
+      const [,collateral,borrowed,interest,totalDue,active]=await lend.getGateLoanInfo(id);
+      if(!active) continue;
+      html+=`<div style="background:var(--bg2);border:1px solid var(--border-s);border-radius:var(--r);padding:16px;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:14px;font-weight:700;">Loan #${id} — GATE → zkLTC</div>
+          <span style="font-size:11px;padding:2px 8px;border-radius:100px;background:rgba(38,217,138,0.1);color:var(--green);">Active</span>
+        </div>
+        <div class="w-row"><span class="w-lbl">Collateral</span><span class="w-val">${parseFloat(ethers.formatEther(collateral)).toFixed(2)} GATE</span></div>
+        <div class="w-row"><span class="w-lbl">Borrowed</span><span class="w-val" style="color:var(--silver);">${parseFloat(ethers.formatEther(borrowed)).toFixed(4)} zkLTC</span></div>
+        <div class="w-row"><span class="w-lbl">Interest</span><span class="w-val" style="color:var(--red);">${parseFloat(ethers.formatEther(interest)).toFixed(6)} zkLTC</span></div>
+        <div class="w-row"><span class="w-lbl">Total due</span><span class="w-val">${parseFloat(ethers.formatEther(totalDue)).toFixed(6)} zkLTC</span></div>
+        <button onclick="repayGateLoan(${id},'${ethers.formatEther(totalDue)}')" style="width:100%;margin-top:12px;padding:10px;border-radius:9px;background:var(--silver);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">Repay & Get GATE Back</button>
+      </div>`;
+    }
+    el.innerHTML=html||'<div class="app-empty"><div class="app-empty-ico">🏦</div>No active loans</div>';
+  }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+async function repayZkLoan(loanId, totalDue){
+  try{
+    await switchToLitVM();
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,signer);
+    const amount=ethers.parseEther(totalDue);
+    showToast('Approving GATE...','ok');
+    await (await gate.approve(GATE_LENDING,amount)).wait();
+    showToast('Repaying loan...','ok');
+    await (await lend.repayGateWithZk(loanId)).wait();
+    showToast('Loan repaid! zkLTC returned 🎉','ok');
+    loadMyLoans();loadGateBal();loadLending();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+async function repayGateLoan(loanId, totalDue){
+  try{
+    await switchToLitVM();
+    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,signer);
+    const value=ethers.parseEther(totalDue);
+    showToast('Repaying loan...','ok');
+    await (await lend.repayZkWithGate(loanId,{value})).wait();
+    showToast('Loan repaid! GATE returned 🎉','ok');
+    loadMyLoans();loadGateBal();loadLending();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+// ── BATTLESHIP ──
+let bsToken = 'GATE';
+let currentBsGame = null;
+let myShips = [];
+let myShots = [];
+let enemyShots = [];
+let shipsPlaced = false;
+let bsTimer = null;
+const SHIP_SIZES = [4,3,3,2,2,2,1,1,1,1];
+const CELL_STYLES = {
+  empty:'background:var(--bg3);border:1px solid var(--border);',
+  ship:'background:rgba(38,217,138,0.3);border:1px solid var(--green);',
+  hit:'background:rgba(255,77,77,0.5);border:1px solid var(--red);',
+  miss:'background:rgba(90,100,120,0.3);border:1px solid var(--muted);',
+  sunk:'background:rgba(255,77,77,0.8);border:1px solid var(--red);'
+};
+
+function setBsToken(t){
+  bsToken=t;
+  ['GATE','zkLTC'].forEach(tok=>{
+    const btn=document.getElementById('bsToken'+tok);
+    if(!btn) return;
+    if(tok===t){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+}
+
+async function loadBattleLobby(){
+  const el=document.getElementById('openGamesList');
+  el.innerHTML='<div class="app-loader">Loading...</div>';
+  try{
+    const {data:games}=await sb.from('battleship_games')
+      .select('*').eq('status','waiting').order('created_at',{ascending:false}).limit(20);
+    if(!games||games.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one and wait for an opponent!</div>';
+      return;
+    }
+    el.innerHTML=games.map(g=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;">
+        <div>
+          <div style="font-size:14px;font-weight:700;">${sAddr(g.player1_wallet)} <span style="color:var(--muted);font-weight:400;">challenges you</span></div>
+          <div style="font-size:13px;color:var(--gold);font-family:'Space Mono',monospace;margin-top:4px;">💰 ${g.bet_amount} ${g.bet_token} each</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${tAgo(g.created_at)} ago</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          ${userAddr&&g.player1_wallet===userAddr?
+            `<button onclick="cancelBattleGame('${g.id}')" style="background:var(--bg3);border:1px solid var(--border);color:var(--red);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;">Cancel</button>`:
+            `<button onclick="joinBattleGame('${g.id}','${g.bet_amount}','${g.bet_token}')" style="background:var(--gold);color:#08090C;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button>`
+          }
+        </div>
+      </div>`).join('');
+  }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+async function createBattleGame(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const amt=document.getElementById('bsBetAmt').value.trim();
+  if(!amt||parseFloat(amt)<=0){showToast('Enter bet amount','err');return;}
+  try{
+    await switchToLitVM();
+    const amtWei=ethers.parseEther(amt);
+    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,signer);
+
+    if(bsToken==='GATE'){
+      const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+      showToast('Approving GATE...','ok');
+      await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
+      showToast('Creating game...','ok');
+      const tx=await bs.createGame(amtWei,0);
+      const receipt=await tx.wait();
+      // Get game ID from event
+      const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
+      let gameId=0;
+      for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p) gameId=Number(p.args.id);}catch{}}
+      // Save to Supabase
+      await sb.from('battleship_games').insert({
+        player1_wallet:userAddr,bet_amount:amt,bet_token:'GATE',
+        status:'waiting',contract_game_id:gameId
+      });
+    } else {
+      showToast('Creating game...','ok');
+      const tx=await bs.createGame(amtWei,1,{value:amtWei});
+      const receipt=await tx.wait();
+      const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
+      let gameId=0;
+      for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p) gameId=Number(p.args.id);}catch{}}
+      await sb.from('battleship_games').insert({
+        player1_wallet:userAddr,bet_amount:amt,bet_token:'zkLTC',
+        status:'waiting',contract_game_id:gameId
+      });
+    }
+    showToast('Game created! Waiting for opponent... ⚓','ok');
+    document.getElementById('bsBetAmt').value='';
+    loadBattleLobby();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+async function joinBattleGame(gameDbId, betAmt, betToken){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    // Get contract game id
+    const {data:game}=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
+    if(!game){showToast('Game not found','err');return;}
+    await switchToLitVM();
+    const amtWei=ethers.parseEther(betAmt);
+    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,signer);
+    if(betToken==='GATE'){
+      const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+      showToast('Approving GATE...','ok');
+      await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
+      await (await bs.joinGame(game.contract_game_id)).wait();
+    } else {
+      await (await bs.joinGame(game.contract_game_id,{value:amtWei})).wait();
+    }
+    await sb.from('battleship_games').update({
+      player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet
+    }).eq('id',gameDbId);
+    showToast('Joined! Place your ships ⚓','ok');
+    startBattleGame(gameDbId);
+    loadBattleLobby();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+async function cancelBattleGame(gameDbId){
+  try{
+    const {data:game}=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
+    await switchToLitVM();
+    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,signer);
+    await (await bs.cancelGame(game.contract_game_id)).wait();
+    await sb.from('battleship_games').update({status:'cancelled'}).eq('id',gameDbId);
+    showToast('Game cancelled, bet refunded','ok');
+    loadBattleLobby();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+function startBattleGame(gameDbId){
+  currentBsGame=gameDbId;
+  myShips=[];myShots=[];enemyShots=[];shipsPlaced=false;
+  document.getElementById('battleLobby').style.display='none';
+  document.getElementById('battleGame').style.display='block';
+  renderBoards();
+  document.getElementById('readyBtn').style.display='none';
+  document.getElementById('placeShipsBtn').style.display='inline-block';
+  document.getElementById('shipsLeft').textContent='Select a ship and click your board to place it';
+  selectedShipSize=0;placedShipsList=[];
+  addBattleLog('⚓ Game started! Place your ships.');
+  setTimeout(()=>initShipSelector(),100);
+  clearInterval(bsTimer);
+  bsTimer=setInterval(pollBattleGame,3000);
+}
+
+function leaveBattleGame(){
+  clearInterval(bsTimer);
+  currentBsGame=null;
+  document.getElementById('battleLobby').style.display='block';
+  document.getElementById('battleGame').style.display='none';
+  loadBattleLobby();
+}
+
+function renderBoards(){
+  const myEl=document.getElementById('myBoard');
+  const enEl=document.getElementById('enemyBoard');
+  myEl.innerHTML='';enEl.innerHTML='';
+  for(let i=0;i<100;i++){
+    const myCell=document.createElement('div');
+    myCell.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.empty;
+    myCell.id='my-'+i;
+    myCell.onclick=(()=>{const idx=i;return()=>handleMyBoardClick(idx);})();
+    // Hover preview
+    myCell.onmouseover=(()=>{const idx=i;return()=>previewPlacement(idx);})();
+    myCell.onmouseout=clearPreview;
+    myEl.appendChild(myCell);
+    const enCell=document.createElement('div');
+    enCell.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.empty;
+    enCell.id='en-'+i;
+    enCell.onclick=()=>fireShot(i);
+    enEl.appendChild(enCell);
+  }
+  // Show my ships
+  myShips.forEach(idx=>{
+    const c=document.getElementById('my-'+idx);
+    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;'+CELL_STYLES.ship;
+  });
+  // Show shots
+  myShots.forEach(s=>{
+    const c=document.getElementById('en-'+s.idx);
+    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:default;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
+  });
+  enemyShots.forEach(s=>{
+    const c=document.getElementById('my-'+s.idx);
+    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
+  });
+}
+
+// Ship placement state
+let selectedShipSize = 0;
+let shipOrientation = 'horizontal'; // or 'vertical'
+let shipsToPlace = [4,3,3,2,2,2,1,1,1,1];
+let placedShipsList = []; // [{cells:[],size:n}]
+
+function initShipSelector(){
+  const el=document.getElementById('shipSelector');
+  if(!el) return;
+  const remaining={};
+  shipsToPlace.forEach(s=>remaining[s]=(remaining[s]||0)+1);
+  placedShipsList.forEach(p=>remaining[p.size]=(remaining[p.size]||1)-1);
+  el.innerHTML=Object.entries(remaining).filter(([s,c])=>c>0).map(([size,count])=>`
+    <button onclick="selectShip(${size})" id="shipBtn${size}"
+      style="padding:8px 12px;border-radius:8px;border:1px solid ${selectedShipSize==size?'var(--gold)':'var(--border)'};background:${selectedShipSize==size?'rgba(245,200,66,0.1)':'var(--bg3)'};color:${selectedShipSize==size?'var(--gold)':'var(--muted)'};font-size:12px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <span>${'🟦'.repeat(parseInt(size))}</span>
+      <span style="font-size:10px;">Size ${size} ×${count}</span>
+    </button>`).join('');
+}
+
+function selectShip(size){
+  selectedShipSize=size;
+  initShipSelector();
+  showToast('Selected ship of size '+size+'. Click your board to place.','ok');
+}
+
+function toggleOrientation(){
+  shipOrientation=shipOrientation==='horizontal'?'vertical':'horizontal';
+  const btn=document.getElementById('orientBtn');
+  if(btn) btn.textContent=shipOrientation==='horizontal'?'↔ Horizontal':'↕ Vertical';
+}
+
+function getPlacementCells(idx, size, orientation){
+  const cells=[];
+  const row=Math.floor(idx/10),col=idx%10;
+  for(let i=0;i<size;i++){
+    if(orientation==='horizontal'){
+      if(col+size>10) return null;
+      cells.push(row*10+col+i);
+    } else {
+      if(row+size>10) return null;
+      cells.push((row+i)*10+col);
+    }
+  }
+  return cells;
+}
+
+function isValidPlacement(cells){
+  // Check if cells overlap with existing ships or adjacent cells
+  for(const cell of cells){
+    const row=Math.floor(cell/10),col=cell%10;
+    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+      const nr=row+dr,nc=col+dc;
+      if(nr>=0&&nr<10&&nc>=0&&nc<10){
+        const neighborIdx=nr*10+nc;
+        if(myShips.includes(neighborIdx)&&!cells.includes(neighborIdx)) return false;
+      }
+    }
+  }
+  return true;
+}
+
+function previewPlacement(idx){
+  if(!selectedShipSize) return;
+  clearPreview();
+  const cells=getPlacementCells(idx,selectedShipSize,shipOrientation);
+  if(!cells) return;
+  const valid=isValidPlacement(cells);
+  cells.forEach(c=>{
+    const el=document.getElementById('my-'+c);
+    if(el&&!myShips.includes(c)) el.style.background=valid?'rgba(38,217,138,0.4)':'rgba(255,77,77,0.4)';
+  });
+}
+
+function clearPreview(){
+  for(let i=0;i<100;i++){
+    const el=document.getElementById('my-'+i);
+    if(el&&!myShips.includes(i)) el.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.empty;
+  }
+}
+
+function handleMyBoardClick(idx){
+  if(!selectedShipSize){showToast('Select a ship first','err');return;}
+  const cells=getPlacementCells(idx,selectedShipSize,shipOrientation);
+  if(!cells){showToast('Ship does not fit here','err');return;}
+  if(!isValidPlacement(cells)){showToast('Too close to another ship','err');return;}
+  // Check if this size still needs placing
+  const placedOfSize=placedShipsList.filter(p=>p.size===selectedShipSize).length;
+  const totalOfSize=shipsToPlace.filter(s=>s===selectedShipSize).length;
+  if(placedOfSize>=totalOfSize){showToast('Already placed all ships of this size','err');return;}
+  placedShipsList.push({cells,size:selectedShipSize});
+  myShips=[...myShips,...cells];
+  // Check if all ships placed
+  const totalShips=shipsToPlace.length;
+  if(placedShipsList.length>=totalShips){
+    selectedShipSize=0;
+    shipsPlaced=true;
+    document.getElementById('readyBtn').style.display='inline-block';
+    document.getElementById('shipsLeft').textContent='All ships placed! ✓';
+    showToast('All ships placed! Click Ready!','ok');
+  } else {
+    selectedShipSize=0;
+    document.getElementById('shipsLeft').textContent=(totalShips-placedShipsList.length)+' ships left to place';
+  }
+  renderBoards();
+  initShipSelector();
+}
+
+function clearMyShips(){
+  myShips=[];placedShipsList=[];shipsPlaced=false;selectedShipSize=0;
+  document.getElementById('readyBtn').style.display='none';
+  document.getElementById('shipsLeft').textContent='Place your ships';
+  renderBoards();
+  initShipSelector();
+}
+
+function randomPlaceShips(){
+  myShips=[];
+  const board=new Array(100).fill(false);
+  const sizes=[4,3,3,2,2,2,1,1,1,1];
+  for(const size of sizes){
+    let placed=false;
+    let attempts=0;
+    while(!placed&&attempts<1000){
+      attempts++;
+      const horiz=Math.random()>0.5;
+      const row=Math.floor(Math.random()*(horiz?10:10-size+1));
+      const col=Math.floor(Math.random()*(horiz?10-size+1:10));
+      const cells=[];
+      let valid=true;
+      for(let i=0;i<size;i++){
+        const idx=horiz?(row*10+col+i):((row+i)*10+col);
+        cells.push(idx);
+        // Check surrounding cells
+        for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+          const nr=Math.floor(idx/10)+dr,nc=idx%10+dc;
+          if(nr>=0&&nr<10&&nc>=0&&nc<10&&board[nr*10+nc]){valid=false;break;}
+        }
+        if(!valid) break;
+      }
+      if(valid){cells.forEach(idx=>{board[idx]=true;myShips.push(idx);});placed=true;}
+    }
+  }
+  shipsPlaced=true;
+  renderBoards();
+  document.getElementById('readyBtn').style.display='inline-block';
+  document.getElementById('shipsLeft').textContent='Ships placed! Click Ready when done.';
+}
+
+async function setReady(){
+  if(!shipsPlaced){showToast('Place your ships first','err');return;}
+  try{
+    const {data:game}=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
+    const isP1=game.player1_wallet===userAddr;
+    const updateData=isP1?{player1_board:JSON.stringify(myShips)}:{player2_board:JSON.stringify(myShips)};
+    await sb.from('battleship_games').update(updateData).eq('id',currentBsGame);
+    document.getElementById('readyBtn').style.display='none';
+    document.getElementById('placeShipsBtn').style.display='none';
+    document.getElementById('shipsLeft').textContent='Waiting for opponent to place ships...';
+    addBattleLog('✓ You are ready! Waiting for opponent...');
+    showToast('Ready! Waiting for opponent...','ok');
+  }catch(e){showToast('Failed','err');}
+}
+
+async function fireShot(idx){
+  if(!currentBsGame) return;
+  if(myShots.find(s=>s.idx===idx)){showToast('Already shot here','err');return;}
+  try{
+    const {data:game}=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
+    if(game.current_turn!==userAddr){showToast("Not your turn!",'err');return;}
+    if(game.status!=='playing'){showToast('Game not active','err');return;}
+    const isP1=game.player1_wallet===userAddr;
+    const enemyBoard=JSON.parse(isP1?(game.player2_board||'[]'):(game.player1_board||'[]'));
+    if(enemyBoard.length===0){showToast('Opponent not ready yet','err');return;}
+    const hit=enemyBoard.includes(idx);
+    myShots.push({idx,hit});
+    // Update in DB
+    const myShotsKey=isP1?'player1_shots':'player2_shots';
+    const allShots=JSON.parse(game[myShotsKey]||'[]');
+    allShots.push({idx,hit});
+    const nextTurn=isP1?game.player2_wallet:game.player1_wallet;
+    // Check win
+    const hitShots=allShots.filter(s=>s.hit).map(s=>s.idx);
+    const won=enemyBoard.every(shipIdx=>hitShots.includes(shipIdx));
+    const updateData={[myShotsKey]:JSON.stringify(allShots),current_turn:nextTurn};
+    if(won) updateData.status='finished',updateData.winner_wallet=userAddr;
+    await sb.from('battleship_games').update(updateData).eq('id',currentBsGame);
+    renderBoards();
+    addBattleLog(hit?`💥 Hit at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}!`:`💧 Miss at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}`);
+    if(won){
+      showToast('🎉 You WIN! Claiming prize...','ok');
+      await claimBattleWin(currentBsGame);
+    }
+  }catch(e){showToast('Failed to fire','err');}
+}
+
+async function pollBattleGame(){
+  if(!currentBsGame) return;
+  try{
+    const {data:game}=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
+    if(!game) return;
+    // Update enemy shots on my board
+    const isP1=game.player1_wallet===userAddr;
+    const enemyShotsData=JSON.parse(isP1?(game.player2_shots||'[]'):(game.player1_shots||'[]'));
+    if(enemyShotsData.length!==enemyShots.length){
+      enemyShots=enemyShotsData;
+      renderBoards();
+      const lastShot=enemyShotsData[enemyShotsData.length-1];
+      if(lastShot) addBattleLog(lastShot.hit?`💥 Enemy hit your ship at ${String.fromCharCode(65+lastShot.idx%10)}${Math.floor(lastShot.idx/10)+1}!`:`💧 Enemy missed at ${String.fromCharCode(65+lastShot.idx%10)}${Math.floor(lastShot.idx/10)+1}`);
+    }
+    // Update status
+    const myTurn=game.current_turn===userAddr;
+    document.getElementById('battleStatus').textContent=
+      game.status==='finished'?'Game Over!':
+      game.status==='waiting'?'Waiting for opponent...':
+      !game.player1_board||!game.player2_board?'Placing ships...':
+      myTurn?'⚔️ Your turn!':'⏳ Opponent turn...';
+    if(game.status==='finished'&&game.winner_wallet&&game.winner_wallet!==userAddr){
+      clearInterval(bsTimer);
+      showToast('😞 You lost! Better luck next time.','err');
+      addBattleLog('😞 You lost the battle!');
+    }
+  }catch(e){}
+}
+
+async function claimBattleWin(gameDbId){
+  try{
+    const {data:game}=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
+    await switchToLitVM();
+    // Owner declares winner — for now show message
+    showToast('🏆 Victory recorded! Prize will be sent.','ok');
+    addBattleLog('🏆 You won! Prize: '+(parseFloat(game.bet_amount)*2*0.97).toFixed(2)+' '+game.bet_token);
+    clearInterval(bsTimer);
+  }catch(e){}
+}
+
+function addBattleLog(msg){
+  const el=document.getElementById('battleLog');
+  if(!el) return;
+  const item=document.createElement('div');
+  item.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);';
+  item.textContent=new Date().toLocaleTimeString()+' — '+msg;
+  el.insertBefore(item,el.firstChild);
+}
+
+// ── DICE GAME ──
+let diceGuess = 0;
+let diceBet = 50;
+const DICE_FACES = ['🎲','⚀','⚁','⚂','⚃','⚄','⚅'];
+
+function setDiceGuess(n){
+  diceGuess=n;
+  for(let i=1;i<=6;i++){
+    const btn=document.getElementById('dguess'+i);
+    if(!btn) continue;
+    if(i===n){btn.style.borderColor='#7c3aed';btn.style.background='#2d1a4a';btn.style.color='#c4b5fd';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  }
+}
+
+function setDiceBet(amount){
+  diceBet=amount;
+  [50,100,200,500].forEach(b=>{
+    const btn=document.getElementById('dbet'+b);
+    if(!btn) return;
+    if(b===amount){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+  const win=(diceBet*5*0.97).toFixed(1);
+  document.getElementById('diceWinAmt').textContent=win+' GATE';
+}
+
+async function loadDice(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const dice=new ethers.Contract(GATE_DICE,DICE_ABI,p);
+    const [pool]=await dice.getStats();
+    document.getElementById('diceHousePool').textContent=parseFloat(ethers.formatEther(pool)).toFixed(0)+' GATE';
+    if(userAddr){
+      const [wins,losses]=await Promise.all([dice.playerWins(userAddr),dice.playerLosses(userAddr)]);
+      document.getElementById('diceMyWins').textContent=wins.toString();
+      document.getElementById('diceMyLosses').textContent=losses.toString();
+      const games=await dice.getMyGames(userAddr);
+      const hist=document.getElementById('diceHistory');
+      if(games.length===0){hist.innerHTML='<div style="font-size:13px;color:var(--muted);">No games yet. Roll the dice!</div>';return;}
+      hist.innerHTML=[...games].reverse().slice(0,10).map(g=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:24px;">${DICE_FACES[g.result]||'🎲'}</span>
+            <div>
+              <div style="font-size:13px;">Guessed <b>${g.guess}</b> → Got <b>${g.result}</b></div>
+              <div style="font-size:11px;color:var(--muted);">${parseFloat(ethers.formatEther(g.bet)).toFixed(0)} GATE bet</div>
+            </div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:${g.won?'var(--green)':'var(--red)'};">
+            ${g.won?'+'+parseFloat(ethers.formatEther(g.payout)).toFixed(1):'-'+parseFloat(ethers.formatEther(g.bet)).toFixed(0)} GATE
+          </div>
+        </div>`).join('');
+    }
+  }catch(e){}
+}
+
+async function rollDice(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(diceGuess===0){showToast('Pick a number first','err');return;}
+  const btn=document.getElementById('rollBtn');
+  try{
+    await switchToLitVM();
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+    const dice=new ethers.Contract(GATE_DICE,DICE_ABI,signer);
+    const amount=ethers.parseEther(diceBet.toString());
+    showToast('Approving GATE...','ok');
+    await (await gate.approve(GATE_DICE,amount)).wait();
+    btn.textContent='Rolling...';btn.disabled=true;
+    document.getElementById('diceEmoji').textContent='🎲';
+    document.getElementById('diceResultText').textContent='Rolling...';
+    const tx=await dice.roll(diceGuess,amount);
+    const receipt=await tx.wait();
+    // Parse result from event
+    const iface=new ethers.Interface(['event DiceRolled(address indexed player,uint8 guess,uint8 result,bool won,uint256 payout)']);
+    let won=false,result=0,payout=0n;
+    for(const log of receipt.logs){
+      try{
+        const parsed=iface.parseLog(log);
+        if(parsed){won=parsed.args.won;result=parsed.args.result;payout=parsed.args.payout;}
+      }catch{}
+    }
+    // Animate dice
+    document.getElementById('diceEmoji').textContent=DICE_FACES[result]||'🎲';
+    if(won){
+      document.getElementById('diceResultText').innerHTML=`<span style="color:var(--green);font-size:18px;font-weight:700;">🎉 YOU WIN! +${parseFloat(ethers.formatEther(payout)).toFixed(1)} GATE</span>`;
+      showToast('🎉 You won '+parseFloat(ethers.formatEther(payout)).toFixed(1)+' GATE!','ok');
+    } else {
+      document.getElementById('diceResultText').innerHTML=`<span style="color:var(--red);font-size:16px;font-weight:700;">😞 You guessed ${diceGuess}, got ${result}. Better luck next time!</span>`;
+      showToast('😞 Lost! The dice showed '+result,'err');
+    }
+    loadDice();
+    loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  btn.textContent='🎲 Roll Dice';btn.disabled=false;
+}
+
+// ── LOTTERY ──
+let lotteryQty = 1;
+
+function setLotteryQty(qty){
+  lotteryQty = qty;
+  [1,2,3,5].forEach(q=>{
+    const btn=document.getElementById('lqty'+q);
+    if(!btn) return;
+    if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+  document.getElementById('lotteryCost').textContent=(qty*10)+' GATE';
+}
+
+async function loadLottery(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
+    const [roundId,playerCount,pot,finished]=await lottery.getCurrentRound();
+    document.getElementById('lotteryRound').textContent=roundId.toString();
+    document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';
+    document.getElementById('lotteryPlayers').textContent=playerCount.toString();
+    document.getElementById('lotteryBar').style.width=(Number(playerCount)*100/20)+'%';
+    if(userAddr){
+      const myT=await lottery.getMyTickets(roundId);
+      document.getElementById('myLotteryTickets').textContent=myT.toString();
+    }
+    // Past rounds
+    const pastEl=document.getElementById('pastLotteryRounds');
+    if(roundId<=1n){pastEl.innerHTML='<div style="font-size:13px;color:var(--muted);">No completed rounds yet</div>';return;}
+    const pastRounds=[];
+    for(let i=Number(roundId)-1;i>=Math.max(1,Number(roundId)-5);i--){
+      try{
+        const players=await lottery.getRoundPlayers(i);
+        const r=await lottery.rounds(i);
+        if(r[4]) pastRounds.push({id:i,winner:r[2],prize:r[3],playerCount:players.length});
+      }catch{}
+    }
+    if(pastRounds.length===0){pastEl.innerHTML='<div style="font-size:13px;color:var(--muted);">No completed rounds yet</div>';return;}
+    pastEl.innerHTML=pastRounds.map(r=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:13px;font-weight:600;">Round #${r.id}</div>
+          <div style="font-size:11px;color:var(--muted);">${r.playerCount} players · Winner: ${sAddr(r.winner)}</div>
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gold);">${parseFloat(ethers.formatEther(r.prize)).toFixed(0)} GATE</div>
+      </div>`).join('');
+  }catch(e){}
+}
+
+async function buyLotteryTicket(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const btn=document.getElementById('buyTicketBtn');
+  try{
+    await switchToLitVM();
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,signer);
+    const amount=ethers.parseEther((lotteryQty*10).toString());
+    showToast('Approving GATE...','ok');
+    await (await gate.approve(GATE_LOTTERY,amount)).wait();
+    btn.textContent='Buying...';btn.disabled=true;
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await lottery.buyTicket(lotteryQty);
+    await tx.wait();
+    showToast('🎟️ Ticket bought! Good luck!','ok');
+    loadLottery();
+    loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  btn.textContent='🎟️ Buy Ticket';btn.disabled=false;
+}
+
+// ── DAO ──
+async function loadDAO(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const dao=new ethers.Contract(GATE_DAO,DAO_ABI,p);
+    const count=await dao.proposalCount();
+    document.getElementById('daoProposalCount').textContent=count.toString();
+
+    if(count===0n){
+      document.getElementById('daoProposals').innerHTML='<div class="app-empty"><div class="app-empty-ico">🏛️</div>No proposals yet.<br>Be the first to propose!</div>';
+      return;
+    }
+
+    const proposals=await dao.getProposals(1,Number(count));
+    const validProps=proposals.filter(p=>p.id>0n).reverse();
+
+    // Check voted status
+    const voted={};
+    if(userAddr){
+      await Promise.all(validProps.map(async p=>{
+        voted[p.id]=await dao.hasVoted(p.id,userAddr);
+      }));
+    }
+
+    document.getElementById('daoProposals').innerHTML=validProps.map(p=>{
+      const total=p.forVotes+p.againstVotes;
+      const forPct=total>0n?Number(p.forVotes*100n/total):0;
+      const againstPct=total>0n?Number(p.againstVotes*100n/total):0;
+      const ended=Date.now()/1000>Number(p.endTime);
+      const statusColors={0:'var(--green)',1:'var(--gold)',2:'var(--red)',3:'var(--muted)'};
+      const statusLabels={0:'Active',1:'✓ Passed',2:'✗ Rejected',3:'Cancelled'};
+      const status=Number(p.status);
+      const hasV=voted[p.id];
+      return `<div style="padding:20px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+          <div style="font-size:15px;font-weight:700;flex:1;">${esc(p.title)}</div>
+          <span style="font-size:11px;padding:3px 10px;border-radius:100px;font-weight:700;background:rgba(0,0,0,0.3);color:${statusColors[status]};white-space:nowrap;">${statusLabels[status]}</span>
+        </div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5;">${esc(p.description.slice(0,200))}${p.description.length>200?'...':''}</div>
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px;">
+            <span style="color:var(--green);">For: ${parseFloat(ethers.formatEther(p.forVotes)).toFixed(0)} GATE (${forPct}%)</span>
+            <span style="color:var(--red);">Against: ${parseFloat(ethers.formatEther(p.againstVotes)).toFixed(0)} GATE (${againstPct}%)</span>
+          </div>
+          <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;">
+            <div style="height:100%;background:var(--green);border-radius:3px;width:${forPct}%;transition:width .8s ease;"></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div style="font-size:11px;color:var(--muted);">
+            by ${sAddr(p.proposer)} · ${ended?'Ended':'Ends'} ${new Date(Number(p.endTime)*1000).toLocaleDateString()}
+          </div>
+          <div style="display:flex;gap:8px;">
+            ${status===0&&!hasV?`
+              <button onclick="castVote(${p.id},true)" style="background:rgba(38,217,138,0.1);border:1px solid rgba(38,217,138,0.3);color:var(--green);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">👍 For</button>
+              <button onclick="castVote(${p.id},false)" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,0.3);color:var(--red);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">👎 Against</button>
+            `:''}
+            ${status===0&&hasV?`<span style="font-size:12px;color:var(--muted);padding:6px 0;">✓ Voted</span>`:''}
+            ${status===0&&ended?`<button onclick="finalizeProposal(${p.id})" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;">Finalize</button>`:''}
+            ${p.proposer.toLowerCase()===(userAddr||'')&&status===0?`<button onclick="cancelDAOProposal(${p.id})" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;">Cancel</button>`:''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('daoProposals').innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+function openNewProposalModal(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  document.getElementById('proposalModal').classList.add('open');
+}
+
+async function submitProposal(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const title=document.getElementById('propTitle').value.trim();
+  const desc=document.getElementById('propDesc').value.trim();
+  if(!title||!desc){showToast('Fill all fields','err');return;}
+  const btn=document.getElementById('submitProposalBtn');
+  try{
+    await switchToLitVM();
+    const dao=new ethers.Contract(GATE_DAO,DAO_ABI,signer);
+    btn.textContent='Submitting...';btn.disabled=true;
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await dao.createProposal(title,desc);
+    await tx.wait();
+    showToast('Proposal created! 🏛️','ok');
+    document.getElementById('proposalModal').classList.remove('open');
+    document.getElementById('propTitle').value='';
+    document.getElementById('propDesc').value='';
+    loadDAO();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  btn.textContent='Submit Proposal';btn.disabled=false;
+}
+
+async function castVote(proposalId,support){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToLitVM();
+    const dao=new ethers.Contract(GATE_DAO,DAO_ABI,signer);
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await dao.vote(proposalId,support);
+    await tx.wait();
+    showToast(support?'Voted For! 👍':'Voted Against! 👎','ok');
+    loadDAO();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+async function finalizeProposal(proposalId){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToLitVM();
+    const dao=new ethers.Contract(GATE_DAO,DAO_ABI,signer);
+    await (await dao.finalize(proposalId)).wait();
+    showToast('Proposal finalized!','ok');
+    loadDAO();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+async function cancelDAOProposal(proposalId){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToLitVM();
+    const dao=new ethers.Contract(GATE_DAO,DAO_ABI,signer);
+    await (await dao.cancelProposal(proposalId)).wait();
+    showToast('Proposal cancelled','ok');
+    loadDAO();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
 }
 
 // ── MARKETPLACE ──
@@ -1693,11 +3211,12 @@ async function loadNotifications(){
       const name=u.username||sAddr(n.from_wallet);
       const avatar=u.avatar_url?`<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
       const icon=n.type==='like'?'❤️':n.type==='follow'?'👤':'💬';
-      const text=n.type==='like'?`<b>${esc(name)}</b> liked your post`:n.type==='follow'?`<b>${esc(name)}</b> followed you`:`<b>${esc(name)}</b> sent you a message`;
+      const text=n.type==='like'?`<b>${esc(name)}</b> liked your post`:n.type==='follow'?`<b>${esc(name)}</b> followed you`:n.type==='repost'?`<b>${esc(name)}</b> reposted your post`:`<b>${esc(name)}</b> sent you a message`;
+      const icon2=n.type==='repost'?'🔁':icon;
       return `<div onclick="markRead('${n.id}')" style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;background:${n.read?'':'rgba(245,200,66,0.03)'};transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='${n.read?'':'rgba(245,200,66,0.03)'}'">
         <div style="position:relative;flex-shrink:0;">
           <div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;">${avatar}</div>
-          <div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:11px;">${icon}</div>
+          <div style="position:absolute;bottom:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:11px;">${n.type==='repost'?'🔁':icon}</div>
         </div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;line-height:1.5;">${text}</div>
@@ -2067,6 +3586,65 @@ async function unstakeGATE(){
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
 }
 
+// ── BELL NOTIFICATIONS ──
+async function checkBellFollowers(authorWallet){
+  // Get followers who have bell on
+  try{
+    const {data:followers}=await sb.from('follows').select('follower_wallet').eq('following_wallet',authorWallet);
+    if(!followers) return;
+    for(const f of followers){
+      // We can't check other users localStorage, but we create a DB notification
+      // The notification badge will show when they open the app
+      await createNotif(f.follower_wallet,'like',null); // reuse notif system
+    }
+  }catch(e){}
+}
+
+// ── REPOST ──
+async function repostPost(postId, authorWallet, btn){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(userAddr===authorWallet.toLowerCase()){showToast("Can't repost your own post",'err');return;}
+  try{
+    // Check if already reposted
+    const {data:existing}=await sb.from('posts').select('id').eq('repost_of',postId).eq('author_wallet',userAddr).single();
+    if(existing){showToast('Already reposted','err');return;}
+    // Get original post
+    const {data:origPost}=await sb.from('posts').select('*,users!posts_author_wallet_fkey(username)').eq('id',postId).single();
+    if(!origPost) return;
+    // Create repost
+    await sb.from('posts').insert({
+      author_wallet: userAddr,
+      content: origPost.content,
+      image_urls: origPost.image_urls||[],
+      repost_of: postId,
+      repost_by: userAddr,
+      repost_by_name: currentUser?.username||sAddr(userAddr),
+      likes_count: 0,
+      reposts_count: 0
+    });
+    // Update reposts count on original
+    const newCount=(parseInt(document.getElementById('rpcnt-'+postId)?.textContent||'0'))+1;
+    await sb.from('posts').update({reposts_count:newCount}).eq('id',postId);
+    if(document.getElementById('rpcnt-'+postId)) document.getElementById('rpcnt-'+postId).textContent=newCount;
+    btn.style.color='var(--green)';
+    showToast('🔁 Reposted!','ok');
+    // Notify author
+    await createNotif(authorWallet,'repost',postId);
+    loadPosts();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
+}
+
+// ── REWARDS POOL ──
+async function loadRewardsPool(){
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    const r=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,p);
+    const bal=await r.poolBalance();
+    const el=document.getElementById('rewardsPoolBal');
+    if(el) el.textContent=parseFloat(ethers.formatEther(bal)).toFixed(0)+' GATE';
+  }catch(e){}
+}
+
 // ── HELPERS ──
 let toastT;
 function showToast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='show '+type;clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3500);}
@@ -2089,6 +3667,41 @@ document.querySelectorAll('.pass-card').forEach(c=>sObs.observe(c));
 // ── INIT ──
 loadPosts();
 window.ethereum?.on('accountsChanged',()=>location.reload());
+window.ethereum?.on('chainChanged',()=>location.reload());
+
+// Auto-connect if previously connected
+async function tryAutoConnect(){
+  if(!window.ethereum) return;
+  try{
+    // Check if already authorized (no popup)
+    const accounts = await window.ethereum.request({method:'eth_accounts'});
+    if(accounts && accounts.length > 0){
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+      userAddr = (await signer.getAddress()).toLowerCase();
+      const btn = document.getElementById('connectBtn');
+      btn.classList.add('connected');
+      btn.innerHTML = `<div class="w-dot"></div>${userAddr.slice(0,6)}...${userAddr.slice(-4)}`;
+      document.getElementById('newPostBtn').classList.add('show');
+      document.getElementById('composer').classList.add('show');
+      await ensureUser();
+      loadGateBal();
+      loadPosts();
+      updateNotifBadge();
+      loadRewardsPool();
+    }
+  }catch(e){}
+}
+tryAutoConnect();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('/sw.js')
+      .then(()=>console.log('SW registered'))
+      .catch(e=>console.log('SW error', e));
+  });
+}
 </script>
 </body>
 </html>
