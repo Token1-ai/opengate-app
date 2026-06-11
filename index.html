@@ -375,6 +375,40 @@ textarea.form-inp{resize:vertical;min-height:80px;}
   </div>
 </div>
 
+<!-- CHALLENGE MODAL -->
+<div class="modal-overlay" id="challengeModal">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:420px;position:relative;">
+    <button class="modal-close-btn" onclick="document.getElementById('challengeModal').classList.remove('open')">✕</button>
+    <div style="font-size:22px;font-weight:700;margin-bottom:6px;">⚔️ Challenge to Battle!</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Challenging: <span id="challengeTargetName" style="color:var(--gold);font-weight:700;"></span></div>
+    <div style="margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Game Mode</div>
+      <div style="display:flex;gap:8px;">
+        <button id="challModeStake" onclick="setChallMode('stake')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;">💰 With Stakes</button>
+        <button id="challModeFree" onclick="setChallMode('free')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">🎮 Free Play</button>
+      </div>
+    </div>
+    <div id="challStakePanel">
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Bet Amount</div>
+        <input id="challBetAmt" type="number" placeholder="e.g. 50" min="1"
+          style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token</div>
+        <div style="display:flex;gap:8px;">
+          <button id="challTokenGATE" onclick="setChallToken('GATE')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;">GATE</button>
+          <button id="challTokenZKLTC" onclick="setChallToken('zkLTC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">zkLTC</button>
+        </div>
+      </div>
+    </div>
+    <div id="challFreePanel" style="display:none;margin-bottom:14px;padding:12px;background:rgba(38,217,138,0.05);border:1px solid rgba(38,217,138,0.2);border-radius:9px;">
+      <div style="font-size:13px;color:var(--green);">🎮 Free Play — no stakes!</div>
+    </div>
+    <button onclick="sendChallenge()" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#E24B4A,#c0392b);color:#fff;font-size:15px;font-weight:700;">⚔️ Send Challenge!</button>
+  </div>
+</div>
+
 <!-- WALLET SELECTION MODAL -->
 <div class="modal-overlay" id="walletModal">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:380px;position:relative;">
@@ -814,19 +848,33 @@ textarea.form-inp{resize:vertical;min-height:80px;}
             <!-- Create game -->
             <div style="background:linear-gradient(145deg,rgba(38,217,138,0.07),rgba(38,217,138,0.02));border:1px solid rgba(38,217,138,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
               <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-                <div>
-                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Bet Amount</div>
-                  <input id="bsBetAmt" type="number" placeholder="e.g. 50" min="1"
-                    style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+              <!-- Game mode -->
+              <div style="margin-bottom:14px;">
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Game Mode</div>
+                <div style="display:flex;gap:8px;">
+                  <button id="bsModeStake" onclick="setBsMode('stake')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;">💰 With Stakes</button>
+                  <button id="bsModeFree" onclick="setBsMode('free')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">🎮 Free Play</button>
                 </div>
-                <div>
-                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token</div>
-                  <div style="display:flex;gap:8px;">
-                    <button id="bsTokenGATE" onclick="setBsToken('GATE')" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;">GATE</button>
-                    <button id="bsTokenZKLTC" onclick="setBsToken('zkLTC')" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">zkLTC</button>
+              </div>
+              <div id="bsStakePanel">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+                  <div>
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Bet Amount</div>
+                    <input id="bsBetAmt" type="number" placeholder="e.g. 50" min="1"
+                      style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+                  </div>
+                  <div>
+                    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token</div>
+                    <div style="display:flex;gap:8px;">
+                      <button id="bsTokenGATE" onclick="setBsToken('GATE')" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;">GATE</button>
+                      <button id="bsTokenZKLTC" onclick="setBsToken('zkLTC')" style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">zkLTC</button>
+                    </div>
                   </div>
                 </div>
+              </div>
+              <div id="bsFreePanel" style="display:none;margin-bottom:14px;padding:12px;background:rgba(38,217,138,0.05);border:1px solid rgba(38,217,138,0.2);border-radius:9px;">
+                <div style="font-size:13px;color:var(--green);">🎮 Free Play — no stakes, just fun!</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:4px;">Play against another player without betting tokens.</div>
               </div>
               <button onclick="createBattleGame()" style="width:100%;padding:13px;border-radius:10px;background:var(--green);color:#08090C;font-size:14px;font-weight:700;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">⚔️ Create Game</button>
             </div>
@@ -1776,7 +1824,8 @@ function renderPost(post,liked){
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
   const repostHeader=post.repost_by?`<div style="font-size:11px;color:var(--muted);padding:8px 20px 0;display:flex;align-items:center;gap:5px;"><span>🔁</span><span style="font-weight:600;color:var(--muted);">${esc(post.repost_by_name||sAddr(post.repost_by))} reposted</span></div>`:'';
   return `${repostHeader}<div class="post-card"><div class="post-inner"><div class="post-av">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name">${esc(name)}</span>${badge}<span class="post-wlt">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span></div><div class="post-txt">${esc(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post.likes_count||0}</span></button><button class="act-btn" onclick="repostPost('${post.id}','${post.author_wallet}',this)" id="rp-${post.id}"><span>🔁</span><span class="act-cnt" id="rpcnt-${post.id}">${post.reposts_count||0}</span></button>
-          <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button></div></div></div></div>`;
+          <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
+          ${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}</div></div></div></div>`;
 }
 async function likePost(postId,authorWallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
@@ -1853,9 +1902,10 @@ async function loadProfile(wallet){
       </div>
       ${isOwn?
         `<button class="edit-prof-btn" onclick="openEditModal()">Edit Profile</button>`:
-        `<div style="display:flex;gap:8px;align-items:center;">
+        `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button class="follow-btn${isF?' following':''}" onclick="toggleFollow('${target}',this)">${isF?'Following':'Follow'}</button>
           ${isF?`<button title="${isBellOn('${target}')?'Notifications on':'Get notified of new posts'}" onclick="toggleBell('${target}',this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:14px;cursor:pointer;color:${isBellOn('${target}')?'var(--gold)':'var(--muted)'};transition:all .2s;">🔔</button>`:''}
+          <button onclick="openChallenge('${target}','${esc(user.username||sAddr(target))}')" style="background:linear-gradient(135deg,rgba(226,75,74,0.15),rgba(192,57,43,0.08));border:1px solid rgba(226,75,74,0.3);color:#E24B4A;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">⚔️ Challenge</button>
         </div>`
       }
     </div>
@@ -2261,6 +2311,19 @@ const CELL_STYLES = {
   sunk:'background:rgba(255,77,77,0.8);border:1px solid var(--red);'
 };
 
+let bsMode = 'stake';
+function setBsMode(mode){
+  bsMode=mode;
+  ['stake','free'].forEach(m=>{
+    const btn=document.getElementById('bsMode'+m.charAt(0).toUpperCase()+m.slice(1));
+    if(!btn) return;
+    if(m===mode){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+  document.getElementById('bsStakePanel').style.display=mode==='stake'?'block':'none';
+  document.getElementById('bsFreePanel').style.display=mode==='free'?'block':'none';
+}
+
 function setBsToken(t){
   bsToken=t;
   ['GATE','zkLTC'].forEach(tok=>{
@@ -2284,14 +2347,17 @@ async function loadBattleLobby(){
     el.innerHTML=games.map(g=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;">
         <div>
-          <div style="font-size:14px;font-weight:700;">${sAddr(g.player1_wallet)} <span style="color:var(--muted);font-weight:400;">challenges you</span></div>
-          <div style="font-size:13px;color:var(--gold);font-family:'Space Mono',monospace;margin-top:4px;">💰 ${g.bet_amount} ${g.bet_token} each</div>
+          <div style="font-size:14px;font-weight:700;">
+            ${isChallenge?'<span style="color:#E24B4A;">⚔️ You are challenged by </span>':''}${sAddr(g.player1_wallet)}
+            ${!isChallenge?'<span style="color:var(--muted);font-weight:400;"> vs anyone</span>':''}
+          </div>
+          <div style="font-size:13px;font-family:'Space Mono',monospace;margin-top:4px;">${g.bet_token==='FREE'?'<span style="color:var(--green);">🎮 Free Play</span>':'<span style="color:var(--gold);">💰 '+g.bet_amount+' '+g.bet_token+' each</span>'}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px;">${tAgo(g.created_at)} ago</div>
         </div>
         <div style="display:flex;gap:8px;">
           ${userAddr&&g.player1_wallet===userAddr?
             `<button onclick="cancelBattleGame('${g.id}')" style="background:var(--bg3);border:1px solid var(--border);color:var(--red);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;">Cancel</button>`:
-            `<button onclick="joinBattleGame('${g.id}','${g.bet_amount}','${g.bet_token}')" style="background:var(--gold);color:#08090C;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button>`
+            `<button onclick="joinBattleGame('${g.id}','${g.bet_amount}','${g.bet_token}')" style="background:${isChallenge?'#E24B4A':'var(--gold)'};color:${isChallenge?'#fff':'#08090C'};border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;">${isChallenge?'⚔️ Accept!':'⚔️ Join'}</button>`
           }
         </div>
       </div>`).join('');
@@ -2300,25 +2366,37 @@ async function loadBattleLobby(){
 
 async function createBattleGame(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
+
+  // Free mode - no contract needed
+  if(bsMode==='free'){
+    showToast('Creating free game...','ok');
+    await sb.from('battleship_games').insert({
+      player1_wallet:userAddr,bet_amount:'0',bet_token:'FREE',
+      status:'waiting',contract_game_id:0
+    });
+    showToast('Free game created! Waiting for opponent ⚓','ok');
+    loadBattleLobby();
+    return;
+  }
+
   const amt=document.getElementById('bsBetAmt').value.trim();
   if(!amt||parseFloat(amt)<=0){showToast('Enter bet amount','err');return;}
   try{
     await switchToLitVM();
     const amtWei=ethers.parseEther(amt);
-    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
 
     if(bsToken==='GATE'){
-      const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+      const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
       showToast('Creating game...','ok');
       const tx=await bs.createGame(amtWei,0);
       const receipt=await tx.wait();
-      // Get game ID from event
       const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
       let gameId=0;
       for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p) gameId=Number(p.args.id);}catch{}}
-      // Save to Supabase
       await sb.from('battleship_games').insert({
         player1_wallet:userAddr,bet_amount:amt,bet_token:'GATE',
         status:'waiting',contract_game_id:gameId
@@ -2344,14 +2422,26 @@ async function createBattleGame(){
 async function joinBattleGame(gameDbId, betAmt, betToken){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   try{
-    // Get contract game id
     const {data:game}=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
     if(!game){showToast('Game not found','err');return;}
+
+    // Free mode
+    if(betToken==='FREE'){
+      await sb.from('battleship_games').update({
+        player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet
+      }).eq('id',gameDbId);
+      showToast('Joined free game! Place your ships ⚓','ok');
+      startBattleGame(gameDbId);
+      loadBattleLobby();
+      return;
+    }
+
     await switchToLitVM();
     const amtWei=ethers.parseEther(betAmt);
-    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
     if(betToken==='GATE'){
-      const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
+      const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
       await (await bs.joinGame(game.contract_game_id)).wait();
@@ -2626,6 +2716,11 @@ async function fireShot(idx){
     if(won) updateData.status='finished',updateData.winner_wallet=userAddr;
     await sb.from('battleship_games').update(updateData).eq('id',currentBsGame);
     renderBoards();
+    // Show red X on hit
+    if(hit){
+      const el=document.getElementById('en-'+idx);
+      if(el){el.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';}
+    }
     addBattleLog(hit?`💥 Hit at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}!`:`💧 Miss at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}`);
     if(won){
       showToast('🎉 You WIN! Claiming prize...','ok');
@@ -2646,7 +2741,13 @@ async function pollBattleGame(){
       enemyShots=enemyShotsData;
       renderBoards();
       const lastShot=enemyShotsData[enemyShotsData.length-1];
-      if(lastShot) addBattleLog(lastShot.hit?`💥 Enemy hit your ship at ${String.fromCharCode(65+lastShot.idx%10)}${Math.floor(lastShot.idx/10)+1}!`:`💧 Enemy missed at ${String.fromCharCode(65+lastShot.idx%10)}${Math.floor(lastShot.idx/10)+1}`);
+      if(lastShot){
+      addBattleLog(lastShot.hit?`💥 Enemy hit your ship at ${String.fromCharCode(65+lastShot.idx%10)}${Math.floor(lastShot.idx/10)+1}!`:`💧 Enemy missed at ${String.fromCharCode(65+lastShot.idx%10)}${Math.floor(lastShot.idx/10)+1}`);
+      if(lastShot.hit){
+        const el=document.getElementById('my-'+lastShot.idx);
+        if(el){el.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';}
+      }
+    }
     }
     // Update status
     const myTurn=game.current_turn===userAddr;
@@ -3246,6 +3347,76 @@ function renderUserCard(u){
 function viewUserProfile(wallet){
   showTab('profile');
   loadProfile(wallet);
+}
+
+// ── CHALLENGE ──
+let challTarget = '';
+let challMode = 'stake';
+let challToken = 'GATE';
+
+function openChallenge(wallet, name){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(userAddr===wallet.toLowerCase()){showToast("Can't challenge yourself",'err');return;}
+  challTarget=wallet;
+  document.getElementById('challengeTargetName').textContent=name;
+  document.getElementById('challengeModal').classList.add('open');
+}
+
+function setChallMode(mode){
+  challMode=mode;
+  ['stake','free'].forEach(m=>{
+    const btn=document.getElementById('challMode'+m.charAt(0).toUpperCase()+m.slice(1));
+    if(!btn) return;
+    if(m===mode){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+  document.getElementById('challStakePanel').style.display=mode==='stake'?'block':'none';
+  document.getElementById('challFreePanel').style.display=mode==='free'?'block':'none';
+}
+
+function setChallToken(t){
+  challToken=t;
+  ['GATE','ZKLTS'].forEach(tok=>{
+    const btn=document.getElementById('challToken'+tok);
+    if(!btn) return;
+    if(tok===t){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+}
+
+async function sendChallenge(){
+  if(!userAddr||!challTarget){showToast('Connect wallet first','err');return;}
+  const amt=challMode==='stake'?document.getElementById('challBetAmt').value.trim():'0';
+  if(challMode==='stake'&&(!amt||parseFloat(amt)<=0)){showToast('Enter bet amount','err');return;}
+  try{
+    // Create game in DB with challenge flag
+    const {data:game}=await sb.from('battleship_games').insert({
+      player1_wallet:userAddr,
+      bet_amount:challMode==='free'?'0':amt,
+      bet_token:challMode==='free'?'FREE':challToken,
+      status:'waiting',
+      contract_game_id:0,
+      challenge_to:challTarget
+    }).select().single();
+
+    // Send DM notification
+    const myName=currentUser?.username||sAddr(userAddr);
+    const betInfo=challMode==='free'?'Free Play':amt+' '+challToken;
+    await sb.from('messages').insert({
+      from_wallet:userAddr,
+      to_wallet:challTarget,
+      content:`⚔️ ${myName} challenges you to Battleship! Bet: ${betInfo}. Go to Battleship tab to accept!`
+    });
+    await createNotif(challTarget,'dm');
+
+    document.getElementById('challengeModal').classList.remove('open');
+    showToast('⚔️ Challenge sent!','ok');
+
+    // If stake mode, create contract game
+    if(challMode==='stake'&&game){
+      showTab('battle');
+    }
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
 }
 
 // ── NOTIFICATIONS ──
