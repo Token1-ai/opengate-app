@@ -2943,6 +2943,30 @@ async function cancelDAOProposal(proposalId){
 }
 
 // ── MARKETPLACE ──
+// Helper to resolve IPFS URLs with multiple gateways
+async function resolveIPFS(uri){
+  if(!uri) return '';
+  const gateways=['https://ipfs.io/ipfs/','https://cloudflare-ipfs.com/ipfs/','https://gateway.pinata.cloud/ipfs/'];
+  if(uri.startsWith('ipfs://')){
+    const hash=uri.slice(7);
+    for(const gw of gateways){
+      try{
+        const res=await fetch(gw+hash,{signal:AbortSignal.timeout(5000)});
+        if(res.ok) return gw+hash;
+      }catch{}
+    }
+    return gateways[0]+hash;
+  }
+  if(uri.startsWith('http')) return uri;
+  return uri;
+}
+
+async function fetchNFTMeta(uri){
+  const resolvedUri=await resolveIPFS(uri);
+  const res=await fetch(resolvedUri,{signal:AbortSignal.timeout(8000)});
+  return await res.json();
+}
+
 async function loadMarketplace(){
   try{
     const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
@@ -2965,17 +2989,16 @@ async function loadMarketplace(){
       return;
     }
 
-    // Load NFT metadata
+    // Load NFT metadata with better IPFS handling
     const cards=await Promise.all(active.map(async (l,i)=>{
-      let img='🖼️';let name='NFT';
+      let img='';let name='NFT #'+l.tokenId.toString();
       try{
         const nft=new ethers.Contract(l.nftContract,ERC721_ABI,p);
         let uri=await nft.tokenURI(l.tokenId);
-        if(uri.startsWith('ipfs://')) uri='https://gateway.pinata.cloud/ipfs/'+uri.slice(7);
-        const meta=await fetch(uri).then(r=>r.json());
-        if(meta.image){img=meta.image.startsWith('ipfs://')?'https://gateway.pinata.cloud/ipfs/'+meta.image.slice(7):meta.image;}
+        const meta=await fetchNFTMeta(uri);
+        if(meta.image) img=await resolveIPFS(meta.image);
         name=meta.name||'NFT #'+l.tokenId.toString();
-      }catch{}
+      }catch(e){ console.log('NFT meta error:',e); }
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
       return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:transform .2s;cursor:pointer;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
         <div style="aspect-ratio:1;background:var(--bg3);overflow:hidden;position:relative;">
