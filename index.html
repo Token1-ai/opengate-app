@@ -879,6 +879,13 @@ textarea.form-inp{resize:vertical;min-height:80px;}
               <button onclick="createBattleGame()" style="width:100%;padding:13px;border-radius:10px;background:var(--green);color:#08090C;font-size:14px;font-weight:700;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">⚔️ Create Game</button>
             </div>
 
+            <!-- VS AI button -->
+            <div style="margin-bottom:16px;">
+              <button onclick="startAIGame()" style="width:100%;padding:13px;border-radius:10px;background:linear-gradient(135deg,rgba(124,58,237,0.15),rgba(91,33,182,0.08));border:1px solid rgba(124,58,237,0.3);color:#c4b5fd;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+                🤖 Play vs AI (Free, instant start)
+              </button>
+            </div>
+
             <!-- Open games -->
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
               <span>🔍 Open Games</span>
@@ -2485,6 +2492,119 @@ function startBattleGame(gameDbId){
   bsTimer=setInterval(pollBattleGame,3000);
 }
 
+// ── AI OPPONENT ──
+let aiShips = [];
+let aiLastHit = null;
+let aiHuntMode = false;
+let aiHuntList = [];
+let aiShotsFired = [];
+
+function generateAIShips(){
+  aiShips = [];
+  const SIZES=[4,3,3,2,2,2,1,1,1,1];
+  for(const size of SIZES){
+    let placed=false,tries=0;
+    while(!placed&&tries<1000){
+      tries++;
+      const h=Math.random()>.5;
+      const r=Math.floor(Math.random()*(h?10:10-size+1));
+      const c=Math.floor(Math.random()*(h?10-size+1:10));
+      const cells=[];
+      let valid=true;
+      for(let i=0;i<size;i++){
+        const idx=h?(r*10+c+i):((r+i)*10+c);
+        cells.push(idx);
+        const row=Math.floor(idx/10),col=idx%10;
+        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+          const nr=row+dr,nc=col+dc;
+          if(nr>=0&&nr<10&&nc>=0&&nc<10&&aiShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc)){valid=false;}
+        }
+      }
+      if(valid){cells.forEach(x=>aiShips.push(x));placed=true;}
+    }
+  }
+}
+
+function aiPickTarget(){
+  // Hunt mode - follow up on hits
+  if(aiHuntMode&&aiHuntList.length>0){
+    const idx=aiHuntList.shift();
+    if(!aiShotsFired.includes(idx)) return idx;
+  }
+  // Random shot avoiding already fired
+  const available=[];
+  for(let i=0;i<100;i++) if(!aiShotsFired.includes(i)) available.push(i);
+  if(available.length===0) return -1;
+  // Smart: prefer cells not adjacent to misses
+  return available[Math.floor(Math.random()*available.length)];
+}
+
+function aiFireAt(idx){
+  aiShotsFired.push(idx);
+  const hit=myShips.includes(idx);
+  enemyShots.push({idx,hit});
+  if(hit){
+    aiHuntMode=true;
+    // Add adjacent cells to hunt list
+    const r=Math.floor(idx/10),c=idx%10;
+    [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr,dc])=>{
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<10&&nc>=0&&nc<10&&!aiShotsFired.includes(nr*10+nc)){
+        aiHuntList.push(nr*10+nc);
+      }
+    });
+  } else {
+    if(aiHuntList.length===0) aiHuntMode=false;
+  }
+  return hit;
+}
+
+function startAIGame(){
+  // Start game vs AI - no waiting for opponent
+  generateAIShips();
+  aiShotsFired=[];aiHuntMode=false;aiHuntList=[];aiLastHit=null;
+  currentBsGame='AI';
+  myShots=[];enemyShots=[];
+  document.getElementById('battleLobby').style.display='none';
+  document.getElementById('battleGame').style.display='block';
+  document.getElementById('battleStatus').textContent='🤖 VS Computer — Place your ships!';
+  document.getElementById('enemyBoardLabel').textContent='Enemy Fleet (AI) — Click to fire!';
+  document.getElementById('dmBackBtn').style.display='block';
+  document.getElementById('dmBackBtn').textContent='← Leave';
+  document.getElementById('dmBackBtn').onclick=leaveBattleGame;
+  renderBoards();
+  document.getElementById('readyBtn').style.display='none';
+  document.getElementById('placeShipsBtn').style.display='inline-block';
+  document.getElementById('shipsLeft').textContent='Select a ship and click your board to place it';
+  selectedShipSize=0;placedShipsList=[];
+  addBattleLog('🤖 Game vs AI started! Place your ships.');
+  setTimeout(()=>initShipSelector(),100);
+}
+
+function aiTakeTurn(){
+  if(currentBsGame!=='AI') return;
+  setTimeout(()=>{
+    const idx=aiPickTarget();
+    if(idx===-1) return;
+    const hit=aiFireAt(idx);
+    renderBoards();
+    if(hit){
+      const el=document.getElementById('my-'+idx);
+      if(el) el.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';
+    }
+    addBattleLog(hit?`🤖 AI hit your ship at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}!`:`🤖 AI missed at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}`);
+    // Check if AI wins
+    const allSunk=myShips.every(s=>aiShotsFired.includes(s));
+    if(allSunk){
+      document.getElementById('battleStatus').textContent='🤖 AI wins! Better luck next time.';
+      addBattleLog('🤖 AI destroyed your fleet!');
+      currentBsGame=null;
+    } else {
+      document.getElementById('battleStatus').textContent='⚔️ Your turn!';
+    }
+  }, 800);
+}
+
 function leaveBattleGame(){
   clearInterval(bsTimer);
   currentBsGame=null;
@@ -2679,6 +2799,19 @@ function randomPlaceShips(){
 
 async function setReady(){
   if(!shipsPlaced){showToast('Place your ships first','err');return;}
+
+  // AI game - start immediately
+  if(currentBsGame==='AI'){
+    document.getElementById('readyBtn').style.display='none';
+    document.getElementById('placeShipsBtn').style.display='none';
+    document.getElementById('shipsLeft').textContent='Battle started! Click enemy board to fire.';
+    document.getElementById('battleStatus').textContent='⚔️ Your turn!';
+    addBattleLog('✓ Ships placed! Battle started vs AI.');
+    showToast('Battle started! 🤖','ok');
+    renderBoards();
+    return;
+  }
+
   try{
     const {data:game}=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
     const isP1=game.player1_wallet===userAddr;
