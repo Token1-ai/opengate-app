@@ -961,7 +961,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
             <!-- Orientation toggle -->
             <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;">
               <button id="orientBtn" onclick="toggleOrientation()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">↔ Horizontal</button>
-              <button onclick="clearMyShips()" style="background:var(--bg3);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">✕ Clear All</button>
+              <button onclick="clearMyShips()" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.4);color:var(--red);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">🗑 Clear & Redo</button>
             </div>
             <div style="font-size:11px;color:var(--muted);text-align:center;">Click a ship below, then click on your board to place it</div>
           </div>
@@ -2025,6 +2025,7 @@ function openEditModal(){
   document.getElementById('editBio').value=currentUser.bio||'';
   document.getElementById('editAvatar').value=currentUser.avatar_url||'';
   document.getElementById('editCover').value=currentUser.cover_url||'';
+  setAvatarTab('upload'); // Default to upload tab
   document.getElementById('editWebsite').value=currentUser.website||'';
   document.getElementById('editTwitter').value=currentUser.twitter||'';
   document.getElementById('editModal').classList.add('open');
@@ -3876,7 +3877,9 @@ async function stakeGATE(){
     const approveTx=await gate.approve(GATE_STAKING,amount);
     await approveTx.wait();
     showToast('Staking...','ok');
-    const tx=await sc.stake(amount);
+    const stakeIface=new ethers.Interface(['function stake(uint256 amount)']);
+    const stakeData=stakeIface.encodeFunctionData('stake',[amount]);
+    const tx=await freshSigner.sendTransaction({to:GATE_STAKING,data:stakeData});
     await tx.wait();
     showToast('Staked successfully! 💎','ok');
     document.getElementById('stakeAmount').value='';
@@ -3890,9 +3893,9 @@ async function claimGATE(){
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,freshSigner);
     showToast('Claiming rewards...','ok');
-    const tx=await sc.claim();
+    const claimIface=new ethers.Interface(['function claim()']);
+    const tx=await freshSigner.sendTransaction({to:GATE_STAKING,data:claimIface.encodeFunctionData('claim',[])});
     await tx.wait();
     showToast('Rewards claimed! 🎉','ok');
     loadStakingInfo();
@@ -3905,9 +3908,10 @@ async function unstakeGATE(){
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,freshSigner);
     showToast('Unstaking...','ok');
-    const tx=await sc.unstake();
+    const unstakeIface=new ethers.Interface(['function unstake()']);
+    const unstakeData=unstakeIface.encodeFunctionData('unstake',[]);
+    const tx=await freshSigner.sendTransaction({to:GATE_STAKING,data:unstakeData});
     await tx.wait();
     showToast('Unstaked! Tokens returned 💰','ok');
     loadStakingInfo();
