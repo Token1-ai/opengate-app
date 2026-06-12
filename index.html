@@ -460,7 +460,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
           <div style="font-weight:600;color:var(--text);margin-bottom:4px;">Click to choose photo</div>
           <div style="font-size:11px;">From gallery, camera or files</div>
         </div>
-        <input type="file" id="avatarFile" accept="image/*" capture="environment" style="display:none;" onchange="uploadAvatarFile(this)"/>
+        <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatarFile(this)"/>
         <div id="uploadAvatarStatus" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center;"></div>
         <div id="avatarPreviewBox" style="margin-top:10px;display:none;text-align:center;">
           <img id="avatarPreviewImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);"/>
@@ -676,12 +676,13 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🔄</span>Easy Swap</button>
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🟡</span>Buy GATE</button>
         <button class="side-btn" id="tab-staking" onclick="showTab('staking')"><span class="side-ico">💎</span>Staking</button>
-        <button class="side-btn" id="tab-faucet" onclick="showTab('faucet')"><span class="side-ico">🚰</span>Faucet</button>
+
         <button class="side-btn" id="tab-lending" onclick="showTab('lending')"><span class="side-ico">🏦</span>Lending</button>
-        <button class="side-btn" id="tab-battle" onclick="showTab('battle')"><span class="side-ico">⚓</span>Battleship</button>
-        <button class="side-btn" id="tab-dice" onclick="showTab('dice')"><span class="side-ico">🎲</span>Dice Game</button>
-        <button class="side-btn" id="tab-lottery" onclick="showTab('lottery')"><span class="side-ico">🎰</span>Lottery</button>
-        <button class="side-btn" id="tab-dao" onclick="showTab('dao')"><span class="side-ico">🏛️</span>DAO</button>
+        <button class="side-btn" id="tab-games" onclick="showTab('games')"><span class="side-ico">🎮</span>Games</button>
+        
+        
+        
+
         <button class="side-btn" id="tab-market" onclick="showTab('market')"><span class="side-ico">🛒</span>NFT Market</button>
         <button class="side-btn" id="tab-explore" onclick="showTab('explore')"><span class="side-ico">🔍</span>Explore</button>
         <button class="side-btn" id="tab-notifs" onclick="showTab('notifs')"><span class="side-ico">🔔</span>Notifications<span id="notifBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
@@ -837,6 +838,35 @@ textarea.form-inp{resize:vertical;min-height:80px;}
             <div id="myLoansList"><div class="app-loader">Loading your loans...</div></div>
           </div>
 
+        </div>
+      </div>
+      <div id="view-games" style="display:none;">
+        <div class="feed-hdr">🎮 Games</div>
+        <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:600px;margin:0 auto;">
+          <div onclick="showTab('battle')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:36px;margin-bottom:8px;">⚓</div>
+            <div style="font-size:15px;font-weight:700;">Battleship</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">PvP or vs AI</div>
+            <div style="font-size:11px;color:var(--green);margin-top:6px;">Free / Stake GATE or zkLTC</div>
+          </div>
+          <div onclick="showTab('dice')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:36px;margin-bottom:8px;">🎲</div>
+            <div style="font-size:15px;font-weight:700;">Dice Roll</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">Guess 1-6, win 5×</div>
+            <div style="font-size:11px;color:var(--gold);margin-top:6px;">50 / 100 / 200 / 500 GATE</div>
+          </div>
+          <div onclick="showTab('lottery')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:36px;margin-bottom:8px;">🎰</div>
+            <div style="font-size:15px;font-weight:700;">Lottery</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">20 players, one winner</div>
+            <div style="font-size:11px;color:#a855f7;margin-top:6px;">10 GATE per ticket</div>
+          </div>
+          <div onclick="showTab('lending')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='var(--silver)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:36px;margin-bottom:8px;">🏦</div>
+            <div style="font-size:15px;font-weight:700;">Lending</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">Borrow with collateral</div>
+            <div style="font-size:11px;color:var(--silver);margin-top:6px;">10% APR · zkLTC ↔ GATE</div>
+          </div>
         </div>
       </div>
       <div id="view-battle" style="display:none;">
@@ -1438,12 +1468,12 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <button class="mob-btn" onclick="focusComposer();showTab('feed')"><span class="mob-ico">✍️</span>Post</button>
     <button class="mob-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="mob-ico">🔄</span>Swap</button>
     <button class="mob-btn" onclick="showTab('staking')"><span class="mob-ico">💎</span>Stake</button>
-    <button class="mob-btn" onclick="showTab('faucet')"><span class="mob-ico">🚰</span>Faucet</button>
+
     <button class="mob-btn" onclick="showTab('lending')"><span class="mob-ico">🏦</span>Lend</button>
-    <button class="mob-btn" onclick="showTab('battle')"><span class="mob-ico">⚓</span>Battle</button>
-    <button class="mob-btn" onclick="showTab('dice')"><span class="mob-ico">🎲</span>Dice</button>
-    <button class="mob-btn" onclick="showTab('lottery')"><span class="mob-ico">🎰</span>Lottery</button>
-    <button class="mob-btn" onclick="showTab('dao')"><span class="mob-ico">🏛️</span>DAO</button>
+    
+    
+    
+
     <button class="mob-btn" onclick="showTab('market')"><span class="mob-ico">🛒</span>Market</button>
     <button class="mob-btn" onclick="showTab('explore')"><span class="mob-ico">🔍</span>Explore</button>
     <button class="mob-btn" onclick="showTab('notifs')"><span class="mob-ico">🔔</span>Notifs</button>
@@ -1701,6 +1731,7 @@ function showTab(tab){
   document.getElementById('view-lottery').style.display=tab==='lottery'?'block':'none';
   document.getElementById('view-dice').style.display=tab==='dice'?'block':'none';
   document.getElementById('view-battle').style.display=tab==='battle'?'block':'none';
+  document.getElementById('view-games').style.display=tab==='games'?'block':'none';
   document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
   document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
   document.querySelectorAll('.side-btn').forEach(b=>b.classList.remove('active'));
@@ -1720,6 +1751,7 @@ function showTab(tab){
   if(tab==='lottery') loadLottery();
   if(tab==='dice') loadDice();
   if(tab==='battle'){ loadBattleLobby(); clearInterval(bsTimer); }
+  if(tab==='games'){}
   if(tab==='lending') loadLending();
   if(tab==='faucet') loadFaucet();
 }
@@ -2485,9 +2517,10 @@ function startBattleGame(gameDbId){
   document.getElementById('readyBtn').style.display='none';
   document.getElementById('placeShipsBtn').style.display='inline-block';
   document.getElementById('shipsLeft').textContent='Select a ship and click your board to place it';
-  selectedShipSize=0;placedShipsList=[];
-  addBattleLog('⚓ Game started! Place your ships.');
-  setTimeout(()=>initShipSelector(),100);
+  document.getElementById('shipsPanel').style.display='block';
+  selectedShipSize=0;placedShipsList=[];myShips=[];
+  addBattleLog('🤖 VS AI started! Place your ships.');
+  setTimeout(()=>{initShipSelector();renderBoards();},100);
   clearInterval(bsTimer);
   bsTimer=setInterval(pollBattleGame,3000);
 }
@@ -2563,7 +2596,7 @@ function startAIGame(){
   // Start game vs AI - no waiting for opponent
   generateAIShips();
   aiShotsFired=[];aiHuntMode=false;aiHuntList=[];aiLastHit=null;
-  currentBsGame='AI';
+  currentBsGame='AI'; // Must be string 'AI' for AI mode detection
   myShots=[];enemyShots=[];
   document.getElementById('battleLobby').style.display='none';
   document.getElementById('battleGame').style.display='block';
@@ -2637,14 +2670,21 @@ function renderBoards(){
     const c=document.getElementById('my-'+idx);
     if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;'+CELL_STYLES.ship;
   });
-  // Show shots
+  // Show MY shots on enemy board (hits/misses only - never show enemy ship positions)
   myShots.forEach(s=>{
     const c=document.getElementById('en-'+s.idx);
-    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:default;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
+    if(c){
+      c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:default;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
+      if(s.hit) c.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';
+    }
   });
+  // Show enemy shots on my board
   enemyShots.forEach(s=>{
     const c=document.getElementById('my-'+s.idx);
-    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
+    if(c){
+      c.style.cssText='aspect-ratio:1;border-radius:2px;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
+      if(s.hit) c.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';
+    }
   });
 }
 
@@ -2730,7 +2770,16 @@ function clearPreview(){
 }
 
 function handleMyBoardClick(idx){
-  if(!selectedShipSize){showToast('Select a ship first','err');return;}
+  // Only allow placement during place phase
+  if(currentBsGame&&currentBsGame!=='AI'&&shipsPlaced) return;
+  if(shipsPlaced&&currentBsGame==='AI'){
+    // Game started, don't allow placement
+    return;
+  }
+  if(!selectedShipSize){
+    showToast('Select a ship type first ↓','err');
+    return;
+  }
   const cells=getPlacementCells(idx,selectedShipSize,shipOrientation);
   if(!cells){showToast('Ship does not fit here','err');return;}
   if(!isValidPlacement(cells)){showToast('Too close to another ship','err');return;}
@@ -2982,22 +3031,24 @@ async function rollDice(){
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
     const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
-    const dice=new ethers.Contract(GATE_DICE,DICE_ABI,freshSigner);
     const amount=ethers.parseEther(diceBet.toString());
     showToast('Approving GATE...','ok');
     await (await gate.approve(GATE_DICE,amount)).wait();
     btn.textContent='Rolling...';btn.disabled=true;
     document.getElementById('diceEmoji').textContent='🎲';
     document.getElementById('diceResultText').textContent='Rolling...';
-    const tx=await dice.roll(diceGuess,amount);
+    // Direct ABI call
+    const DICE_IFACE = new ethers.Interface(['function roll(uint8 guess, uint256 bet)']);
+    const diceCalldata = DICE_IFACE.encodeFunctionData('roll',[diceGuess, amount]);
+    const tx = await freshSigner.sendTransaction({to:GATE_DICE,data:diceCalldata});
     const receipt=await tx.wait();
     // Parse result from event
     const iface=new ethers.Interface(['event DiceRolled(address indexed player,uint8 guess,uint8 result,bool won,uint256 payout)']);
     let won=false,result=0,payout=0n;
     for(const log of receipt.logs){
       try{
-        const parsed=iface.parseLog(log);
-        if(parsed){won=parsed.args.won;result=parsed.args.result;payout=parsed.args.payout;}
+        const parsed=iface.parseLog({topics:log.topics,data:log.data});
+        if(parsed&&parsed.name==='DiceRolled'){won=parsed.args.won;result=Number(parsed.args.result);payout=parsed.args.payout;}
       }catch{}
     }
     // Animate dice
@@ -3072,13 +3123,16 @@ async function buyLotteryTicket(){
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
     const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
-    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
     const amount=ethers.parseEther((lotteryQty*10).toString());
     showToast('Approving GATE...','ok');
     await (await gate.approve(GATE_LOTTERY,amount)).wait();
     btn.textContent='Buying...';btn.disabled=true;
     showToast('Confirm in MetaMask...','ok');
-    const tx=await lottery.buyTicket(lotteryQty);
+    // Try multiple function signatures
+    // Direct ABI call with exact selector
+    const LOTTERY_IFACE = new ethers.Interface(['function buyTicket(uint256 qty)']);
+    const calldata = LOTTERY_IFACE.encodeFunctionData('buyTicket',[BigInt(lotteryQty)]);
+    const tx = await freshSigner.sendTransaction({to:GATE_LOTTERY,data:calldata});
     await tx.wait();
     showToast('🎟️ Ticket bought! Good luck!','ok');
     loadLottery();
