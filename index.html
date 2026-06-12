@@ -2649,41 +2649,48 @@ function leaveBattleGame(){
 function renderBoards(){
   const myEl=document.getElementById('myBoard');
   const enEl=document.getElementById('enemyBoard');
+  if(!myEl||!enEl) return;
   myEl.innerHTML='';enEl.innerHTML='';
+
   for(let i=0;i<100;i++){
+    // MY BOARD — place ships + show enemy shots
     const myCell=document.createElement('div');
     myCell.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.empty;
     myCell.id='my-'+i;
-    myCell.onclick=(()=>{const idx=i;return()=>handleMyBoardClick(idx);})();
-    // Hover preview
-    myCell.onmouseover=(()=>{const idx=i;return()=>previewPlacement(idx);})();
+    myCell.onclick=(function(idx){return function(){handleMyBoardClick(idx);};})(i);
+    myCell.onmouseover=(function(idx){return function(){previewPlacement(idx);};})(i);
     myCell.onmouseout=clearPreview;
     myEl.appendChild(myCell);
+
+    // ENEMY BOARD — fire shots (never show enemy ships)
     const enCell=document.createElement('div');
     enCell.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.empty;
     enCell.id='en-'+i;
-    enCell.onclick=()=>fireShot(i);
+    enCell.onclick=(function(idx){return function(){fireShot(idx);};})(i);
     enEl.appendChild(enCell);
   }
-  // Show my ships
-  myShips.forEach(idx=>{
+
+  // Show MY ships on MY board only
+  myShips.forEach(function(idx){
     const c=document.getElementById('my-'+idx);
-    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;'+CELL_STYLES.ship;
+    if(c){c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.ship;}
   });
-  // Show MY shots on enemy board (hits/misses only - never show enemy ship positions)
-  myShots.forEach(s=>{
+
+  // Show MY shots on ENEMY board (hits/misses only — NEVER show enemy ships)
+  myShots.forEach(function(s){
     const c=document.getElementById('en-'+s.idx);
     if(c){
       c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:default;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
-      if(s.hit) c.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';
+      if(s.hit) c.innerHTML='<span style="color:#ff4d4d;font-size:14px;font-weight:900;line-height:1;">✕</span>';
     }
   });
-  // Show enemy shots on my board
-  enemyShots.forEach(s=>{
+
+  // Show ENEMY shots on MY board
+  enemyShots.forEach(function(s){
     const c=document.getElementById('my-'+s.idx);
     if(c){
-      c.style.cssText='aspect-ratio:1;border-radius:2px;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
-      if(s.hit) c.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';
+      c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
+      if(s.hit) c.innerHTML='<span style="color:#ff4d4d;font-size:14px;font-weight:900;line-height:1;">✕</span>';
     }
   });
 }
