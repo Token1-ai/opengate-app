@@ -455,16 +455,16 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <div id="nftPreview" style="margin-top:8px;"></div>
       </div>
       <div id="avatarUploadTab" style="display:none;">
-        <div onclick="document.getElementById('avatarFile').click()" style="border:2px dashed var(--border);border-radius:9px;padding:24px;text-align:center;cursor:pointer;color:var(--muted);font-size:13px;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.background='rgba(245,200,66,0.04)'" onmouseout="this.style.borderColor='var(--border)';this.style.background=''">
-          <div style="font-size:32px;margin-bottom:8px;">📷</div>
-          <div style="font-weight:600;color:var(--text);margin-bottom:4px;">Click to choose photo</div>
-          <div style="font-size:11px;">From gallery, camera or files</div>
+        <div style="margin-bottom:10px;">
+          <button type="button" onclick="document.getElementById('avatarFile').click()" style="width:100%;padding:16px;border:2px dashed var(--border);border-radius:9px;background:var(--bg3);cursor:pointer;color:var(--text);font-size:14px;font-weight:600;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+            📷 Choose photo from gallery / files
+          </button>
+          <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatarFile(this)"/>
         </div>
-        <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatarFile(this)"/>
-        <div id="uploadAvatarStatus" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center;"></div>
+        <div id="uploadAvatarStatus" style="font-size:13px;color:var(--muted);text-align:center;padding:4px;"></div>
         <div id="avatarPreviewBox" style="margin-top:10px;display:none;text-align:center;">
-          <img id="avatarPreviewImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);"/>
-          <div style="font-size:11px;color:var(--green);margin-top:6px;">✓ Photo selected</div>
+          <img id="avatarPreviewImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);"/>
+          <div style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600;">✓ Photo ready — click Save Profile</div>
         </div>
       </div>
     </div>
@@ -1771,18 +1771,33 @@ function focusComposer(){ document.getElementById('postText').focus(); }
 let pendingImages = [];
 
 async function uploadToPinata(file){
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('pinataMetadata', JSON.stringify({name: 'opengate-post-' + Date.now()}));
-  const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + PINATA_JWT },
-    body: formData
-  });
-  if(!res.ok) throw new Error('Upload failed');
-  const data = await res.json();
-  return 'https://gateway.pinata.cloud/ipfs/' + data.IpfsHash;
+  // Upload via Supabase Storage
+  try{
+    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+    const path='uploads/'+(userAddr||'anon')+'_'+Date.now()+'.'+ext;
+    const uploadResult=await sb.storage.from('media').upload(path,file,{
+      cacheControl:'3600',upsert:true,contentType:file.type
+    });
+    if(uploadResult.error) throw new Error(uploadResult.error.message);
+    const pubResult=sb.storage.from('media').getPublicUrl(path);
+    return pubResult.data.publicUrl;
+  }catch(e){
+    // Fallback: try Pinata directly
+    const formData=new FormData();
+    formData.append('file',file);
+    formData.append('pinataMetadata',JSON.stringify({name:'og-'+Date.now()}));
+    const res=await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+PINATA_JWT},
+      body:formData
+    });
+    if(!res.ok) throw new Error('Upload failed');
+    const json=await res.json();
+    return 'https://gateway.pinata.cloud/ipfs/'+json.IpfsHash;
+  }
 }
+
+
 
 async function handleImages(input){
   const files = Array.from(input.files);
@@ -2335,146 +2350,145 @@ async function repayGateLoan(loanId, totalDue){
 
 // ── BATTLESHIP ──
 let bsToken = 'GATE';
-let currentBsGame = null;
-let myShips = [];
-let myShots = [];
-let enemyShots = [];
-let shipsPlaced = false;
-let bsTimer = null;
-const SHIP_SIZES = [4,3,3,2,2,2,1,1,1,1];
-const CELL_STYLES = {
-  empty:'background:var(--bg3);border:1px solid var(--border);',
-  ship:'background:rgba(38,217,138,0.3);border:1px solid var(--green);',
-  hit:'background:rgba(255,77,77,0.5);border:1px solid var(--red);',
-  miss:'background:rgba(90,100,120,0.3);border:1px solid var(--muted);',
-  sunk:'background:rgba(255,77,77,0.8);border:1px solid var(--red);'
-};
-
 let bsMode = 'stake';
-function setBsMode(mode){
-  bsMode=mode;
-  ['stake','free'].forEach(m=>{
-    const btn=document.getElementById('bsMode'+m.charAt(0).toUpperCase()+m.slice(1));
-    if(!btn) return;
-    if(m===mode){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
-    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
-  });
-  document.getElementById('bsStakePanel').style.display=mode==='stake'?'block':'none';
-  document.getElementById('bsFreePanel').style.display=mode==='free'?'block':'none';
-}
+let currentBsGame = null;
 
+// Ship placement state (same logic as working demo)
+const BS_SHIP_SIZES = [4,3,3,2,2,2,1,1,1,1];
+let bsMyShips = [];
+let bsPlaced = [];
+let bsSelectedSize = 0;
+let bsOrientation = 'h';
+let bsPhase = 'lobby'; // lobby | placing | battle | over
+
+// Shots
+let bsMyShots = [];
+let bsEnemyShots = [];
+
+// AI
+let bsAIShips = [];
+let bsAIFired = [];
+let bsAIHunt = false;
+let bsAIHuntList = [];
+
+let bsTimer = null;
+
+// ── Lobby ──
 function setBsToken(t){
   bsToken=t;
-  ['GATE','zkLTC'].forEach(tok=>{
+  ['GATE','ZKLTS'].forEach(tok=>{
     const btn=document.getElementById('bsToken'+tok);
-    if(!btn) return;
+    if(!btn)return;
     if(tok===t){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
     else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
   });
 }
 
+function setBsMode(mode){
+  bsMode=mode;
+  ['Stake','Free'].forEach(m=>{
+    const btn=document.getElementById('bsMode'+m);
+    if(!btn)return;
+    const active=m.toLowerCase()===mode;
+    btn.style.borderColor=active?'var(--gold)':'var(--border)';
+    btn.style.background=active?'rgba(245,200,66,0.1)':'var(--bg3)';
+    btn.style.color=active?'var(--gold)':'var(--muted)';
+  });
+  const sp=document.getElementById('bsStakePanel');
+  const fp=document.getElementById('bsFreePanel');
+  if(sp)sp.style.display=mode==='stake'?'block':'none';
+  if(fp)fp.style.display=mode==='free'?'block':'none';
+}
+
 async function loadBattleLobby(){
   const el=document.getElementById('openGamesList');
+  if(!el)return;
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
     const {data:games}=await sb.from('battleship_games')
       .select('*').eq('status','waiting').order('created_at',{ascending:false}).limit(20);
     if(!games||games.length===0){
-      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one and wait for an opponent!</div>';
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games. Create one!</div>';
       return;
     }
-    el.innerHTML=games.map(g=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;">
-        <div>
-          <div style="font-size:14px;font-weight:700;">
-            ${isChallenge?'<span style="color:#E24B4A;">⚔️ You are challenged by </span>':''}${sAddr(g.player1_wallet)}
-            ${!isChallenge?'<span style="color:var(--muted);font-weight:400;"> vs anyone</span>':''}
-          </div>
-          <div style="font-size:13px;font-family:'Space Mono',monospace;margin-top:4px;">${g.bet_token==='FREE'?'<span style="color:var(--green);">🎮 Free Play</span>':'<span style="color:var(--gold);">💰 '+g.bet_amount+' '+g.bet_token+' each</span>'}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${tAgo(g.created_at)} ago</div>
-        </div>
-        <div style="display:flex;gap:8px;">
-          ${userAddr&&g.player1_wallet===userAddr?
-            `<button onclick="cancelBattleGame('${g.id}')" style="background:var(--bg3);border:1px solid var(--border);color:var(--red);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;">Cancel</button>`:
-            `<button onclick="joinBattleGame('${g.id}','${g.bet_amount}','${g.bet_token}')" style="background:${isChallenge?'#E24B4A':'var(--gold)'};color:${isChallenge?'#fff':'#08090C'};border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;">${isChallenge?'⚔️ Accept!':'⚔️ Join'}</button>`
-          }
-        </div>
-      </div>`).join('');
+    el.innerHTML='';
+    games.forEach(function(g){
+      const isChallenge=g.challenge_to&&g.challenge_to===userAddr;
+      const isMine=userAddr&&g.player1_wallet===userAddr;
+      const betLabel=g.bet_token==='FREE'
+        ?'<span style="color:var(--green);">🎮 Free Play</span>'
+        :'<span style="color:var(--gold);">💰 '+g.bet_amount+' '+g.bet_token+' each</span>';
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(isChallenge?'rgba(226,75,74,0.4)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;';
+      row.innerHTML='<div><div style="font-size:14px;font-weight:700;">'+(isChallenge?'<span style="color:#E24B4A;">⚔️ Challenge: </span>':'')+sAddr(g.player1_wallet)+'</div><div style="font-size:13px;margin-top:4px;">'+betLabel+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+tAgo(g.created_at)+' ago</div></div>';
+      const btnDiv=document.createElement('div');
+      if(isMine){
+        const btn=document.createElement('button');
+        btn.textContent='Cancel';
+        btn.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--red);border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;';
+        btn.onclick=(function(id){return function(){cancelBattleGame(id);};})(g.id);
+        btnDiv.appendChild(btn);
+      } else {
+        const btn=document.createElement('button');
+        btn.textContent=isChallenge?'⚔️ Accept!':'⚔️ Join';
+        btn.style.cssText='background:'+(isChallenge?'#E24B4A':'var(--gold)')+';color:'+(isChallenge?'#fff':'#08090C')+';border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;';
+        btn.onclick=(function(id,amt,tok){return function(){joinBattleGame(id,amt,tok);};})(g.id,g.bet_amount,g.bet_token);
+        btnDiv.appendChild(btn);
+      }
+      row.appendChild(btnDiv);
+      el.appendChild(row);
+    });
   }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
 }
 
 async function createBattleGame(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
-
-  // Free mode - no contract needed
   if(bsMode==='free'){
-    showToast('Creating free game...','ok');
-    await sb.from('battleship_games').insert({
-      player1_wallet:userAddr,bet_amount:'0',bet_token:'FREE',
-      status:'waiting',contract_game_id:0
-    });
-    showToast('Free game created! Waiting for opponent ⚓','ok');
-    loadBattleLobby();
-    return;
+    await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:'0',bet_token:'FREE',status:'waiting',contract_game_id:0});
+    showToast('Free game created! ⚓','ok');
+    loadBattleLobby();return;
   }
-
   const amt=document.getElementById('bsBetAmt').value.trim();
   if(!amt||parseFloat(amt)<=0){showToast('Enter bet amount','err');return;}
   try{
     await switchToLitVM();
     const amtWei=ethers.parseEther(amt);
     const freshSigner=await provider.getSigner();
-    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
-
     if(bsToken==='GATE'){
       const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
+      const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
-      showToast('Creating game...','ok');
       const tx=await bs.createGame(amtWei,0);
       const receipt=await tx.wait();
       const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
       let gameId=0;
-      for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p) gameId=Number(p.args.id);}catch{}}
-      await sb.from('battleship_games').insert({
-        player1_wallet:userAddr,bet_amount:amt,bet_token:'GATE',
-        status:'waiting',contract_game_id:gameId
-      });
-    } else {
-      showToast('Creating game...','ok');
+      for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p)gameId=Number(p.args.id);}catch{}}
+      await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'GATE',status:'waiting',contract_game_id:gameId});
+    }else{
+      const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
       const tx=await bs.createGame(amtWei,1,{value:amtWei});
       const receipt=await tx.wait();
       const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
       let gameId=0;
-      for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p) gameId=Number(p.args.id);}catch{}}
-      await sb.from('battleship_games').insert({
-        player1_wallet:userAddr,bet_amount:amt,bet_token:'zkLTC',
-        status:'waiting',contract_game_id:gameId
-      });
+      for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p)gameId=Number(p.args.id);}catch{}}
+      await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'zkLTC',status:'waiting',contract_game_id:gameId});
     }
-    showToast('Game created! Waiting for opponent... ⚓','ok');
+    showToast('Game created! ⚓','ok');
     document.getElementById('bsBetAmt').value='';
     loadBattleLobby();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
 }
 
-async function joinBattleGame(gameDbId, betAmt, betToken){
+async function joinBattleGame(gameDbId,betAmt,betToken){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   try{
     const {data:game}=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
     if(!game){showToast('Game not found','err');return;}
-
-    // Free mode
     if(betToken==='FREE'){
-      await sb.from('battleship_games').update({
-        player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet
-      }).eq('id',gameDbId);
-      showToast('Joined free game! Place your ships ⚓','ok');
-      startBattleGame(gameDbId);
-      loadBattleLobby();
-      return;
+      await sb.from('battleship_games').update({player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet}).eq('id',gameDbId);
+      startPvPGame(gameDbId);return;
     }
-
     await switchToLitVM();
     const amtWei=ethers.parseEther(betAmt);
     const freshSigner=await provider.getSigner();
@@ -2484,14 +2498,11 @@ async function joinBattleGame(gameDbId, betAmt, betToken){
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
       await (await bs.joinGame(game.contract_game_id)).wait();
-    } else {
+    }else{
       await (await bs.joinGame(game.contract_game_id,{value:amtWei})).wait();
     }
-    await sb.from('battleship_games').update({
-      player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet
-    }).eq('id',gameDbId);
-    showToast('Joined! Place your ships ⚓','ok');
-    startBattleGame(gameDbId);
+    await sb.from('battleship_games').update({player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet}).eq('id',gameDbId);
+    startPvPGame(gameDbId);
     loadBattleLobby();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
 }
@@ -2499,478 +2510,434 @@ async function joinBattleGame(gameDbId, betAmt, betToken){
 async function cancelBattleGame(gameDbId){
   try{
     const {data:game}=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
-    await switchToLitVM();
-    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,signer);
-    await (await bs.cancelGame(game.contract_game_id)).wait();
+    if(game&&game.contract_game_id>0){
+      await switchToLitVM();
+      const freshSigner=await provider.getSigner();
+      const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
+      await (await bs.cancelGame(game.contract_game_id)).wait();
+    }
     await sb.from('battleship_games').update({status:'cancelled'}).eq('id',gameDbId);
-    showToast('Game cancelled, bet refunded','ok');
-    loadBattleLobby();
+    showToast('Game cancelled','ok');loadBattleLobby();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
 }
 
-function startBattleGame(gameDbId){
-  currentBsGame=gameDbId;
-  myShips=[];myShots=[];enemyShots=[];shipsPlaced=false;
+// ── Start game ──
+function bsInitGame(){
+  bsMyShips=[];bsPlaced=[];bsSelectedSize=0;bsMyShots=[];bsEnemyShots=[];
+  bsPhase='placing';
   document.getElementById('battleLobby').style.display='none';
   document.getElementById('battleGame').style.display='block';
-  renderBoards();
+  bsRenderBoards();
+  bsBuildShipBtns();
+  document.getElementById('shipsPanel').style.display='block';
   document.getElementById('readyBtn').style.display='none';
   document.getElementById('placeShipsBtn').style.display='inline-block';
-  document.getElementById('shipsLeft').textContent='Select a ship and click your board to place it';
-  document.getElementById('shipsPanel').style.display='block';
-  selectedShipSize=0;placedShipsList=[];myShips=[];
-  addBattleLog('🤖 VS AI started! Place your ships.');
-  setTimeout(()=>{initShipSelector();renderBoards();},100);
-  clearInterval(bsTimer);
-  bsTimer=setInterval(pollBattleGame,3000);
-}
-
-// ── AI OPPONENT ──
-let aiShips = [];
-let aiLastHit = null;
-let aiHuntMode = false;
-let aiHuntList = [];
-let aiShotsFired = [];
-
-function generateAIShips(){
-  aiShips = [];
-  const SIZES=[4,3,3,2,2,2,1,1,1,1];
-  for(const size of SIZES){
-    let placed=false,tries=0;
-    while(!placed&&tries<1000){
-      tries++;
-      const h=Math.random()>.5;
-      const r=Math.floor(Math.random()*(h?10:10-size+1));
-      const c=Math.floor(Math.random()*(h?10-size+1:10));
-      const cells=[];
-      let valid=true;
-      for(let i=0;i<size;i++){
-        const idx=h?(r*10+c+i):((r+i)*10+c);
-        cells.push(idx);
-        const row=Math.floor(idx/10),col=idx%10;
-        for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-          const nr=row+dr,nc=col+dc;
-          if(nr>=0&&nr<10&&nc>=0&&nc<10&&aiShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc)){valid=false;}
-        }
-      }
-      if(valid){cells.forEach(x=>aiShips.push(x));placed=true;}
-    }
-  }
-}
-
-function aiPickTarget(){
-  // Hunt mode - follow up on hits
-  if(aiHuntMode&&aiHuntList.length>0){
-    const idx=aiHuntList.shift();
-    if(!aiShotsFired.includes(idx)) return idx;
-  }
-  // Random shot avoiding already fired
-  const available=[];
-  for(let i=0;i<100;i++) if(!aiShotsFired.includes(i)) available.push(i);
-  if(available.length===0) return -1;
-  // Smart: prefer cells not adjacent to misses
-  return available[Math.floor(Math.random()*available.length)];
-}
-
-function aiFireAt(idx){
-  aiShotsFired.push(idx);
-  const hit=myShips.includes(idx);
-  enemyShots.push({idx,hit});
-  if(hit){
-    aiHuntMode=true;
-    // Add adjacent cells to hunt list
-    const r=Math.floor(idx/10),c=idx%10;
-    [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr,dc])=>{
-      const nr=r+dr,nc=c+dc;
-      if(nr>=0&&nr<10&&nc>=0&&nc<10&&!aiShotsFired.includes(nr*10+nc)){
-        aiHuntList.push(nr*10+nc);
-      }
-    });
-  } else {
-    if(aiHuntList.length===0) aiHuntMode=false;
-  }
-  return hit;
+  document.getElementById('shipsLeft').textContent='Select a ship below, then click YOUR board (top) to place it';
 }
 
 function startAIGame(){
-  // Start game vs AI - no waiting for opponent
-  generateAIShips();
-  aiShotsFired=[];aiHuntMode=false;aiHuntList=[];aiLastHit=null;
-  currentBsGame='AI'; // Must be string 'AI' for AI mode detection
-  myShots=[];enemyShots=[];
-  document.getElementById('battleLobby').style.display='none';
-  document.getElementById('battleGame').style.display='block';
-  document.getElementById('battleStatus').textContent='🤖 VS Computer — Place your ships!';
-  document.getElementById('enemyBoardLabel').textContent='Enemy Fleet (AI) — Click to fire!';
-  document.getElementById('dmBackBtn').style.display='block';
-  document.getElementById('dmBackBtn').textContent='← Leave';
-  document.getElementById('dmBackBtn').onclick=leaveBattleGame;
-  renderBoards();
-  document.getElementById('readyBtn').style.display='none';
-  document.getElementById('placeShipsBtn').style.display='inline-block';
-  document.getElementById('shipsLeft').textContent='Select a ship and click your board to place it';
-  selectedShipSize=0;placedShipsList=[];
-  addBattleLog('🤖 Game vs AI started! Place your ships.');
-  setTimeout(()=>initShipSelector(),100);
+  // Generate AI ships
+  bsAIShips=[];bsAIFired=[];bsAIHunt=false;bsAIHuntList=[];
+  for(var size of BS_SHIP_SIZES){
+    var ok=false,tries=0;
+    while(!ok&&tries<2000){
+      tries++;
+      var h=Math.random()>.5;
+      var r=Math.floor(Math.random()*(h?10:11-size));
+      var c=Math.floor(Math.random()*(h?11-size:10));
+      var cells=[];
+      for(var i=0;i<size;i++) cells.push(h?(r*10+c+i):((r+i)*10+c));
+      var valid=true;
+      for(var ci of cells){
+        var cr=Math.floor(ci/10),cc=ci%10;
+        for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){
+          var nr=cr+dr,nc=cc+dc;
+          if(nr>=0&&nr<10&&nc>=0&&nc<10&&bsAIShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc)){valid=false;}
+        }
+      }
+      if(valid){cells.forEach(function(x){bsAIShips.push(x);});ok=true;}
+    }
+  }
+  currentBsGame='AI';
+  document.getElementById('battleStatus').textContent='🤖 VS Computer — place ships on YOUR board (top)';
+  document.getElementById('enemyBoardLabel').textContent='Enemy Fleet (AI) — click to fire!';
+  addBattleLog('🤖 VS AI! Place your ships on the TOP board.');
+  bsInitGame();
 }
 
-function aiTakeTurn(){
-  if(currentBsGame!=='AI') return;
-  setTimeout(()=>{
-    const idx=aiPickTarget();
-    if(idx===-1) return;
-    const hit=aiFireAt(idx);
-    renderBoards();
-    if(hit){
-      const el=document.getElementById('my-'+idx);
-      if(el) el.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';
-    }
-    addBattleLog(hit?`🤖 AI hit your ship at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}!`:`🤖 AI missed at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}`);
-    // Check if AI wins
-    const allSunk=myShips.every(s=>aiShotsFired.includes(s));
-    if(allSunk){
-      document.getElementById('battleStatus').textContent='🤖 AI wins! Better luck next time.';
-      addBattleLog('🤖 AI destroyed your fleet!');
-      currentBsGame=null;
-    } else {
-      document.getElementById('battleStatus').textContent='⚔️ Your turn!';
-    }
-  }, 800);
+function startPvPGame(gameDbId){
+  currentBsGame=gameDbId;
+  document.getElementById('battleStatus').textContent='Place your ships on YOUR board (top)';
+  document.getElementById('enemyBoardLabel').textContent='Enemy Fleet — click to fire!';
+  addBattleLog('⚓ Game started! Place ships on TOP board.');
+  bsInitGame();
+  clearInterval(bsTimer);
+  bsTimer=setInterval(bsPollGame,3000);
 }
 
 function leaveBattleGame(){
   clearInterval(bsTimer);
-  currentBsGame=null;
+  currentBsGame=null;bsPhase='lobby';
   document.getElementById('battleLobby').style.display='block';
   document.getElementById('battleGame').style.display='none';
   loadBattleLobby();
 }
 
-function renderBoards(){
-  const myEl=document.getElementById('myBoard');
-  const enEl=document.getElementById('enemyBoard');
-  if(!myEl||!enEl) return;
+// ── Boards ──
+function bsRenderBoards(){
+  var myEl=document.getElementById('myBoard');
+  var enEl=document.getElementById('enemyBoard');
+  if(!myEl||!enEl)return;
   myEl.innerHTML='';enEl.innerHTML='';
 
-  for(let i=0;i<100;i++){
-    // MY BOARD — place ships + show enemy shots
-    const myCell=document.createElement('div');
-    myCell.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.empty;
-    myCell.id='my-'+i;
-    myCell.onclick=(function(idx){return function(){handleMyBoardClick(idx);};})(i);
-    myCell.onmouseover=(function(idx){return function(){previewPlacement(idx);};})(i);
-    myCell.onmouseout=clearPreview;
-    myEl.appendChild(myCell);
+  for(var i=0;i<100;i++){
+    // MY board — place ships here
+    var mc=document.createElement('div');
+    mc.id='my-'+i;
+    mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);'+(bsPhase==='placing'?'cursor:crosshair;':'');
+    if(bsPhase==='placing'){
+      (function(idx){
+        mc.onclick=function(){bsPlaceShip(idx);};
+        mc.onmouseover=function(){bsHover(idx,true);};
+        mc.onmouseout=function(){bsHover(idx,false);};
+      })(i);
+    }
+    myEl.appendChild(mc);
 
-    // ENEMY BOARD — fire shots (never show enemy ships)
-    const enCell=document.createElement('div');
-    enCell.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.empty;
-    enCell.id='en-'+i;
-    enCell.onclick=(function(idx){return function(){fireShot(idx);};})(i);
-    enEl.appendChild(enCell);
+    // ENEMY board — fire here
+    var ec=document.createElement('div');
+    ec.id='en-'+i;
+    ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:'+(bsPhase==='battle'?'crosshair':'not-allowed')+';';
+    (function(idx){ec.onclick=function(){bsFireAt(idx);};})(i);
+    enEl.appendChild(ec);
   }
 
-  // Show MY ships on MY board only
-  myShips.forEach(function(idx){
-    const c=document.getElementById('my-'+idx);
-    if(c){c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.ship;}
+  // My ships (green)
+  bsMyShips.forEach(function(idx){
+    var c=document.getElementById('my-'+idx);
+    if(c)c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.35);border:1px solid var(--green);cursor:crosshair;';
   });
 
-  // Show MY shots on ENEMY board (hits/misses only — NEVER show enemy ships)
-  myShots.forEach(function(s){
-    const c=document.getElementById('en-'+s.idx);
-    if(c){
-      c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:default;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
-      if(s.hit) c.innerHTML='<span style="color:#ff4d4d;font-size:14px;font-weight:900;line-height:1;">✕</span>';
-    }
+  // My shots on enemy board
+  bsMyShots.forEach(function(s){
+    var c=document.getElementById('en-'+s.idx);
+    if(!c)return;
+    if(s.hit){c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(255,77,77,0.6);border:1px solid #ff4d4d;cursor:default;';c.innerHTML='<b style="color:#fff;font-size:13px;line-height:1;">✕</b>';}
+    else{c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(90,100,120,0.3);border:1px solid var(--muted);cursor:default;';c.innerHTML='<b style="color:#888;font-size:10px;">•</b>';}
   });
 
-  // Show ENEMY shots on MY board
-  enemyShots.forEach(function(s){
-    const c=document.getElementById('my-'+s.idx);
-    if(c){
-      c.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+(s.hit?CELL_STYLES.hit:CELL_STYLES.miss);
-      if(s.hit) c.innerHTML='<span style="color:#ff4d4d;font-size:14px;font-weight:900;line-height:1;">✕</span>';
-    }
+  // Enemy shots on my board
+  bsEnemyShots.forEach(function(s){
+    var c=document.getElementById('my-'+s.idx);
+    if(!c)return;
+    if(s.hit){c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(255,77,77,0.6);border:1px solid #ff4d4d;';c.innerHTML='<b style="color:#fff;font-size:13px;line-height:1;">✕</b>';}
+    else{c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(90,100,120,0.3);border:1px solid var(--muted);';c.innerHTML='<b style="color:#888;font-size:10px;">•</b>';}
   });
 }
 
-// Ship placement state
-let selectedShipSize = 0;
-let shipOrientation = 'horizontal'; // or 'vertical'
-let shipsToPlace = [4,3,3,2,2,2,1,1,1,1];
-let placedShipsList = []; // [{cells:[],size:n}]
-
-function initShipSelector(){
-  const el=document.getElementById('shipSelector');
-  if(!el) return;
-  const remaining={};
-  shipsToPlace.forEach(s=>remaining[s]=(remaining[s]||0)+1);
-  placedShipsList.forEach(p=>remaining[p.size]=(remaining[p.size]||1)-1);
-  el.innerHTML=Object.entries(remaining).filter(([s,c])=>c>0).map(([size,count])=>`
-    <button onclick="selectShip(${size})" id="shipBtn${size}"
-      style="padding:8px 12px;border-radius:8px;border:1px solid ${selectedShipSize==size?'var(--gold)':'var(--border)'};background:${selectedShipSize==size?'rgba(245,200,66,0.1)':'var(--bg3)'};color:${selectedShipSize==size?'var(--gold)':'var(--muted)'};font-size:12px;font-weight:600;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;">
-      <span>${'🟦'.repeat(parseInt(size))}</span>
-      <span style="font-size:10px;">Size ${size} ×${count}</span>
-    </button>`).join('');
+// ── Ship placement (same as working demo) ──
+function bsBuildShipBtns(){
+  var el=document.getElementById('shipSelector');
+  if(!el)return;
+  var rem={};
+  BS_SHIP_SIZES.forEach(function(s){rem[s]=(rem[s]||0)+1;});
+  bsPlaced.forEach(function(p){rem[p.size]--;});
+  el.innerHTML='';
+  var seen={};
+  BS_SHIP_SIZES.forEach(function(s){
+    if(seen[s]||rem[s]<=0){seen[s]=true;return;}
+    seen[s]=true;
+    var b=document.createElement('button');
+    var active=s===bsSelectedSize;
+    b.style.cssText='padding:8px 12px;border-radius:8px;border:1px solid '+(active?'var(--gold)':'var(--border)')+';background:'+(active?'rgba(245,200,66,0.1)':'var(--bg3)')+';color:'+(active?'var(--gold)':'var(--muted)')+';font-size:12px;font-weight:600;cursor:pointer;';
+    b.innerHTML='<span>'+'▪'.repeat(s)+'</span> <span style="font-size:10px;">×'+rem[s]+'</span>';
+    (function(size){b.onclick=function(){bsSelectedSize=size;bsBuildShipBtns();};})(s);
+    el.appendChild(b);
+  });
+  var total=BS_SHIP_SIZES.length,left=total-bsPlaced.length;
+  var shipsLeftEl=document.getElementById('shipsLeft');
+  var readyBtn=document.getElementById('readyBtn');
+  if(shipsLeftEl)shipsLeftEl.textContent=left>0?(left+' ships left'):('All ships placed! Click Ready ✓');
+  if(readyBtn)readyBtn.style.display=left===0?'inline-block':'none';
 }
 
-function selectShip(size){
-  selectedShipSize=size;
-  initShipSelector();
-  showToast('Selected ship of size '+size+'. Click your board to place.','ok');
-}
-
-function toggleOrientation(){
-  shipOrientation=shipOrientation==='horizontal'?'vertical':'horizontal';
-  const btn=document.getElementById('orientBtn');
-  if(btn) btn.textContent=shipOrientation==='horizontal'?'↔ Horizontal':'↕ Vertical';
-}
-
-function getPlacementCells(idx, size, orientation){
-  const cells=[];
-  const row=Math.floor(idx/10),col=idx%10;
-  for(let i=0;i<size;i++){
-    if(orientation==='horizontal'){
-      if(col+size>10) return null;
-      cells.push(row*10+col+i);
-    } else {
-      if(row+size>10) return null;
-      cells.push((row+i)*10+col);
-    }
-  }
+function bsGetCells(idx,size,horiz){
+  var row=Math.floor(idx/10),col=idx%10;
+  if(horiz&&col+size>10)return null;
+  if(!horiz&&row+size>10)return null;
+  var cells=[];
+  for(var i=0;i<size;i++) cells.push(horiz?(row*10+col+i):((row+i)*10+col));
   return cells;
 }
 
-function isValidPlacement(cells){
-  // Check if cells overlap with existing ships or adjacent cells
-  for(const cell of cells){
-    const row=Math.floor(cell/10),col=cell%10;
-    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-      const nr=row+dr,nc=col+dc;
-      if(nr>=0&&nr<10&&nc>=0&&nc<10){
-        const neighborIdx=nr*10+nc;
-        if(myShips.includes(neighborIdx)&&!cells.includes(neighborIdx)) return false;
-      }
+function bsIsValid(cells){
+  for(var i=0;i<cells.length;i++){
+    var cell=cells[i],row=Math.floor(cell/10),col=cell%10;
+    for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){
+      var nr=row+dr,nc=col+dc;
+      if(nr>=0&&nr<10&&nc>=0&&nc<10&&bsMyShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc))return false;
     }
   }
   return true;
 }
 
-function previewPlacement(idx){
-  if(!selectedShipSize) return;
-  clearPreview();
-  const cells=getPlacementCells(idx,selectedShipSize,shipOrientation);
-  if(!cells) return;
-  const valid=isValidPlacement(cells);
-  cells.forEach(c=>{
-    const el=document.getElementById('my-'+c);
-    if(el&&!myShips.includes(c)) el.style.background=valid?'rgba(38,217,138,0.4)':'rgba(255,77,77,0.4)';
+function bsPlaceShip(idx){
+  if(bsPhase!=='placing')return;
+  if(!bsSelectedSize){showToast('Select a ship first! ↓','err');return;}
+  var horiz=bsOrientation==='h';
+  var cells=bsGetCells(idx,bsSelectedSize,horiz);
+  if(!cells){showToast('Does not fit here','err');return;}
+  if(!bsIsValid(cells)){showToast('Too close to another ship','err');return;}
+  var placed=bsPlaced.filter(function(p){return p.size===bsSelectedSize;}).length;
+  var total=BS_SHIP_SIZES.filter(function(s){return s===bsSelectedSize;}).length;
+  if(placed>=total){showToast('Already placed all of this size','err');return;}
+  bsPlaced.push({cells:cells,size:bsSelectedSize});
+  cells.forEach(function(c){bsMyShips.push(c);});
+  bsSelectedSize=0;
+  bsRenderBoards();
+  bsBuildShipBtns();
+}
+
+function bsHover(idx,enter){
+  if(bsPhase!=='placing'||!bsSelectedSize)return;
+  // Clear
+  for(var i=0;i<100;i++){
+    var c=document.getElementById('my-'+i);
+    if(c&&!bsMyShips.includes(i))c.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
+  }
+  if(!enter)return;
+  var cells=bsGetCells(idx,bsSelectedSize,bsOrientation==='h');
+  if(!cells)return;
+  var ok=bsIsValid(cells);
+  cells.forEach(function(ci){
+    var c=document.getElementById('my-'+ci);
+    if(c&&!bsMyShips.includes(ci))c.style.background=ok?'rgba(38,217,138,0.4)':'rgba(255,77,77,0.4)';
   });
 }
 
-function clearPreview(){
-  for(let i=0;i<100;i++){
-    const el=document.getElementById('my-'+i);
-    if(el&&!myShips.includes(i)) el.style.cssText='aspect-ratio:1;border-radius:2px;cursor:crosshair;'+CELL_STYLES.empty;
-  }
-}
-
-function handleMyBoardClick(idx){
-  // Only allow placement during place phase
-  if(currentBsGame&&currentBsGame!=='AI'&&shipsPlaced) return;
-  if(shipsPlaced&&currentBsGame==='AI'){
-    // Game started, don't allow placement
-    return;
-  }
-  if(!selectedShipSize){
-    showToast('Select a ship type first ↓','err');
-    return;
-  }
-  const cells=getPlacementCells(idx,selectedShipSize,shipOrientation);
-  if(!cells){showToast('Ship does not fit here','err');return;}
-  if(!isValidPlacement(cells)){showToast('Too close to another ship','err');return;}
-  // Check if this size still needs placing
-  const placedOfSize=placedShipsList.filter(p=>p.size===selectedShipSize).length;
-  const totalOfSize=shipsToPlace.filter(s=>s===selectedShipSize).length;
-  if(placedOfSize>=totalOfSize){showToast('Already placed all ships of this size','err');return;}
-  placedShipsList.push({cells,size:selectedShipSize});
-  myShips=[...myShips,...cells];
-  // Check if all ships placed
-  const totalShips=shipsToPlace.length;
-  if(placedShipsList.length>=totalShips){
-    selectedShipSize=0;
-    shipsPlaced=true;
-    document.getElementById('readyBtn').style.display='inline-block';
-    document.getElementById('shipsLeft').textContent='All ships placed! ✓';
-    showToast('All ships placed! Click Ready!','ok');
-  } else {
-    selectedShipSize=0;
-    document.getElementById('shipsLeft').textContent=(totalShips-placedShipsList.length)+' ships left to place';
-  }
-  renderBoards();
-  initShipSelector();
+function toggleOrientation(){
+  bsOrientation=bsOrientation==='h'?'v':'h';
+  var btn=document.getElementById('orientBtn');
+  if(btn)btn.textContent=bsOrientation==='h'?'↔ Horizontal':'↕ Vertical';
 }
 
 function clearMyShips(){
-  myShips=[];placedShipsList=[];shipsPlaced=false;selectedShipSize=0;
-  document.getElementById('readyBtn').style.display='none';
-  document.getElementById('shipsLeft').textContent='Place your ships';
-  renderBoards();
-  initShipSelector();
+  bsMyShips=[];bsPlaced=[];bsSelectedSize=0;
+  bsRenderBoards();bsBuildShipBtns();
 }
 
 function randomPlaceShips(){
-  myShips=[];
-  const board=new Array(100).fill(false);
-  const sizes=[4,3,3,2,2,2,1,1,1,1];
-  for(const size of sizes){
-    let placed=false;
-    let attempts=0;
-    while(!placed&&attempts<1000){
-      attempts++;
-      const horiz=Math.random()>0.5;
-      const row=Math.floor(Math.random()*(horiz?10:10-size+1));
-      const col=Math.floor(Math.random()*(horiz?10-size+1:10));
-      const cells=[];
-      let valid=true;
-      for(let i=0;i<size;i++){
-        const idx=horiz?(row*10+col+i):((row+i)*10+col);
-        cells.push(idx);
-        // Check surrounding cells
-        for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
-          const nr=Math.floor(idx/10)+dr,nc=idx%10+dc;
-          if(nr>=0&&nr<10&&nc>=0&&nc<10&&board[nr*10+nc]){valid=false;break;}
-        }
-        if(!valid) break;
+  bsMyShips=[];bsPlaced=[];bsSelectedSize=0;
+  for(var i=0;i<BS_SHIP_SIZES.length;i++){
+    var size=BS_SHIP_SIZES[i],ok=false,tries=0;
+    while(!ok&&tries<2000){
+      tries++;
+      var h=Math.random()>.5;
+      var r=Math.floor(Math.random()*(h?10:11-size));
+      var c=Math.floor(Math.random()*(h?11-size:10));
+      var cells=bsGetCells(r*10+c,size,h);
+      if(cells&&bsIsValid(cells)){
+        bsPlaced.push({cells:cells,size:size});
+        cells.forEach(function(x){bsMyShips.push(x);});
+        ok=true;
       }
-      if(valid){cells.forEach(idx=>{board[idx]=true;myShips.push(idx);});placed=true;}
     }
   }
-  shipsPlaced=true;
-  renderBoards();
-  document.getElementById('readyBtn').style.display='inline-block';
-  document.getElementById('shipsLeft').textContent='Ships placed! Click Ready when done.';
+  bsRenderBoards();bsBuildShipBtns();
 }
 
 async function setReady(){
-  if(!shipsPlaced){showToast('Place your ships first','err');return;}
+  if(bsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all ships first!','err');return;}
+  bsPhase='battle';
+  bsRenderBoards();
+  document.getElementById('shipsPanel').style.display='none';
+  addBattleLog('✓ Ships placed! Click the BOTTOM board to fire!');
+  showToast('Battle started! Click bottom board to fire 🎯','ok');
 
-  // AI game - start immediately
   if(currentBsGame==='AI'){
-    document.getElementById('readyBtn').style.display='none';
-    document.getElementById('placeShipsBtn').style.display='none';
-    document.getElementById('shipsLeft').textContent='Battle started! Click enemy board to fire.';
-    document.getElementById('battleStatus').textContent='⚔️ Your turn!';
-    addBattleLog('✓ Ships placed! Battle started vs AI.');
-    showToast('Battle started! 🤖','ok');
-    renderBoards();
+    document.getElementById('battleStatus').textContent='⚔️ YOUR TURN — click the BOTTOM board to fire!';
+    return;
+  }
+  // PvP: save board
+  try{
+    var res=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
+    var game=res.data;
+    var isP1=game.player1_wallet===userAddr;
+    var upd=isP1?{player1_board:JSON.stringify(bsMyShips)}:{player2_board:JSON.stringify(bsMyShips)};
+    await sb.from('battleship_games').update(upd).eq('id',currentBsGame);
+    document.getElementById('battleStatus').textContent='Waiting for opponent to place ships...';
+  }catch(e){}
+}
+
+// ── Firing ──
+async function bsFireAt(idx){
+  if(bsPhase!=='battle'){
+    if(bsPhase==='placing')showToast('Place ALL ships and click Ready first! ↓','err');
+    return;
+  }
+  if(bsMyShots.find(function(s){return s.idx===idx;})){showToast('Already fired here','err');return;}
+
+  if(currentBsGame==='AI'){
+    var hit=bsAIShips.includes(idx);
+    bsMyShots.push({idx:idx,hit:hit});
+    bsRenderBoards();
+    addBattleLog(hit?('💥 Hit! '+bsCoord(idx)):('💧 Miss '+bsCoord(idx)));
+    var allHit=bsAIShips.every(function(s){return bsMyShots.some(function(m){return m.idx===s&&m.hit;});});
+    if(allHit){
+      bsPhase='over';
+      document.getElementById('battleStatus').textContent='🎉 YOU WIN!';
+      showToast('🎉 You beat the AI!','ok');
+      addBattleLog('🎉 AI fleet destroyed! You win!');
+    }else{
+      document.getElementById('battleStatus').textContent='🤖 AI thinking...';
+      setTimeout(bsAITurn,800);
+    }
     return;
   }
 
+  // PvP
   try{
-    const {data:game}=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
-    const isP1=game.player1_wallet===userAddr;
-    const updateData=isP1?{player1_board:JSON.stringify(myShips)}:{player2_board:JSON.stringify(myShips)};
-    await sb.from('battleship_games').update(updateData).eq('id',currentBsGame);
-    document.getElementById('readyBtn').style.display='none';
-    document.getElementById('placeShipsBtn').style.display='none';
-    document.getElementById('shipsLeft').textContent='Waiting for opponent to place ships...';
-    addBattleLog('✓ You are ready! Waiting for opponent...');
-    showToast('Ready! Waiting for opponent...','ok');
-  }catch(e){showToast('Failed','err');}
-}
-
-async function fireShot(idx){
-  if(!currentBsGame) return;
-  if(myShots.find(s=>s.idx===idx)){showToast('Already shot here','err');return;}
-  try{
-    const {data:game}=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
-    if(game.current_turn!==userAddr){showToast("Not your turn!",'err');return;}
-    if(game.status!=='playing'){showToast('Game not active','err');return;}
-    const isP1=game.player1_wallet===userAddr;
-    const enemyBoard=JSON.parse(isP1?(game.player2_board||'[]'):(game.player1_board||'[]'));
+    var res=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
+    var game=res.data;
+    if(!game||game.status!=='playing'){showToast('Game not active','err');return;}
+    if(game.current_turn!==userAddr){showToast('Not your turn!','err');return;}
+    var isP1=game.player1_wallet===userAddr;
+    var enemyBoard=JSON.parse(isP1?(game.player2_board||'[]'):(game.player1_board||'[]'));
     if(enemyBoard.length===0){showToast('Opponent not ready yet','err');return;}
-    const hit=enemyBoard.includes(idx);
-    myShots.push({idx,hit});
-    // Update in DB
-    const myShotsKey=isP1?'player1_shots':'player2_shots';
-    const allShots=JSON.parse(game[myShotsKey]||'[]');
-    allShots.push({idx,hit});
-    const nextTurn=isP1?game.player2_wallet:game.player1_wallet;
-    // Check win
-    const hitShots=allShots.filter(s=>s.hit).map(s=>s.idx);
-    const won=enemyBoard.every(shipIdx=>hitShots.includes(shipIdx));
-    const updateData={[myShotsKey]:JSON.stringify(allShots),current_turn:nextTurn};
-    if(won) updateData.status='finished',updateData.winner_wallet=userAddr;
-    await sb.from('battleship_games').update(updateData).eq('id',currentBsGame);
-    renderBoards();
-    // Show red X on hit
-    if(hit){
-      const el=document.getElementById('en-'+idx);
-      if(el){el.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';}
-    }
-    addBattleLog(hit?`💥 Hit at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}!`:`💧 Miss at ${String.fromCharCode(65+idx%10)}${Math.floor(idx/10)+1}`);
-    if(won){
-      showToast('🎉 You WIN! Claiming prize...','ok');
-      await claimBattleWin(currentBsGame);
-    }
-  }catch(e){showToast('Failed to fire','err');}
+    var hit=enemyBoard.includes(idx);
+    bsMyShots.push({idx:idx,hit:hit});
+    var key=isP1?'player1_shots':'player2_shots';
+    var shots=JSON.parse(game[key]||'[]');
+    shots.push({idx:idx,hit:hit});
+    var won=enemyBoard.every(function(s){return shots.filter(function(x){return x.hit;}).some(function(x){return x.idx===s;});});
+    var upd={[key]:JSON.stringify(shots),current_turn:isP1?game.player2_wallet:game.player1_wallet};
+    if(won){upd.status='finished';upd.winner_wallet=userAddr;}
+    await sb.from('battleship_games').update(upd).eq('id',currentBsGame);
+    bsRenderBoards();
+    addBattleLog(hit?('💥 Hit! '+bsCoord(idx)):('💧 Miss '+bsCoord(idx)));
+    if(won){bsPhase='over';showToast('🎉 YOU WIN!','ok');document.getElementById('battleStatus').textContent='🎉 YOU WIN!';}
+    else document.getElementById('battleStatus').textContent='Opponent turn...';
+  }catch(e){showToast('Error: '+(e.message||'?'),'err');}
 }
 
-async function pollBattleGame(){
-  if(!currentBsGame) return;
+// ── AI turn ──
+function bsAITurn(){
+  if(currentBsGame!=='AI')return;
+  var idx=-1;
+  if(bsAIHunt&&bsAIHuntList.length>0){
+    while(bsAIHuntList.length>0){var c=bsAIHuntList.shift();if(!bsAIFired.includes(c)){idx=c;break;}}
+  }
+  if(idx===-1){
+    var avail=[];
+    for(var i=0;i<100;i++)if(!bsAIFired.includes(i))avail.push(i);
+    if(avail.length===0)return;
+    idx=avail[Math.floor(Math.random()*avail.length)];
+  }
+  bsAIFired.push(idx);
+  var hit=bsMyShips.includes(idx);
+  bsEnemyShots.push({idx:idx,hit:hit});
+  if(hit){
+    bsAIHunt=true;
+    var r=Math.floor(idx/10),c=idx%10;
+    [[0,1],[0,-1],[1,0],[-1,0]].forEach(function(d){
+      var nr=r+d[0],nc=c+d[1];
+      if(nr>=0&&nr<10&&nc>=0&&nc<10&&!bsAIFired.includes(nr*10+nc))bsAIHuntList.push(nr*10+nc);
+    });
+  }else if(bsAIHuntList.length===0){bsAIHunt=false;}
+  bsRenderBoards();
+  addBattleLog(hit?('🤖 AI hit your ship at '+bsCoord(idx)+'!'):('🤖 AI missed '+bsCoord(idx)));
+  var allSunk=bsMyShips.every(function(s){return bsAIFired.includes(s);});
+  if(allSunk){
+    bsPhase='over';
+    document.getElementById('battleStatus').textContent='💀 AI wins!';
+    addBattleLog('💀 AI destroyed your fleet!');
+  }else{
+    document.getElementById('battleStatus').textContent='⚔️ YOUR TURN — click the BOTTOM board!';
+  }
+}
+
+// ── PvP polling ──
+async function bsPollGame(){
+  if(!currentBsGame||currentBsGame==='AI')return;
   try{
-    const {data:game}=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
-    if(!game) return;
-    // Update enemy shots on my board
-    const isP1=game.player1_wallet===userAddr;
-    const enemyShotsData=JSON.parse(isP1?(game.player2_shots||'[]'):(game.player1_shots||'[]'));
-    if(enemyShotsData.length!==enemyShots.length){
-      enemyShots=enemyShotsData;
-      renderBoards();
-      const lastShot=enemyShotsData[enemyShotsData.length-1];
-      if(lastShot){
-      addBattleLog(lastShot.hit?`💥 Enemy hit your ship at ${String.fromCharCode(65+lastShot.idx%10)}${Math.floor(lastShot.idx/10)+1}!`:`💧 Enemy missed at ${String.fromCharCode(65+lastShot.idx%10)}${Math.floor(lastShot.idx/10)+1}`);
-      if(lastShot.hit){
-        const el=document.getElementById('my-'+lastShot.idx);
-        if(el){el.innerHTML='<span style="color:var(--red);font-size:14px;font-weight:900;">✕</span>';}
-      }
+    var res=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
+    var game=res.data;if(!game)return;
+    var isP1=game.player1_wallet===userAddr;
+    var enemyShotsData=JSON.parse(isP1?(game.player2_shots||'[]'):(game.player1_shots||'[]'));
+    if(enemyShotsData.length!==bsEnemyShots.length){
+      bsEnemyShots=enemyShotsData;bsRenderBoards();
+      var last=enemyShotsData[enemyShotsData.length-1];
+      if(last)addBattleLog(last.hit?('💥 Enemy hit '+bsCoord(last.idx)):('💧 Enemy missed '+bsCoord(last.idx)));
     }
+    if(game.status==='finished'){
+      clearInterval(bsTimer);bsPhase='over';
+      document.getElementById('battleStatus').textContent=game.winner_wallet===userAddr?'🎉 YOU WIN!':'💀 You lost!';
+      return;
     }
-    // Update status
-    const myTurn=game.current_turn===userAddr;
-    document.getElementById('battleStatus').textContent=
-      game.status==='finished'?'Game Over!':
-      game.status==='waiting'?'Waiting for opponent...':
-      !game.player1_board||!game.player2_board?'Placing ships...':
-      myTurn?'⚔️ Your turn!':'⏳ Opponent turn...';
-    if(game.status==='finished'&&game.winner_wallet&&game.winner_wallet!==userAddr){
-      clearInterval(bsTimer);
-      showToast('😞 You lost! Better luck next time.','err');
-      addBattleLog('😞 You lost the battle!');
-    }
+    var myTurn=game.current_turn===userAddr;
+    var bothReady=game.player1_board&&game.player2_board;
+    if(bothReady&&bsPhase==='placing'){bsPhase='battle';bsRenderBoards();}
+    if(bsPhase==='battle')document.getElementById('battleStatus').textContent=myTurn?'⚔️ YOUR TURN':'Opponent turn...';
   }catch(e){}
 }
 
-async function claimBattleWin(gameDbId){
-  try{
-    const {data:game}=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
-    await switchToLitVM();
-    // Owner declares winner — for now show message
-    showToast('🏆 Victory recorded! Prize will be sent.','ok');
-    addBattleLog('🏆 You won! Prize: '+(parseFloat(game.bet_amount)*2*0.97).toFixed(2)+' '+game.bet_token);
-    clearInterval(bsTimer);
-  }catch(e){}
-}
+function bsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/10)+1);}
 
 function addBattleLog(msg){
-  const el=document.getElementById('battleLog');
-  if(!el) return;
-  const item=document.createElement('div');
-  item.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);';
-  item.textContent=new Date().toLocaleTimeString()+' — '+msg;
-  el.insertBefore(item,el.firstChild);
+  var el=document.getElementById('battleLog');if(!el)return;
+  var d=document.createElement('div');
+  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);';
+  d.textContent=new Date().toLocaleTimeString()+' — '+msg;
+  el.insertBefore(d,el.firstChild);
+}
+
+// ── Challenge ──
+let challTarget='';
+let challMode='stake';
+let challToken='GATE';
+
+function openChallenge(wallet,name){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(userAddr===wallet.toLowerCase()){showToast('Cannot challenge yourself','err');return;}
+  challTarget=wallet;
+  var el=document.getElementById('challengeTargetName');
+  if(el)el.textContent=name;
+  document.getElementById('challengeModal').classList.add('open');
+}
+
+function setChallMode(mode){
+  challMode=mode;
+  ['stake','free'].forEach(function(m){
+    var btn=document.getElementById('challMode'+m.charAt(0).toUpperCase()+m.slice(1));
+    if(!btn)return;
+    if(m===mode){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
+    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  });
+  var sp=document.getElementById('challStakePanel');
+  var fp=document.getElementById('challFreePanel');
+  if(sp)sp.style.display=mode==='stake'?'block':'none';
+  if(fp)fp.style.display=mode==='free'?'block':'none';
+}
+
+function setChallToken(t){challToken=t;}
+
+async function sendChallenge(){
+  if(!userAddr||!challTarget){showToast('Connect wallet first','err');return;}
+  var amt=challMode==='stake'?document.getElementById('challBetAmt').value.trim():'0';
+  if(challMode==='stake'&&(!amt||parseFloat(amt)<=0)){showToast('Enter bet amount','err');return;}
+  try{
+    await sb.from('battleship_games').insert({
+      player1_wallet:userAddr,bet_amount:challMode==='free'?'0':amt,
+      bet_token:challMode==='free'?'FREE':challToken,
+      status:'waiting',contract_game_id:0,challenge_to:challTarget
+    });
+    var myName=currentUser&&currentUser.username?currentUser.username:sAddr(userAddr);
+    var betInfo=challMode==='free'?'Free Play':amt+' '+challToken;
+    await sb.from('messages').insert({from_wallet:userAddr,to_wallet:challTarget,content:'⚔️ '+myName+' challenges you to Battleship! Bet: '+betInfo+'. Go to Games to accept!'});
+    await createNotif(challTarget,'dm');
+    document.getElementById('challengeModal').classList.remove('open');
+    showToast('⚔️ Challenge sent!','ok');
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
 }
 
 // ── DICE GAME ──
@@ -3541,76 +3508,6 @@ function renderUserCard(u){
 function viewUserProfile(wallet){
   showTab('profile');
   loadProfile(wallet);
-}
-
-// ── CHALLENGE ──
-let challTarget = '';
-let challMode = 'stake';
-let challToken = 'GATE';
-
-function openChallenge(wallet, name){
-  if(!userAddr){showToast('Connect wallet first','err');return;}
-  if(userAddr===wallet.toLowerCase()){showToast("Can't challenge yourself",'err');return;}
-  challTarget=wallet;
-  document.getElementById('challengeTargetName').textContent=name;
-  document.getElementById('challengeModal').classList.add('open');
-}
-
-function setChallMode(mode){
-  challMode=mode;
-  ['stake','free'].forEach(m=>{
-    const btn=document.getElementById('challMode'+m.charAt(0).toUpperCase()+m.slice(1));
-    if(!btn) return;
-    if(m===mode){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
-    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
-  });
-  document.getElementById('challStakePanel').style.display=mode==='stake'?'block':'none';
-  document.getElementById('challFreePanel').style.display=mode==='free'?'block':'none';
-}
-
-function setChallToken(t){
-  challToken=t;
-  ['GATE','ZKLTS'].forEach(tok=>{
-    const btn=document.getElementById('challToken'+tok);
-    if(!btn) return;
-    if(tok===t){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
-    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
-  });
-}
-
-async function sendChallenge(){
-  if(!userAddr||!challTarget){showToast('Connect wallet first','err');return;}
-  const amt=challMode==='stake'?document.getElementById('challBetAmt').value.trim():'0';
-  if(challMode==='stake'&&(!amt||parseFloat(amt)<=0)){showToast('Enter bet amount','err');return;}
-  try{
-    // Create game in DB with challenge flag
-    const {data:game}=await sb.from('battleship_games').insert({
-      player1_wallet:userAddr,
-      bet_amount:challMode==='free'?'0':amt,
-      bet_token:challMode==='free'?'FREE':challToken,
-      status:'waiting',
-      contract_game_id:0,
-      challenge_to:challTarget
-    }).select().single();
-
-    // Send DM notification
-    const myName=currentUser?.username||sAddr(userAddr);
-    const betInfo=challMode==='free'?'Free Play':amt+' '+challToken;
-    await sb.from('messages').insert({
-      from_wallet:userAddr,
-      to_wallet:challTarget,
-      content:`⚔️ ${myName} challenges you to Battleship! Bet: ${betInfo}. Go to Battleship tab to accept!`
-    });
-    await createNotif(challTarget,'dm');
-
-    document.getElementById('challengeModal').classList.remove('open');
-    showToast('⚔️ Challenge sent!','ok');
-
-    // If stake mode, create contract game
-    if(challMode==='stake'&&game){
-      showTab('battle');
-    }
-  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
 }
 
 // ── NOTIFICATIONS ──
