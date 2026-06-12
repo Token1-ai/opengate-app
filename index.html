@@ -455,13 +455,15 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <div id="nftPreview" style="margin-top:8px;"></div>
       </div>
       <div id="avatarUploadTab" style="display:none;">
-        <div style="margin-bottom:10px;">
-          <button type="button" onclick="document.getElementById('avatarFile').click()" style="width:100%;padding:16px;border:2px dashed var(--border);border-radius:9px;background:var(--bg3);cursor:pointer;color:var(--text);font-size:14px;font-weight:600;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-            📷 Choose photo from gallery / files
-          </button>
+        <label for="avatarFile" style="display:block;cursor:pointer;">
+          <div id="uploadDropzone" style="padding:20px;border:2px dashed var(--border);border-radius:9px;background:var(--bg3);text-align:center;transition:all .2s;">
+            <div style="font-size:32px;margin-bottom:8px;">📷</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Click here to choose photo</div>
+            <div style="font-size:12px;color:var(--muted);">JPG, PNG, GIF — from your computer or phone</div>
+          </div>
           <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatarFile(this)"/>
-        </div>
-        <div id="uploadAvatarStatus" style="font-size:13px;color:var(--muted);text-align:center;padding:4px;"></div>
+        </label>
+        <div id="uploadAvatarStatus" style="font-size:13px;color:var(--muted);text-align:center;padding:6px 0;"></div>
         <div id="avatarPreviewBox" style="margin-top:10px;display:none;text-align:center;">
           <img id="avatarPreviewImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);"/>
           <div style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600;">✓ Photo ready — click Save Profile</div>
@@ -2023,7 +2025,8 @@ function openEditModal(){
   if(!currentUser)return;
   document.getElementById('editUsername').value=currentUser.username||'';
   document.getElementById('editBio').value=currentUser.bio||'';
-  document.getElementById('editAvatar').value=currentUser.avatar_url||'';
+  const av=currentUser.avatar_url||'';
+  document.getElementById('editAvatar').value=(av.startsWith('0x')&&av.length===42)?'':av;
   document.getElementById('editCover').value=currentUser.cover_url||'';
   setAvatarTab('upload'); // Default to upload tab
   document.getElementById('editWebsite').value=currentUser.website||'';
