@@ -2569,10 +2569,14 @@ async function loadBattleLobby(){
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
     // Load from DB - challenges to me first, then open games
-    const q1=userAddr?sb.from('battleship_games').select('*').eq('status','waiting').eq('challenge_to',userAddr).order('created_at',{ascending:false}):Promise.resolve({data:[]});
-    const q2=sb.from('battleship_games').select('*').eq('status','waiting').is('challenge_to',null).order('created_at',{ascending:false}).limit(30);
-    const [{data:challenges},{data:openGames}]=await Promise.all([q1,q2]);
-    const games=[...(challenges||[]),...(openGames||[])];
+    // Get all waiting games
+    const {data:allWaiting}=await sb.from('battleship_games')
+      .select('*').eq('status','waiting')
+      .order('created_at',{ascending:false}).limit(50);
+    // Split: challenges to me + open games
+    const challenges=(allWaiting||[]).filter(g=>g.challenge_to&&g.challenge_to===userAddr);
+    const openGames=(allWaiting||[]).filter(g=>!g.challenge_to||g.challenge_to!==userAddr);
+    const games=[...challenges,...openGames];
     // Also check if I'm in an active game
     if(userAddr){
       const {data:myGame}=await sb.from('battleship_games')
@@ -2594,7 +2598,7 @@ async function loadBattleLobby(){
       }
     }
     if(!games||games.length===0){
-      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games or challenges yet.<br>Create a game or challenge someone!</div>';
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games yet.<br>Be the first to create one!</div>';
       return;
     }
     el.innerHTML='';
@@ -3889,22 +3893,29 @@ async function acceptChallenge(fromWallet, event){
   if(event) event.stopPropagation();
   if(!userAddr){showToast('Connect wallet first','err');return;}
   try{
-    // Find the waiting game from this challenger - check challenge_to OR open game
+    // Find ANY waiting game from this challenger
     let game=null;
-    // First try challenge_to=me
-    const {data:g1}=await sb.from('battleship_games')
-      .select('*').eq('status','waiting').eq('player1_wallet',fromWallet)
-      .eq('challenge_to',userAddr).order('created_at',{ascending:false}).limit(1);
-    if(g1&&g1.length>0) game=g1[0];
-    // If not found, try any waiting game from this player
-    if(!game){
-      const {data:g2}=await sb.from('battleship_games')
-        .select('*').eq('status','waiting').eq('player1_wallet',fromWallet)
-        .order('created_at',{ascending:false}).limit(1);
-      if(g2&&g2.length>0) game=g2[0];
+    const {data:allGames}=await sb.from('battleship_games')
+      .select('*')
+      .eq('player1_wallet',fromWallet)
+      .in('status',['waiting','playing'])
+      .order('created_at',{ascending:false})
+      .limit(5);
+    if(allGames&&allGames.length>0){
+      // Prefer challenge_to=me, then waiting, then playing
+      game=allGames.find(g=>g.challenge_to===userAddr&&g.status==='waiting')
+        ||allGames.find(g=>g.status==='waiting')
+        ||allGames.find(g=>g.status==='playing'&&(!g.player2_wallet||g.player2_wallet===userAddr));
     }
     if(!game){
-      showToast('Game not found or already started','err');
+      showToast('No active game found from this player','err');
+      return;
+    }
+    // If already playing and we're player2 - just rejoin
+    if(game.status==='playing'&&game.player2_wallet===userAddr){
+      showToast('Rejoining game...','ok');
+      showTab('battle');
+      setTimeout(function(){startPvPGame(game.id);},300);
       return;
     }
     // If staked game - need to stake same amount first
