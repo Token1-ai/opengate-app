@@ -448,11 +448,17 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       </div>
       <div id="avatarUrlTab"><input class="form-inp" id="editAvatar" placeholder="https://..." style="width:100%;"/></div>
       <div id="avatarNftTab" style="display:none;">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Enter NFT contract and token ID to use as avatar</div>
-        <input class="form-inp" id="nftContract" placeholder="NFT contract address" style="width:100%;margin-bottom:8px;"/>
-        <input class="form-inp" id="nftTokenId" placeholder="Token ID (e.g. 1)" style="width:100%;margin-bottom:8px;"/>
-        <button onclick="loadNFTAvatar()" style="width:100%;padding:9px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;cursor:pointer;">Load NFT Image</button>
-        <div id="nftPreview" style="margin-top:8px;"></div>
+        <button onclick="scanWalletNFTs()" style="width:100%;padding:11px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px;">
+          🔍 Scan my wallet for NFTs
+        </button>
+        <div id="walletNFTList" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:200px;overflow-y:auto;"></div>
+        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Or enter manually:</div>
+          <input class="form-inp" id="nftContract" placeholder="NFT contract address" style="width:100%;margin-bottom:6px;"/>
+          <input class="form-inp" id="nftTokenId" placeholder="Token ID (e.g. 1)" style="width:100%;margin-bottom:6px;"/>
+          <button onclick="loadNFTAvatar()" style="width:100%;padding:8px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:12px;cursor:pointer;">Load NFT Image</button>
+          <div id="nftPreview" style="margin-top:8px;"></div>
+        </div>
       </div>
       <div id="avatarUploadTab" style="display:none;">
         <label for="avatarFile" style="display:block;cursor:pointer;">
@@ -996,6 +1002,11 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 
             <!-- Pick bet -->
             <div style="margin-bottom:20px;">
+              <!-- Token selector -->
+              <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
+                <button id="diceTokenGATE" onclick="setDiceToken('GATE')" style="padding:6px 18px;border-radius:8px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;">GATE</button>
+                <button id="diceTokenZKLTC" onclick="setDiceToken('zkLTC')" style="padding:6px 18px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;">zkLTC</button>
+              </div>
               <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;">Pick your bet</div>
               <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
                 <button onclick="setDiceBet(50)" id="dbet50" style="flex:1;min-width:60px;padding:10px;border-radius:10px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;">50</button>
@@ -1960,8 +1971,8 @@ async function loadProfile(wallet){
         `<button class="edit-prof-btn" onclick="openEditModal()">Edit Profile</button>`:
         `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button class="follow-btn${isF?' following':''}" onclick="toggleFollow('${target}',this)">${isF?'Following':'Follow'}</button>
-          ${isF?`<button title="${isBellOn('${target}')?'Notifications on':'Get notified of new posts'}" onclick="toggleBell('${target}',this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:14px;cursor:pointer;color:${isBellOn('${target}')?'var(--gold)':'var(--muted)'};transition:all .2s;">🔔</button>`:''}
-          <button onclick="openChallenge('${target}','${esc(user.username||sAddr(target))}')" style="background:linear-gradient(135deg,rgba(226,75,74,0.15),rgba(192,57,43,0.08));border:1px solid rgba(226,75,74,0.3);color:#E24B4A;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">⚔️ Challenge</button>
+          <button id="bell-${target}" onclick="toggleBell('${target}',this)" title="${isBellOn('${target}')?'Notifications on — click to turn off':'Get notified of new posts'}" style="background:${isBellOn('${target}')?'rgba(245,200,66,0.1)':'var(--bg3)'};border:1px solid ${isBellOn('${target}')?'var(--gold)':'var(--border)'};border-radius:20px;padding:7px 12px;font-size:14px;cursor:pointer;color:${isBellOn('${target}')?'var(--gold)':'var(--muted)'};transition:all .2s;">🔔</button>
+          <button onclick="openChallenge('${target}','${esc(user.username||sAddr(target))}')" style="background:linear-gradient(135deg,rgba(226,75,74,0.15),rgba(192,57,43,0.08));border:1px solid rgba(226,75,74,0.3);color:#E24B4A;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">⚔️ Challenge</button>
         </div>`
       }
     </div>
@@ -2043,6 +2054,80 @@ function setAvatarTab(tab){
   });
 }
 
+async function scanWalletNFTs(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const el=document.getElementById('walletNFTList');
+  el.innerHTML='<div style="font-size:12px;color:var(--muted);grid-column:1/-1;padding:10px;">Scanning your wallet...</div>';
+  try{
+    const p=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+    // Collect all known NFT contracts
+    const contracts=new Set();
+    // From NFT marketplace on LitVM - get all listed contracts
+    try{
+      const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
+      const count=await market.listingCount();
+      const listings=await market.getListings(1,Math.min(Number(count),100));
+      listings.forEach(function(l){if(l.nftContract)contracts.add(l.nftContract);});
+    }catch{}
+    // Also check any user-minted tokens from TokenFactory
+    contracts.add('0xb69Df265Ac37A3E6AB2C940cFA395FE7fF0C0A60');
+    // From Supabase users table - collect nft_avatar_contract values
+    try{
+      const {data:users}=await sb.from('users').select('nft_avatar_contract').not('nft_avatar_contract','is',null).limit(50);
+      if(users)users.forEach(function(u){if(u.nft_avatar_contract)contracts.add(u.nft_avatar_contract);});
+    }catch{}
+    const contractList=Array.from(contracts);
+    
+    const erc721Abi=[
+      'function balanceOf(address) view returns(uint256)',
+      'function tokenOfOwnerByIndex(address,uint256) view returns(uint256)',
+      'function tokenURI(uint256) view returns(string)',
+      'function ownerOf(uint256) view returns(address)',
+    ];
+    const found=[];
+    for(const addr of contracts){
+      try{
+        const nft=new ethers.Contract(addr,erc721Abi,p);
+        const bal=await nft.balanceOf(userAddr);
+        const count=Math.min(Number(bal),20);
+        for(let i=0;i<count;i++){
+          try{
+            const tokenId=await nft.tokenOfOwnerByIndex(userAddr,i);
+            let uri=await nft.tokenURI(tokenId);
+            const meta=await fetchNFTMeta(uri).catch(()=>({}));
+            const img=meta.image?await resolveIPFS(meta.image):'';
+            if(img) found.push({contract:addr,tokenId:tokenId.toString(),img,name:meta.name||'NFT #'+tokenId});
+          }catch{}
+        }
+      }catch{}
+    }
+    
+    if(found.length===0){
+      el.innerHTML='<div style="font-size:12px;color:var(--muted);grid-column:1/-1;text-align:center;">No NFTs found.<br>Try entering contract manually.</div>';
+      return;
+    }
+    el.innerHTML='';
+    found.forEach(function(nft){
+      const div=document.createElement('div');
+      div.style.cssText='border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all .15s;';
+      const imgEl=document.createElement('img');imgEl.src=nft.img;imgEl.style.cssText='width:100%;aspect-ratio:1;object-fit:cover;';imgEl.onerror=function(){this.style.display='none';};div.appendChild(imgEl);
+      div.title=nft.name;
+      div.onclick=function(){
+        // Select this NFT as avatar
+        document.querySelectorAll('#walletNFTList > div').forEach(function(d){d.style.borderColor='transparent';});
+        div.style.borderColor='var(--gold)';
+        document.getElementById('editAvatar').value=nft.img;
+        document.getElementById('nftContract').value=nft.contract;
+        document.getElementById('nftTokenId').value=nft.tokenId;
+        showToast('NFT selected! Click Save Profile','ok');
+      };
+      el.appendChild(div);
+    });
+  }catch(e){
+    el.innerHTML='<div style="font-size:12px;color:var(--muted);grid-column:1/-1;">Failed to scan: '+e.message.slice(0,40)+'</div>';
+  }
+}
+
 async function loadNFTAvatar(){
   const contract=document.getElementById('nftContract').value.trim();
   const tokenId=document.getElementById('nftTokenId').value.trim();
@@ -2097,7 +2182,12 @@ async function saveProfile(){
   const website=document.getElementById('editWebsite').value.trim();
   const twitter=document.getElementById('editTwitter').value.trim();
   try{
-    const {error}=await sb.from('users').update({username,bio,avatar_url,cover_url,website,twitter}).eq('wallet',userAddr);
+    const nft_contract=document.getElementById('nftContract')?document.getElementById('nftContract').value.trim():'';
+    const nft_token=document.getElementById('nftTokenId')?document.getElementById('nftTokenId').value.trim():'';
+    const updates={username,bio,avatar_url,cover_url,website,twitter};
+    if(nft_contract) updates.nft_avatar_contract=nft_contract;
+    if(nft_token) updates.nft_avatar_token_id=nft_token;
+    const {error}=await sb.from('users').update(updates).eq('wallet',userAddr);
     if(error)throw error;
     currentUser={...currentUser,username,bio,avatar_url,cover_url,website,twitter};
     updateCompAv();closeEditModal();showToast('Profile saved ✓','ok');loadProfile();
@@ -2942,6 +3032,44 @@ async function sendChallenge(){
     document.getElementById('challengeModal').classList.remove('open');
     showToast('⚔️ Challenge sent!','ok');
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+}
+
+// ── DICE TOKEN ──
+let diceToken = 'GATE';
+let lotteryToken = 'GATE';
+
+function setDiceToken(t){
+  diceToken=t;
+  ['GATE','ZKLTS'].forEach(function(tok){
+    const id='diceToken'+(tok==='ZKLTS'?'ZKLTS':tok);
+    const btn=document.getElementById(tok==='ZKLTS'?'diceTokenZKLTC':'diceToken'+tok);
+    if(!btn)return;
+    const active=tok===t||(tok==='ZKLTS'&&t==='zkLTC');
+    btn.style.borderColor=active?'var(--gold)':'var(--border)';
+    btn.style.background=active?'rgba(245,200,66,0.1)':'var(--bg3)';
+    btn.style.color=active?'var(--gold)':'var(--muted)';
+  });
+  // Update win text
+  updateDiceWinText();
+}
+
+function setLotteryToken(t){
+  lotteryToken=t;
+  ['GATE','zkLTC'].forEach(function(tok){
+    const btn=document.getElementById('lotteryToken'+tok.replace('zkLTC','ZKLTS').replace('GATE','GATE'));
+    // simpler:
+  });
+  const gBtn=document.getElementById('lotteryTokenGATE');
+  const zBtn=document.getElementById('lotteryTokenZKLTC');
+  if(gBtn){gBtn.style.borderColor=t==='GATE'?'var(--gold)':'var(--border)';gBtn.style.background=t==='GATE'?'rgba(245,200,66,0.1)':'var(--bg3)';gBtn.style.color=t==='GATE'?'var(--gold)':'var(--muted)';}
+  if(zBtn){zBtn.style.borderColor=t==='zkLTC'?'var(--gold)':'var(--border)';zBtn.style.background=t==='zkLTC'?'rgba(245,200,66,0.1)':'var(--bg3)';zBtn.style.color=t==='zkLTC'?'var(--gold)':'var(--muted)';}
+}
+
+function updateDiceWinText(){
+  const winEl=document.getElementById('diceWinAmt');
+  if(!winEl)return;
+  const win=(diceBet*5*0.97).toFixed(diceToken==='zkLTC'?4:2);
+  winEl.textContent='Win: '+win+' '+diceToken+' (5× − 3% fee)';
 }
 
 // ── DICE GAME ──
