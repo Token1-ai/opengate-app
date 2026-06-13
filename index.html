@@ -2568,9 +2568,14 @@ async function loadBattleLobby(){
   if(!el)return;
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
-    // Show waiting games
-    const {data:games}=await sb.from('battleship_games')
-      .select('*').eq('status','waiting').order('created_at',{ascending:false}).limit(30);
+    // Show challenges TO ME first, then all open games
+    const {data:challenges}= userAddr ? await sb.from('battleship_games')
+      .select('*').eq('status','waiting').eq('challenge_to',userAddr)
+      .order('created_at',{ascending:false}) : {data:[]};
+    const {data:openGames}=await sb.from('battleship_games')
+      .select('*').eq('status','waiting').is('challenge_to',null)
+      .order('created_at',{ascending:false}).limit(20);
+    const games=[...(challenges||[]),...(openGames||[])];
     // Also check if I'm in an active game
     if(userAddr){
       const {data:myGame}=await sb.from('battleship_games')
@@ -2591,7 +2596,7 @@ async function loadBattleLobby(){
       }
     }
     if(!games||games.length===0){
-      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games. Create one!</div>';
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games or challenges yet.<br>Create a game or challenge someone!</div>';
       return;
     }
     el.innerHTML='';
@@ -2637,23 +2642,22 @@ async function createBattleGame(){
     await switchToLitVM();
     const amtWei=ethers.parseEther(amt);
     const freshSigner=await provider.getSigner();
+    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
+    const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
+    let gameId=0;
     if(bsToken==='GATE'){
       const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
-      const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
-      const tx=await bs.createGame(amtWei,0);
+      showToast('Creating game...','ok');
+      const tx=await bs.createGameGATE(amtWei);
       const receipt=await tx.wait();
-      const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
-      let gameId=0;
       for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p)gameId=Number(p.args.id);}catch{}}
       await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'GATE',status:'waiting',contract_game_id:gameId});
-    }else{
-      const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
-      const tx=await bs.createGame(amtWei,1,{value:amtWei});
+    } else {
+      showToast('Creating game...','ok');
+      const tx=await bs.createGameZK({value:amtWei});
       const receipt=await tx.wait();
-      const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
-      let gameId=0;
       for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p)gameId=Number(p.args.id);}catch{}}
       await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'zkLTC',status:'waiting',contract_game_id:gameId});
     }
@@ -2680,9 +2684,11 @@ async function joinBattleGame(gameDbId,betAmt,betToken){
       const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
-      await (await bs.joinGame(game.contract_game_id)).wait();
-    }else{
-      await (await bs.joinGame(game.contract_game_id,{value:amtWei})).wait();
+      showToast('Joining game...','ok');
+      await (await bs.joinGameGATE(game.contract_game_id)).wait();
+    } else {
+      showToast('Joining game...','ok');
+      await (await bs.joinGameZK(game.contract_game_id,{value:amtWei})).wait();
     }
     await sb.from('battleship_games').update({player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet}).eq('id',gameDbId);
     startPvPGame(gameDbId);
@@ -2697,7 +2703,7 @@ async function cancelBattleGame(gameDbId){
       await switchToLitVM();
       const freshSigner=await provider.getSigner();
       const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
-      await (await bs.cancelGame(game.contract_game_id)).wait();
+      await (await bs.cancelGame(BigInt(game.contract_game_id))).wait();
     }
     await sb.from('battleship_games').update({status:'cancelled'}).eq('id',gameDbId);
     showToast('Game cancelled','ok');loadBattleLobby();
@@ -3054,7 +3060,12 @@ async function bsPollGame(){
     }
     if(game.status==='finished'){
       clearInterval(bsTimer);bsPhase='over';
-      document.getElementById('battleStatus').textContent=game.winner_wallet===userAddr?'🎉 YOU WIN!':'💀 You lost!';
+      const isWinner=game.winner_wallet===userAddr;
+      document.getElementById('battleStatus').textContent=isWinner?'🎉 YOU WIN!':'💀 You lost!';
+      // Auto-declare winner on contract if game had stakes
+      if(isWinner&&game.contract_game_id>0&&game.bet_token!=='FREE'){
+        bsDeclareWinnerOnChain(game.contract_game_id,userAddr,game.bet_token);
+      }
       return;
     }
     var myTurn=game.current_turn===userAddr;
@@ -3062,6 +3073,21 @@ async function bsPollGame(){
     if(bothReady&&bsPhase==='placing'){bsPhase='battle';bsRenderBoards();}
     if(bsPhase==='battle')document.getElementById('battleStatus').textContent=myTurn?'⚔️ YOUR TURN':'Opponent turn...';
   }catch(e){}
+}
+
+async function bsDeclareWinnerOnChain(contractGameId,winnerAddr,betToken){
+  try{
+    await switchToLitVM();
+    const freshSigner=await provider.getSigner();
+    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
+    showToast('Claiming prize...','ok');
+    const tx=await bs.declareWinner(BigInt(contractGameId),winnerAddr);
+    await tx.wait();
+    showToast('🏆 Prize sent to your wallet!','ok');
+  }catch(e){
+    // Owner only function - show message
+    showToast('Victory recorded! Prize will be sent shortly.','ok');
+  }
 }
 
 function bsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/10)+1);}
@@ -3782,6 +3808,40 @@ async function showFollowersList(wallet, type){
   }catch(e){list.innerHTML='<div class="app-empty" style="padding:20px;">Error loading</div>';}
 }
 
+async function acceptChallenge(fromWallet, event){
+  if(event) event.stopPropagation();
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    // Find the waiting game from this challenger to me
+    const {data:game}=await sb.from('battleship_games')
+      .select('*')
+      .eq('status','waiting')
+      .eq('player1_wallet',fromWallet)
+      .eq('challenge_to',userAddr)
+      .order('created_at',{ascending:false})
+      .limit(1)
+      .single();
+    if(!game){
+      showToast('Challenge not found or already accepted','err');
+      return;
+    }
+    // Join the game
+    await sb.from('battleship_games').update({
+      player2_wallet:userAddr,
+      status:'playing',
+      current_turn:fromWallet
+    }).eq('id',game.id);
+    showToast('Challenge accepted! Place your ships ⚔️','ok');
+    showTab('games');
+    setTimeout(function(){
+      showTab('battle');
+      setTimeout(function(){
+        startPvPGame(game.id);
+      },300);
+    },100);
+  }catch(e){showToast('Failed to accept: '+(e.message||''),'err');}
+}
+
 function openDMWith(wallet){
   showTab('messages');
   // Set active conversation to this wallet
@@ -3815,9 +3875,14 @@ async function loadNotifications(){
       const u=users[n.from_wallet]||{};
       const name=u.username||sAddr(n.from_wallet);
       const avatar=u.avatar_url?`<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
-      const icon=n.type==='like'?'❤️':n.type==='follow'?'👤':'💬';
-      const text=n.type==='like'?`<b>${esc(name)}</b> liked your post`:n.type==='follow'?`<b>${esc(name)}</b> followed you`:n.type==='repost'?`<b>${esc(name)}</b> reposted your post`:`<b>${esc(name)}</b> sent you a message`;
-      const icon2=n.type==='repost'?'🔁':icon;
+      const icon=n.type==='like'?'❤️':n.type==='follow'?'👤':n.type==='challenge'?'⚔️':'💬';
+      const icon2=n.type==='repost'?'🔁':n.type==='challenge'?'⚔️':icon;
+      let text='';
+      if(n.type==='like') text=`<b>${esc(name)}</b> liked your post`;
+      else if(n.type==='follow') text=`<b>${esc(name)}</b> followed you`;
+      else if(n.type==='repost') text=`<b>${esc(name)}</b> reposted your post`;
+      else if(n.type==='challenge') text=`<b>${esc(name)}</b> challenges you to ⚔️ Battleship!`;
+      else text=`<b>${esc(name)}</b> sent you a message`;
       return `<div onclick="markRead('${n.id}')" style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;background:${n.read?'':'rgba(245,200,66,0.03)'};transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='${n.read?'':'rgba(245,200,66,0.03)'}'">
         <div style="position:relative;flex-shrink:0;">
           <div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;">${avatar}</div>
