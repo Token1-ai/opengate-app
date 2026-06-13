@@ -1524,7 +1524,7 @@ const GATE_REWARDS    = '0xf0A8E4E553700578F5b08219dc4D6Ce7491777e6';
 const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
 const GATE_LOTTERY    = '0xe57Af825502EE1E29E1e2027038a0F5E00ee7F7E';
 const GATE_DICE         = '0x3f72225815D7087f7b22A5C9600AEE3B0E5dB798';
-const BATTLESHIP_ADDR   = '0xf4947C9780Df5ab71b1B7825660d3B7a6399d7a3';
+const BATTLESHIP_ADDR   = '0x396117F12DCe9240fFCf2f9b727F343888Dc67a1';
 const GATE_LENDING      = '0x7b650B1A6620c5903ccA91fED6a5Ebe53A72347A';
 const GATE_FAUCET       = '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74';
 const FAUCET_ABI        = [
@@ -3836,6 +3836,29 @@ async function showFollowersList(wallet, type){
   }catch(e){list.innerHTML='<div class="app-empty" style="padding:20px;">Error loading</div>';}
 }
 
+async function declineChallengeDM(fromWallet, event){
+  if(event) event.stopPropagation();
+  try{
+    const {data:game}=await sb.from('battleship_games')
+      .select('*').eq('status','waiting').eq('player1_wallet',fromWallet)
+      .eq('challenge_to',userAddr).order('created_at',{ascending:false}).limit(1).single();
+    if(game){
+      await sb.from('battleship_games').update({status:'cancelled'}).eq('id',game.id);
+      if(game.contract_game_id>0&&game.bet_token!=='FREE'){
+        try{
+          await switchToLitVM();
+          const freshSigner=await provider.getSigner();
+          const coder=ethers.AbiCoder.defaultAbiCoder();
+          const sel=ethers.id('cancelGame(uint256)').slice(0,10);
+          const data=sel+coder.encode(['uint256'],[BigInt(game.contract_game_id)]).slice(2);
+          await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data,gasLimit:200000n})).wait();
+        }catch{}
+      }
+    }
+    showToast('Challenge declined','ok');
+  }catch(e){showToast('Failed','err');}
+}
+
 async function declineChallenge(fromWallet, notifId, event){
   if(event) event.stopPropagation();
   try{
@@ -4227,6 +4250,11 @@ async function loadMessages(){
     return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'};">
       <div style="max-width:70%;background:${mine?'var(--gold)':'var(--bg3)'};color:${mine?'#08090C':'var(--text)'};border-radius:${mine?'18px 18px 4px 18px':'18px 18px 18px 4px'};padding:10px 14px;font-size:14px;line-height:1.5;">
         ${esc(m.content)}
+        ${!mine&&m.content.includes('challenges you to Battleship')?`
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <button onclick="acceptChallenge('${m.from_wallet}',event)" style="padding:6px 14px;background:var(--gold);color:#08090C;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;">⚔️ Accept</button>
+            <button onclick="declineChallengeDM('${m.from_wallet}',event)" style="padding:6px 12px;background:rgba(255,77,77,0.1);color:var(--red);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid rgba(255,77,77,.3);">✕ Decline</button>
+          </div>`:''}
         <div style="font-size:10px;opacity:.6;margin-top:4px;text-align:${mine?'right':'left'};">${tAgo(m.created_at)}</div>
       </div>
     </div>`;
