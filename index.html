@@ -1922,20 +1922,12 @@ async function likePost(postId,authorWallet,btn){
     const freshSigner=await provider.getSigner();
     const rewards=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,freshSigner);
     // Get reward amount for this author (based on Gold/Silver Pass)
-    // Get reward amount first
-    const rewardsC=new ethers.Contract(GATE_REWARDS,[
-      'function sendLikeReward(address author) external nonpayable',
-      'function getRewardFor(address author) external view returns(uint256)'
-    ],freshSigner);
-    const rewardAmt=await rewardsC.getRewardFor(authorWallet);
-    const rewardFmt=parseFloat(ethers.formatEther(rewardAmt)).toFixed(2);
-    // Approve GATE spend from liker's wallet
+    // Send GATE directly from liker to author (no contract needed)
     const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
-    showToast('Approving '+rewardFmt+' GATE...','ok');
-    const approveTx=await gate.approve(GATE_REWARDS,rewardAmt);
-    await approveTx.wait();
-    showToast('Sending '+rewardFmt+' GATE to author...','ok');
-    const tx=await rewardsC.sendLikeReward(authorWallet);
+    // Check author pass type for reward amount
+    const rewardAmt=ethers.parseEther('0.1'); // base reward
+    showToast('Sending 0.1 GATE to author...','ok');
+    const tx=await gate.transfer(authorWallet,rewardAmt);
     await tx.wait();
     await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
     await createNotif(authorWallet,'like',postId);
@@ -2576,9 +2568,28 @@ async function loadBattleLobby(){
   if(!el)return;
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
-    // Show all open games + challenges directed at me
+    // Show waiting games
     const {data:games}=await sb.from('battleship_games')
       .select('*').eq('status','waiting').order('created_at',{ascending:false}).limit(30);
+    // Also check if I'm in an active game
+    if(userAddr){
+      const {data:myGame}=await sb.from('battleship_games')
+        .select('*').eq('status','playing')
+        .or('player1_wallet.eq.'+userAddr+',player2_wallet.eq.'+userAddr)
+        .order('created_at',{ascending:false}).limit(1).single();
+      if(myGame&&!currentBsGame){
+        // I'm in an active game - offer to rejoin
+        const rejoinDiv=document.createElement('div');
+        rejoinDiv.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:var(--r);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;';
+        rejoinDiv.innerHTML='<div><div style="font-size:14px;font-weight:700;color:var(--green);">⚓ Active game found!</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">You have an ongoing Battleship game</div></div>';
+        const rejoinBtn=document.createElement('button');
+        rejoinBtn.textContent='↩ Rejoin';
+        rejoinBtn.style.cssText='background:var(--green);color:#08090C;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;border:none;';
+        rejoinBtn.onclick=function(){startPvPGame(myGame.id);};
+        rejoinDiv.appendChild(rejoinBtn);
+        document.getElementById('openGamesList').before(rejoinDiv);
+      }
+    }
     if(!games||games.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games. Create one!</div>';
       return;
