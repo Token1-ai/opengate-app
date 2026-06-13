@@ -2568,13 +2568,10 @@ async function loadBattleLobby(){
   if(!el)return;
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
-    // Show challenges TO ME first, then all open games
-    const {data:challenges}= userAddr ? await sb.from('battleship_games')
-      .select('*').eq('status','waiting').eq('challenge_to',userAddr)
-      .order('created_at',{ascending:false}) : {data:[]};
-    const {data:openGames}=await sb.from('battleship_games')
-      .select('*').eq('status','waiting').is('challenge_to',null)
-      .order('created_at',{ascending:false}).limit(20);
+    // Load from DB - challenges to me first, then open games
+    const q1=userAddr?sb.from('battleship_games').select('*').eq('status','waiting').eq('challenge_to',userAddr).order('created_at',{ascending:false}):Promise.resolve({data:[]});
+    const q2=sb.from('battleship_games').select('*').eq('status','waiting').is('challenge_to',null).order('created_at',{ascending:false}).limit(30);
+    const [{data:challenges},{data:openGames}]=await Promise.all([q1,q2]);
     const games=[...(challenges||[]),...(openGames||[])];
     // Also check if I'm in an active game
     if(userAddr){
@@ -2583,16 +2580,17 @@ async function loadBattleLobby(){
         .or('player1_wallet.eq.'+userAddr+',player2_wallet.eq.'+userAddr)
         .order('created_at',{ascending:false}).limit(1).single();
       if(myGame&&!currentBsGame){
-        // I'm in an active game - offer to rejoin
         const rejoinDiv=document.createElement('div');
         rejoinDiv.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:var(--r);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;';
-        rejoinDiv.innerHTML='<div><div style="font-size:14px;font-weight:700;color:var(--green);">⚓ Active game found!</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">You have an ongoing Battleship game</div></div>';
+        const betInfo=myGame.bet_token==='FREE'?'Free Play':myGame.bet_amount+' '+myGame.bet_token;
+        rejoinDiv.innerHTML='<div><div style="font-size:14px;font-weight:700;color:var(--green);">⚓ Active game — '+betInfo+'</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">Continue your ongoing battle</div></div>';
         const rejoinBtn=document.createElement('button');
-        rejoinBtn.textContent='↩ Rejoin';
+        rejoinBtn.textContent='↩ Continue';
         rejoinBtn.style.cssText='background:var(--green);color:#08090C;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;border:none;';
         rejoinBtn.onclick=function(){startPvPGame(myGame.id);};
         rejoinDiv.appendChild(rejoinBtn);
-        document.getElementById('openGamesList').before(rejoinDiv);
+        const ogl=document.getElementById('openGamesList');
+        if(ogl)ogl.before(rejoinDiv);
       }
     }
     if(!games||games.length===0){
@@ -2605,7 +2603,7 @@ async function loadBattleLobby(){
       const isMine=userAddr&&g.player1_wallet===userAddr;
       const betLabel=g.bet_token==='FREE'
         ?'<span style="color:var(--green);">🎮 Free Play</span>'
-        :'<span style="color:var(--gold);">💰 '+g.bet_amount+' '+g.bet_token+' — you must stake the same</span>';
+        :'<span style="color:var(--gold);">💰 Stake: '+g.bet_amount+' '+g.bet_token+'</span>';
       const row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(isChallenge?'rgba(226,75,74,0.4)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;';
       row.innerHTML='<div><div style="font-size:14px;font-weight:700;">'+(isChallenge?'<span style="color:#E24B4A;">⚔️ Challenge: </span>':'')+sAddr(g.player1_wallet)+'</div><div style="font-size:13px;margin-top:4px;">'+betLabel+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+tAgo(g.created_at)+' ago</div></div>';
@@ -3891,33 +3889,62 @@ async function acceptChallenge(fromWallet, event){
   if(event) event.stopPropagation();
   if(!userAddr){showToast('Connect wallet first','err');return;}
   try{
-    // Find the waiting game from this challenger to me
-    const {data:game}=await sb.from('battleship_games')
-      .select('*')
-      .eq('status','waiting')
-      .eq('player1_wallet',fromWallet)
-      .eq('challenge_to',userAddr)
-      .order('created_at',{ascending:false})
-      .limit(1)
-      .single();
+    // Find the waiting game from this challenger - check challenge_to OR open game
+    let game=null;
+    // First try challenge_to=me
+    const {data:g1}=await sb.from('battleship_games')
+      .select('*').eq('status','waiting').eq('player1_wallet',fromWallet)
+      .eq('challenge_to',userAddr).order('created_at',{ascending:false}).limit(1);
+    if(g1&&g1.length>0) game=g1[0];
+    // If not found, try any waiting game from this player
     if(!game){
-      showToast('Challenge not found or already accepted','err');
+      const {data:g2}=await sb.from('battleship_games')
+        .select('*').eq('status','waiting').eq('player1_wallet',fromWallet)
+        .order('created_at',{ascending:false}).limit(1);
+      if(g2&&g2.length>0) game=g2[0];
+    }
+    if(!game){
+      showToast('Game not found or already started','err');
       return;
     }
-    // Join the game
+    // If staked game - need to stake same amount first
+    if(game.bet_token!=='FREE'&&game.contract_game_id>0){
+      try{
+        await switchToLitVM();
+        const freshSigner=await provider.getSigner();
+        const amtWei=ethers.parseEther(game.bet_amount);
+        const coder=ethers.AbiCoder.defaultAbiCoder();
+        if(game.bet_token==='GATE'){
+          const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
+          showToast('Approving '+game.bet_amount+' GATE...','ok');
+          await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
+          showToast('Joining game on chain...','ok');
+          const sel=ethers.id('joinGameGATE(uint256)').slice(0,10);
+          const data=sel+coder.encode(['uint256'],[BigInt(game.contract_game_id)]).slice(2);
+          await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data,gasLimit:300000n})).wait();
+        } else {
+          showToast('Sending '+game.bet_amount+' zkLTC...','ok');
+          const sel=ethers.id('joinGameZK(uint256)').slice(0,10);
+          const data=sel+coder.encode(['uint256'],[BigInt(game.contract_game_id)]).slice(2);
+          await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data,value:amtWei,gasLimit:300000n})).wait();
+        }
+      }catch(stakeErr){
+        showToast('Failed to stake: '+(stakeErr.reason||stakeErr.message||'').slice(0,50),'err');
+        return;
+      }
+    }
+    // Join the game in DB
     await sb.from('battleship_games').update({
       player2_wallet:userAddr,
       status:'playing',
-      current_turn:fromWallet
+      current_turn:game.player1_wallet||fromWallet
     }).eq('id',game.id);
     showToast('Challenge accepted! Place your ships ⚔️','ok');
-    showTab('games');
+    document.getElementById('challengeModal')&&document.getElementById('challengeModal').classList.remove('open');
+    showTab('battle');
     setTimeout(function(){
-      showTab('battle');
-      setTimeout(function(){
-        startPvPGame(game.id);
-      },300);
-    },100);
+      startPvPGame(game.id);
+    },300);
   }catch(e){showToast('Failed to accept: '+(e.message||''),'err');}
 }
 
