@@ -2642,23 +2642,28 @@ async function createBattleGame(){
     await switchToLitVM();
     const amtWei=ethers.parseEther(amt);
     const freshSigner=await provider.getSigner();
-    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
-    const iface=new ethers.Interface(['event GameCreated(uint256 indexed id,address indexed player1,uint256 bet,uint8 token)']);
+    // Use direct selectors to avoid ABI parsing issues in ethers v6
     let gameId=0;
     if(bsToken==='GATE'){
       const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
       showToast('Creating game...','ok');
-      const tx=await bs.createGameGATE(amtWei);
-      const receipt=await tx.wait();
-      for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p)gameId=Number(p.args.id);}catch{}}
+      // createGameGATE(uint256 amount) selector
+      const sel=ethers.id('createGameGATE(uint256)').slice(0,10);
+      const enc=ethers.AbiCoder.defaultAbiCoder().encode(['uint256'],[amtWei]);
+      const receipt=await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:sel+enc.slice(2),gasLimit:300000n})).wait();
+      // Parse GameCreated event: keccak256("GameCreated(uint256,address,uint256,uint8)")
+      const evSig=ethers.id('GameCreated(uint256,address,uint256,uint8)');
+      for(const log of receipt.logs){if(log.topics[0]===evSig){gameId=Number(BigInt(log.topics[1]));break;}}
       await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'GATE',status:'waiting',contract_game_id:gameId});
     } else {
       showToast('Creating game...','ok');
-      const tx=await bs.createGameZK({value:amtWei});
-      const receipt=await tx.wait();
-      for(const log of receipt.logs){try{const p=iface.parseLog(log);if(p)gameId=Number(p.args.id);}catch{}}
+      // createGameZK() selector
+      const sel=ethers.id('createGameZK()').slice(0,10);
+      const receipt=await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:sel,value:amtWei,gasLimit:200000n})).wait();
+      const evSig=ethers.id('GameCreated(uint256,address,uint256,uint8)');
+      for(const log of receipt.logs){if(log.topics[0]===evSig){gameId=Number(BigInt(log.topics[1]));break;}}
       await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'zkLTC',status:'waiting',contract_game_id:gameId});
     }
     showToast('Game created! ⚓','ok');
@@ -2679,16 +2684,19 @@ async function joinBattleGame(gameDbId,betAmt,betToken){
     await switchToLitVM();
     const amtWei=ethers.parseEther(betAmt);
     const freshSigner=await provider.getSigner();
-    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
     if(betToken==='GATE'){
       const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
       showToast('Joining game...','ok');
-      await (await bs.joinGameGATE(game.contract_game_id)).wait();
+      const sel2=ethers.id('joinGameGATE(uint256)').slice(0,10);
+      const enc2=ethers.AbiCoder.defaultAbiCoder().encode(['uint256'],[BigInt(game.contract_game_id)]);
+      await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:sel2+enc2.slice(2),gasLimit:200000n})).wait();
     } else {
       showToast('Joining game...','ok');
-      await (await bs.joinGameZK(game.contract_game_id,{value:amtWei})).wait();
+      const sel2=ethers.id('joinGameZK(uint256)').slice(0,10);
+      const enc2=ethers.AbiCoder.defaultAbiCoder().encode(['uint256'],[BigInt(game.contract_game_id)]);
+      await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:sel2+enc2.slice(2),value:amtWei,gasLimit:200000n})).wait();
     }
     await sb.from('battleship_games').update({player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet}).eq('id',gameDbId);
     startPvPGame(gameDbId);
@@ -2703,7 +2711,9 @@ async function cancelBattleGame(gameDbId){
       await switchToLitVM();
       const freshSigner=await provider.getSigner();
       const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
-      await (await bs.cancelGame(BigInt(game.contract_game_id))).wait();
+      const selC=ethers.id('cancelGame(uint256)').slice(0,10);
+      const encC=ethers.AbiCoder.defaultAbiCoder().encode(['uint256'],[BigInt(game.contract_game_id)]);
+      await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:selC+encC.slice(2),gasLimit:200000n})).wait();
     }
     await sb.from('battleship_games').update({status:'cancelled'}).eq('id',gameDbId);
     showToast('Game cancelled','ok');loadBattleLobby();
@@ -3079,9 +3089,10 @@ async function bsDeclareWinnerOnChain(contractGameId,winnerAddr,betToken){
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    const bs=new ethers.Contract(BATTLESHIP_ADDR,BATTLESHIP_ABI,freshSigner);
+    const selW=ethers.id('declareWinner(uint256,address)').slice(0,10);
+    const encW=ethers.AbiCoder.defaultAbiCoder().encode(['uint256','address'],[BigInt(contractGameId),winnerAddr]);
     showToast('Claiming prize...','ok');
-    const tx=await bs.declareWinner(BigInt(contractGameId),winnerAddr);
+    const tx=await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:selW+encW.slice(2),gasLimit:200000n});
     await tx.wait();
     showToast('🏆 Prize sent to your wallet!','ok');
   }catch(e){
