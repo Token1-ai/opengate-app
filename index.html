@@ -432,6 +432,17 @@ textarea.form-inp{resize:vertical;min-height:80px;}
   </div>
 </div>
 
+<!-- FOLLOWERS MODAL -->
+<div class="modal-overlay" id="followersModal">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:0;width:100%;max-width:420px;position:relative;overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:16px;font-weight:700;" id="followersModalTitle">Followers</div>
+      <button onclick="document.getElementById('followersModal').classList.remove('open')" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div id="followersModalList" style="max-height:400px;overflow-y:auto;padding:8px 0;"></div>
+  </div>
+</div>
+
 <!-- EDIT PROFILE MODAL -->
 <div class="modal-overlay" id="editModal">
   <div class="edit-modal-inner">
@@ -441,10 +452,11 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <div class="form-grp"><label class="form-lbl">Bio</label><textarea class="form-inp" id="editBio" placeholder="Tell the world about yourself..." maxlength="160"></textarea></div>
     <div class="form-grp">
       <label class="form-lbl">Avatar</label>
-      <div style="display:flex;gap:8px;margin-bottom:8px;">
-        <button onclick="setAvatarTab('url')" id="avatarTabUrl" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:12px;font-weight:600;cursor:pointer;">URL</button>
-        <button onclick="setAvatarTab('nft')" id="avatarTabNft" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">Use NFT 🖼️</button>
-        <button onclick="setAvatarTab('upload')" id="avatarTabUpload" style="flex:1;padding:7px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">Upload 📤</button>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button onclick="setAvatarTab('upload')" id="avatarTabUpload2" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;">📷 Photo</button>
+        <button onclick="setAvatarTab('nft');scanWalletNFTs();" id="avatarTabNft" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;">🖼️ NFT</button>
+        <button onclick="setAvatarTab('url')" id="avatarTabUrl" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;">🔗 Link</button>
+
       </div>
       <div id="avatarUrlTab"><input class="form-inp" id="editAvatar" placeholder="https://..." style="width:100%;"/></div>
       <div id="avatarNftTab" style="display:none;">
@@ -460,25 +472,22 @@ textarea.form-inp{resize:vertical;min-height:80px;}
           <div id="nftPreview" style="margin-top:8px;"></div>
         </div>
       </div>
-      <div id="avatarUploadTab" style="display:none;">
-        <label for="avatarFile" style="display:block;cursor:pointer;">
-          <div id="uploadDropzone" style="padding:20px;border:2px dashed var(--border);border-radius:9px;background:var(--bg3);text-align:center;transition:all .2s;">
-            <div style="font-size:32px;margin-bottom:8px;">📷</div>
-            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px;">Click here to choose photo</div>
-            <div style="font-size:12px;color:var(--muted);">JPG, PNG, GIF — from your computer or phone</div>
+      <div id="avatarUploadTab" style="display:block;">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;cursor:pointer;" onclick="document.getElementById('avatarFile').click()">
+          <div id="avatarThumb" style="width:52px;height:52px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">🧑</div>
+          <div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);">Click to choose photo</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">JPG, PNG, GIF from your device</div>
           </div>
-          <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatarFile(this)"/>
-        </label>
-        <div id="uploadAvatarStatus" style="font-size:13px;color:var(--muted);text-align:center;padding:6px 0;"></div>
-        <div id="avatarPreviewBox" style="margin-top:10px;display:none;text-align:center;">
-          <img id="avatarPreviewImg" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);"/>
-          <div style="font-size:12px;color:var(--green);margin-top:6px;font-weight:600;">✓ Photo ready — click Save Profile</div>
+          <div style="margin-left:auto;font-size:20px;">📁</div>
         </div>
+        <input type="file" id="avatarFile" accept="image/*" style="display:none;" onchange="uploadAvatarFile(this)"/>
+        <div id="uploadAvatarStatus" style="font-size:12px;color:var(--muted);margin-top:6px;text-align:center;"></div>
       </div>
     </div>
     <div class="form-grp">
       <label class="form-lbl">Cover Image URL (optional)</label>
-      <input class="form-inp" id="editCover" placeholder="https://..." style="width:100%;"/>
+      <input class="form-inp" id="editCover" placeholder="https://i.imgur.com/example.jpg (1500×500px)" style="width:100%;"/>
       <div style="font-size:11px;color:var(--muted);margin-top:4px;">Recommended: 1500×500px</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
@@ -1511,7 +1520,7 @@ const GATE_STAKING  = '0xDD2d80b7c31622D084905899b4d40b815cF01bF8';
 const GATE_PRESALE  = '0xd1BD1853913F1CA242cD4D88a1F50EB0a6ba0854';
 const TOKEN_FACTORY   = '0xb69Df265Ac37A3E6AB2C940cFA395FE7fF0C0A60';
 const NFT_MARKET      = '0x2231E1aDcbb1FB59055d6442207Ac029553e5859';
-const GATE_REWARDS    = '0x1de30bC3490DB9ea1514DA791aA4dAE08e961E91';
+const GATE_REWARDS    = '0xf0A8E4E553700578F5b08219dc4D6Ce7491777e6';
 const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
 const GATE_LOTTERY    = '0xe57Af825502EE1E29E1e2027038a0F5E00ee7F7E';
 const GATE_DICE         = '0x3f72225815D7087f7b22A5C9600AEE3B0E5dB798';
@@ -1578,9 +1587,11 @@ const DAO_ABI         = [
   'function MIN_TOKENS_TO_VOTE() view returns(uint256)',
 ];
 const REWARDS_ABI     = [
-  'function sendLikeReward(address author) nonpayable',
-  'function getRewardFor(address author) view returns(uint256)',
-  'function poolBalance() view returns(uint256)',
+  'function sendLikeReward(address author) external nonpayable',
+  'function getRewardFor(address author) external view returns(uint256)',
+  'function poolBalance() external view returns(uint256)',
+  'function rewardPool() external view returns(uint256)',
+  'function syncPool() external nonpayable',
 ];
 const NFT_MARKET_ABI  = [
   'function listNFT(address,uint256,uint256) returns(uint256)',
@@ -1890,7 +1901,7 @@ function renderPost(post,liked){
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
   const repostHeader=post.repost_by?`<div style="font-size:11px;color:var(--muted);padding:8px 20px 0;display:flex;align-items:center;gap:5px;"><span>🔁</span><span style="font-weight:600;color:var(--muted);">${esc(post.repost_by_name||sAddr(post.repost_by))} reposted</span></div>`:'';
-  return `${repostHeader}<div class="post-card"><div class="post-inner"><div class="post-av">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name">${esc(name)}</span>${badge}<span class="post-wlt">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span></div><div class="post-txt">${esc(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post.likes_count||0}</span></button><button class="act-btn" onclick="repostPost('${post.id}','${post.author_wallet}',this)" id="rp-${post.id}"><span>🔁</span><span class="act-cnt" id="rpcnt-${post.id}">${post.reposts_count||0}</span></button>
+  return `${repostHeader}<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${esc(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post.likes_count||0}</span></button><button class="act-btn" onclick="repostPost('${post.id}','${post.author_wallet}',this)" id="rp-${post.id}"><span>🔁</span><span class="act-cnt" id="rpcnt-${post.id}">${post.reposts_count||0}</span></button>
           <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
           ${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}</div></div></div></div>`;
 }
@@ -1911,10 +1922,20 @@ async function likePost(postId,authorWallet,btn){
     const freshSigner=await provider.getSigner();
     const rewards=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,freshSigner);
     // Get reward amount for this author (based on Gold/Silver Pass)
-    const rewardAmt=await rewards.getRewardFor(authorWallet);
+    // Get reward amount first
+    const rewardsC=new ethers.Contract(GATE_REWARDS,[
+      'function sendLikeReward(address author) external nonpayable',
+      'function getRewardFor(address author) external view returns(uint256)'
+    ],freshSigner);
+    const rewardAmt=await rewardsC.getRewardFor(authorWallet);
     const rewardFmt=parseFloat(ethers.formatEther(rewardAmt)).toFixed(2);
-    showToast('Sending '+rewardFmt+' GATE...','ok');
-    const tx=await rewards.sendLikeReward(authorWallet);
+    // Approve GATE spend from liker's wallet
+    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
+    showToast('Approving '+rewardFmt+' GATE...','ok');
+    const approveTx=await gate.approve(GATE_REWARDS,rewardAmt);
+    await approveTx.wait();
+    showToast('Sending '+rewardFmt+' GATE to author...','ok');
+    const tx=await rewardsC.sendLikeReward(authorWallet);
     await tx.wait();
     await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
     await createNotif(authorWallet,'like',postId);
@@ -1942,7 +1963,7 @@ async function loadProfile(wallet){
   const isOwn=userAddr&&userAddr===target;
   let isF=false;
   if(userAddr&&!isOwn){const {data:f}=await sb.from('follows').select('id').eq('follower_wallet',userAddr).eq('following_wallet',target).single();isF=!!f;}
-  const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.innerHTML='🧑'"/>`:'🧑';
+  const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.style.display='none'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`:'🧑';
   const coverStyle=u.cover_url?`background:url('${u.cover_url}') center/cover no-repeat`:'background:linear-gradient(135deg,rgba(245,200,66,.15),rgba(38,217,138,.08))';
   const badgeStyle=u.pass_type==='gold'?'background:rgba(245,200,66,0.15);color:var(--gold);border:1px solid var(--border-g);':u.pass_type==='silver'?'background:rgba(168,189,208,0.15);color:var(--silver);border:1px solid var(--border-s);':'background:var(--bg3);color:var(--muted);border:1px solid var(--border);';
   const badgeTxt=u.pass_type==='gold'?'🥇 Gold Pass':u.pass_type==='silver'?'🥈 Silver Pass':'👤 Free';
@@ -1956,7 +1977,7 @@ async function loadProfile(wallet){
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
         <div>
           <div class="prof-name">${esc(u.username||sAddr(u.wallet))}</div>
-          <div class="prof-wlt">${u.wallet}</div>
+          <div class="prof-wlt" onclick="cpText('${u.wallet}');showToast('Wallet copied!','ok')" style="cursor:pointer;" title="Click to copy">${u.wallet}</div>
         </div>
         <span style="font-size:11px;padding:4px 12px;border-radius:100px;font-weight:700;${badgeStyle}">${badgeTxt}</span>
       </div>
@@ -1964,19 +1985,30 @@ async function loadProfile(wallet){
       ${links.length?`<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;">${links.join('')}</div>`:''}
       <div class="prof-stats">
         <div class="pstat"><div class="pstat-n">${pc||0}</div><div class="pstat-l">Posts</div></div>
-        <div class="pstat"><div class="pstat-n">${fc||0}</div><div class="pstat-l">Followers</div></div>
-        <div class="pstat"><div class="pstat-n">${fic||0}</div><div class="pstat-l">Following</div></div>
+        <div class="pstat" onclick="showFollowersList('${target}','followers')" style="cursor:pointer;" title="View followers"><div class="pstat-n">${fc||0}</div><div class="pstat-l">Followers</div></div>
+        <div class="pstat" onclick="showFollowersList('${target}','following')" style="cursor:pointer;" title="View following"><div class="pstat-n">${fic||0}</div><div class="pstat-l">Following</div></div>
       </div>
       ${isOwn?
         `<button class="edit-prof-btn" onclick="openEditModal()">Edit Profile</button>`:
         `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <button class="follow-btn${isF?' following':''}" onclick="toggleFollow('${target}',this)">${isF?'Following':'Follow'}</button>
-          <button id="bell-${target}" onclick="toggleBell('${target}',this)" title="${isBellOn('${target}')?'Notifications on — click to turn off':'Get notified of new posts'}" style="background:${isBellOn('${target}')?'rgba(245,200,66,0.1)':'var(--bg3)'};border:1px solid ${isBellOn('${target}')?'var(--gold)':'var(--border)'};border-radius:20px;padding:7px 12px;font-size:14px;cursor:pointer;color:${isBellOn('${target}')?'var(--gold)':'var(--muted)'};transition:all .2s;">🔔</button>
-          <button onclick="openChallenge('${target}','${esc(user.username||sAddr(target))}')" style="background:linear-gradient(135deg,rgba(226,75,74,0.15),rgba(192,57,43,0.08));border:1px solid rgba(226,75,74,0.3);color:#E24B4A;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">⚔️ Challenge</button>
+          <button id="bell-${target}" onclick="toggleBell('${target}',this)" style="background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:14px;cursor:pointer;color:var(--muted);transition:all .2s;">🔔</button>
+          <button onclick="openDMWith('${target}')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;">💬 Message</button>
+          <button onclick="openChallenge('${target}','${esc(u.username||sAddr(target))}')" style="background:linear-gradient(135deg,rgba(226,75,74,0.15),rgba(192,57,43,0.08));border:1px solid rgba(226,75,74,0.3);color:#E24B4A;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Challenge</button>
         </div>`
       }
     </div>
     <div id="profPosts"><div class="app-loader">Loading...</div></div>`;
+  // Update bell button state after render
+  const bellBtn=document.getElementById('bell-'+target);
+  if(bellBtn&&isBellOn(target)){
+    bellBtn.style.background='rgba(245,200,66,0.1)';
+    bellBtn.style.borderColor='var(--gold)';
+    bellBtn.style.color='var(--gold)';
+    bellBtn.title='Notifications on — click to turn off';
+  } else if(bellBtn){
+    bellBtn.title='Get notified of new posts';
+  }
   const {data:posts}=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').eq('author_wallet',target).order('created_at',{ascending:false});
   const pp=document.getElementById('profPosts');
   if(!posts||posts.length===0){pp.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet</div>';return;}
@@ -1984,18 +2016,37 @@ async function loadProfile(wallet){
   if(userAddr){const {data:lk}=await sb.from('likes').select('post_id').eq('liker_wallet',userAddr).in('post_id',posts.map(p=>p.id));if(lk)lk.forEach(l=>ls.add(l.post_id));}
   pp.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id))).join('');
 }
+async function quickFollow(wallet, btn){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(btn.textContent==='✓'){return;}
+  try{
+    // Check if already following
+    const {data:existing}=await sb.from('follows').select('id').eq('follower_wallet',userAddr).eq('following_wallet',wallet).single();
+    if(existing){btn.textContent='✓';btn.style.color='var(--green)';return;}
+    await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});
+    await createNotif(wallet,'follow');
+    btn.textContent='✓';
+    btn.style.color='var(--green)';
+    btn.style.borderColor='var(--green)';
+    showToast('Following! ✓','ok');
+  }catch(e){showToast('Failed','err');}
+}
+
 async function toggleFollow(wallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const f=btn.classList.contains('following');
   if(f){
     await sb.from('follows').delete().eq('follower_wallet',userAddr).eq('following_wallet',wallet);
     btn.textContent='Follow';btn.classList.remove('following');
-    // Remove bell if was set
     removeBellNotif(wallet);
+    // Update follower count on page
+    const fcEl=document.querySelector('.pstat-n');
+    // Just reload profile to update counts
   } else {
     await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});
     btn.textContent='Following';btn.classList.add('following');
     await createNotif(wallet,'follow');
+    showToast('Following! ✓','ok');
   }
 }
 
@@ -2037,8 +2088,23 @@ function openEditModal(){
   document.getElementById('editUsername').value=currentUser.username||'';
   document.getElementById('editBio').value=currentUser.bio||'';
   const av=currentUser.avatar_url||'';
-  document.getElementById('editAvatar').value=(av.startsWith('0x')&&av.length===42)?'':av;
-  document.getElementById('editCover').value=currentUser.cover_url||'';
+  const cleanAv=(av.startsWith('0x')&&av.length===42)?'':av;
+  document.getElementById('editAvatar').value=cleanAv;
+  // Show current avatar in thumb
+  const thumb=document.getElementById('avatarThumb');
+  if(thumb){
+    if(cleanAv){
+      const tImg=document.createElement('img');
+      tImg.src=cleanAv;
+      tImg.style.cssText='width:100%;height:100%;object-fit:cover;';
+      tImg.onerror=function(){this.parentElement.textContent='🧑';};
+      thumb.innerHTML='';
+      thumb.appendChild(tImg);
+    } else {
+      thumb.textContent='🧑';
+    }
+  }
+    document.getElementById('editCover').value=currentUser.cover_url||'';
   setAvatarTab('upload'); // Default to upload tab
   document.getElementById('editWebsite').value=currentUser.website||'';
   document.getElementById('editTwitter').value=currentUser.twitter||'';
@@ -2046,11 +2112,17 @@ function openEditModal(){
 }
 
 function setAvatarTab(tab){
-  ['url','nft','upload'].forEach(t=>{
-    document.getElementById('avatarTab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display=t===tab?'block':'none';
+  ['url','nft','upload'].forEach(function(t){
+    // Update button style
     const btn=document.getElementById('avatarTab'+t.charAt(0).toUpperCase()+t.slice(1));
-    if(t===tab){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}
-    else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+    if(btn){
+      btn.style.borderColor=t===tab?'var(--gold)':'var(--border)';
+      btn.style.background=t===tab?'rgba(245,200,66,0.1)':'var(--bg3)';
+      btn.style.color=t===tab?'var(--gold)':'var(--muted)';
+    }
+    // Show/hide PANEL
+    const panel=document.getElementById('avatar'+t.charAt(0).toUpperCase()+t.slice(1)+'Tab');
+    if(panel) panel.style.display=t===tab?'block':'none';
   });
 }
 
@@ -2154,19 +2226,19 @@ async function uploadAvatarFile(input){
   const file=input.files[0];
   if(!file) return;
   const status=document.getElementById('uploadAvatarStatus');
-  const previewBox=document.getElementById('avatarPreviewBox');
-  const previewImg=document.getElementById('avatarPreviewImg');
-  // Show local preview immediately
+  // Show local preview immediately in thumb
   const localUrl=URL.createObjectURL(file);
-  if(previewImg){previewImg.src=localUrl;previewBox.style.display='block';}
-  status.textContent='Uploading to IPFS...';
+  const thumb=document.getElementById('avatarThumb');
+  if(thumb) thumb.innerHTML='<img src="'+localUrl+'" style="width:100%;height:100%;object-fit:cover;"/>';
+  status.textContent='Uploading...';
   try{
     const url=await uploadToPinata(file);
     document.getElementById('editAvatar').value=url;
-    if(previewImg) previewImg.src=url;
-    status.textContent='✓ Uploaded!';
+    const thumb2=document.getElementById('avatarThumb');
+    if(thumb2) thumb2.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;"/>';
+    status.textContent='✓ Done! Click Save Profile';
     status.style.color='var(--green)';
-    showToast('Avatar uploaded! ✓','ok');
+    showToast('Photo ready! Click Save Profile ✓','ok');
   }catch(e){
     status.textContent='Upload failed. Try again.';
     status.style.color='var(--red)';
@@ -2177,7 +2249,12 @@ function closeEditModal(){document.getElementById('editModal').classList.remove(
 async function saveProfile(){
   const username=document.getElementById('editUsername').value.trim();
   const bio=document.getElementById('editBio').value.trim();
-  const avatar_url=document.getElementById('editAvatar').value.trim();
+  let avatar_url=document.getElementById('editAvatar').value.trim();
+  // Warn about imgur album URLs
+  if(avatar_url.includes('imgur.com/a/')) {
+    showToast('Tip: use direct image URL (i.imgur.com/xxx.jpg)','err');
+    avatar_url='';
+  }
   const cover_url=document.getElementById('editCover').value.trim();
   const website=document.getElementById('editWebsite').value.trim();
   const twitter=document.getElementById('editTwitter').value.trim();
@@ -2499,8 +2576,9 @@ async function loadBattleLobby(){
   if(!el)return;
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
+    // Show all open games + challenges directed at me
     const {data:games}=await sb.from('battleship_games')
-      .select('*').eq('status','waiting').order('created_at',{ascending:false}).limit(20);
+      .select('*').eq('status','waiting').order('created_at',{ascending:false}).limit(30);
     if(!games||games.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games. Create one!</div>';
       return;
@@ -3640,6 +3718,65 @@ function renderUserCard(u){
 function viewUserProfile(wallet){
   showTab('profile');
   loadProfile(wallet);
+}
+
+async function showFollowersList(wallet, type){
+  document.getElementById('followersModal').classList.add('open');
+  const title=document.getElementById('followersModalTitle');
+  const list=document.getElementById('followersModalList');
+  title.textContent=type==='followers'?'Followers':'Following';
+  list.innerHTML='<div class="app-loader">Loading...</div>';
+  try{
+    let data,error;
+    if(type==='followers'){
+      const res=await sb.from('follows').select('follower_wallet').eq('following_wallet',wallet);
+      data=res.data;error=res.error;
+    } else {
+      const res=await sb.from('follows').select('following_wallet').eq('follower_wallet',wallet);
+      data=res.data;error=res.error;
+    }
+    if(error||!data||data.length===0){
+      list.innerHTML='<div class="app-empty" style="padding:20px;">No '+(type==='followers'?'followers':'following')+' yet</div>';
+      return;
+    }
+    const wallets=data.map(function(d){return type==='followers'?d.follower_wallet:d.following_wallet;});
+    const {data:users}=await sb.from('users').select('wallet,username,avatar_url,pass_type').in('wallet',wallets);
+    const usersMap={};
+    if(users) users.forEach(function(u){usersMap[u.wallet]=u;});
+    list.innerHTML='';
+    wallets.forEach(function(w){
+      const u=usersMap[w]||{wallet:w};
+      const av=u.avatar_url?('<img src="'+u.avatar_url+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;"/>'):'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px;">🧑</div>';
+      const row=document.createElement('div');
+      row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .15s;';
+      row.onmouseover=function(){this.style.background='var(--bg3)';};
+      row.onmouseout=function(){this.style.background='';};
+      const info=document.createElement('div');
+      info.style.cssText='flex:1;min-width:0;';
+      info.innerHTML='<div style="font-size:14px;font-weight:600;">'+(u.username||sAddr(w))+'</div><div style="font-size:11px;color:var(--muted);font-family:monospace;">'+w.slice(0,8)+'...'+w.slice(-4)+'</div>';
+      const dmBtn=document.createElement('button');
+      dmBtn.textContent='💬';
+      dmBtn.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;';
+      dmBtn.onclick=(function(addr){return function(e){e.stopPropagation();openDMWith(addr);document.getElementById('followersModal').classList.remove('open');};})(w);
+      const avWrap=document.createElement('div');avWrap.innerHTML=av;if(avWrap.firstChild)row.appendChild(avWrap.firstChild);
+      row.appendChild(info);
+      row.appendChild(dmBtn);
+      row.onclick=function(){
+        document.getElementById('followersModal').classList.remove('open');
+        loadProfile(w);
+        showTab('profile');
+      };
+      list.appendChild(row);
+    });
+  }catch(e){list.innerHTML='<div class="app-empty" style="padding:20px;">Error loading</div>';}
+}
+
+function openDMWith(wallet){
+  showTab('messages');
+  // Set active conversation to this wallet
+  setTimeout(function(){
+    openConversation(wallet);
+  }, 300);
 }
 
 // ── NOTIFICATIONS ──
