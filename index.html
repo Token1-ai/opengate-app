@@ -2605,7 +2605,7 @@ async function loadBattleLobby(){
       const isMine=userAddr&&g.player1_wallet===userAddr;
       const betLabel=g.bet_token==='FREE'
         ?'<span style="color:var(--green);">🎮 Free Play</span>'
-        :'<span style="color:var(--gold);">💰 '+g.bet_amount+' '+g.bet_token+' each</span>';
+        :'<span style="color:var(--gold);">💰 '+g.bet_amount+' '+g.bet_token+' — you must stake the same</span>';
       const row=document.createElement('div');
       row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(isChallenge?'rgba(226,75,74,0.4)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;';
       row.innerHTML='<div><div style="font-size:14px;font-weight:700;">'+(isChallenge?'<span style="color:#E24B4A;">⚔️ Challenge: </span>':'')+sAddr(g.player1_wallet)+'</div><div style="font-size:13px;margin-top:4px;">'+betLabel+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+tAgo(g.created_at)+' ago</div></div>';
@@ -2642,29 +2642,43 @@ async function createBattleGame(){
     await switchToLitVM();
     const amtWei=ethers.parseEther(amt);
     const freshSigner=await provider.getSigner();
-    // Use direct selectors to avoid ABI parsing issues in ethers v6
-    let gameId=0;
+    // Save game to DB first (no contract needed for free lobby)
+    // Contract only locks funds when both players are ready
+    let contractGameId = 0;
+    
     if(bsToken==='GATE'){
       const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
       showToast('Approving GATE...','ok');
       await (await gate.approve(BATTLESHIP_ADDR,amtWei)).wait();
       showToast('Creating game...','ok');
-      // createGameGATE(uint256 amount) selector
-      const sel=ethers.id('createGameGATE(uint256)').slice(0,10);
-      const enc=ethers.AbiCoder.defaultAbiCoder().encode(['uint256'],[amtWei]);
-      const receipt=await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:sel+enc.slice(2),gasLimit:300000n})).wait();
-      // Parse GameCreated event: keccak256("GameCreated(uint256,address,uint256,uint8)")
-      const evSig=ethers.id('GameCreated(uint256,address,uint256,uint8)');
-      for(const log of receipt.logs){if(log.topics[0]===evSig){gameId=Number(BigInt(log.topics[1]));break;}}
-      await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'GATE',status:'waiting',contract_game_id:gameId});
+      try{
+        const coder=ethers.AbiCoder.defaultAbiCoder();
+        const sel=ethers.id('createGameGATE(uint256)').slice(0,10);
+        const data=sel+coder.encode(['uint256'],[amtWei]).slice(2);
+        const receipt=await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data,gasLimit:400000n})).wait();
+        const evSig=ethers.id('GameCreated(uint256,address,uint256,uint8)');
+        for(const log of receipt.logs){
+          if(log.topics[0]===evSig){contractGameId=Number(BigInt(log.topics[1]));break;}
+        }
+      }catch(contractErr){
+        showToast('Contract error: '+(contractErr.reason||contractErr.message||'').slice(0,50),'err');
+        return;
+      }
+      await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'GATE',status:'waiting',contract_game_id:contractGameId});
     } else {
       showToast('Creating game...','ok');
-      // createGameZK() selector
-      const sel=ethers.id('createGameZK()').slice(0,10);
-      const receipt=await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:sel,value:amtWei,gasLimit:200000n})).wait();
-      const evSig=ethers.id('GameCreated(uint256,address,uint256,uint8)');
-      for(const log of receipt.logs){if(log.topics[0]===evSig){gameId=Number(BigInt(log.topics[1]));break;}}
-      await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'zkLTC',status:'waiting',contract_game_id:gameId});
+      try{
+        const sel=ethers.id('createGameZK()').slice(0,10);
+        const receipt=await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data:sel,value:amtWei,gasLimit:400000n})).wait();
+        const evSig=ethers.id('GameCreated(uint256,address,uint256,uint8)');
+        for(const log of receipt.logs){
+          if(log.topics[0]===evSig){contractGameId=Number(BigInt(log.topics[1]));break;}
+        }
+      }catch(contractErr){
+        showToast('Contract error: '+(contractErr.reason||contractErr.message||'').slice(0,50),'err');
+        return;
+      }
+      await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:amt,bet_token:'zkLTC',status:'waiting',contract_game_id:contractGameId});
     }
     showToast('Game created! ⚓','ok');
     document.getElementById('bsBetAmt').value='';
@@ -2677,6 +2691,9 @@ async function joinBattleGame(gameDbId,betAmt,betToken){
   try{
     const {data:game}=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
     if(!game){showToast('Game not found','err');return;}
+    // Always use the exact amount from the game (not user input)
+    betAmt=game.bet_amount;
+    betToken=game.bet_token;
     if(betToken==='FREE'){
       await sb.from('battleship_games').update({player2_wallet:userAddr,status:'playing',current_turn:game.player1_wallet}).eq('id',gameDbId);
       startPvPGame(gameDbId);return;
@@ -3819,6 +3836,34 @@ async function showFollowersList(wallet, type){
   }catch(e){list.innerHTML='<div class="app-empty" style="padding:20px;">Error loading</div>';}
 }
 
+async function declineChallenge(fromWallet, notifId, event){
+  if(event) event.stopPropagation();
+  try{
+    // Cancel the waiting game
+    const {data:game}=await sb.from('battleship_games')
+      .select('*').eq('status','waiting').eq('player1_wallet',fromWallet)
+      .eq('challenge_to',userAddr).order('created_at',{ascending:false}).limit(1).single();
+    if(game){
+      await sb.from('battleship_games').update({status:'cancelled'}).eq('id',game.id);
+      // Refund on contract if staked
+      if(game.contract_game_id>0&&game.bet_token!=='FREE'){
+        try{
+          await switchToLitVM();
+          const freshSigner=await provider.getSigner();
+          const coder=ethers.AbiCoder.defaultAbiCoder();
+          const sel=ethers.id('cancelGame(uint256)').slice(0,10);
+          const data=sel+coder.encode(['uint256'],[BigInt(game.contract_game_id)]).slice(2);
+          await (await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data,gasLimit:200000n})).wait();
+        }catch{}
+      }
+    }
+    // Mark notification as read
+    await sb.from('notifications').update({read:true}).eq('id',notifId);
+    showToast('Challenge declined','ok');
+    loadNotifications();
+  }catch(e){showToast('Failed','err');}
+}
+
 async function acceptChallenge(fromWallet, event){
   if(event) event.stopPropagation();
   if(!userAddr){showToast('Connect wallet first','err');return;}
@@ -3892,7 +3937,10 @@ async function loadNotifications(){
       if(n.type==='like') text=`<b>${esc(name)}</b> liked your post`;
       else if(n.type==='follow') text=`<b>${esc(name)}</b> followed you`;
       else if(n.type==='repost') text=`<b>${esc(name)}</b> reposted your post`;
-      else if(n.type==='challenge') text=`<b>${esc(name)}</b> challenges you to ⚔️ Battleship!`;
+      else if(n.type==='challenge'){
+        const betInfo=n.bet_amount?n.bet_amount+' '+(n.bet_token||'GATE'):'Free Play';
+        text=`<b>${esc(name)}</b> challenges you to ⚔️ Battleship! Bet: ${betInfo}`;
+      }
       else text=`<b>${esc(name)}</b> sent you a message`;
       return `<div onclick="markRead('${n.id}')" style="display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);cursor:pointer;background:${n.read?'':'rgba(245,200,66,0.03)'};transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='${n.read?'':'rgba(245,200,66,0.03)'}'">
         <div style="position:relative;flex-shrink:0;">
