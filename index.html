@@ -3234,16 +3234,33 @@ async function bsFireAt(idx){
     var won=enemyBoard.every(function(s){return shots.filter(function(x){return x.hit;}).some(function(x){return x.idx===s;});});
     var upd={};
     upd[key]=JSON.stringify(shots);
-    upd.current_turn=isP1?game.player2_wallet:game.player1_wallet;
-    if(won){upd.status='finished';upd.winner_wallet=userAddr;}
+    // If HIT - keep same player's turn (shoot again)
+    // If MISS - switch to opponent's turn
+    if(won){
+      upd.status='finished';
+      upd.winner_wallet=userAddr;
+      upd.current_turn=userAddr; // winner keeps turn
+    } else if(hit){
+      upd.current_turn=userAddr; // hit = shoot again
+    } else {
+      upd.current_turn=isP1?game.player2_wallet:game.player1_wallet; // miss = switch
+    }
     // Save to DB - Realtime will update both players
     await sb.from('battleship_games').update(upd).eq('id',currentBsGame);
     // Update local state immediately for shooter
     bsMyShots=shots;
     bsRenderBoards();
-    addBattleLog(hit?('💥 Hit! '+bsCoord(idx)):('💧 Miss '+bsCoord(idx)));
-    if(won){bsPhase='over';bsSetStatus('🎉 YOU WIN!');showToast('🎉 YOU WIN!','ok');}
-    else bsSetStatus('⏳ Opponent turn...');
+    addBattleLog(hit?('💥 Hit! '+bsCoord(idx)+' — SHOOT AGAIN!'):('💧 Miss '+bsCoord(idx)));
+    if(won){
+      bsPhase='over';
+      bsSetStatus('🎉 YOU WIN!');
+      showToast('🎉 YOU WIN!','ok');
+    } else if(hit){
+      bsSetStatus('💥 HIT! Shoot again!');
+      showToast('💥 Hit! Shoot again!','ok');
+    } else {
+      bsSetStatus('⏳ Opponent turn...');
+    }
   }catch(e){showToast('Error: '+(e.message||''),'err');}
 }
 
@@ -3290,6 +3307,12 @@ function bsHandleGameUpdate(game){
     showToast('⚔️ Both players ready! Battle starts!','ok');
   }
 
+  // Always reload MY ships from DB (in case of refresh or reconnect)
+  if(bsMyShips.length===0){
+    var myBoardStr=isP1?game.player1_board:game.player2_board;
+    if(myBoardStr) bsMyShips=JSON.parse(myBoardStr);
+  }
+
   // ALWAYS sync shots from DB (don't rely on local state)
   var myShotsRaw=isP1?game.player1_shots:game.player2_shots;
   var newMyShots=JSON.parse(myShotsRaw||'[]');
@@ -3315,7 +3338,23 @@ function bsHandleGameUpdate(game){
   // Update status
   if(bsPhase==='battle'){
     var myTurn=game.current_turn===userAddr;
-    bsSetStatus(myTurn?'⚔️ YOUR TURN — click the BOTTOM board!':'⏳ Opponent turn...');
+    if(myTurn){
+      // Check if last enemy shot was a hit (they hit me and shoot again)
+      var lastEnemyShot=newEnemyShots[newEnemyShots.length-1];
+      if(lastEnemyShot&&lastEnemyShot.hit){
+        bsSetStatus('⚔️ YOUR TURN — click the BOTTOM board!');
+      } else {
+        bsSetStatus('⚔️ YOUR TURN — click the BOTTOM board!');
+      }
+    } else {
+      // Check if last MY shot was a hit (I hit them and shoot again)
+      var lastMyShot=newMyShots[newMyShots.length-1];
+      if(lastMyShot&&lastMyShot.hit){
+        bsSetStatus('⏳ Opponent hit! They shoot again...');
+      } else {
+        bsSetStatus('⏳ Opponent turn...');
+      }
+    }
   } else if(bsPhase==='placing'){
     var myBoard=isP1?game.player1_board:game.player2_board;
     if(myBoard) bsSetStatus('⏳ Waiting for opponent to place ships...');
