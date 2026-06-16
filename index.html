@@ -4134,7 +4134,13 @@ async function installPWA(){if(!pwaPrompt)return;pwaPrompt.prompt();const result
 loadPosts();
 window.ethereum?.on('accountsChanged',()=>location.reload());
 window.ethereum?.on('chainChanged',()=>location.reload());
-async function tryAutoConnect(){if(!window.ethereum)return;try{const accounts=await window.ethereum.request({method:'eth_accounts'});if(accounts&&accounts.length>0){provider=new ethers.BrowserProvider(window.ethereum);signer=await provider.getSigner();userAddr=(await signer.getAddress()).toLowerCase();const btn=document.getElementById('connectBtn');btn.classList.add('connected');btn.innerHTML='<div class="w-dot"></div>'+userAddr.slice(0,6)+'...'+userAddr.slice(-4);document.getElementById('newPostBtn').classList.add('show');document.getElementById('composer').classList.add('show');await ensureUser();loadGateBal();loadPosts();updateNotifBadge();loadRewardsPool();}}catch(e){}}
+async function tryAutoConnect(){if(!window.ethereum)return;try{const accounts=await window.ethereum.request({method:'eth_accounts'});if(accounts&&accounts.length>0){provider=new ethers.BrowserProvider(window.ethereum);signer=await provider.getSigner();userAddr=(await signer.getAddress()).toLowerCase();const btn=document.getElementById('connectBtn');btn.classList.add('connected');btn.innerHTML='<div class="w-dot"></div>'+userAddr.slice(0,6)+'...'+userAddr.slice(-4);document.getElementById('newPostBtn').classList.add('show');document.getElementById('composer').classList.add('show');await ensureUser();loadGateBal();loadPosts();updateNotifBadge();loadRewardsPool();
+    setTimeout(function(){
+      subscribeToConversations();
+      updateUnreadBadge();
+      try{sb.channel('notifs-auto-'+userAddr).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){updateNotifBadge();}).subscribe();}catch(e){}
+    },800);
+  }}catch(e){}}
 tryAutoConnect();
 </script>
 <script>
