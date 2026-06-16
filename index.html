@@ -1813,8 +1813,16 @@ function showTab(tab){
   if(tab==='profile') loadProfile();
   if(tab==='staking'){ loadStakingInfo(); clearInterval(stakingTimer); stakingTimer=setInterval(loadStakingInfo,10000); }
   else clearInterval(stakingTimer);
-  if(tab==='messages'){ loadConversations(); }
-  else { clearInterval(dmTimer); }
+  if(tab==='messages'){ loadConversations(); subscribeToConversations(); }
+  else {
+    clearInterval(dmTimer);
+    if(tab!=='messages'&&convsRealtimeChannel){
+      sb.removeChannel(convsRealtimeChannel);convsRealtimeChannel=null;
+    }
+    if(tab!=='battle'&&lobbyRealtimeChannel){
+      sb.removeChannel(lobbyRealtimeChannel);lobbyRealtimeChannel=null;
+    }
+  }
   if(tab==='presale') loadPresaleInfo();
   if(tab==='launchpad') loadLaunchpad();
   if(tab==='notifs') loadNotifications();
@@ -1823,7 +1831,7 @@ function showTab(tab){
   if(tab==='dao') loadDAO();
   if(tab==='lottery') loadLottery();
   if(tab==='dice') loadDice();
-  if(tab==='battle'){ loadBattleLobby(); clearInterval(bsTimer); }
+  if(tab==='battle'){ loadBattleLobby(); subscribeToBattleLobby(); clearInterval(bsTimer); }
   if(tab==='games'){}
   if(tab==='lending') loadLending();
   if(tab==='faucet') loadFaucet();
@@ -2704,9 +2712,24 @@ function setBsMode(mode){
 }
 
 // ── LOBBY ──
+let lobbyRealtimeChannel=null;
+function subscribeToBattleLobby(){
+  if(lobbyRealtimeChannel) return;
+  lobbyRealtimeChannel=sb.channel('lobby-games')
+    .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games'},function(){
+      // Refresh lobby on any game change
+      if(document.getElementById('battleLobby')&&
+         document.getElementById('battleLobby').style.display!=='none'){
+        loadBattleLobby();
+      }
+    })
+    .subscribe();
+}
+
 async function loadBattleLobby(){
   const el=document.getElementById('openGamesList');
   if(!el)return;
+  subscribeToBattleLobby();
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
     // Auto-cancel abandoned playing games older than 2 hours
@@ -3830,6 +3853,7 @@ async function loadNotifications(){
 async function markRead(id){await sb.from('notifications').update({read:true}).eq('id',id);updateNotifBadge();}
 async function markAllRead(){if(!userAddr)return;await sb.from('notifications').update({read:true}).eq('to_wallet',userAddr).eq('read',false);loadNotifications();}
 async function updateNotifBadge(){if(!userAddr)return;const {count}=await sb.from('notifications').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);const badge=document.getElementById('notifBadge');if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}
+async function updateUnreadBadge(){if(!userAddr)return;const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);const badge=document.getElementById('unreadBadge');if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}}
 async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===toWallet)return;try{await sb.from('notifications').insert({to_wallet:toWallet,from_wallet:userAddr,type,post_id:postId||undefined});}catch(e){}}
 
 // ── LAUNCHPAD ──
@@ -3845,8 +3869,26 @@ async function buyPresale(){if(!userAddr){showToast('Connect wallet first','err'
 
 // ── MESSAGES ──
 let currentDMWallet=null,dmTimer=null;
+let convsRealtimeChannel=null;
+function subscribeToConversations(){
+  if(!userAddr||convsRealtimeChannel) return;
+  convsRealtimeChannel=sb.channel('convs-'+userAddr)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
+      const m=payload.new;
+      if(m.to_wallet===userAddr||m.from_wallet===userAddr){
+        // Update conversations list
+        const convList=document.getElementById('convList');
+        if(convList&&convList.style.display!=='none') loadConversations();
+        // Update unread badge
+        updateUnreadBadge();
+      }
+    })
+    .subscribe();
+}
+
 async function loadConversations(){
   if(!userAddr)return;
+  subscribeToConversations();
   const el=document.getElementById('convListItems');
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
