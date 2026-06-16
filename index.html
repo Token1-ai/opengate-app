@@ -1719,8 +1719,17 @@ async function connectWallet(){
     await ensureUser();
     loadGateBal();
     loadPosts();
+    subscribeToNewPosts();
     updateNotifBadge();
     loadRewardsPool();
+    // Realtime for notifications
+    try{
+      sb.channel('notifs-'+userAddr)
+        .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){
+          updateNotifBadge();
+        })
+        .subscribe();
+    }catch(e){}
   } catch(e){ showToast('Connection cancelled','err'); }
 }
 
@@ -1739,8 +1748,12 @@ async function switchToLitVM(){
   catch(e){ 
     if(e.code===4902){
       await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
+      // Wait for network to be added
+      await new Promise(r=>setTimeout(r,500));
+      await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x1159'}]});
     } else if(e.code!==4001){ throw e; }
   }
+  // Always refresh provider after network switch
   provider = new ethers.BrowserProvider(window.ethereum);
   signer = await provider.getSigner();
   userAddr = (await signer.getAddress()).toLowerCase();
