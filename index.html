@@ -666,8 +666,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <div class="footer-links">
       <a href="https://www.easyswap.life" target="_blank">Easy Swap</a>
       <a href="https://liteforge.explorer.caldera.xyz" target="_blank">LitVM Explorer</a>
-      <a href="https://bscscan.com/address/0x065B95Fd0409C40b9eD27e71E2DD4Ad40aB50096" target="_blank">GoldPass</a>
-      <a href="https://bscscan.com/address/0xd3809aaf6eA7cEDEa3364780eE8F789f81cc7Fcc" target="_blank">SilverPass</a>
+      <a href="https://bscscan.com/address/0x16239880aEe6919Ed0a411859D8D8e5A7F2ef801" target="_blank">GoldPass</a>
+      <a href="https://bscscan.com/address/0x1CcA4e53E66EbDcD31f4d7ae4E2A791C49CF4a46" target="_blank">SilverPass</a>
     </div>
   </footer>
 </div>
@@ -1512,8 +1512,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 // ── CONFIG ──
 const SUPABASE_URL = 'https://hgzthbidfdqomuotdocb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnenRoYmlkZmRxb211b3Rkb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTI2NjEsImV4cCI6MjA5NjU4ODY2MX0.otgk-jq2k0COrIE3cUEnRBPYKGnzAHRi3LEIQhE7khA';
-const GOLD_PASS  = '0x065B95Fd0409C40b9eD27e71E2DD4Ad40aB50096';
-const SILVER_PASS= '0xd3809aaf6eA7cEDEa3364780eE8F789f81cc7Fcc';
+const GOLD_PASS  = '0x16239880aEe6919Ed0a411859D8D8e5A7F2ef801';
+const SILVER_PASS= '0x1CcA4e53E66EbDcD31f4d7ae4E2A791C49CF4a46';
 const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://opengate-app-zeta.vercel.app/api/rpc'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
@@ -3616,21 +3616,22 @@ async function loadNotifications(){
     // Batch fetch all users at once instead of one by one
     const {data:userList}=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);
     if(userList)userList.forEach(u=>{users[u.wallet]=u;_userCache[u.wallet]={data:u,t:Date.now()};});
-    el.innerHTML=notifs.map(n=>{
+    // Clear loader
+    el.innerHTML='';
+    notifs.forEach(n=>{
       const u=users[n.from_wallet]||{};
       const name=u.username||sAddr(n.from_wallet);
-      const avatar=u.avatar_url?('<img src="'+u.avatar_url+'" style="width:100%;height:100%;object-fit:cover;"/>'):'🧑';
-      const icon=n.type==='like'?'❤️':n.type==='follow'?'👤':n.type==='challenge'?'⚔️':'💬';
       let text='';
       if(n.type==='like')text='<b>'+esc(name)+'</b> liked your post';
       else if(n.type==='follow')text='<b>'+esc(name)+'</b> followed you';
       else if(n.type==='challenge')text='<b>'+esc(name)+'</b> challenges you to ⚔️ Battleship!';
       else text='<b>'+esc(name)+'</b> sent you a message';
-      // Build notification card using DOM
       const card=document.createElement('div');
       card.style.cssText='display:flex;align-items:flex-start;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);background:'+(n.read?'':'rgba(245,200,66,0.03)')+';';
-      const avDiv=document.createElement('div');avDiv.style.cssText='width:40px;height:40px;border-radius:50%;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;';
-      if(u.avatar_url){const img=document.createElement('img');img.src=u.avatar_url;img.style.cssText='width:100%;height:100%;object-fit:cover;';avDiv.appendChild(img);}else avDiv.textContent='🧑';
+      const avDiv=document.createElement('div');
+      avDiv.style.cssText='width:40px;height:40px;border-radius:50%;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;';
+      if(u.avatar_url){const img=document.createElement('img');img.src=u.avatar_url;img.style.cssText='width:100%;height:100%;object-fit:cover;';avDiv.appendChild(img);}
+      else avDiv.textContent='🧑';
       const body=document.createElement('div');body.style.cssText='flex:1;';
       body.innerHTML='<div style="font-size:14px;line-height:1.5;">'+text+'</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">'+tAgo(n.created_at)+'</div>';
       if(n.type==='challenge'){
@@ -3641,12 +3642,9 @@ async function loadNotifications(){
         db.onclick=(function(fw,nid){return function(e){declineChallenge(fw,nid,e);};})(n.from_wallet,n.id);
         btns.appendChild(ab);btns.appendChild(db);body.appendChild(btns);
       }
-      if(!n.read){const dot=document.createElement('div');dot.style.cssText='width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:4px;';card.appendChild(avDiv);card.appendChild(body);card.appendChild(dot);}
-      else{card.appendChild(avDiv);card.appendChild(body);}
+      card.appendChild(avDiv);card.appendChild(body);
+      if(!n.read){const dot=document.createElement('div');dot.style.cssText='width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:4px;';card.appendChild(dot);}
       el.appendChild(card);
-      return '';
-
-
     });
   }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
 }
