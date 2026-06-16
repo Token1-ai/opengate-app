@@ -3160,8 +3160,18 @@ async function setReady(){
   if(bsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all ships first!','err');return;}
   bsPhase='battle';
   bsRenderBoards();
+  // Hide ALL placement controls permanently
   var sp=document.getElementById('shipsPanel');
   if(sp)sp.style.display='none';
+  var pb=document.getElementById('placeShipsBtn');
+  if(pb)pb.style.display='none';
+  var rb=document.getElementById('readyBtn');
+  if(rb)rb.style.display='none';
+  // Disable clicking on my board
+  for(var i=0;i<100;i++){
+    var c=document.getElementById('my-'+i);
+    if(c){c.onclick=null;c.onmouseover=null;c.onmouseout=null;c.style.cursor='default';}
+  }
   addBattleLog('✓ Ships placed! Click the BOTTOM board to fire!');
   if(currentBsGame==='AI'){
     bsSetStatus('⚔️ YOUR TURN — click the BOTTOM board!');
@@ -3202,7 +3212,6 @@ async function bsFireAt(idx){
     var enemyBoard=JSON.parse(isP1?(game.player2_board||'[]'):(game.player1_board||'[]'));
     if(enemyBoard.length===0){showToast('Opponent placing ships, wait...','err');return;}
     var hit=enemyBoard.includes(idx);
-    bsMyShots.push({idx:idx,hit:hit});
     var key=isP1?'player1_shots':'player2_shots';
     var shots=JSON.parse(game[key]||'[]');
     shots.push({idx:idx,hit:hit});
@@ -3211,7 +3220,10 @@ async function bsFireAt(idx){
     upd[key]=JSON.stringify(shots);
     upd.current_turn=isP1?game.player2_wallet:game.player1_wallet;
     if(won){upd.status='finished';upd.winner_wallet=userAddr;}
+    // Save to DB - Realtime will update both players
     await sb.from('battleship_games').update(upd).eq('id',currentBsGame);
+    // Update local state immediately for shooter
+    bsMyShots=shots;
     bsRenderBoards();
     addBattleLog(hit?('💥 Hit! '+bsCoord(idx)):('💧 Miss '+bsCoord(idx)));
     if(won){bsPhase='over';bsSetStatus('🎉 YOU WIN!');showToast('🎉 YOU WIN!','ok');}
@@ -3254,29 +3266,34 @@ function bsHandleGameUpdate(game){
   // Both boards ready - start battle phase
   if(game.player1_board&&game.player2_board&&bsPhase==='placing'){
     bsPhase='battle';
+    // Load my ships from DB if not set
+    if(bsMyShips.length===0){
+      var myBoardRaw=isP1?game.player1_board:game.player2_board;
+      if(myBoardRaw) bsMyShips=JSON.parse(myBoardRaw);
+    }
     showToast('⚔️ Both players ready! Battle starts!','ok');
   }
 
-  // Sync MY shots (what I fired at enemy)
+  // ALWAYS sync shots from DB (don't rely on local state)
   var myShotsRaw=isP1?game.player1_shots:game.player2_shots;
-  var myShotsData=JSON.parse(myShotsRaw||'[]');
-  if(myShotsData.length!==bsMyShots.length){
-    bsMyShots=myShotsData;
-  }
+  var newMyShots=JSON.parse(myShotsRaw||'[]');
 
-  // Sync ENEMY shots (what enemy fired at me)
   var enemyShotsRaw=isP1?game.player2_shots:game.player1_shots;
-  var enemyShotsData=JSON.parse(enemyShotsRaw||'[]');
-  if(enemyShotsData.length!==bsEnemyShots.length){
-    var newShots=enemyShotsData.slice(bsEnemyShots.length);
-    bsEnemyShots=enemyShotsData;
-    // Log new enemy shots
-    newShots.forEach(function(s){
+  var newEnemyShots=JSON.parse(enemyShotsRaw||'[]');
+
+  // Log new enemy shots
+  if(newEnemyShots.length>bsEnemyShots.length){
+    var added=newEnemyShots.slice(bsEnemyShots.length);
+    added.forEach(function(s){
       addBattleLog(s.hit?('💥 Enemy hit '+bsCoord(s.idx)+'!'):('💧 Enemy missed '+bsCoord(s.idx)));
     });
   }
 
-  // Always re-render
+  // Update local state from DB
+  bsMyShots=newMyShots;
+  bsEnemyShots=newEnemyShots;
+
+  // Always re-render boards
   bsRenderBoards();
 
   // Update status
@@ -3285,9 +3302,7 @@ function bsHandleGameUpdate(game){
     bsSetStatus(myTurn?'⚔️ YOUR TURN — click the BOTTOM board!':'⏳ Opponent turn...');
   } else if(bsPhase==='placing'){
     var myBoard=isP1?game.player1_board:game.player2_board;
-    if(myBoard){
-      bsSetStatus('⏳ Waiting for opponent to place ships...');
-    }
+    if(myBoard) bsSetStatus('⏳ Waiting for opponent to place ships...');
   }
 }
 
