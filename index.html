@@ -3857,8 +3857,21 @@ async function loadNotifications(){
 }
 async function markRead(id){await sb.from('notifications').update({read:true}).eq('id',id);updateNotifBadge();}
 async function markAllRead(){if(!userAddr)return;await sb.from('notifications').update({read:true}).eq('to_wallet',userAddr).eq('read',false);loadNotifications();}
-async function updateNotifBadge(){if(!userAddr)return;const {count}=await sb.from('notifications').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);const badge=document.getElementById('notifBadge');if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}
-async function updateUnreadBadge(){if(!userAddr)return;const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);const badge=document.getElementById('unreadBadge');if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}}
+async function updateNotifBadge(){
+  if(!userAddr)return;
+  // Bell = likes, follows, challenges (not DMs)
+  const {count}=await sb.from('notifications').select('*',{count:'exact',head:true})
+    .eq('to_wallet',userAddr).eq('read',false).neq('type','dm');
+  const badge=document.getElementById('notifBadge');
+  if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}
+}
+async function updateUnreadBadge(){
+  if(!userAddr)return;
+  const {count}=await sb.from('messages').select('*',{count:'exact',head:true})
+    .eq('to_wallet',userAddr).eq('read',false);
+  const badge=document.getElementById('unreadBadge');
+  if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}
+}
 async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===toWallet)return;try{await sb.from('notifications').insert({to_wallet:toWallet,from_wallet:userAddr,type,post_id:postId||undefined});}catch(e){}}
 
 // ── LAUNCHPAD ──
@@ -3875,39 +3888,61 @@ async function buyPresale(){if(!userAddr){showToast('Connect wallet first','err'
 // ── MESSAGES ──
 let currentDMWallet=null,dmTimer=null;
 let convsRealtimeChannel=null;
+let _lastMsgCount=0;
+let _msgPollTimer=null;
+
 function subscribeToConversations(){
   if(!userAddr||convsRealtimeChannel) return;
+
+  // Realtime WebSocket
   convsRealtimeChannel=sb.channel('msgs-'+userAddr+'-'+Date.now())
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
       const m=payload.new;
       if(!m) return;
-      const isToMe=m.to_wallet===userAddr;
-      const isFromMe=m.from_wallet===userAddr;
-      if(!isToMe&&!isFromMe) return;
-      if(isToMe){
-        // New message for me - update badge
-        updateUnreadBadge();
-      }
-      // Refresh conversation list if open
-      const convList=document.getElementById('convList');
-      if(convList&&convList.style.display!=='none'){
-        loadConversations();
-      }
-      // If in active DM - load new messages
-      if(currentDMWallet){
-        const partner=isToMe?m.from_wallet:m.to_wallet;
-        if(partner===currentDMWallet){
-          loadMessages();
-          if(isToMe){
-            sb.from('messages').update({read:true})
-              .eq('from_wallet',currentDMWallet).eq('to_wallet',userAddr);
-          }
-        }
-      }
+      if(m.to_wallet!==userAddr&&m.from_wallet!==userAddr) return;
+      handleNewMessage(m);
     })
-    .subscribe(function(status){
-      console.log('Messages Realtime:', status);
-    });
+    .subscribe();
+
+  // Polling backup every 3s to catch missed Realtime events
+  clearInterval(_msgPollTimer);
+  _msgPollTimer=setInterval(async function(){
+    if(!userAddr) return;
+    try{
+      const {count}=await sb.from('messages').select('*',{count:'exact',head:true})
+        .eq('to_wallet',userAddr).eq('read',false);
+      if(count!==_lastMsgCount){
+        _lastMsgCount=count||0;
+        updateUnreadBadge();
+        // Refresh conv list if open
+        const convList=document.getElementById('convList');
+        if(convList&&convList.style.display!=='none') loadConversations();
+      }
+    }catch(e){}
+  },3000);
+}
+
+function handleNewMessage(m){
+  const isToMe=m.to_wallet===userAddr;
+  if(isToMe){
+    _lastMsgCount++;
+    updateUnreadBadge();
+  }
+  // Refresh conv list if open
+  const convList=document.getElementById('convList');
+  if(convList&&convList.style.display!=='none') loadConversations();
+  // If in active DM - show message instantly
+  if(currentDMWallet){
+    const partner=isToMe?m.from_wallet:m.to_wallet;
+    if(partner===currentDMWallet){
+      loadMessages();
+      if(isToMe){
+        _lastMsgCount=Math.max(0,_lastMsgCount-1);
+        sb.from('messages').update({read:true})
+          .eq('from_wallet',currentDMWallet).eq('to_wallet',userAddr);
+      }
+    }
+  }
 }
 
 async function loadConversations(){
@@ -3979,6 +4014,7 @@ function showConvList(){
   currentDMWallet=null;
   clearInterval(dmTimer);
   if(dmRealtimeChannel){sb.removeChannel(dmRealtimeChannel);dmRealtimeChannel=null;}
+  updateUnreadBadge();
   document.getElementById('convList').style.display='block';
   document.getElementById('convView').style.display='none';
   document.getElementById('dmBackBtn').style.display='none';
