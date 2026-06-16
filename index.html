@@ -1643,6 +1643,17 @@ const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let provider, signer, userAddr, currentUser, mintPrice, mintType;
 
+// ── RPC PROVIDER ──
+// Use MetaMask provider if connected (no rate limit), fallback to public RPC
+function getReadProvider(){
+  if(provider) return provider; // MetaMask already connected - use it!
+  return new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');
+}
+function getBNBProvider(){
+  // BNB reads always use public RPC (not LitVM)
+  return new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+}
+
 // ── CACHE ──
 const _userCache={};
 const _postLikeCache={};
@@ -1757,7 +1768,7 @@ async function loadGateBal(force=false){
     return;
   }
   try{
-    const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');
+    const p=getReadProvider();
     const bal=await new ethers.Contract(GATE_TOKEN,GATE_ABI,p).balanceOf(userAddr);
     _gateBalCache=parseFloat(ethers.formatEther(bal)).toFixed(2);
     _gateBalTime=now;
@@ -2249,7 +2260,7 @@ async function scanWalletNFTs(){
   const el=document.getElementById('walletNFTList');
   el.innerHTML='<div style="font-size:12px;color:var(--muted);grid-column:1/-1;padding:10px;">Scanning your wallet...</div>';
   try{
-    const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');
+    const p=getReadProvider();
     // Collect all known NFT contracts
     const contracts=new Set();
     // From NFT marketplace on LitVM - get all listed contracts
@@ -2325,7 +2336,7 @@ async function loadNFTAvatar(){
   const preview=document.getElementById('nftPreview');
   preview.innerHTML='<div style="font-size:12px;color:var(--muted);">Loading NFT...</div>';
   try{
-    const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');
+    const p=getReadProvider();
     const nftAbi=['function tokenURI(uint256) view returns(string)'];
     const nft=new ethers.Contract(contract,nftAbi,p);
     let uri=await nft.tokenURI(tokenId);
@@ -2401,7 +2412,7 @@ async function openMintModal(type){
   document.getElementById('mintBnb').textContent='Loading...';
   document.getElementById('mintModal').classList.add('open');
   try{
-    const p=new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+    const p=getBNBProvider();
     const c=new ethers.Contract(isGold?GOLD_PASS:SILVER_PASS,MINT_ABI,p);
     mintPrice=await c.getMintPriceBNB();
     document.getElementById('mintBnb').textContent=parseFloat(ethers.formatEther(mintPrice)).toFixed(6)+' BNB';
@@ -2432,7 +2443,7 @@ async function executeMint(){
 // ── FAUCET ──
 async function loadFaucet(){
   try{
-    const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');
+    const p=getReadProvider();
     const faucet=new ethers.Contract(GATE_FAUCET,FAUCET_ABI,p);
     const [bal,count]=await Promise.all([faucet.faucetBalance(),faucet.claimCount()]);
     document.getElementById('faucetBalance').textContent=parseFloat(ethers.formatEther(bal)).toFixed(0);
@@ -2519,7 +2530,7 @@ function updateGateBorrowCalc(){
 
 async function loadLending(){
   try{
-    const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');
+    const p=getReadProvider();
     const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,p);
     const pool=await lend.gatePool();
     document.getElementById('lendGatePool').textContent=parseFloat(ethers.formatEther(pool)).toFixed(0)+' GATE';
@@ -2570,7 +2581,7 @@ async function loadMyLoans(){
   const el=document.getElementById('myLoansList');
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
-    const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');
+    const p=getReadProvider();
     const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,p);
     const [zkIds,gateIds]=await Promise.all([lend.getMyZkLoans(),lend.getMyGateLoans()]);
     let html='';
@@ -3375,7 +3386,7 @@ let diceBet = 50;
 const DICE_FACES = ['🎲','⚀','⚁','⚂','⚃','⚄','⚅'];
 function setDiceGuess(n){diceGuess=n;for(let i=1;i<=6;i++){const btn=document.getElementById('dguess'+i);if(!btn)continue;if(i===n){btn.style.borderColor='#7c3aed';btn.style.background='#2d1a4a';btn.style.color='#c4b5fd';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}}}
 function setDiceBet(amount){diceBet=amount;[50,100,200,500].forEach(b=>{const btn=document.getElementById('dbet'+b);if(!btn)return;if(b===amount){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});const win=(diceBet*5*0.97).toFixed(1);document.getElementById('diceWinAmt').textContent=win+' GATE';}
-async function loadDice(){try{const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');const dice=new ethers.Contract(GATE_DICE,DICE_ABI,p);const [pool]=await dice.getStats();document.getElementById('diceHousePool').textContent=parseFloat(ethers.formatEther(pool)).toFixed(0)+' GATE';if(userAddr){const [wins,losses]=await Promise.all([dice.playerWins(userAddr),dice.playerLosses(userAddr)]);document.getElementById('diceMyWins').textContent=wins.toString();document.getElementById('diceMyLosses').textContent=losses.toString();}}catch(e){}}
+async function loadDice(){try{const p=getReadProvider();const dice=new ethers.Contract(GATE_DICE,DICE_ABI,p);const [pool]=await dice.getStats();document.getElementById('diceHousePool').textContent=parseFloat(ethers.formatEther(pool)).toFixed(0)+' GATE';if(userAddr){const [wins,losses]=await Promise.all([dice.playerWins(userAddr),dice.playerLosses(userAddr)]);document.getElementById('diceMyWins').textContent=wins.toString();document.getElementById('diceMyLosses').textContent=losses.toString();}}catch(e){}}
 async function rollDice(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   if(!diceGuess){showToast('Pick a number first','err');return;}
@@ -3406,7 +3417,7 @@ async function rollDice(){
 // ── LOTTERY ──
 let lotteryQty = 1;
 function setLotteryQty(qty){lotteryQty=qty;[1,2,3,5].forEach(q=>{const btn=document.getElementById('lqty'+q);if(!btn)return;if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});document.getElementById('lotteryCost').textContent=(qty*10)+' GATE';}
-async function loadLottery(){try{const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);const [roundId,playerCount,pot]=await lottery.getCurrentRound();document.getElementById('lotteryRound').textContent=roundId.toString();document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';document.getElementById('lotteryPlayers').textContent=playerCount.toString();document.getElementById('lotteryBar').style.width=(Number(playerCount)*100/20)+'%';if(userAddr){const myT=await lottery.getMyTickets(roundId);document.getElementById('myLotteryTickets').textContent=myT.toString();}}catch(e){}}
+async function loadLottery(){try{const p=getReadProvider();const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);const [roundId,playerCount,pot]=await lottery.getCurrentRound();document.getElementById('lotteryRound').textContent=roundId.toString();document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';document.getElementById('lotteryPlayers').textContent=playerCount.toString();document.getElementById('lotteryBar').style.width=(Number(playerCount)*100/20)+'%';if(userAddr){const myT=await lottery.getMyTickets(roundId);document.getElementById('myLotteryTickets').textContent=myT.toString();}}catch(e){}}
 async function buyLotteryTicket(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const btn=document.getElementById('buyTicketBtn');
@@ -3439,7 +3450,7 @@ async function resolveIPFS(uri){if(!uri)return '';if(uri.startsWith('ipfs://'))r
 async function fetchNFTMeta(uri){const r=await resolveIPFS(uri);const res=await fetch(r,{signal:AbortSignal.timeout(8000)});return await res.json();}
 async function loadMarketplace(){
   try{
-    const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');
+    const p=getReadProvider();
     const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
     const [count,volume]=await Promise.all([market.listingCount(),market.totalVolume()]);
     document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(volume)).toFixed(4)+' zkLTC';
@@ -3656,11 +3667,11 @@ async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===t
 // ── LAUNCHPAD ──
 let ltOpts={ltMint:false,ltBurn:false,ltPause:false};
 function toggleLtOpt(id){ltOpts[id]=!ltOpts[id];const btn=document.getElementById(id);if(ltOpts[id]){btn.style.borderColor='#7c3aed';btn.style.background='#2d1a4a';btn.style.color='#c4b5fd';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}}
-async function loadLaunchpad(){try{const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,p);const fee=await factory.creationFee();const total=await factory.totalTokensCreated();document.getElementById('totalTokensCreated').textContent=total.toString();document.getElementById('ltFeeDisplay').textContent=parseFloat(ethers.formatEther(fee)).toFixed(4)+' zkLTC';}catch(e){}}
+async function loadLaunchpad(){try{const p=getReadProvider();const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,p);const fee=await factory.creationFee();const total=await factory.totalTokensCreated();document.getElementById('totalTokensCreated').textContent=total.toString();document.getElementById('ltFeeDisplay').textContent=parseFloat(ethers.formatEther(fee)).toFixed(4)+' zkLTC';}catch(e){}}
 async function launchToken(){if(!userAddr){showToast('Connect wallet first','err');return;}const name=document.getElementById('ltName').value.trim();const symbol=document.getElementById('ltSymbol').value.trim();const decimals=parseInt(document.getElementById('ltDecimals').value)||18;const supply=document.getElementById('ltSupply').value.trim();if(!name||!symbol||!supply){showToast('Fill all required fields','err');return;}try{await switchToLitVM();const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,signer);const fee=await factory.creationFee();const tx=await factory.createToken(name,symbol,decimals,supply,ltOpts.ltMint,ltOpts.ltBurn,ltOpts.ltPause,{value:fee});await tx.wait();showToast('🎉 Token '+symbol+' deployed!','ok');loadLaunchpad();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 
 // ── PRESALE ──
-async function loadPresaleInfo(){try{const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');const pc=new ethers.Contract(GATE_PRESALE,PRESALE_ABI,p);const [raised,,gateInContract,active]=await pc.getInfo();const raisedF=parseFloat(ethers.formatEther(raised));const pct=Math.min(100,(raisedF/100)*100).toFixed(1);document.getElementById('presaleStatus').textContent=active?'🟢 Active':'🔴 Inactive';document.getElementById('presaleRaised').textContent=raisedF.toFixed(4)+' / 100';document.getElementById('presalePct').textContent=pct+'%';document.getElementById('presaleBar').style.width=pct+'%';document.getElementById('presaleGatePool').textContent=parseFloat(ethers.formatEther(gateInContract)).toFixed(0)+' GATE';if(userAddr){const contrib=await pc.contributed(userAddr);document.getElementById('myContrib').textContent=parseFloat(ethers.formatEther(contrib)).toFixed(4)+' zkLTC';}}catch(e){}}
+async function loadPresaleInfo(){try{const p=getReadProvider();const pc=new ethers.Contract(GATE_PRESALE,PRESALE_ABI,p);const [raised,,gateInContract,active]=await pc.getInfo();const raisedF=parseFloat(ethers.formatEther(raised));const pct=Math.min(100,(raisedF/100)*100).toFixed(1);document.getElementById('presaleStatus').textContent=active?'🟢 Active':'🔴 Inactive';document.getElementById('presaleRaised').textContent=raisedF.toFixed(4)+' / 100';document.getElementById('presalePct').textContent=pct+'%';document.getElementById('presaleBar').style.width=pct+'%';document.getElementById('presaleGatePool').textContent=parseFloat(ethers.formatEther(gateInContract)).toFixed(0)+' GATE';if(userAddr){const contrib=await pc.contributed(userAddr);document.getElementById('myContrib').textContent=parseFloat(ethers.formatEther(contrib)).toFixed(4)+' zkLTC';}}catch(e){}}
 function updatePresaleCalc(){const amt=parseFloat(document.getElementById('presaleAmt').value);document.getElementById('presaleCalc').textContent=amt>0?'You receive: '+(amt*1000).toLocaleString()+' GATE':'';}
 async function buyPresale(){if(!userAddr){showToast('Connect wallet first','err');return;}const amt=document.getElementById('presaleAmt').value;if(!amt||parseFloat(amt)<=0){showToast('Enter amount','err');return;}try{await switchToLitVM();const freshSigner=await provider.getSigner();const pc=new ethers.Contract(GATE_PRESALE,PRESALE_ABI,freshSigner);const value=ethers.parseEther(amt);const tx=await pc.buy({value});await tx.wait();showToast('🎉 GATE purchased!','ok');loadPresaleInfo();loadGateBal();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 
@@ -3772,7 +3783,7 @@ function openConversation(wallet){openDM(wallet);}
 function openDMWith(wallet){showTab('messages');setTimeout(function(){openDM(wallet);},300);}
 
 // ── STAKING ──
-async function loadStakingInfo(){try{const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,p);const [rp,ts]=await Promise.all([sc.rewardPool(),sc.totalStaked()]);document.getElementById('rewardPoolVal').textContent=parseFloat(ethers.formatEther(rp)).toFixed(0)+' GATE';document.getElementById('totalStakedVal').textContent=parseFloat(ethers.formatEther(ts)).toFixed(2);if(userAddr){const [staked,pending]=await sc.getStakeInfo(userAddr);document.getElementById('myStaked').textContent=parseFloat(ethers.formatEther(staked)).toFixed(2);document.getElementById('myPending').textContent=parseFloat(ethers.formatEther(pending)).toFixed(4);}}catch(e){}}
+async function loadStakingInfo(){try{const p=getReadProvider();const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,p);const [rp,ts]=await Promise.all([sc.rewardPool(),sc.totalStaked()]);document.getElementById('rewardPoolVal').textContent=parseFloat(ethers.formatEther(rp)).toFixed(0)+' GATE';document.getElementById('totalStakedVal').textContent=parseFloat(ethers.formatEther(ts)).toFixed(2);if(userAddr){const [staked,pending]=await sc.getStakeInfo(userAddr);document.getElementById('myStaked').textContent=parseFloat(ethers.formatEther(staked)).toFixed(2);document.getElementById('myPending').textContent=parseFloat(ethers.formatEther(pending)).toFixed(4);}}catch(e){}}
 let stakingTimer;
 async function stakeGATE(){if(!userAddr){showToast('Connect wallet first','err');return;}const amt=document.getElementById('stakeAmount').value;if(!amt||parseFloat(amt)<=0){showToast('Enter amount','err');return;}try{await switchToLitVM();const freshSigner=await provider.getSigner();const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);const amount=ethers.parseEther(String(amt));showToast('Approving GATE...','ok');await(await gate.approve(GATE_STAKING,amount)).wait();showToast('Staking...','ok');const iface=new ethers.Interface(['function stake(uint256 amount)']);await(await freshSigner.sendTransaction({to:GATE_STAKING,data:iface.encodeFunctionData('stake',[amount])})).wait();showToast('Staked! 💎','ok');loadStakingInfo();loadGateBal();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}}
 async function claimGATE(){if(!userAddr){showToast('Connect wallet first','err');return;}try{await switchToLitVM();const freshSigner=await provider.getSigner();const iface=new ethers.Interface(['function claim()']);await(await freshSigner.sendTransaction({to:GATE_STAKING,data:iface.encodeFunctionData('claim',[])})).wait();showToast('Rewards claimed! 🎉','ok');loadStakingInfo();loadGateBal();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}}
@@ -3790,7 +3801,7 @@ async function checkBellFollowers(authorWallet){try{const {data:followers}=await
 async function repostPost(postId,authorWallet,btn){if(!userAddr){showToast('Connect wallet first','err');return;}if(userAddr===authorWallet.toLowerCase()){showToast("Cannot repost own post",'err');return;}try{const {data:existing}=await sb.from('posts').select('id').eq('repost_of',postId).eq('author_wallet',userAddr).single();if(existing){showToast('Already reposted','err');return;}const {data:origPost}=await sb.from('posts').select('*').eq('id',postId).single();if(!origPost)return;await sb.from('posts').insert({author_wallet:userAddr,content:origPost.content,image_urls:origPost.image_urls||[],repost_of:postId,repost_by:userAddr,repost_by_name:currentUser?.username||sAddr(userAddr),likes_count:0,reposts_count:0});const newCount=(parseInt(document.getElementById('rpcnt-'+postId)?.textContent||'0'))+1;await sb.from('posts').update({reposts_count:newCount}).eq('id',postId);if(document.getElementById('rpcnt-'+postId))document.getElementById('rpcnt-'+postId).textContent=newCount;btn.style.color='var(--green)';showToast('🔁 Reposted!','ok');await createNotif(authorWallet,'repost',postId);loadPosts();}catch(e){showToast('Failed','err');}}
 
 // ── REWARDS POOL ──
-async function loadRewardsPool(){try{const p=new ethers.JsonRpcProvider('https://opengate-app-zeta.vercel.app/api/rpc');const r=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,p);const bal=await r.poolBalance();const el=document.getElementById('rewardsPoolBal');if(el)el.textContent=parseFloat(ethers.formatEther(bal)).toFixed(0)+' GATE';}catch(e){}}
+async function loadRewardsPool(){try{const p=getReadProvider();const r=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,p);const bal=await r.poolBalance();const el=document.getElementById('rewardsPoolBal');if(el)el.textContent=parseFloat(ethers.formatEther(bal)).toFixed(0)+' GATE';}catch(e){}}
 
 // ── HELPERS ──
 let toastT;
@@ -3814,7 +3825,7 @@ function tAgo(ts){const d=(Date.now()-new Date(ts))/1000;if(d<60)return'now';if(
 // ── SUPPLY COUNTS ──
 async function loadPassSupply(){
   try{
-    const p=new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+    const p=getBNBProvider();
     const abi=['function totalSupply() view returns(uint256)','function MAX_SUPPLY() view returns(uint256)'];
     const gold=new ethers.Contract(GOLD_PASS,abi,p);
     const silver=new ethers.Contract(SILVER_PASS,abi,p);
