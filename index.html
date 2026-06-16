@@ -1721,9 +1721,12 @@ async function connectWallet(){
     loadPosts();
     subscribeToNewPosts();
     updateNotifBadge();
-    updateUnreadBadge();
     loadRewardsPool();
-    subscribeToConversations();
+    // Subscribe after userAddr confirmed
+    setTimeout(function(){
+      subscribeToConversations();
+      updateUnreadBadge();
+    }, 500);
     // Realtime for notifications
     try{
       sb.channel('notifs-'+userAddr)
@@ -3874,24 +3877,37 @@ let currentDMWallet=null,dmTimer=null;
 let convsRealtimeChannel=null;
 function subscribeToConversations(){
   if(!userAddr||convsRealtimeChannel) return;
-  convsRealtimeChannel=sb.channel('convs-'+userAddr)
+  convsRealtimeChannel=sb.channel('msgs-'+userAddr+'-'+Date.now())
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
       const m=payload.new;
-      if(m.to_wallet===userAddr){
-        // New message TO me - update badge immediately
+      if(!m) return;
+      const isToMe=m.to_wallet===userAddr;
+      const isFromMe=m.from_wallet===userAddr;
+      if(!isToMe&&!isFromMe) return;
+      if(isToMe){
+        // New message for me - update badge
         updateUnreadBadge();
-        // If conversation list open - refresh it
-        const convList=document.getElementById('convList');
-        if(convList&&convList.style.display!=='none') loadConversations();
-        // If this DM is open - load new messages
-        if(currentDMWallet&&m.from_wallet===currentDMWallet) loadMessages();
-      } else if(m.from_wallet===userAddr){
-        // Message FROM me - refresh conversation list
-        const convList=document.getElementById('convList');
-        if(convList&&convList.style.display!=='none') loadConversations();
+      }
+      // Refresh conversation list if open
+      const convList=document.getElementById('convList');
+      if(convList&&convList.style.display!=='none'){
+        loadConversations();
+      }
+      // If in active DM - load new messages
+      if(currentDMWallet){
+        const partner=isToMe?m.from_wallet:m.to_wallet;
+        if(partner===currentDMWallet){
+          loadMessages();
+          if(isToMe){
+            sb.from('messages').update({read:true})
+              .eq('from_wallet',currentDMWallet).eq('to_wallet',userAddr);
+          }
+        }
       }
     })
-    .subscribe();
+    .subscribe(function(status){
+      console.log('Messages Realtime:', status);
+    });
 }
 
 async function loadConversations(){
