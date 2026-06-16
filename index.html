@@ -3676,14 +3676,24 @@ async function buyNFT(listingId,price){
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    // price is BigInt passed directly from contract
-    const exactPrice=BigInt(price.toString());
+    // Re-fetch exact price from contract to avoid precision issues
+    const p=getReadProvider();
+    const marketRead=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
+    const listings=await marketRead.getListings(listingId,listingId);
+    if(!listings||!listings[0]||!listings[0].active){
+      showToast('Listing not found or inactive','err');return;
+    }
+    const exactPrice=listings[0].price; // exact BigInt from contract
     showToast('Confirm in MetaMask...','ok');
     const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,freshSigner);
-    await(await market.buyNFT(listingId,{value:exactPrice})).wait();
+    const tx=await market.buyNFT(listingId,{value:exactPrice});
+    await tx.wait();
     showToast('NFT purchased! 🎉','ok');
     loadMarketplace();
-  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  }catch(e){
+    const msg=e.reason||e.message||'Failed';
+    showToast(msg.slice(0,60),'err');
+  }
 }
 async function cancelNFTListing(id){if(!userAddr)return;try{await switchToLitVM();const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);await(await market.cancelListing(id)).wait();showToast('Listing cancelled','ok');loadMarketplace();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 
