@@ -3223,7 +3223,7 @@ async function bsFireAt(idx){
     var res=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
     var game=res.data;
     if(!game||game.status!=='playing'){showToast('Game not active','err');return;}
-    if(game.current_turn!==userAddr){showToast('Not your turn!','err');return;}
+    if((game.current_turn||'').toLowerCase()!==userAddr){showToast('Not your turn!','err');return;}
     var isP1=game.player1_wallet===userAddr;
     var enemyBoard=JSON.parse(isP1?(game.player2_board||'[]'):(game.player1_board||'[]'));
     if(enemyBoard.length===0){showToast('Opponent placing ships, wait...','err');return;}
@@ -3239,11 +3239,13 @@ async function bsFireAt(idx){
     if(won){
       upd.status='finished';
       upd.winner_wallet=userAddr;
-      upd.current_turn=userAddr; // winner keeps turn
+      upd.current_turn=userAddr;
     } else if(hit){
-      upd.current_turn=userAddr; // hit = shoot again
+      upd.current_turn=userAddr; // hit = same player shoots again
     } else {
-      upd.current_turn=isP1?game.player2_wallet:game.player1_wallet; // miss = switch
+      // miss = switch to opponent (lowercase to match userAddr)
+      var opponent=isP1?game.player2_wallet:game.player1_wallet;
+      upd.current_turn=(opponent||'').toLowerCase();
     }
     // Save to DB - Realtime will update both players
     await sb.from('battleship_games').update(upd).eq('id',currentBsGame);
