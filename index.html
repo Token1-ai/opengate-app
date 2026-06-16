@@ -2939,22 +2939,25 @@ function bsJoinPvP(gameDbId){
     .on('postgres_changes', {
       event: 'UPDATE',
       schema: 'public',
-      table: 'battleship_games',
-      filter: 'id=eq.'+gameDbId
+      table: 'battleship_games'
     }, function(payload){
-      bsHandleGameUpdate(payload.new);
+      // Check game ID manually (UUID filter can be unreliable)
+      if(payload.new && payload.new.id === gameDbId){
+        bsHandleGameUpdate(payload.new);
+      }
     })
     .subscribe(function(status){
       if(status==='SUBSCRIBED'){
-        addBattleLog('🔴 Live connection established');
-      } else if(status==='CHANNEL_ERROR'){
-        // Fallback to polling if realtime fails
-        addBattleLog('⚠️ Realtime unavailable, using polling...');
-        bsTimer=setInterval(bsPollGame,3000);
+        addBattleLog('🔴 Live');
+        // Start lightweight polling as backup (every 2s)
+        bsTimer=setInterval(bsPollGame,2000);
+      } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+        addBattleLog('⚠️ Using polling...');
+        bsTimer=setInterval(bsPollGame,2000);
       }
     });
 
-  // Also do one initial fetch
+  // Initial fetch
   bsPollGame();
 }
 
@@ -3042,21 +3045,34 @@ function bsRenderBoards(){
     (function(idx){ec.onclick=function(){bsFireAt(idx);};})(i);
     enEl.appendChild(ec);
   }
+  // Paint MY board: ships first, then enemy shots ON TOP
   bsMyShips.forEach(function(idx){
     var c=document.getElementById('my-'+idx);
-    if(c)c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.35);border:1px solid var(--green);cursor:crosshair;';
+    if(c)c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.35);border:1px solid var(--green);'+(bsPhase==='placing'?'cursor:crosshair;':'cursor:default;');
   });
-  bsMyShots.forEach(function(s){
-    var c=document.getElementById('en-'+s.idx);
-    if(!c)return;
-    if(s.hit){c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(255,77,77,0.6);border:1px solid #ff4d4d;cursor:default;';c.innerHTML='<b style="color:#fff;font-size:13px;line-height:1;">✕</b>';}
-    else{c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(90,100,120,0.3);border:1px solid var(--muted);cursor:default;';c.innerHTML='<b style="color:#888;font-size:10px;">•</b>';}
-  });
+  // Enemy shots on MY board (paint AFTER ships so they show on top)
   bsEnemyShots.forEach(function(s){
     var c=document.getElementById('my-'+s.idx);
     if(!c)return;
-    if(s.hit){c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(255,77,77,0.6);border:1px solid #ff4d4d;';c.innerHTML='<b style="color:#fff;font-size:13px;line-height:1;">✕</b>';}
-    else{c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(90,100,120,0.3);border:1px solid var(--muted);';c.innerHTML='<b style="color:#888;font-size:10px;">•</b>';}
+    if(s.hit){
+      c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(255,77,77,0.8);border:2px solid #ff4d4d;cursor:default;';
+      c.innerHTML='<b style="color:#fff;font-size:13px;line-height:1;">✕</b>';
+    } else {
+      c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(90,100,120,0.4);border:1px solid var(--muted);cursor:default;';
+      c.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';
+    }
+  });
+  // Paint MY shots on ENEMY board
+  bsMyShots.forEach(function(s){
+    var c=document.getElementById('en-'+s.idx);
+    if(!c)return;
+    if(s.hit){
+      c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(255,77,77,0.8);border:2px solid #ff4d4d;cursor:default;';
+      c.innerHTML='<b style="color:#fff;font-size:13px;line-height:1;">✕</b>';
+    } else {
+      c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(90,100,120,0.4);border:1px solid var(--muted);cursor:default;';
+      c.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';
+    }
   });
 }
 
