@@ -3239,31 +3239,55 @@ function bsAITurn(){
 function bsHandleGameUpdate(game){
   if(!game||!currentBsGame||currentBsGame==='AI')return;
   var isP1=game.player1_wallet===userAddr;
-  // Update enemy shots
-  var enemyShotsData=JSON.parse(isP1?(game.player2_shots||'[]'):(game.player1_shots||'[]'));
-  if(enemyShotsData.length!==bsEnemyShots.length){
-    bsEnemyShots=enemyShotsData;
-    bsRenderBoards();
-    var last=enemyShotsData[enemyShotsData.length-1];
-    if(last)addBattleLog(last.hit?('💥 Enemy hit '+bsCoord(last.idx)+'!'):('💧 Enemy missed '+bsCoord(last.idx)));
-  }
-  var myShotsData=JSON.parse(isP1?(game.player1_shots||'[]'):(game.player2_shots||'[]'));
-  if(myShotsData.length!==bsMyShots.length){bsMyShots=myShotsData;bsRenderBoards();}
+
+  // Game over check first
   if(game.status==='finished'){
     clearInterval(bsTimer);
     if(bsRealtimeChannel){sb.removeChannel(bsRealtimeChannel);bsRealtimeChannel=null;}
     bsPhase='over';
+    bsRenderBoards();
     bsSetStatus(game.winner_wallet===userAddr?'🎉 YOU WIN!':'💀 You lost!');
+    showToast(game.winner_wallet===userAddr?'🎉 YOU WIN!':'💀 You lost!',game.winner_wallet===userAddr?'ok':'err');
     return;
   }
-  var bothReady=game.player1_board&&game.player2_board;
-  if(bothReady&&bsPhase==='placing'){bsPhase='battle';bsRenderBoards();}
+
+  // Both boards ready - start battle phase
+  if(game.player1_board&&game.player2_board&&bsPhase==='placing'){
+    bsPhase='battle';
+    showToast('⚔️ Both players ready! Battle starts!','ok');
+  }
+
+  // Sync MY shots (what I fired at enemy)
+  var myShotsRaw=isP1?game.player1_shots:game.player2_shots;
+  var myShotsData=JSON.parse(myShotsRaw||'[]');
+  if(myShotsData.length!==bsMyShots.length){
+    bsMyShots=myShotsData;
+  }
+
+  // Sync ENEMY shots (what enemy fired at me)
+  var enemyShotsRaw=isP1?game.player2_shots:game.player1_shots;
+  var enemyShotsData=JSON.parse(enemyShotsRaw||'[]');
+  if(enemyShotsData.length!==bsEnemyShots.length){
+    var newShots=enemyShotsData.slice(bsEnemyShots.length);
+    bsEnemyShots=enemyShotsData;
+    // Log new enemy shots
+    newShots.forEach(function(s){
+      addBattleLog(s.hit?('💥 Enemy hit '+bsCoord(s.idx)+'!'):('💧 Enemy missed '+bsCoord(s.idx)));
+    });
+  }
+
+  // Always re-render
+  bsRenderBoards();
+
+  // Update status
   if(bsPhase==='battle'){
     var myTurn=game.current_turn===userAddr;
     bsSetStatus(myTurn?'⚔️ YOUR TURN — click the BOTTOM board!':'⏳ Opponent turn...');
   } else if(bsPhase==='placing'){
     var myBoard=isP1?game.player1_board:game.player2_board;
-    if(myBoard)bsSetStatus('⏳ Waiting for opponent to place ships...');
+    if(myBoard){
+      bsSetStatus('⏳ Waiting for opponent to place ships...');
+    }
   }
 }
 
@@ -3271,25 +3295,7 @@ async function bsPollGame(){
   if(!currentBsGame||currentBsGame==='AI')return;
   try{
     var res=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
-    var game=res.data;if(!game)return;
-    var isP1=game.player1_wallet===userAddr;
-    var enemyShotsData=JSON.parse(isP1?(game.player2_shots||'[]'):(game.player1_shots||'[]'));
-    if(enemyShotsData.length!==bsEnemyShots.length){
-      bsEnemyShots=enemyShotsData;bsRenderBoards();
-      var last=enemyShotsData[enemyShotsData.length-1];
-      if(last)addBattleLog(last.hit?('💥 Enemy hit '+bsCoord(last.idx)+'!'):('💧 Enemy missed '+bsCoord(last.idx)));
-    }
-    var myShotsData=JSON.parse(isP1?(game.player1_shots||'[]'):(game.player2_shots||'[]'));
-    if(myShotsData.length!==bsMyShots.length){bsMyShots=myShotsData;bsRenderBoards();}
-    if(game.status==='finished'){
-      clearInterval(bsTimer);bsPhase='over';
-      bsSetStatus(game.winner_wallet===userAddr?'🎉 YOU WIN!':'💀 You lost!');
-      return;
-    }
-    var bothReady=game.player1_board&&game.player2_board;
-    if(bothReady&&bsPhase==='placing'){bsPhase='battle';bsRenderBoards();}
-    if(bsPhase==='battle'){var myTurn=game.current_turn===userAddr;bsSetStatus(myTurn?'⚔️ YOUR TURN — click the BOTTOM board!':'⏳ Opponent turn...');}
-    else if(bsPhase==='placing'){var myBoard=isP1?game.player1_board:game.player2_board;if(myBoard)bsSetStatus('⏳ Waiting for opponent to place ships...');}
+    if(res.data) bsHandleGameUpdate(res.data);
   }catch(e){}
 }
 
