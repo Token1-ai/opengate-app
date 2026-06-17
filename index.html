@@ -3635,8 +3635,52 @@ async function finalizeProposal(id){}
 async function cancelDAOProposal(id){}
 
 // ── MARKETPLACE ──
-async function resolveIPFS(uri){if(!uri)return '';if(uri.startsWith('ipfs://'))return 'https://gateway.pinata.cloud/ipfs/'+uri.slice(7);return uri;}
-async function fetchNFTMeta(uri){const r=await resolveIPFS(uri);const res=await fetch(r,{signal:AbortSignal.timeout(8000)});return await res.json();}
+async function resolveIPFS(uri){
+  if(!uri) return '';
+  if(uri.startsWith('data:')) return uri; // base64 inline
+  if(uri.startsWith('ipfs://')){
+    const hash=uri.slice(7);
+    return 'https://cloudflare-ipfs.com/ipfs/'+hash;
+  }
+  if(uri.startsWith('https://ipfs.io/ipfs/')) return uri.replace('https://ipfs.io/ipfs/','https://cloudflare-ipfs.com/ipfs/');
+  return uri;
+}
+async function resolveIPFSWithFallback(uri){
+  if(!uri) return '';
+  if(uri.startsWith('data:')) return uri;
+  const hash=uri.startsWith('ipfs://')?uri.slice(7):null;
+  if(hash){
+    // Try multiple gateways
+    const gateways=[
+      'https://cloudflare-ipfs.com/ipfs/'+hash,
+      'https://gateway.pinata.cloud/ipfs/'+hash,
+      'https://ipfs.io/ipfs/'+hash,
+      'https://nftstorage.link/ipfs/'+hash,
+    ];
+    for(const gw of gateways){
+      try{
+        const r=await fetch(gw,{method:'HEAD',signal:AbortSignal.timeout(3000)});
+        if(r.ok) return gw;
+      }catch{}
+    }
+    return gateways[0];
+  }
+  return uri;
+}
+async function fetchNFTMeta(uri){
+  // Handle base64 encoded JSON
+  if(uri.startsWith('data:application/json;base64,')){
+    const b64=uri.split(',')[1];
+    return JSON.parse(atob(b64));
+  }
+  if(uri.startsWith('data:application/json,')){
+    return JSON.parse(decodeURIComponent(uri.split(',')[1]));
+  }
+  const r=await resolveIPFS(uri);
+  const res=await fetch(r,{signal:AbortSignal.timeout(10000)});
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return await res.json();
+}
 async function loadMarketplace(){
   try{
     const p=getReadProvider();
@@ -3658,9 +3702,14 @@ async function loadMarketplace(){
         const nft=new ethers.Contract(l.nftContract,ERC721_ABI,p);
         let uri=await nft.tokenURI(l.tokenId);
         const meta=await fetchNFTMeta(uri);
-        if(meta.image)img=await resolveIPFS(meta.image);
+        if(meta.image){
+          // Try multiple IPFS gateways for image
+          img=await resolveIPFSWithFallback(meta.image);
+        }
         name=meta.name||name;
-      }catch{}
+      }catch(err){
+        console.log('NFT meta error:',l.nftContract,l.tokenId.toString(),err.message);
+      }
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
       const listingIdx=i+1;
       const priceWei=l.price; // Keep as BigInt
@@ -3670,9 +3719,31 @@ async function loadMarketplace(){
       card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;';
       // Image
       const imgDiv=document.createElement('div');
-      imgDiv.style.cssText='aspect-ratio:1;background:var(--bg3);overflow:hidden;';
-      if(img){const im=document.createElement('img');im.src=img;im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';imgDiv.appendChild(im);}
-      else imgDiv.innerHTML='<div style="font-size:40px;display:flex;align-items:center;justify-content:center;height:100%;">🖼️</div>';
+      imgDiv.style.cssText='aspect-ratio:1;background:var(--bg3);overflow:hidden;position:relative;';
+      if(img){
+        const im=document.createElement('img');
+        im.loading='lazy';
+        im.style.cssText='width:100%;height:100%;object-fit:cover;';
+        im.alt=name;
+        // Try main URL first, fallback to other gateways on error
+        im.src=img;
+        im.onerror=async function(){
+          // Try Pinata as fallback
+          if(img.includes('cloudflare-ipfs.com')){
+            const hash=img.split('/ipfs/')[1];
+            if(hash) this.src='https://gateway.pinata.cloud/ipfs/'+hash;
+          } else if(img.includes('pinata.cloud')){
+            const hash=img.split('/ipfs/')[1];
+            if(hash) this.src='https://ipfs.io/ipfs/'+hash;
+          } else {
+            // Show placeholder
+            imgDiv.innerHTML='<div style="font-size:36px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
+          }
+        };
+        imgDiv.appendChild(im);
+      } else {
+        imgDiv.innerHTML='<div style="font-size:36px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
+      }
       // Info
       const info=document.createElement('div');
       info.style.cssText='padding:12px;';
@@ -4019,8 +4090,8 @@ async function openDM(wallet){
       }
     })
     .subscribe();
-  // Polling backup for active DM every 3s
-  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},3000);
+  // Polling backup for active DM every 2s
+  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},2000);
 }
 function openDMByAddr(){const addr=document.getElementById('newDmAddr').value.trim().toLowerCase();if(!addr||!addr.startsWith('0x')){showToast('Enter valid address','err');return;}openDM(addr);}
 function showConvList(){
