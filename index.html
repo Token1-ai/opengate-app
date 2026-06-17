@@ -2091,10 +2091,13 @@ async function likePost(postId,authorWallet,btn){
     await tx.wait();
     await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
     await createNotif(authorWallet,'like',postId);
-    const c=parseInt(document.getElementById('cnt-'+postId).textContent)+1;
+    // Use DB to get accurate count
+    const {count:likeCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
+    const c=likeCount||0;
     await sb.from('posts').update({likes_count:c}).eq('id',postId);
     btn.classList.add('liked'); btn.querySelector('span').textContent='❤️';
-    document.getElementById('cnt-'+postId).textContent=c;
+    const cntEl=document.getElementById('cnt-'+postId);
+    if(cntEl)cntEl.textContent=c;
     showToast('❤️ Liked! GATE reward sent to author','ok');
     loadGateBal(true);
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
@@ -3935,9 +3938,13 @@ function handleNewMessage(m){
   if(currentDMWallet){
     const partner=isToMe?m.from_wallet:m.to_wallet;
     if(partner===currentDMWallet){
+      // Make sure convView is visible
+      const cv=document.getElementById('convView');
+      if(cv&&cv.style.display==='none') cv.style.display='flex';
       loadMessages();
       if(isToMe){
         _lastMsgCount=Math.max(0,_lastMsgCount-1);
+        updateUnreadBadge();
         sb.from('messages').update({read:true})
           .eq('from_wallet',currentDMWallet).eq('to_wallet',userAddr);
       }
@@ -3999,15 +4006,21 @@ async function openDM(wallet){
   // Realtime for messages
   clearInterval(dmTimer);
   if(dmRealtimeChannel){sb.removeChannel(dmRealtimeChannel);dmRealtimeChannel=null;}
-  dmRealtimeChannel=sb.channel('dm-'+userAddr+'-'+wallet)
+  dmRealtimeChannel=sb.channel('dm-'+userAddr+'-'+wallet+'-'+Date.now())
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
       const m=payload.new;
+      if(!m) return;
       if((m.from_wallet===wallet&&m.to_wallet===userAddr)||(m.from_wallet===userAddr&&m.to_wallet===wallet)){
         loadMessages();
-        if(m.from_wallet===wallet) sb.from('messages').update({read:true}).eq('from_wallet',wallet).eq('to_wallet',userAddr);
+        if(m.from_wallet===wallet){
+          sb.from('messages').update({read:true}).eq('from_wallet',wallet).eq('to_wallet',userAddr);
+          updateUnreadBadge();
+        }
       }
     })
     .subscribe();
+  // Polling backup for active DM every 3s
+  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},3000);
 }
 function openDMByAddr(){const addr=document.getElementById('newDmAddr').value.trim().toLowerCase();if(!addr||!addr.startsWith('0x')){showToast('Enter valid address','err');return;}openDM(addr);}
 function showConvList(){
@@ -4026,7 +4039,7 @@ async function loadMessages(){
   const el=document.getElementById('msgList');
   const {data:msgs}=await sb.from('messages').select('*').or('and(from_wallet.eq.'+userAddr+',to_wallet.eq.'+currentDMWallet+'),and(from_wallet.eq.'+currentDMWallet+',to_wallet.eq.'+userAddr+')').order('created_at',{ascending:true});
   if(!msgs||msgs.length===0){el.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;">No messages yet 👋</div>';return;}
-  const atBottom=el.scrollHeight-el.scrollTop<=el.clientHeight+50;
+  const atBottom=(el.scrollHeight-el.scrollTop<=el.clientHeight+80)||(el.scrollHeight===0);
   el.innerHTML='';
   msgs.forEach(function(m){
     const mine=m.from_wallet===userAddr;
@@ -4046,7 +4059,8 @@ async function loadMessages(){
     const timeEl=document.createElement('div');timeEl.style.cssText='font-size:10px;opacity:.6;margin-top:4px;text-align:'+(mine?'right':'left')+';';timeEl.textContent=tAgo(m.created_at);bubble.appendChild(timeEl);
     wrap.appendChild(bubble);el.appendChild(wrap);
   });
-  if(atBottom)el.scrollTop=el.scrollHeight;
+  // Always scroll to bottom when loading messages
+  setTimeout(function(){el.scrollTop=el.scrollHeight;},50);
 }
 async function sendDM(){if(!userAddr){showToast('Connect wallet first','err');return;}if(!currentDMWallet)return;const input=document.getElementById('msgInput');const content=input.value.trim();if(!content)return;input.value='';try{await sb.from('messages').insert({from_wallet:userAddr,to_wallet:currentDMWallet,content});await createNotif(currentDMWallet,'dm');loadMessages();}catch(e){showToast('Failed','err');input.value=content;}}
 function openConversation(wallet){openDM(wallet);}
