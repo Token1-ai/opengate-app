@@ -2091,14 +2091,17 @@ async function likePost(postId,authorWallet,btn){
     await tx.wait();
     await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
     await createNotif(authorWallet,'like',postId);
-    // Use DB to get accurate count
-    const {count:likeCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
-    const c=likeCount||0;
-    await sb.from('posts').update({likes_count:c}).eq('id',postId);
-    btn.classList.add('liked'); btn.querySelector('span').textContent='❤️';
+    // Update likes count
     const cntEl=document.getElementById('cnt-'+postId);
-    if(cntEl)cntEl.textContent=c;
-    showToast('❤️ Liked! GATE reward sent to author','ok');
+    const prevCount=parseInt((cntEl&&cntEl.textContent)||'0')||0;
+    const c=prevCount+1;
+    // Update UI immediately
+    btn.classList.add('liked');
+    btn.querySelector('span').textContent='❤️';
+    if(cntEl) cntEl.textContent=c;
+    // Save to DB
+    await sb.from('posts').update({likes_count:c}).eq('id',postId);
+    showToast('❤️ Liked! 0.1 GATE sent to author','ok');
     loadGateBal(true);
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
   btn.disabled=false;
@@ -3688,8 +3691,9 @@ async function loadMarketplace(){
     const [count,volume]=await Promise.all([market.listingCount(),market.totalVolume()]);
     document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(volume)).toFixed(4)+' zkLTC';
     if(count===0n){document.getElementById('mktListings').textContent='0';document.getElementById('marketListings').innerHTML='<div class="app-empty">No listings yet</div>';return;}
-    const listings=await market.getListings(1,50);
-    const active=listings.filter(l=>l.active);
+    const listings=await market.getListings(1,Number(count));
+    const active=[];
+    listings.forEach(function(l,i){if(l.active)active.push({...l,_id:i+1});});
     document.getElementById('mktListings').textContent=active.length;
     const grid=document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;';
@@ -3711,7 +3715,7 @@ async function loadMarketplace(){
         console.log('NFT meta error:',l.nftContract,l.tokenId.toString(),err.message);
       }
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
-      const listingIdx=i+1;
+      const listingIdx=l._id; // Real contract listing ID
       const priceWei=l.price; // Keep as BigInt
       const priceEth=parseFloat(ethers.formatEther(priceWei)).toFixed(4);
 
@@ -3797,7 +3801,22 @@ async function buyNFT(listingId,price){
     showToast(msg.slice(0,60),'err');
   }
 }
-async function cancelNFTListing(id){if(!userAddr)return;try{await switchToLitVM();const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);await(await market.cancelListing(id)).wait();showToast('Listing cancelled','ok');loadMarketplace();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
+async function cancelNFTListing(id){
+  if(!userAddr)return;
+  try{
+    await switchToLitVM();
+    const freshSigner=await provider.getSigner();
+    const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,freshSigner);
+    showToast('Cancelling listing...','ok');
+    const tx=await market.cancelListing(id);
+    await tx.wait();
+    showToast('Listing cancelled ✓','ok');
+    loadMarketplace();
+  }catch(e){
+    const msg=e.reason||e.message||'Failed';
+    showToast(msg.slice(0,60),'err');
+  }
+}
 
 // ── EXPLORE ──
 let searchFilter='users',searchTimer=null;
