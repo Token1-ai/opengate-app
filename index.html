@@ -3723,9 +3723,17 @@ async function loadMarketplace(){
     const listings=await market.getListings(1,Math.min(total,50));
     const active=[];
     for(let i=0;i<listings.length;i++){
-      if(listings[i].active){
-        // Real listing ID = i+1 (since we fetch from 1)
-        active.push(Object.assign({},listings[i],{_id:i+1}));
+      const l=listings[i];
+      if(l&&l.active){
+        // Manually extract fields from ethers Proxy object
+        active.push({
+          seller:l.seller,
+          nftContract:l.nftContract,
+          tokenId:l.tokenId,
+          price:l.price,
+          active:l.active,
+          _id:i+1  // Real contract listing ID
+        });
       }
     }
     document.getElementById('mktListings').textContent=active.length;
