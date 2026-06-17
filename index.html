@@ -3717,10 +3717,17 @@ async function loadMarketplace(){
     const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
     const [count,volume]=await Promise.all([market.listingCount(),market.totalVolume()]);
     document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(volume)).toFixed(4)+' zkLTC';
-    if(count===0n){document.getElementById('mktListings').textContent='0';document.getElementById('marketListings').innerHTML='<div class="app-empty">No listings yet</div>';return;}
-    const listings=await market.getListings(1,Number(count));
+    if(!count||count===0n||Number(count)===0){document.getElementById('mktListings').textContent='0';document.getElementById('marketListings').innerHTML='<div class="app-empty">No listings yet</div>';return;}
+    // getListings(from, to) - returns listings from ID 1 to count
+    const total=Number(count);
+    const listings=await market.getListings(1,Math.min(total,50));
     const active=[];
-    listings.forEach(function(l,i){if(l.active)active.push({...l,_id:i+1});});
+    for(let i=0;i<listings.length;i++){
+      if(listings[i].active){
+        // Real listing ID = i+1 (since we fetch from 1)
+        active.push(Object.assign({},listings[i],{_id:i+1}));
+      }
+    }
     document.getElementById('mktListings').textContent=active.length;
     const grid=document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;';
