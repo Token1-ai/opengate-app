@@ -1821,11 +1821,19 @@ function showTab(tab){
   if(tab==='messages'){ loadConversations(); subscribeToConversations(); }
   else {
     clearInterval(dmTimer);
-    if(tab!=='messages'&&convsRealtimeChannel){
-      sb.removeChannel(convsRealtimeChannel);convsRealtimeChannel=null;
+    // Close DM realtime when leaving messages tab
+    if(tab!=='messages'){
+      if(dmRealtimeChannel){sb.removeChannel(dmRealtimeChannel);dmRealtimeChannel=null;}
+      // Keep convsRealtimeChannel for badge updates (it's lightweight)
     }
+    // Close lobby realtime when leaving battle tab
     if(tab!=='battle'&&lobbyRealtimeChannel){
       sb.removeChannel(lobbyRealtimeChannel);lobbyRealtimeChannel=null;
+    }
+    // Close battleship realtime when leaving battle tab
+    if(tab!=='battle'&&bsRealtimeChannel){
+      clearInterval(bsTimer);
+      sb.removeChannel(bsRealtimeChannel);bsRealtimeChannel=null;
     }
   }
   if(tab==='presale') loadPresaleInfo();
@@ -3002,11 +3010,11 @@ function bsJoinPvP(gameDbId){
     .subscribe(function(status){
       if(status==='SUBSCRIBED'){
         addBattleLog('🔴 Live');
-        // Start lightweight polling as backup (every 2s)
-        bsTimer=setInterval(bsPollGame,2000);
+        // Start lightweight polling as backup (every 3s)
+        bsTimer=setInterval(bsPollGame,3000);
       } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
         addBattleLog('⚠️ Using polling...');
-        bsTimer=setInterval(bsPollGame,2000);
+        bsTimer=setInterval(bsPollGame,3000);
       }
     });
 
@@ -3638,51 +3646,70 @@ async function finalizeProposal(id){}
 async function cancelDAOProposal(id){}
 
 // ── MARKETPLACE ──
+// ── NFT IMAGE CACHE ──
+const _nftImgCache={};
+const _nftMetaCache={};
+
+function getCachedNFTImg(key){
+  const c=_nftImgCache[key];
+  if(c&&Date.now()-c.t<3600000) return c.url; // 1hr cache
+  return null;
+}
+function setCachedNFTImg(key,url){_nftImgCache[key]={url,t:Date.now()};}
+
 async function resolveIPFS(uri){
   if(!uri) return '';
-  if(uri.startsWith('data:')) return uri; // base64 inline
+  if(uri.startsWith('data:')) return uri;
   if(uri.startsWith('ipfs://')){
     const hash=uri.slice(7);
+    // Use Cloudflare as primary (fastest, globally cached)
     return 'https://cloudflare-ipfs.com/ipfs/'+hash;
   }
   if(uri.startsWith('https://ipfs.io/ipfs/')) return uri.replace('https://ipfs.io/ipfs/','https://cloudflare-ipfs.com/ipfs/');
+  if(uri.startsWith('https://gateway.pinata.cloud/')) return uri;
   return uri;
 }
+
 async function resolveIPFSWithFallback(uri){
   if(!uri) return '';
   if(uri.startsWith('data:')) return uri;
-  const hash=uri.startsWith('ipfs://')?uri.slice(7):null;
+  // Check cache first
+  const cached=getCachedNFTImg(uri);
+  if(cached) return cached;
+  const hash=uri.startsWith('ipfs://')?uri.slice(7)
+    :uri.includes('/ipfs/')?uri.split('/ipfs/')[1]
+    :null;
   if(hash){
-    // Try multiple gateways
-    const gateways=[
-      'https://cloudflare-ipfs.com/ipfs/'+hash,
-      'https://gateway.pinata.cloud/ipfs/'+hash,
-      'https://ipfs.io/ipfs/'+hash,
-      'https://nftstorage.link/ipfs/'+hash,
-    ];
-    for(const gw of gateways){
-      try{
-        const r=await fetch(gw,{method:'HEAD',signal:AbortSignal.timeout(3000)});
-        if(r.ok) return gw;
-      }catch{}
-    }
-    return gateways[0];
+    // Cloudflare is fastest and has best global caching
+    const primary='https://cloudflare-ipfs.com/ipfs/'+hash;
+    setCachedNFTImg(uri,primary);
+    return primary;
   }
+  setCachedNFTImg(uri,uri);
   return uri;
 }
 async function fetchNFTMeta(uri){
+  if(!uri) throw new Error('No URI');
+  // Check meta cache (1hr)
+  if(_nftMetaCache[uri]&&Date.now()-_nftMetaCache[uri].t<3600000)
+    return _nftMetaCache[uri].data;
   // Handle base64 encoded JSON
   if(uri.startsWith('data:application/json;base64,')){
-    const b64=uri.split(',')[1];
-    return JSON.parse(atob(b64));
+    const data=JSON.parse(atob(uri.split(',')[1]));
+    _nftMetaCache[uri]={data,t:Date.now()};
+    return data;
   }
   if(uri.startsWith('data:application/json,')){
-    return JSON.parse(decodeURIComponent(uri.split(',')[1]));
+    const data=JSON.parse(decodeURIComponent(uri.split(',')[1]));
+    _nftMetaCache[uri]={data,t:Date.now()};
+    return data;
   }
   const r=await resolveIPFS(uri);
   const res=await fetch(r,{signal:AbortSignal.timeout(10000)});
   if(!res.ok) throw new Error('HTTP '+res.status);
-  return await res.json();
+  const data=await res.json();
+  _nftMetaCache[uri]={data,t:Date.now()};
+  return data;
 }
 async function loadMarketplace(){
   try{
@@ -4109,8 +4136,8 @@ async function openDM(wallet){
       }
     })
     .subscribe();
-  // Polling backup for active DM every 2s
-  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},2000);
+  // Polling backup for active DM every 5s (Realtime handles instant delivery)
+  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},5000);
 }
 function openDMByAddr(){const addr=document.getElementById('newDmAddr').value.trim().toLowerCase();if(!addr||!addr.startsWith('0x')){showToast('Enter valid address','err');return;}openDM(addr);}
 function showConvList(){
@@ -4227,6 +4254,38 @@ async function loadPassSupply(){
 
 // ── INIT ──
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
+
+// ── VISIBILITY: Pause Realtime when tab hidden, resume when visible ──
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){
+    // Tab hidden - pause polling to save resources
+    clearInterval(_msgPollTimer);
+    clearInterval(dmTimer);
+    clearInterval(stakingTimer);
+  } else {
+    // Tab visible again - resume
+    if(userAddr){
+      // Restart message polling
+      if(!_msgPollTimer){
+        _msgPollTimer=setInterval(async function(){
+          if(!userAddr)return;
+          try{
+            const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
+            const c=count||0;
+            if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();
+              const convList=document.getElementById('convList');
+              if(convList&&convList.style.display!=='none')loadConversations();
+            }
+          }catch(e){}
+        },5000);
+      }
+      // Refresh data that might have changed
+      updateUnreadBadge();
+      updateNotifBadge();
+      loadGateBal(true);
+    }
+  }
+});
 const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');obs.unobserve(x.target);}}),{threshold:0.08});
 document.querySelectorAll('.fade').forEach(el=>obs.observe(el));
 const sObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.querySelectorAll('.supply-fill[data-target]').forEach(b=>{setTimeout(()=>b.style.width=b.dataset.target,300)});}),{threshold:0.2});
