@@ -1821,19 +1821,11 @@ function showTab(tab){
   if(tab==='messages'){ loadConversations(); subscribeToConversations(); }
   else {
     clearInterval(dmTimer);
-    // Close DM realtime when leaving messages tab
-    if(tab!=='messages'){
-      if(dmRealtimeChannel){sb.removeChannel(dmRealtimeChannel);dmRealtimeChannel=null;}
-      // Keep convsRealtimeChannel for badge updates (it's lightweight)
+    if(tab!=='messages'&&convsRealtimeChannel){
+      sb.removeChannel(convsRealtimeChannel);convsRealtimeChannel=null;
     }
-    // Close lobby realtime when leaving battle tab
     if(tab!=='battle'&&lobbyRealtimeChannel){
       sb.removeChannel(lobbyRealtimeChannel);lobbyRealtimeChannel=null;
-    }
-    // Close battleship realtime when leaving battle tab
-    if(tab!=='battle'&&bsRealtimeChannel){
-      clearInterval(bsTimer);
-      sb.removeChannel(bsRealtimeChannel);bsRealtimeChannel=null;
     }
   }
   if(tab==='presale') loadPresaleInfo();
@@ -2099,17 +2091,14 @@ async function likePost(postId,authorWallet,btn){
     await tx.wait();
     await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
     await createNotif(authorWallet,'like',postId);
-    // Update likes count
-    const cntEl=document.getElementById('cnt-'+postId);
-    const prevCount=parseInt((cntEl&&cntEl.textContent)||'0')||0;
-    const c=prevCount+1;
-    // Update UI immediately
-    btn.classList.add('liked');
-    btn.querySelector('span').textContent='❤️';
-    if(cntEl) cntEl.textContent=c;
-    // Save to DB
+    // Use DB to get accurate count
+    const {count:likeCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
+    const c=likeCount||0;
     await sb.from('posts').update({likes_count:c}).eq('id',postId);
-    showToast('❤️ Liked! 0.1 GATE sent to author','ok');
+    btn.classList.add('liked'); btn.querySelector('span').textContent='❤️';
+    const cntEl=document.getElementById('cnt-'+postId);
+    if(cntEl)cntEl.textContent=c;
+    showToast('❤️ Liked! GATE reward sent to author','ok');
     loadGateBal(true);
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
   btn.disabled=false;
@@ -3010,11 +2999,11 @@ function bsJoinPvP(gameDbId){
     .subscribe(function(status){
       if(status==='SUBSCRIBED'){
         addBattleLog('🔴 Live');
-        // Start lightweight polling as backup (every 3s)
-        bsTimer=setInterval(bsPollGame,3000);
+        // Start lightweight polling as backup (every 2s)
+        bsTimer=setInterval(bsPollGame,2000);
       } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
         addBattleLog('⚠️ Using polling...');
-        bsTimer=setInterval(bsPollGame,3000);
+        bsTimer=setInterval(bsPollGame,2000);
       }
     });
 
@@ -3646,70 +3635,51 @@ async function finalizeProposal(id){}
 async function cancelDAOProposal(id){}
 
 // ── MARKETPLACE ──
-// ── NFT IMAGE CACHE ──
-const _nftImgCache={};
-const _nftMetaCache={};
-
-function getCachedNFTImg(key){
-  const c=_nftImgCache[key];
-  if(c&&Date.now()-c.t<3600000) return c.url; // 1hr cache
-  return null;
-}
-function setCachedNFTImg(key,url){_nftImgCache[key]={url,t:Date.now()};}
-
 async function resolveIPFS(uri){
   if(!uri) return '';
-  if(uri.startsWith('data:')) return uri;
+  if(uri.startsWith('data:')) return uri; // base64 inline
   if(uri.startsWith('ipfs://')){
     const hash=uri.slice(7);
-    // Use Cloudflare as primary (fastest, globally cached)
     return 'https://cloudflare-ipfs.com/ipfs/'+hash;
   }
   if(uri.startsWith('https://ipfs.io/ipfs/')) return uri.replace('https://ipfs.io/ipfs/','https://cloudflare-ipfs.com/ipfs/');
-  if(uri.startsWith('https://gateway.pinata.cloud/')) return uri;
   return uri;
 }
-
 async function resolveIPFSWithFallback(uri){
   if(!uri) return '';
   if(uri.startsWith('data:')) return uri;
-  // Check cache first
-  const cached=getCachedNFTImg(uri);
-  if(cached) return cached;
-  const hash=uri.startsWith('ipfs://')?uri.slice(7)
-    :uri.includes('/ipfs/')?uri.split('/ipfs/')[1]
-    :null;
+  const hash=uri.startsWith('ipfs://')?uri.slice(7):null;
   if(hash){
-    // Cloudflare is fastest and has best global caching
-    const primary='https://cloudflare-ipfs.com/ipfs/'+hash;
-    setCachedNFTImg(uri,primary);
-    return primary;
+    // Try multiple gateways
+    const gateways=[
+      'https://cloudflare-ipfs.com/ipfs/'+hash,
+      'https://gateway.pinata.cloud/ipfs/'+hash,
+      'https://ipfs.io/ipfs/'+hash,
+      'https://nftstorage.link/ipfs/'+hash,
+    ];
+    for(const gw of gateways){
+      try{
+        const r=await fetch(gw,{method:'HEAD',signal:AbortSignal.timeout(3000)});
+        if(r.ok) return gw;
+      }catch{}
+    }
+    return gateways[0];
   }
-  setCachedNFTImg(uri,uri);
   return uri;
 }
 async function fetchNFTMeta(uri){
-  if(!uri) throw new Error('No URI');
-  // Check meta cache (1hr)
-  if(_nftMetaCache[uri]&&Date.now()-_nftMetaCache[uri].t<3600000)
-    return _nftMetaCache[uri].data;
   // Handle base64 encoded JSON
   if(uri.startsWith('data:application/json;base64,')){
-    const data=JSON.parse(atob(uri.split(',')[1]));
-    _nftMetaCache[uri]={data,t:Date.now()};
-    return data;
+    const b64=uri.split(',')[1];
+    return JSON.parse(atob(b64));
   }
   if(uri.startsWith('data:application/json,')){
-    const data=JSON.parse(decodeURIComponent(uri.split(',')[1]));
-    _nftMetaCache[uri]={data,t:Date.now()};
-    return data;
+    return JSON.parse(decodeURIComponent(uri.split(',')[1]));
   }
   const r=await resolveIPFS(uri);
   const res=await fetch(r,{signal:AbortSignal.timeout(10000)});
   if(!res.ok) throw new Error('HTTP '+res.status);
-  const data=await res.json();
-  _nftMetaCache[uri]={data,t:Date.now()};
-  return data;
+  return await res.json();
 }
 async function loadMarketplace(){
   try{
@@ -3717,25 +3687,9 @@ async function loadMarketplace(){
     const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
     const [count,volume]=await Promise.all([market.listingCount(),market.totalVolume()]);
     document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(volume)).toFixed(4)+' zkLTC';
-    if(!count||count===0n||Number(count)===0){document.getElementById('mktListings').textContent='0';document.getElementById('marketListings').innerHTML='<div class="app-empty">No listings yet</div>';return;}
-    // getListings(from, to) - returns listings from ID 1 to count
-    const total=Number(count);
-    const listings=await market.getListings(1,Math.min(total,50));
-    const active=[];
-    for(let i=0;i<listings.length;i++){
-      const l=listings[i];
-      if(l&&l.active){
-        // Manually extract fields from ethers Proxy object
-        active.push({
-          seller:l.seller,
-          nftContract:l.nftContract,
-          tokenId:l.tokenId,
-          price:l.price,
-          active:l.active,
-          _id:i+1  // Real contract listing ID
-        });
-      }
-    }
+    if(count===0n){document.getElementById('mktListings').textContent='0';document.getElementById('marketListings').innerHTML='<div class="app-empty">No listings yet</div>';return;}
+    const listings=await market.getListings(1,50);
+    const active=listings.filter(l=>l.active);
     document.getElementById('mktListings').textContent=active.length;
     const grid=document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;';
@@ -3757,7 +3711,7 @@ async function loadMarketplace(){
         console.log('NFT meta error:',l.nftContract,l.tokenId.toString(),err.message);
       }
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
-      const listingIdx=l._id; // Real contract listing ID
+      const listingIdx=i+1;
       const priceWei=l.price; // Keep as BigInt
       const priceEth=parseFloat(ethers.formatEther(priceWei)).toFixed(4);
 
@@ -3843,22 +3797,7 @@ async function buyNFT(listingId,price){
     showToast(msg.slice(0,60),'err');
   }
 }
-async function cancelNFTListing(id){
-  if(!userAddr)return;
-  try{
-    await switchToLitVM();
-    const freshSigner=await provider.getSigner();
-    const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,freshSigner);
-    showToast('Cancelling listing...','ok');
-    const tx=await market.cancelListing(id);
-    await tx.wait();
-    showToast('Listing cancelled ✓','ok');
-    loadMarketplace();
-  }catch(e){
-    const msg=e.reason||e.message||'Failed';
-    showToast(msg.slice(0,60),'err');
-  }
-}
+async function cancelNFTListing(id){if(!userAddr)return;try{await switchToLitVM();const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);await(await market.cancelListing(id)).wait();showToast('Listing cancelled','ok');loadMarketplace();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 
 // ── EXPLORE ──
 let searchFilter='users',searchTimer=null;
@@ -4151,8 +4090,8 @@ async function openDM(wallet){
       }
     })
     .subscribe();
-  // Polling backup for active DM every 5s (Realtime handles instant delivery)
-  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},5000);
+  // Polling backup for active DM every 2s
+  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},2000);
 }
 function openDMByAddr(){const addr=document.getElementById('newDmAddr').value.trim().toLowerCase();if(!addr||!addr.startsWith('0x')){showToast('Enter valid address','err');return;}openDM(addr);}
 function showConvList(){
@@ -4269,38 +4208,6 @@ async function loadPassSupply(){
 
 // ── INIT ──
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
-
-// ── VISIBILITY: Pause Realtime when tab hidden, resume when visible ──
-document.addEventListener('visibilitychange',function(){
-  if(document.hidden){
-    // Tab hidden - pause polling to save resources
-    clearInterval(_msgPollTimer);
-    clearInterval(dmTimer);
-    clearInterval(stakingTimer);
-  } else {
-    // Tab visible again - resume
-    if(userAddr){
-      // Restart message polling
-      if(!_msgPollTimer){
-        _msgPollTimer=setInterval(async function(){
-          if(!userAddr)return;
-          try{
-            const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
-            const c=count||0;
-            if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();
-              const convList=document.getElementById('convList');
-              if(convList&&convList.style.display!=='none')loadConversations();
-            }
-          }catch(e){}
-        },5000);
-      }
-      // Refresh data that might have changed
-      updateUnreadBadge();
-      updateNotifBadge();
-      loadGateBal(true);
-    }
-  }
-});
 const obs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');obs.unobserve(x.target);}}),{threshold:0.08});
 document.querySelectorAll('.fade').forEach(el=>obs.observe(el));
 const sObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.querySelectorAll('.supply-fill[data-target]').forEach(b=>{setTimeout(()=>b.style.width=b.dataset.target,300)});}),{threshold:0.2});
