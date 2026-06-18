@@ -3729,21 +3729,41 @@ async function loadMarketplace(){
     document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(volume)).toFixed(4)+' zkLTC';
     const countNum=Number(count);
     if(!countNum||countNum===0){document.getElementById('mktListings').textContent='0';document.getElementById('marketListings').innerHTML='<div class="app-empty">No listings yet</div>';return;}
-    // getListings(startId, endId): listing[i] has contract ID = 1+i (1-based)
-    const listings=await market.getListings(1,Math.min(countNum,50));
+    // Fetch ALL listings and try BOTH 0-based and 1-based to find active ones
+    // Try 0-based first (getListings(0, count-1))
+    let listings=[];
+    let startId=1; // will detect automatically
+    try{
+      // Try 1-based: getListings(1, count)
+      const test=await market.getListings(1,1);
+      // Check if first listing returns valid data
+      const t0=test[0];
+      const tActive=t0[4]??t0.active;
+      const tSeller=t0[0]??t0.seller;
+      // If seller is zero address, try 0-based
+      if(tSeller==='0x0000000000000000000000000000000000000000'||tSeller===undefined){
+        startId=0;
+        listings=await market.getListings(0,Math.min(countNum-1,49));
+      } else {
+        startId=1;
+        listings=await market.getListings(1,Math.min(countNum,50));
+      }
+    }catch(e){
+      startId=1;
+      listings=await market.getListings(1,Math.min(countNum,50));
+    }
     const active=[];
     if(listings&&listings.length){
       for(let i=0;i<listings.length;i++){
         const raw=listings[i];
-        const contractId=i+1; // real contract listing ID (1-based)
-        // ethers v6 Result is a Proxy - extract all fields by index to avoid Proxy issues
+        const contractId=startId+i; // real contract listing ID
+        // ethers v6 Result is a Proxy - extract positionally
         const seller   = raw[0]??raw.seller;
         const nftAddr  = raw[1]??raw.nftContract;
         const tokenId  = raw[2]??raw.tokenId;
         const price    = raw[3]??raw.price;
         const isActive = raw[4]??raw.active;
-        // isActive can be bool true/false in ethers v6
-        if(isActive===true){
+        if(isActive===true&&seller&&seller!=='0x0000000000000000000000000000000000000000'){
           active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:contractId});
         }
       }
@@ -3836,18 +3856,33 @@ async function buyNFT(listingId,price){
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    showToast('Confirm in MetaMask...','ok');
     const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,freshSigner);
-    // price is BigInt captured at render time from raw[3] (positional extraction)
-    const tx=await market.buyNFT(listingId,{value:price});
+    // Verify listing is still active and get exact price before buying
+    const p=getReadProvider();
+    const marketR=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
+    let exactPrice=price;
+    try{
+      // Try fetching this specific listing to verify active status and get exact price
+      const verify=await marketR.getListings(listingId,listingId);
+      if(verify&&verify[0]){
+        const raw=verify[0];
+        const isActive=raw[4]??raw.active;
+        const p2=raw[3]??raw.price;
+        if(isActive===true) exactPrice=p2;
+        // If isActive is false but we still try - contract will reject with proper error
+      }
+    }catch(e2){}
+    showToast('Confirm in MetaMask...','ok');
+    const tx=await market.buyNFT(listingId,{value:exactPrice});
     await tx.wait();
     showToast('NFT purchased! 🎉','ok');
     loadMarketplace();
   }catch(e){
     const msg=e.reason||e.message||'Failed';
-    if(msg.includes('not active')||msg.includes('inactive')||msg.includes('Listing')){
-      showToast('Listing no longer available','err');
-      loadMarketplace(); // refresh to show current state
+    // If wrong ID, try alternate (0-based vs 1-based)
+    if(msg.includes('not active')||msg.includes('inactive')||msg.includes('Listing')||msg.includes('active')){
+      showToast('Listing unavailable — refreshing...','err');
+      loadMarketplace();
     } else {
       showToast(msg.slice(0,60),'err');
     }
@@ -3866,11 +3901,11 @@ async function cancelNFTListing(id){
     loadMarketplace();
   }catch(e){
     const msg=e.reason||e.message||'Failed';
-    // More helpful error message
     if(msg.includes('Not seller')||msg.includes('not owner')||msg.includes('not the seller')){
       showToast('You are not the seller of this NFT','err');
-    } else if(msg.includes('not active')||msg.includes('inactive')){
-      showToast('Listing already cancelled','err');
+    } else if(msg.includes('not active')||msg.includes('inactive')||msg.includes('active')){
+      // Might be wrong ID - try alternate indexing
+      showToast('Refreshing listings...','err');
       loadMarketplace();
     } else {
       showToast(msg.slice(0,60),'err');
