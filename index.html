@@ -1896,8 +1896,10 @@ async function uploadToPinata(file){
 
 
 function checkImgUpload(){
+  const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
+  const isOwner=userAddr&&userAddr===OWNER_WALLET;
   const passType=currentUser?.pass_type;
-  if(!passType||passType==='free'||!passType){
+  if(!isOwner&&(!passType||passType==='free')){
     showToast('Images require Silver or Gold Pass 🥈','err');
     return;
   }
@@ -1907,7 +1909,9 @@ function checkImgUpload(){
 async function handleImages(input){
   const files = Array.from(input.files);
   if(files.length === 0) return;
-  const maxImgs = currentUser?.pass_type === 'gold' ? 20 : currentUser?.pass_type === 'silver' ? 3 : 0;
+  const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
+  const isOwner=userAddr&&userAddr===OWNER_WALLET;
+  const maxImgs = isOwner ? 20 : currentUser?.pass_type === 'gold' ? 20 : currentUser?.pass_type === 'silver' ? 3 : 0;
   if(pendingImages.length + files.length > maxImgs){
     showToast('Max ' + maxImgs + ' images allowed','err'); return;
   }
@@ -1942,17 +1946,20 @@ async function createPost(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const content=document.getElementById('postText').value.trim();
   if(!content) return;
-  // Check daily post limit
+  // Check daily post limit (owner has unlimited)
+  const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
+  const isOwner=userAddr===OWNER_WALLET;
   const passType=currentUser?.pass_type;
-  const maxPosts=passType==='gold'?999:passType==='silver'?10:3;
-  const today=new Date();today.setHours(0,0,0,0);
-  const {count:todayPosts}=await sb.from('posts').select('*',{count:'exact',head:true})
-    .eq('author_wallet',userAddr).gte('created_at',today.toISOString());
-  if(todayPosts>=maxPosts){
-    if(passType==='gold') showToast('Daily limit reached','err');
-    else if(passType==='silver') showToast('Silver limit: 10 posts/day. Upgrade to Gold for unlimited!','err');
-    else showToast('Free limit: 3 posts/day. Get Silver or Gold Pass for more!','err');
-    return;
+  const maxPosts=isOwner?999999:passType==='gold'?999:passType==='silver'?10:3;
+  if(!isOwner){
+    const today=new Date();today.setHours(0,0,0,0);
+    const {count:todayPosts}=await sb.from('posts').select('*',{count:'exact',head:true})
+      .eq('author_wallet',userAddr).gte('created_at',today.toISOString());
+    if(todayPosts>=maxPosts){
+      if(passType==='silver') showToast('Silver limit: 10 posts/day. Upgrade to Gold for unlimited!','err');
+      else showToast('Free limit: 3 posts/day. Get Silver or Gold Pass for more!','err');
+      return;
+    }
   }
   const btn=document.getElementById('postBtn');
   btn.disabled=true; btn.textContent='Posting...';
