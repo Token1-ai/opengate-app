@@ -3727,46 +3727,20 @@ async function loadMarketplace(){
   try{
     const p=getReadProvider();
     const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
-    const [count,volume]=await Promise.all([market.listingCount(),market.totalVolume()]);
-    document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(volume)).toFixed(4)+' zkLTC';
-    const countNum=Number(count);
-    if(!countNum||countNum===0){document.getElementById('mktListings').textContent='0';document.getElementById('marketListings').innerHTML='<div class="app-empty">No listings yet</div>';return;}
-    // Use getActiveListings() — returns ONLY active listings with their real IDs
-    // Falls back to old method if new contract not deployed yet
+    // Fetch volume (non-critical)
+    market.totalVolume().then(v=>document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(v)).toFixed(4)+' zkLTC').catch(()=>{});
+    // Use getActiveListings() directly — no listingCount needed
     let active=[];
-    try{
-      const [ids,listings]=await market.getActiveListings();
-      for(let i=0;i<listings.length;i++){
-        const raw=listings[i];
-        const seller  = String(raw[0]??raw.seller??'');
-        const nftAddr = String(raw[1]??raw.nftContract??'');
-        const tokenId = raw[2]??raw.tokenId;
-        const price   = raw[3]??raw.price;
-        active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:Number(ids[i])});
-      }
-    }catch(e){
-      // Fallback: old method with dedup
-      const ZERO='0x0000000000000000000000000000000000000000';
-      const _seen=new Set();
-      for(let id=Math.min(countNum,50);id>=1;id--){
-        try{
-          const res=await market.getListings(id,id);
-          if(!res||!res[0]) continue;
-          const raw=res[0];
-          const seller  = String(raw[0]??raw.seller??'');
-          const nftAddr = String(raw[1]??raw.nftContract??'');
-          const tokenId = raw[2]??raw.tokenId;
-          const price   = raw[3]??raw.price;
-          const isActive= raw[4]??raw.active;
-          if(isActive===true&&seller&&seller!==ZERO&&nftAddr&&nftAddr!==ZERO&&price&&BigInt(price.toString())>0n){
-            const dk=nftAddr.toLowerCase()+'_'+tokenId.toString();
-            if(_seen.has(dk)) continue;
-            _seen.add(dk);
-            active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:id});
-          }
-        }catch(e2){ continue; }
-      }
-      active.sort((a,b)=>a._id-b._id);
+    const result=await market.getActiveListings();
+    const ids=result[0];
+    const listings=result[1];
+    for(let i=0;i<listings.length;i++){
+      const raw=listings[i];
+      const seller  = String(raw[0]??raw.seller??'');
+      const nftAddr = String(raw[1]??raw.nftContract??'');
+      const tokenId = raw[2]??raw.tokenId;
+      const price   = raw[3]??raw.price;
+      active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:Number(ids[i])});
     }
     document.getElementById('mktListings').textContent=active.length;
     const grid=document.createElement('div');
