@@ -3732,7 +3732,8 @@ async function loadMarketplace(){
     // Fetch listings one by one to guarantee correct contract ID
     const active=[];
     const ZERO='0x0000000000000000000000000000000000000000';
-    for(let id=1;id<=Math.min(countNum,50);id++){
+    const _seen=new Set(); // dedup by nftContract+tokenId — show only newest listing
+    for(let id=Math.min(countNum,50);id>=1;id--){ // iterate newest-first (highest ID = latest listing)
       try{
         const res=await market.getListings(id,id);
         if(!res||!res[0]) continue;
@@ -3742,17 +3743,21 @@ async function loadMarketplace(){
         const tokenId  = raw[2]??raw.tokenId;
         const price    = raw[3]??raw.price;
         const isActive = raw[4]??raw.active;
-        // Strict checks: must be active===true, valid seller, valid contract, price>0
         if(
           isActive===true &&
           seller && seller!==ZERO &&
           nftAddr && nftAddr!==ZERO &&
           price && BigInt(price.toString())>0n
         ){
+          const dedupKey=nftAddr.toLowerCase()+'_'+tokenId.toString();
+          if(_seen.has(dedupKey)) continue; // skip duplicate — newer listing already added
+          _seen.add(dedupKey);
           active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:id});
         }
       }catch(e){ continue; }
     }
+    // Sort by listing ID ascending for display
+    active.sort((a,b)=>a._id-b._id);
     document.getElementById('mktListings').textContent=active.length;
     const grid=document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;';
