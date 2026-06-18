@@ -1522,7 +1522,7 @@ const GATE_ABI   = ['function transfer(address,uint256) returns(bool)','function
 const GATE_STAKING  = '0xDD2d80b7c31622D084905899b4d40b815cF01bF8';
 const GATE_PRESALE  = '0xd1BD1853913F1CA242cD4D88a1F50EB0a6ba0854';
 const TOKEN_FACTORY   = '0xb69Df265Ac37A3E6AB2C940cFA395FE7fF0C0A60';
-const NFT_MARKET      = '0x2231E1aDcbb1FB59055d6442207Ac029553e5859';
+const NFT_MARKET      = '0x7EF2e0048f5bAeDe046f6BF797943daF4ED8CB47';
 const GATE_REWARDS    = '0xf0A8E4E553700578F5b08219dc4D6Ce7491777e6';
 const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
 const GATE_LOTTERY    = '0xe57Af825502EE1E29E1e2027038a0F5E00ee7F7E';
@@ -1600,7 +1600,9 @@ const NFT_MARKET_ABI  = [
   'function listNFT(address,uint256,uint256) returns(uint256)',
   'function buyNFT(uint256) payable',
   'function cancelListing(uint256)',
+  'function getListing(uint256) view returns(tuple(address seller,address nftContract,uint256 tokenId,uint256 price,bool active))',
   'function getListings(uint256,uint256) view returns(tuple(address seller,address nftContract,uint256 tokenId,uint256 price,bool active)[])',
+  'function getActiveListings() view returns(uint256[],tuple(address seller,address nftContract,uint256 tokenId,uint256 price,bool active)[])',
   'function listingCount() view returns(uint256)',
   'function totalVolume() view returns(uint256)',
 ];
@@ -3729,35 +3731,43 @@ async function loadMarketplace(){
     document.getElementById('mktVolume').textContent=parseFloat(ethers.formatEther(volume)).toFixed(4)+' zkLTC';
     const countNum=Number(count);
     if(!countNum||countNum===0){document.getElementById('mktListings').textContent='0';document.getElementById('marketListings').innerHTML='<div class="app-empty">No listings yet</div>';return;}
-    // Fetch listings one by one to guarantee correct contract ID
-    const active=[];
-    const ZERO='0x0000000000000000000000000000000000000000';
-    const _seen=new Set(); // dedup by nftContract+tokenId — show only newest listing
-    for(let id=Math.min(countNum,50);id>=1;id--){ // iterate newest-first (highest ID = latest listing)
-      try{
-        const res=await market.getListings(id,id);
-        if(!res||!res[0]) continue;
-        const raw=res[0];
-        const seller   = String(raw[0]??raw.seller??'');
-        const nftAddr  = String(raw[1]??raw.nftContract??'');
-        const tokenId  = raw[2]??raw.tokenId;
-        const price    = raw[3]??raw.price;
-        const isActive = raw[4]??raw.active;
-        if(
-          isActive===true &&
-          seller && seller!==ZERO &&
-          nftAddr && nftAddr!==ZERO &&
-          price && BigInt(price.toString())>0n
-        ){
-          const dedupKey=nftAddr.toLowerCase()+'_'+tokenId.toString();
-          if(_seen.has(dedupKey)) continue; // skip duplicate — newer listing already added
-          _seen.add(dedupKey);
-          active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:id});
-        }
-      }catch(e){ continue; }
+    // Use getActiveListings() — returns ONLY active listings with their real IDs
+    // Falls back to old method if new contract not deployed yet
+    let active=[];
+    try{
+      const [ids,listings]=await market.getActiveListings();
+      for(let i=0;i<listings.length;i++){
+        const raw=listings[i];
+        const seller  = String(raw[0]??raw.seller??'');
+        const nftAddr = String(raw[1]??raw.nftContract??'');
+        const tokenId = raw[2]??raw.tokenId;
+        const price   = raw[3]??raw.price;
+        active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:Number(ids[i])});
+      }
+    }catch(e){
+      // Fallback: old method with dedup
+      const ZERO='0x0000000000000000000000000000000000000000';
+      const _seen=new Set();
+      for(let id=Math.min(countNum,50);id>=1;id--){
+        try{
+          const res=await market.getListings(id,id);
+          if(!res||!res[0]) continue;
+          const raw=res[0];
+          const seller  = String(raw[0]??raw.seller??'');
+          const nftAddr = String(raw[1]??raw.nftContract??'');
+          const tokenId = raw[2]??raw.tokenId;
+          const price   = raw[3]??raw.price;
+          const isActive= raw[4]??raw.active;
+          if(isActive===true&&seller&&seller!==ZERO&&nftAddr&&nftAddr!==ZERO&&price&&BigInt(price.toString())>0n){
+            const dk=nftAddr.toLowerCase()+'_'+tokenId.toString();
+            if(_seen.has(dk)) continue;
+            _seen.add(dk);
+            active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:id});
+          }
+        }catch(e2){ continue; }
+      }
+      active.sort((a,b)=>a._id-b._id);
     }
-    // Sort by listing ID ascending for display
-    active.sort((a,b)=>a._id-b._id);
     document.getElementById('mktListings').textContent=active.length;
     const grid=document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;';
