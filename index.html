@@ -1772,6 +1772,31 @@ async function ensureUser(){
   if(!data){ const {data:u} = await sb.from('users').insert({wallet:userAddr}).select().single(); currentUser=u; }
   else currentUser=data;
   updateCompAv();
+  // Auto-detect pass type from BNB Chain
+  checkPassType();
+}
+
+async function checkPassType(){
+  if(!userAddr) return;
+  try{
+    const bnbP = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+    const nftAbi = ['function balanceOf(address) view returns(uint256)'];
+    const goldNFT   = new ethers.Contract('0x16239880aEe6919Ed0a411859D8D8e5A7F2ef801', nftAbi, bnbP);
+    const silverNFT = new ethers.Contract('0x1CcA4e53E66EbDcD31f4d7ae4E2A791C49CF4a46', nftAbi, bnbP);
+    const [goldBal, silverBal] = await Promise.all([
+      goldNFT.balanceOf(userAddr),
+      silverNFT.balanceOf(userAddr)
+    ]);
+    let passType = 'free';
+    if(goldBal > 0n) passType = 'gold';
+    else if(silverBal > 0n) passType = 'silver';
+    // Update if changed
+    if(currentUser && currentUser.pass_type !== passType){
+      await sb.from('users').update({pass_type: passType}).eq('wallet', userAddr);
+      currentUser = {...currentUser, pass_type: passType};
+      if(passType !== 'free') showToast('Pass detected: ' + passType + ' ✓', 'ok');
+    }
+  }catch(e){}
 }
 function updateCompAv(){
   if(!currentUser) return;
