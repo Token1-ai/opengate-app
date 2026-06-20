@@ -2810,7 +2810,7 @@ function showOpponentJoinedBanner(game){
   btn.onclick=function(){
     banner.remove();
     showTab('battle');
-    setTimeout(function(){bsJoinPvP(game.id);},200);
+    setTimeout(function(){bsResumeGame(game.id);},200);
   };
   const closeBtn=document.createElement('button');
   closeBtn.textContent='✕';
@@ -2860,7 +2860,7 @@ async function loadBattleLobby(){
         const rb=document.createElement('button');
         rb.textContent='↩ Continue';
         rb.style.cssText='background:var(--green);color:#08090C;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;border:none;';
-        rb.onclick=function(){bsJoinPvP(ag.id);};
+        rb.onclick=function(){bsResumeGame(ag.id,ag);};
         rdiv.appendChild(rb);
         el.innerHTML='';
         el.appendChild(rdiv);
@@ -3065,6 +3065,83 @@ async function bsJoinGame(gameDbId,betAmt,betToken){
 
 // ── START PVP ──
 let bsRealtimeChannel = null;
+
+// Resume an already-in-progress game (e.g. after being notified opponent
+// joined, or via "Continue" in lobby) WITHOUT resetting ship placement.
+async function bsResumeGame(gameDbId,gameData){
+  const oldBanner=document.getElementById('gameJoinedBanner');
+  if(oldBanner)oldBanner.remove();
+  pendingJoinedGameId=null;
+  currentBsGame=gameDbId;
+  bsMyShots=[];bsEnemyShots=[];bsMyShips=[];
+
+  const lobby=document.getElementById('battleLobby');
+  const game=document.getElementById('battleGame');
+  if(lobby)lobby.style.display='none';
+  if(game)game.style.display='block';
+  const sl=document.getElementById('enemyBoardLabel');
+  if(sl)sl.textContent='Enemy Fleet — click to fire!';
+
+  try{
+    let g=gameData;
+    if(!g){
+      const res=await sb.from('battleship_games').select('*').eq('id',gameDbId).single();
+      g=res.data;
+    }
+    if(!g){showToast('Game not found','err');leaveBattleGame();return;}
+
+    const isP1=g.player1_wallet===userAddr;
+    const myBoardStr=isP1?g.player1_board:g.player2_board;
+
+    if(myBoardStr){
+      // I already placed my ships — restore them and hide placement UI
+      bsMyShips=JSON.parse(myBoardStr);
+      bsPhase=(g.player1_board&&g.player2_board)?'battle':'placing';
+      const sp=document.getElementById('shipsPanel');
+      const pb=document.getElementById('placeShipsBtn');
+      const rb=document.getElementById('readyBtn');
+      if(sp)sp.style.display='none';
+      if(pb)pb.style.display='none';
+      if(rb)rb.style.display='none';
+      for(let i=0;i<100;i++){
+        const c=document.getElementById('my-'+i);
+        if(c){c.onclick=null;c.onmouseover=null;c.onmouseout=null;c.style.cursor='default';}
+      }
+      addBattleLog(bsPhase==='battle'?'⚔️ Resuming battle!':'⏳ Waiting for opponent to place ships...');
+    } else {
+      // I haven't placed ships yet — show the normal placement flow
+      bsPhase='placing';
+      bsInitBoard();
+      addBattleLog('⚓ PvP game! Place ships on TOP board.');
+    }
+
+    bsSetStatus(bsPhase==='battle'?'⚔️ Loading battle...':'⏳ Waiting for opponent to place ships...');
+    bsRenderBoards();
+
+    clearInterval(bsTimer);
+    if(bsRealtimeChannel) sb.removeChannel(bsRealtimeChannel);
+    bsRealtimeChannel = sb.channel('game-'+gameDbId)
+      .on('postgres_changes', {event:'UPDATE',schema:'public',table:'battleship_games'}, function(payload){
+        if(payload.new && payload.new.id === gameDbId){
+          bsHandleGameUpdate(payload.new);
+        }
+      })
+      .subscribe(function(status){
+        if(status==='SUBSCRIBED'){
+          addBattleLog('🔴 Live');
+          bsTimer=setInterval(bsPollGame,3000);
+        } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+          addBattleLog('⚠️ Using polling...');
+          bsTimer=setInterval(bsPollGame,3000);
+        }
+      });
+
+    // Apply the freshest state immediately
+    bsHandleGameUpdate(g);
+  }catch(e){
+    showToast('Failed to resume game','err');
+  }
+}
 
 function bsJoinPvP(gameDbId){
   const oldBanner=document.getElementById('gameJoinedBanner');
