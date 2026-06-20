@@ -167,9 +167,15 @@ button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline
 .rm-phase{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
 .rm-title{font-size:16px;font-weight:700;margin-bottom:10px;}
 .rm-features{list-style:none;}
-.rm-features li{font-size:13px;color:var(--muted);padding:4px 0;display:flex;gap:8px;}
-.rm-features li::before{content:'·';color:var(--muted);}
+.rm-features li{font-size:13px;color:var(--muted);padding:4px 0;display:flex;gap:8px;align-items:flex-start;}
+.rm-features li::before{content:'·';color:var(--muted);flex-shrink:0;}
+.rm-features li.done{color:var(--text);}
+.rm-features li.done::before{content:'✓';color:var(--green);}
+.rm-features li.building::before{content:'🔨';}
+.rm-features li.soon::before{content:'🕐';}
 .rm-item.active .rm-features li::before{content:'✓';color:var(--green);}
+.rm-item.active .rm-features li.building::before{content:'🔨';color:var(--muted);}
+.rm-item.active .rm-features li.soon::before{content:'🕐';color:var(--muted);}
 .rm-badge{display:inline-block;margin-top:12px;font-size:11px;padding:3px 10px;border-radius:100px;font-family:'Space Mono',monospace;}
 .rm-item.active .rm-badge{background:rgba(38,217,138,0.1);color:var(--green);}
 .rm-item .rm-badge{background:rgba(255,255,255,0.04);color:var(--muted);}
@@ -639,11 +645,11 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <div class="eyebrow fade">Roadmap</div>
       <h2 class="section-title fade">What's coming</h2>
       <div class="roadmap-grid">
-        <div class="rm-item active fade"><div class="rm-phase">Phase 1 — Now</div><div class="rm-title">Foundation</div><ul class="rm-features"><li>GATE token on LitVM</li><li>Gold Pass NFT</li><li>Silver Pass NFT</li><li>Social feed app</li></ul><span class="rm-badge">Live</span></div>
-        <div class="rm-item fade"><div class="rm-phase">Phase 2</div><div class="rm-title">Social Layer</div><ul class="rm-features"><li>User profiles</li><li>Post feed + images</li><li>Likes → GATE</li><li>Direct messages</li></ul><span class="rm-badge">Building</span></div>
-        <div class="rm-item fade"><div class="rm-phase">Phase 3</div><div class="rm-title">DeFi Layer</div><ul class="rm-features"><li>GATE staking</li><li>GATE presale</li><li>Easy Swap DEX</li><li>Reward multipliers</li></ul><span class="rm-badge">Soon</span></div>
-        <div class="rm-item fade"><div class="rm-phase">Phase 4</div><div class="rm-title">Ecosystem</div><ul class="rm-features"><li>NFT marketplace</li><li>Token launchpad</li><li>Play-to-earn games</li><li>DAO voting</li></ul><span class="rm-badge">Planned</span></div>
-        <div class="rm-item fade"><div class="rm-phase">Phase 5</div><div class="rm-title">LitVM Hub</div><ul class="rm-features"><li>Full NFT marketplace</li><li>Lending protocol</li><li>Lottery</li><li>Faucet</li></ul><span class="rm-badge">Planned</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 1 — Now</div><div class="rm-title">Foundation</div><ul class="rm-features"><li class="done">GATE token on LitVM</li><li class="done">Gold Pass NFT</li><li class="done">Silver Pass NFT</li><li class="done">Social feed app</li><li class="done">GATE Faucet</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 2</div><div class="rm-title">Social Layer</div><ul class="rm-features"><li class="done">User profiles</li><li class="done">Post feed + images</li><li class="done">Likes → GATE</li><li class="done">Direct messages</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 3</div><div class="rm-title">DeFi Layer</div><ul class="rm-features"><li class="done">GATE staking</li><li class="done">GATE presale</li><li class="done">Easy Swap DEX</li><li class="done">Reward multipliers</li><li class="done">Lending protocol</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 4</div><div class="rm-title">Ecosystem</div><ul class="rm-features"><li class="done">NFT marketplace</li><li class="done">Token launchpad</li><li class="done">Play-to-earn games</li><li class="building">DAO voting</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item fade"><div class="rm-phase">Phase 5</div><div class="rm-title">What's Next</div><ul class="rm-features"><li class="soon">NFT creation studio</li><li class="soon">More tokens for bets &amp; likes</li><li class="soon">New games</li><li class="soon">Mobile app</li></ul><span class="rm-badge">Coming soon</span></div>
       </div>
     </div>
   </section>
