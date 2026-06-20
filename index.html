@@ -1723,6 +1723,7 @@ async function connectWallet(){
     loadPosts();
     subscribeToNewPosts();
     updateNotifBadge();
+    cleanupOldNotifications();
     loadRewardsPool();
     // Subscribe after userAddr confirmed
     setTimeout(function(){
@@ -1737,6 +1738,7 @@ async function connectWallet(){
         })
         .subscribe();
     }catch(e){}
+    subscribeToMyGameInvites();
   } catch(e){ showToast('Connection cancelled','err'); }
 }
 
@@ -2776,6 +2778,48 @@ function setBsMode(mode){
 
 // ── LOBBY ──
 let lobbyRealtimeChannel=null;
+let myGameInviteChannel=null;
+let pendingJoinedGameId=null;
+// Global subscription: notifies me the moment someone joins MY waiting game,
+// regardless of which tab/page I'm currently looking at.
+function subscribeToMyGameInvites(){
+  if(!userAddr||myGameInviteChannel) return;
+  myGameInviteChannel=sb.channel('my-games-'+userAddr)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'battleship_games',filter:'player1_wallet=eq.'+userAddr},function(payload){
+      const g=payload.new;
+      if(!g) return;
+      // Someone just joined my waiting game
+      if(g.status==='playing'&&g.player2_wallet&&currentBsGame!==g.id){
+        showOpponentJoinedBanner(g);
+      }
+    })
+    .subscribe();
+}
+function showOpponentJoinedBanner(game){
+  pendingJoinedGameId=game.id;
+  // Remove any existing banner first
+  const old=document.getElementById('gameJoinedBanner');
+  if(old)old.remove();
+  const banner=document.createElement('div');
+  banner.id='gameJoinedBanner';
+  banner.style.cssText='position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:500;background:linear-gradient(135deg,#26D98A,#1ba972);color:#08090C;border-radius:14px;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 24px rgba(0,0,0,.4);font-size:14px;font-weight:700;max-width:90vw;';
+  banner.innerHTML='<span>⚓ Opponent joined your game!</span>';
+  const btn=document.createElement('button');
+  btn.textContent='Enter Game →';
+  btn.style.cssText='background:#08090C;color:#26D98A;border:none;border-radius:9px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;';
+  btn.onclick=function(){
+    banner.remove();
+    showTab('battle');
+    setTimeout(function(){bsJoinPvP(game.id);},200);
+  };
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='✕';
+  closeBtn.style.cssText='background:none;border:none;color:#08090C;font-size:16px;cursor:pointer;opacity:.6;';
+  closeBtn.onclick=function(){banner.remove();};
+  banner.appendChild(btn);banner.appendChild(closeBtn);
+  document.body.appendChild(banner);
+  showToast('⚓ Someone joined your Battleship game!','ok');
+}
 function subscribeToBattleLobby(){
   if(lobbyRealtimeChannel) return;
   lobbyRealtimeChannel=sb.channel('lobby-games')
@@ -3023,6 +3067,9 @@ async function bsJoinGame(gameDbId,betAmt,betToken){
 let bsRealtimeChannel = null;
 
 function bsJoinPvP(gameDbId){
+  const oldBanner=document.getElementById('gameJoinedBanner');
+  if(oldBanner)oldBanner.remove();
+  pendingJoinedGameId=null;
   currentBsGame=gameDbId;
   bsPhase='placing';
   bsMyShots=[];bsEnemyShots=[];
@@ -3976,8 +4023,16 @@ async function showFollowersList(wallet, type){
 }
 
 // ── NOTIFICATIONS ──
+async function cleanupOldNotifications(){
+  if(!userAddr)return;
+  try{
+    const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
+    await sb.from('notifications').delete().eq('to_wallet',userAddr).lt('created_at',cutoff);
+  }catch(e){}
+}
 async function loadNotifications(){
   if(!userAddr)return;
+  await cleanupOldNotifications();
   const el=document.getElementById('notifsList');
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
@@ -4401,11 +4456,12 @@ async function installPWA(){if(!pwaPrompt)return;pwaPrompt.prompt();const result
 loadPosts();
 window.ethereum?.on('accountsChanged',()=>location.reload());
 window.ethereum?.on('chainChanged',()=>location.reload());
-async function tryAutoConnect(){if(!window.ethereum)return;try{const accounts=await window.ethereum.request({method:'eth_accounts'});if(accounts&&accounts.length>0){provider=new ethers.BrowserProvider(window.ethereum);signer=await provider.getSigner();userAddr=(await signer.getAddress()).toLowerCase();const btn=document.getElementById('connectBtn');btn.classList.add('connected');btn.innerHTML='<div class="w-dot"></div>'+userAddr.slice(0,6)+'...'+userAddr.slice(-4);document.getElementById('newPostBtn').classList.add('show');document.getElementById('composer').classList.add('show');await ensureUser();loadGateBal();loadPosts();updateNotifBadge();loadRewardsPool();
+async function tryAutoConnect(){if(!window.ethereum)return;try{const accounts=await window.ethereum.request({method:'eth_accounts'});if(accounts&&accounts.length>0){provider=new ethers.BrowserProvider(window.ethereum);signer=await provider.getSigner();userAddr=(await signer.getAddress()).toLowerCase();const btn=document.getElementById('connectBtn');btn.classList.add('connected');btn.innerHTML='<div class="w-dot"></div>'+userAddr.slice(0,6)+'...'+userAddr.slice(-4);document.getElementById('newPostBtn').classList.add('show');document.getElementById('composer').classList.add('show');await ensureUser();loadGateBal();loadPosts();updateNotifBadge();cleanupOldNotifications();loadRewardsPool();
     setTimeout(function(){
       subscribeToConversations();
       updateUnreadBadge();
       try{sb.channel('notifs-auto-'+userAddr).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){updateNotifBadge();}).subscribe();}catch(e){}
+      subscribeToMyGameInvites();
     },800);
   }}catch(e){}}
 tryAutoConnect();
