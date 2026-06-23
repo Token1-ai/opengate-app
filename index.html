@@ -1976,8 +1976,9 @@ async function loadPastLotteryRounds(currentRoundId,lottery){
           </div>
           <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gold);">${prizeGate} GATE</div>
         </div>`;
-      }catch(err){}
+      }catch(err){console.log('Round '+rid+' read error:',err.message);}
     }
+    console.log('Past rounds html length:',html.length,'currentRoundId:',currentRoundId);
     el.innerHTML=html||'<div style="font-size:13px;color:var(--muted);">No completed rounds yet</div>';
   }catch(e){el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>';}
 }
