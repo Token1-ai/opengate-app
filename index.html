@@ -2065,7 +2065,62 @@ function setDiceGuess(n){diceGuess=n;for(let i=1;i<=6;i++){const btn=document.ge
 function setDiceToken(t){diceToken=t;const g=document.getElementById('diceTokenGATE');const z=document.getElementById('diceTokenZKLTC');if(g){g.style.borderColor=t==='GATE'?'var(--gold)':'var(--border)';g.style.background=t==='GATE'?'rgba(245,200,66,0.1)':'var(--bg3)';g.style.color=t==='GATE'?'var(--gold)':'var(--muted)';}if(z){z.style.borderColor=t==='zkLTC'?'var(--gold)':'var(--border)';z.style.background=t==='zkLTC'?'rgba(245,200,66,0.1)':'var(--bg3)';z.style.color=t==='zkLTC'?'var(--gold)':'var(--muted)';}}
 function setDiceBet(amount){diceBet=amount;[50,100,200,500].forEach(b=>{const btn=document.getElementById('dbet'+b);if(!btn)return;if(b===amount){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});const win=(diceBet*5*0.97).toFixed(1);document.getElementById('diceWinAmt').textContent=win+' GATE';}
 async function loadDice(){
-  try{const p=getReadProvider();const dice=new ethers.Contract(GATE_DICE,DICE_ABI,p);const [pool]=await dice.getStats();document.getElementById('diceHousePool').textContent=parseFloat(ethers.formatEther(pool)).toFixed(0)+' GATE';if(userAddr){const [wins,losses]=await Promise.all([dice.playerWins(userAddr),dice.playerLosses(userAddr)]);document.getElementById('diceMyWins').textContent=wins.toString();document.getElementById('diceMyLosses').textContent=losses.toString();}}catch(e){}
+  try{
+    const p=getReadProvider();
+    const dice=new ethers.Contract(GATE_DICE,DICE_ABI,p);
+    const [pool]=await dice.getStats();
+    document.getElementById('diceHousePool').textContent=parseFloat(ethers.formatEther(pool)).toFixed(0)+' GATE';
+    if(userAddr){
+      const [wins,losses]=await Promise.all([dice.playerWins(userAddr),dice.playerLosses(userAddr)]);
+      document.getElementById('diceMyWins').textContent=wins.toString();
+      document.getElementById('diceMyLosses').textContent=losses.toString();
+      // Завантажуємо історію через events
+      loadDiceHistory(p);
+    }
+  }catch(e){}
+}
+
+async function loadDiceHistory(p){
+  const el=document.getElementById('diceHistory');
+  if(!el)return;
+  try{
+    const iface=new ethers.Interface(['event DiceRolled(address indexed player,uint8 guess,uint8 result,bool won,uint256 payout)']);
+    const topic=iface.getEvent('DiceRolled').topicHash;
+    // Фільтруємо по адресі гравця (topics[1])
+    const playerTopic='0x'+userAddr.replace('0x','').padStart(64,'0');
+    const latestBlock=await p.getBlockNumber();
+    const fromBlock=Math.max(0,latestBlock-100000);
+    const logs=await p.getLogs({
+      address:GATE_DICE,
+      topics:[topic,playerTopic],
+      fromBlock,
+      toBlock:'latest'
+    });
+    if(!logs||logs.length===0){
+      el.innerHTML='<div style="font-size:13px;color:var(--muted);">No games yet</div>';
+      return;
+    }
+    const recent=[...logs].reverse().slice(0,10);
+    el.innerHTML='';
+    recent.forEach(function(log){
+      try{
+        const parsed=iface.parseLog({topics:log.topics,data:log.data});
+        const guess=Number(parsed.args[1]);
+        const result=Number(parsed.args[2]);
+        const won=parsed.args[3];
+        const payout=parsed.args[4];
+        const row=document.createElement('div');
+        row.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;';
+        row.innerHTML='<span>Guess: <b>'+guess+'</b> → Got: <b>'+result+'</b></span>'
+          +'<span style="color:'+(won?'var(--green)':'var(--red)')+';">'
+          +(won?'+'+parseFloat(ethers.formatEther(payout)).toFixed(1)+' GATE':'Lost')
+          +'</span>';
+        el.appendChild(row);
+      }catch{}
+    });
+  }catch(e){
+    el.innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load history</div>';
+  }
 }
 async function rollDice(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
