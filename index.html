@@ -1935,11 +1935,24 @@ async function loadLottery(){
       document.getElementById('lotteryBar').style.width='0%';
     }
     loadPastLotteryRounds(roundIdNum,lottery);
+    // Оновлюємо тільки основні дані раунду, не Past Winners
     clearTimeout(window._lotteryRefreshTimer);
-    window._lotteryRefreshTimer=setTimeout(function(){
+    window._lotteryRefreshTimer=setTimeout(async function(){
       const view=document.getElementById('view-lottery');
-      if(view&&view.style.display!=='none')loadLottery();
-    },60000);
+      if(view&&view.style.display!=='none'){
+        // Оновлюємо тільки поточний раунд без перезавантаження Past Winners
+        try{
+          const p2=getReadProvider();
+          const lot2=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p2);
+          const gr2=await lot2.getCurrentRound();
+          const pc2=Number(gr2[1]);const pot2=gr2[2];
+          document.getElementById('lotteryPlayers').textContent=pc2.toString();
+          document.getElementById('lotteryBar').style.width=Math.min(100,pc2*100/20)+'%';
+          document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot2)).toFixed(0)+' GATE';
+          if(userAddr){try{const myT=await lot2.getMyTickets(Number(gr2[0]));document.getElementById('myLotteryTickets').textContent=myT.toString();}catch{}}
+        }catch{}
+      }
+    },30000);
   }catch(e){console.log('loadLottery error:',e.message);}
 }
 
@@ -1967,11 +1980,11 @@ async function loadPastLotteryRounds(currentRoundId,lottery){
       for(const log of sorted.slice(0,10)){
         try{
           const parsed=iface.parseLog({topics:log.topics,data:log.data});
-          const rid=Number(parsed.args[0]);
-          const winner=parsed.args[1];
-          const prize=parsed.args[2];
-          const shortWin=winner.slice(0,6)+'...'+winner.slice(-4);
-          const prizeGate=parseFloat(ethers.formatEther(prize)).toFixed(0);
+          const rid=Number(parsed.args.round||parsed.args[0]);
+          const winner=String(parsed.args.winner||parsed.args[1]||'');
+          const prize=parsed.args.prize||parsed.args[2]||0n;
+          const shortWin=winner&&winner.length>=10?winner.slice(0,6)+'...'+winner.slice(-4):'—';
+          const prizeGate=prize?parseFloat(ethers.formatEther(prize)).toFixed(0):'—';
           html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
             <div>
               <div style="font-size:13px;font-weight:700;">Round #${rid}</div>
