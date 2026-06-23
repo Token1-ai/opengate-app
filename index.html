@@ -1917,53 +1917,103 @@ async function loadLottery(){
   try{
     const p=getReadProvider();
     const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
-    const [roundId,playerCount,pot]=await lottery.getCurrentRound();
-    document.getElementById('lotteryRound').textContent=roundId.toString();
-    document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';
-    document.getElementById('lotteryPlayers').textContent=playerCount.toString();
-    const pct=Number(playerCount)*100/20;
-    document.getElementById('lotteryBar').style.width=Math.min(100,pct)+'%';
-    if(userAddr){const myT=await lottery.getMyTickets(roundId);document.getElementById('myLotteryTickets').textContent=myT.toString();}
-    // Авто-draw коли 20 гравців
-    if(Number(playerCount)>=20&&userAddr){
-      try{
-        await switchToLitVM();
-        const freshSigner=await provider.getSigner();
-        const lotteryWrite=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
-        showToast('🎰 Lottery full! Drawing winner...','ok');
-        const tx=await lotteryWrite.draw();await tx.wait();
-        showToast('🎉 Winner selected! Prize sent automatically!','ok');
-        setTimeout(loadLottery,2000);
-      }catch(drawErr){setTimeout(loadLottery,2000);}
+
+    // Читаємо поточний roundId
+    const currentRoundId=await lottery.currentRound();
+    const roundIdNum=Number(currentRoundId);
+
+    // Читаємо дані поточного раунду напряму через rounds()
+    // rounds(id) => (pot, players[], winner, prize, drawn, ticketPrice)
+    const roundData=await lottery.rounds(currentRoundId);
+    const pot=roundData[0];
+    const players=roundData[1];
+    const winner=roundData[2];
+    const prize=roundData[3];
+    const drawn=roundData[4];
+    const playerCount=players?players.length:0;
+
+    document.getElementById('lotteryRound').textContent=roundIdNum.toString();
+
+    if(drawn){
+      // Цей раунд вже завершено — показуємо результат і починаємо новий
+      document.getElementById('lotteryPot').textContent='0 GATE';
+      document.getElementById('lotteryPlayers').textContent='0';
+      document.getElementById('lotteryBar').style.width='0%';
+      if(document.getElementById('myLotteryTickets'))document.getElementById('myLotteryTickets').textContent='0';
+    }else{
+      // Активний раунд
+      const potGate=parseFloat(ethers.formatEther(pot)).toFixed(0);
+      document.getElementById('lotteryPot').textContent=potGate+' GATE';
+      document.getElementById('lotteryPlayers').textContent=playerCount.toString();
+      const pct=playerCount*100/20;
+      document.getElementById('lotteryBar').style.width=Math.min(100,pct)+'%';
+
+      // Мої квитки
+      if(userAddr){
+        try{const myT=await lottery.getMyTickets(currentRoundId);document.getElementById('myLotteryTickets').textContent=myT.toString();}catch{}
+      }
+
+      // Авто-draw коли 20 гравців
+      if(playerCount>=20&&userAddr){
+        try{
+          await switchToLitVM();
+          const freshSigner=await provider.getSigner();
+          const lotteryWrite=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
+          showToast('🎰 Lottery full! Drawing winner...','ok');
+          const tx=await lotteryWrite.draw();await tx.wait();
+          showToast('🎉 Winner selected! Prize sent automatically!','ok');
+          setTimeout(loadLottery,3000);
+          return;
+        }catch(drawErr){}
+      }
     }
+
     // Завантажуємо минулі раунди
-    loadPastLotteryRounds(Number(roundId),lottery);
+    loadPastLotteryRounds(roundIdNum,lottery);
+
+    // Автооновлення кожні 15 секунд
+    clearTimeout(window._lotteryRefreshTimer);
+    window._lotteryRefreshTimer=setTimeout(function(){
+      const view=document.getElementById('view-lottery');
+      if(view&&view.style.display!=='none')loadLottery();
+    },15000);
+
   }catch(e){console.log('loadLottery error:',e.message);}
 }
 
 async function loadPastLotteryRounds(currentRoundId,lottery){
   const el=document.getElementById('pastLotteryRounds');
   if(!el)return;
-  if(currentRoundId<=1){el.innerHTML='<div style="font-size:13px;color:var(--muted);">No completed rounds yet</div>';return;}
   el.innerHTML='<div style="font-size:13px;color:var(--muted);">Loading...</div>';
   try{
     const p=getReadProvider();
     const lc=lottery||new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
     let html='';
-    const from=Math.max(1,currentRoundId-1);
-    const to=Math.max(1,currentRoundId-5);
+    // Перевіряємо останні 10 раундів включно з поточним
+    const from=currentRoundId;
+    const to=Math.max(1,currentRoundId-9);
     for(let rid=from;rid>=to;rid--){
       try{
         const round=await lc.rounds(rid);
-        const pot=round[0];const winner=round[2];const prize=round[3];const drawn=round[4];
+        // rounds => (pot, players[], winner, prize, drawn, ...)
+        const pot=round[0];
+        const players=round[1];
+        const winner=round[2];
+        const prize=round[3];
+        const drawn=round[4];
         if(!drawn)continue;
-        const shortWin=winner?winner.slice(0,6)+'...'+winner.slice(-4):'—';
-        const prizeGate=parseFloat(ethers.formatEther(prize||pot)).toFixed(0);
+        const shortWin=winner&&winner!=='0x0000000000000000000000000000000000000000'?winner.slice(0,6)+'...'+winner.slice(-4):'—';
+        const prizeGate=prize&&prize>0n?parseFloat(ethers.formatEther(prize)).toFixed(0):parseFloat(ethers.formatEther(pot)).toFixed(0);
+        const playersCount=players?players.length:0;
         html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-          <div><div style="font-size:13px;font-weight:700;">Round #${rid}</div><div style="font-size:12px;color:var(--muted);margin-top:2px;">🏆 ${shortWin}</div></div>
+          <div>
+            <div style="font-size:13px;font-weight:700;">Round #${rid}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">🏆 ${shortWin}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:1px;">${playersCount} players</div>
+          </div>
           <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gold);">${prizeGate} GATE</div>
         </div>`;
-      }catch{}
+      }catch(err){console.log('round '+rid+' error:',err.message);}
     }
     el.innerHTML=html||'<div style="font-size:13px;color:var(--muted);">No completed rounds yet</div>';
   }catch(e){el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>';}
