@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <link rel="icon" type="image/png" href="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
 <link rel="apple-touch-icon" href="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
-<link rel="manifest" href="/manifest.json"/>
+<link rel="manifest" href="./manifest.json"/>
 <meta name="theme-color" content="#F5C842"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -1130,6 +1130,59 @@ const PINATA_JWT='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iO
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let provider,signer,userAddr,currentUser,mintPrice,mintType;
 
+// ════════════════════════════════════════════════
+// UNIFIED REALTIME CHANNEL — один канал на юзера
+// ════════════════════════════════════════════════
+let _mainChannel=null;
+let _mainChannelCallbacks={
+  posts:[],
+  likes:[],
+  notifications:[],
+  messages:[],
+  battleship_games:[]
+};
+
+function initMainChannel(){
+  if(_mainChannel)return;
+  if(!userAddr)return;
+  _mainChannel=sb.channel('main-'+userAddr)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},function(p){
+      _mainChannelCallbacks.posts.forEach(fn=>fn(p));
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'likes'},function(p){
+      _mainChannelCallbacks.likes.forEach(fn=>fn(p));
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(p){
+      _mainChannelCallbacks.notifications.forEach(fn=>fn(p));
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(p){
+      _mainChannelCallbacks.messages.forEach(fn=>fn(p));
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games'},function(p){
+      _mainChannelCallbacks.battleship_games.forEach(fn=>fn(p));
+    })
+    .subscribe(function(status){
+      if(status==='SUBSCRIBED')console.log('Main realtime channel connected');
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+        console.log('Main channel error, reconnecting...');
+        _mainChannel=null;
+        setTimeout(initMainChannel,3000);
+      }
+    });
+}
+
+function onRealtimeEvent(table,fn){
+  if(!_mainChannelCallbacks[table])_mainChannelCallbacks[table]=[];
+  // Не додаємо дублікати
+  if(!_mainChannelCallbacks[table].includes(fn))_mainChannelCallbacks[table].push(fn);
+}
+
+function offRealtimeEvent(table,fn){
+  if(!_mainChannelCallbacks[table])return;
+  _mainChannelCallbacks[table]=_mainChannelCallbacks[table].filter(f=>f!==fn);
+}
+
+
 function getReadProvider(){if(provider)return provider;return new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');}
 function getBNBProvider(){return new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');}
 
@@ -1191,12 +1244,8 @@ async function connectWallet(){
       updateUnreadBadge();
       subscribeLikesRealtime(); // ← FIX БАГ 3
     },500);
-    try{
-      sb.channel('notifs-'+userAddr)
-        .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){
-          updateNotifBadge();
-        }).subscribe();
-    }catch(e){}
+    initMainChannel();
+    onRealtimeEvent('notifications',function(){updateNotifBadge();});
     subscribeToMyGameInvites();
   }catch(e){showToast('Connection cancelled','err');}
 }
@@ -1384,14 +1433,11 @@ async function createPost(){
   btn.disabled=false;btn.textContent='Post';
 }
 
-let postsRealtimeChannel=null;
 function subscribeToNewPosts(){
-  if(postsRealtimeChannel)return;
-  postsRealtimeChannel=sb.channel('posts-feed')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},function(){
-      const btn=document.getElementById('newPostsBtn');
-      if(btn)btn.style.display='block';
-    }).subscribe();
+  onRealtimeEvent('posts',function(){
+    const btn=document.getElementById('newPostsBtn');
+    if(btn)btn.style.display='block';
+  });
 }
 
 async function loadPosts(){
@@ -1509,17 +1555,17 @@ async function likePost(postId,authorWallet,btn){
 
 // БАГ 3 FIX — Realtime для лайків
 function subscribeLikesRealtime(){
-  if(window._likesRealtimeChannel)return;
-  window._likesRealtimeChannel=sb.channel('likes-rt-'+Date.now())
-    .on('postgres_changes',{event:'*',schema:'public',table:'likes'},async function(payload){
-      const postId=payload.new?.post_id||payload.old?.post_id;
-      if(!postId)return;
-      const {count}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
-      const c=count||0;
-      const cntEl=document.getElementById('cnt-'+postId);
-      if(cntEl)cntEl.textContent=c;
-      await sb.from('posts').update({likes_count:c}).eq('id',postId);
-    }).subscribe();
+  if(window._likesRealtimeActive)return;
+  window._likesRealtimeActive=true;
+  onRealtimeEvent('likes',async function(payload){
+    const postId=payload.new?.post_id||payload.old?.post_id;
+    if(!postId)return;
+    const {count}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
+    const c=count||0;
+    const cntEl=document.getElementById('cnt-'+postId);
+    if(cntEl)cntEl.textContent=c;
+    await sb.from('posts').update({likes_count:c}).eq('id',postId);
+  });
 }
 
 // ── PROFILE ──
@@ -2450,28 +2496,24 @@ async function buyPresale(){
 let currentDMWallet=null,dmTimer=null,convsRealtimeChannel=null,_lastMsgCount=0,_msgPollTimer=null;
 
 function subscribeToConversations(){
-  if(!userAddr||convsRealtimeChannel)return;
-  convsRealtimeChannel=sb.channel('msgs-'+userAddr+'-'+Date.now())
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
-      const m=payload.new;if(!m)return;
-      if(m.to_wallet!==userAddr&&m.from_wallet!==userAddr)return;
-      handleNewMessage(m);
-    })
-    .subscribe(function(status){
-      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
-        convsRealtimeChannel=null;
-        clearInterval(_msgPollTimer);
-        _msgPollTimer=setInterval(async function(){
-          if(!userAddr)return;
-          try{const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);const c=count||0;if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();const convList=document.getElementById('convList');if(convList&&convList.style.display!=='none')loadConversations();}if(currentDMWallet)loadMessages();}catch(e){}
-        },2000);
-      }
-    });
+  if(!userAddr||window._msgsRealtimeActive)return;
+  window._msgsRealtimeActive=true;
+  onRealtimeEvent('messages',function(payload){
+    const m=payload.new;if(!m)return;
+    if(m.to_wallet!==userAddr&&m.from_wallet!==userAddr)return;
+    handleNewMessage(m);
+  });
+  // Polling як fallback кожні 5 секунд
   clearInterval(_msgPollTimer);
   _msgPollTimer=setInterval(async function(){
     if(!userAddr)return;
-    try{const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);const c=count||0;if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();const convList=document.getElementById('convList');if(convList&&convList.style.display!=='none')loadConversations();}if(currentDMWallet)loadMessages();}catch(e){}
-  },3000);
+    try{
+      const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
+      const c=count||0;
+      if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();const convList=document.getElementById('convList');if(convList&&convList.style.display!=='none')loadConversations();}
+      if(currentDMWallet)loadMessages();
+    }catch(e){}
+  },5000);
 }
 
 function handleNewMessage(m){
@@ -2672,11 +2714,11 @@ async function loadBattleLobby(){
 }
 
 function subscribeToBattleLobby(){
-  if(lobbyRealtimeChannel)return;
-  lobbyRealtimeChannel=sb.channel('bs-lobby-'+Date.now())
-    .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games'},function(){
-      const view=document.getElementById('view-battle');if(view&&view.style.display!=='none')loadBattleLobby();
-    }).subscribe();
+  if(window._bsLobbyActive)return;
+  window._bsLobbyActive=true;
+  onRealtimeEvent('battleship_games',function(){
+    const view=document.getElementById('view-battle');if(view&&view.style.display!=='none')loadBattleLobby();
+  });
 }
 
 async function createBattleGame(){
@@ -3059,11 +3101,12 @@ async function declineChallenge(fromWallet,notifId,e){
 async function declineChallengeDM(fromWallet,e){if(e){e.preventDefault();e.stopPropagation();}showToast('Challenge declined','ok');}
 
 function subscribeToMyGameInvites(){
-  if(!userAddr)return;
-  sb.channel('my-invites-'+userAddr)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'battleship_games',filter:'player2=eq.'+userAddr},function(payload){
-      const g=payload.new;if(g&&g.status==='waiting')showToast('⚔️ You\'ve been challenged to Battleship!','ok');
-    }).subscribe();
+  if(!userAddr||window._gameInvitesActive)return;
+  window._gameInvitesActive=true;
+  onRealtimeEvent('battleship_games',function(payload){
+    const g=payload.new;
+    if(g&&g.player2===userAddr&&g.status==='waiting')showToast('⚔️ You\'ve been challenged to Battleship!','ok');
+  });
 }
 
 // ── SUPPLY ──
@@ -3128,11 +3171,8 @@ async function tryAutoConnect(){
         updateUnreadBadge();
         subscribeLikesRealtime(); // ← FIX БАГ 3
       },500);
-      try{
-        sb.channel('notifs-auto-'+userAddr)
-          .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){updateNotifBadge();})
-          .subscribe();
-      }catch(e){}
+      initMainChannel();
+      onRealtimeEvent('notifications',function(){updateNotifBadge();});
       subscribeToMyGameInvites();
     }
   }catch(e){}
