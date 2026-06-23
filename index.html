@@ -1934,7 +1934,13 @@ async function loadLottery(){
       document.getElementById('lotteryPlayers').textContent='0';
       document.getElementById('lotteryBar').style.width='0%';
     }
-    loadPastLotteryRounds(roundIdNum,lottery);
+    // Завантажуємо Past Winners якщо раунд змінився або ще не завантажені
+    const pw=document.getElementById('pastLotteryRounds');
+    const lastRound=pw?pw.dataset.lastRound:'0';
+    if(pw&&(!pw.innerHTML.includes('Round #')||String(lastRound)!==String(roundIdNum))){
+      pw.dataset.lastRound=roundIdNum;
+      loadPastLotteryRounds(roundIdNum,lottery);
+    }
     // Оновлюємо тільки основні дані раунду, не Past Winners
     clearTimeout(window._lotteryRefreshTimer);
     window._lotteryRefreshTimer=setTimeout(async function(){
@@ -1959,8 +1965,8 @@ async function loadLottery(){
 async function loadPastLotteryRounds(currentRoundId,lottery){
   const el=document.getElementById('pastLotteryRounds');
   if(!el)return;
-  // Не показуємо Loading якщо вже є дані
-  if(!el.innerHTML.includes('Round #'))el.innerHTML='<div style="font-size:13px;color:var(--muted);">Loading...</div>';
+  // Показуємо Loading тільки якщо порожньо
+  if(!el.innerHTML||el.innerHTML.includes('No completed')||el.innerHTML.trim()==='')el.innerHTML='<div style="font-size:13px;color:var(--muted);">Loading...</div>';
   try{
     const p=getReadProvider();
     const lc=lottery||new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
