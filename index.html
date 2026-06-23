@@ -1986,9 +1986,17 @@ async function loadPastLotteryRounds(currentRoundId,lottery){
       for(const log of sorted.slice(0,10)){
         try{
           const parsed=iface.parseLog({topics:log.topics,data:log.data});
-          const rid=Number(parsed.args.round||parsed.args[0]);
-          const winner=String(parsed.args.winner||parsed.args[1]||'');
-          const prize=parsed.args.prize||parsed.args[2]||0n;
+          // round та winner — indexed, тому в topics[1] та topics[2]
+          // prize — не indexed, в data
+          const rid=Number(parsed.args[0]||parsed.args.round||0);
+          // winner з topics[2] — 32 байти, беремо останні 20
+          let winner='';
+          try{
+            const wTopic=log.topics[2];
+            if(wTopic)winner='0x'+wTopic.slice(-40);
+          }catch{}
+          if(!winner||winner==='0x'+'0'.repeat(40))winner=String(parsed.args[1]||parsed.args.winner||'');
+          const prize=parsed.args[2]||parsed.args.prize||0n;
           const shortWin=winner&&winner.length>=10?winner.slice(0,6)+'...'+winner.slice(-4):'—';
           const prizeGate=prize?parseFloat(ethers.formatEther(prize)).toFixed(0):'—';
           html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
