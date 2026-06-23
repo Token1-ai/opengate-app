@@ -2032,18 +2032,33 @@ async function rollDice(){
 }
 
 // ── MARKETPLACE ──
+const IPFS_GATEWAYS=['https://ipfs.io/ipfs/','https://dweb.link/ipfs/','https://nftstorage.link/ipfs/'];
+function getIPFSHash(uri){
+  if(!uri)return null;
+  if(uri.startsWith('ipfs://'))return uri.slice(7);
+  if(uri.includes('/ipfs/'))return uri.split('/ipfs/')[1];
+  return null;
+}
 async function resolveIPFS(uri){
   if(!uri)return'';if(uri.startsWith('data:'))return uri;
-  if(uri.startsWith('ipfs://')){const hash=uri.slice(7);return'https://cloudflare-ipfs.com/ipfs/'+hash;}
-  if(uri.startsWith('https://ipfs.io/ipfs/'))return uri.replace('https://ipfs.io/ipfs/','https://cloudflare-ipfs.com/ipfs/');
+  const hash=getIPFSHash(uri);
+  if(hash)return IPFS_GATEWAYS[0]+hash;
   return uri;
 }
 async function resolveIPFSWithFallback(uri){
   if(!uri)return'';if(uri.startsWith('data:'))return uri;
   const cached=_nftImgCache[uri];if(cached&&Date.now()-cached.t<3600000)return cached.url;
-  const hash=uri.startsWith('ipfs://')?uri.slice(7):uri.includes('/ipfs/')?uri.split('/ipfs/')[1]:null;
-  if(hash){const primary='https://cloudflare-ipfs.com/ipfs/'+hash;_nftImgCache[uri]={url:primary,t:Date.now()};return primary;}
-  _nftImgCache[uri]={url:uri,t:Date.now()};return uri;
+  const hash=getIPFSHash(uri);
+  if(!hash){_nftImgCache[uri]={url:uri,t:Date.now()};return uri;}
+  for(const gw of IPFS_GATEWAYS){
+    try{
+      const url=gw+hash;
+      const res=await fetch(url,{method:'HEAD',signal:AbortSignal.timeout(3000)});
+      if(res.ok){_nftImgCache[uri]={url,t:Date.now()};return url;}
+    }catch{}
+  }
+  const fallback=IPFS_GATEWAYS[0]+hash;
+  _nftImgCache[uri]={url:fallback,t:Date.now()};return fallback;
 }
 async function fetchNFTMeta(uri){
   if(!uri)throw new Error('No URI');
