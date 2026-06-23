@@ -1950,35 +1950,55 @@ async function loadPastLotteryRounds(currentRoundId,lottery){
   try{
     const p=getReadProvider();
     const lc=lottery||new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
+    // Читаємо WinnerPicked events — вони містять всі дані без масивів
+    const iface=new ethers.Interface(['event WinnerPicked(uint256 indexed round,address indexed winner,uint256 prize)']);
+    const topic=iface.getEvent('WinnerPicked').topicHash;
     let html='';
-    // Перевіряємо від попереднього раунду назад
-    const from=Math.max(1,currentRoundId-1);
-    const to=Math.max(1,currentRoundId-10);
-    for(let rid=from;rid>=to;rid--){
-      try{
-        const round=await lc.rounds(rid);
-        // rounds(id) => (id, players[], winner, prize, finished, startTime)
-        const roundId=round[0];
-        const players=round[1];
-        const winner=round[2];
-        const prize=round[3];
-        const finished=round[4];
-        if(!finished)continue;
-        const playersCount=players?players.length:0;
-        const zero='0x0000000000000000000000000000000000000000';
-        const shortWin=winner&&winner!==zero?winner.slice(0,6)+'...'+winner.slice(-4):'—';
-        const prizeGate=prize&&prize>0n?parseFloat(ethers.formatEther(prize)).toFixed(0):(playersCount*10*0.97).toFixed(0);
-        html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
-          <div>
-            <div style="font-size:13px;font-weight:700;">Round #${rid}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">🏆 ${shortWin}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:1px;">${playersCount} players</div>
-          </div>
-          <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gold);">${prizeGate} GATE</div>
-        </div>`;
-      }catch(err){console.log('Round '+rid+' read error:',err.message);}
+    try{
+      const logs=await p.getLogs({
+        address:GATE_LOTTERY,
+        topics:[topic],
+        fromBlock:0,
+        toBlock:'latest'
+      });
+      // Сортуємо від нових до старих
+      const sorted=[...logs].reverse();
+      for(const log of sorted.slice(0,10)){
+        try{
+          const parsed=iface.parseLog({topics:log.topics,data:log.data});
+          const rid=Number(parsed.args[0]);
+          const winner=parsed.args[1];
+          const prize=parsed.args[2];
+          const shortWin=winner.slice(0,6)+'...'+winner.slice(-4);
+          const prizeGate=parseFloat(ethers.formatEther(prize)).toFixed(0);
+          html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:13px;font-weight:700;">Round #${rid}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">🏆 ${shortWin}</div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gold);">${prizeGate} GATE</div>
+          </div>`;
+        }catch{}
+      }
+    }catch(e2){
+      // Fallback: getRoundPlayers якщо logs не працює
+      const from=Math.max(1,currentRoundId-1);
+      const to=Math.max(1,currentRoundId-5);
+      for(let rid=from;rid>=to;rid--){
+        try{
+          const players=await lc.getRoundPlayers(rid);
+          if(!players||players.length===0)continue;
+          const prizeGate=(players.length*10*0.97).toFixed(0);
+          html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div>
+              <div style="font-size:13px;font-weight:700;">Round #${rid}</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">${players.length} players</div>
+            </div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--gold);">${prizeGate} GATE</div>
+          </div>`;
+        }catch{}
+      }
     }
-    console.log('Past rounds html length:',html.length,'currentRoundId:',currentRoundId);
     el.innerHTML=html||'<div style="font-size:13px;color:var(--muted);">No completed rounds yet</div>';
   }catch(e){el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>';}
 }
