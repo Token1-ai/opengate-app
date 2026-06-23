@@ -1939,14 +1939,15 @@ async function loadLottery(){
     window._lotteryRefreshTimer=setTimeout(function(){
       const view=document.getElementById('view-lottery');
       if(view&&view.style.display!=='none')loadLottery();
-    },15000);
+    },60000);
   }catch(e){console.log('loadLottery error:',e.message);}
 }
 
 async function loadPastLotteryRounds(currentRoundId,lottery){
   const el=document.getElementById('pastLotteryRounds');
   if(!el)return;
-  el.innerHTML='<div style="font-size:13px;color:var(--muted);">Loading...</div>';
+  // Не показуємо Loading якщо вже є дані
+  if(!el.innerHTML.includes('Round #'))el.innerHTML='<div style="font-size:13px;color:var(--muted);">Loading...</div>';
   try{
     const p=getReadProvider();
     const lc=lottery||new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
