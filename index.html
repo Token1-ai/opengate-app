@@ -1975,10 +1975,13 @@ async function loadPastLotteryRounds(currentRoundId,lottery){
     const topic=iface.getEvent('WinnerPicked').topicHash;
     let html='';
     try{
+      // Отримуємо поточний блок і шукаємо в останніх 100к блоках
+      const latestBlock=await p.getBlockNumber();
+      const fromBlock=Math.max(0,latestBlock-100000);
       const logs=await p.getLogs({
         address:GATE_LOTTERY,
         topics:[topic],
-        fromBlock:0,
+        fromBlock:fromBlock,
         toBlock:'latest'
       });
       // Сортуємо від нових до старих
