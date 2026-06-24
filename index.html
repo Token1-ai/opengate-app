@@ -1516,7 +1516,7 @@ async function loadPosts(){
   const btn=document.getElementById('newPostsBtn');
   if(btn)btn.style.display='none';
   try{
-    const postsRes=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type), comments(count)').order('created_at',{ascending:false}).limit(15);
+    const postsRes=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').order('created_at',{ascending:false}).limit(15);
     const posts=postsRes.data;
     if(postsRes.error)throw postsRes.error;
     if(!posts||posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
@@ -2767,9 +2767,16 @@ async function loadComments(postId){
   if(!el)return;
   try{
     const {data:comments}=await sb.from('comments')
-      .select('*,users!comments_author_wallet_fkey(username,avatar_url)')
+      .select('*')
       .eq('post_id',postId)
       .order('created_at',{ascending:true});
+    // Окремо завантажуємо юзерів
+    if(comments&&comments.length>0){
+      const wallets=[...new Set(comments.map(c=>c.author_wallet))];
+      const {data:users}=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);
+      const usersMap={};if(users)users.forEach(u=>{usersMap[u.wallet]=u;});
+      comments.forEach(c=>{c.users=usersMap[c.author_wallet]||null;});
+    }
 
     if(!comments||comments.length===0){
       el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No comments yet. Be first!</div>';
@@ -2820,15 +2827,15 @@ async function submitComment(postId){
       author_wallet:userAddr,
       content:content
     });
-    // Нотифікуємо автора поста
-    const {data:post}=await sb.from('posts').select('author_wallet,original_author').eq('id',postId).single();
-    if(post){
-      const notifTarget=post.original_author||post.author_wallet;
-      if(notifTarget&&notifTarget!==userAddr){
-        await createNotif(notifTarget,'comment',postId);
-      }
-    }
     loadComments(postId);
+    // Нотифікуємо автора поста (тихо)
+    try{
+      const {data:post}=await sb.from('posts').select('author_wallet,original_author').eq('id',postId).single();
+      if(post){
+        const notifTarget=post.original_author||post.author_wallet;
+        if(notifTarget&&notifTarget!==userAddr)await createNotif(notifTarget,'comment',postId);
+      }
+    }catch{}
   }catch(e){showToast('Failed to post comment','err');inp.value=content;}
 }
 
