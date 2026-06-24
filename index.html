@@ -1486,7 +1486,7 @@ function renderPost(post,liked){
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
   const repostHeader=post.repost_by?`<div style="font-size:11px;color:var(--muted);padding:8px 20px 0;display:flex;align-items:center;gap:5px;"><span>🔁</span><span style="font-weight:600;">${esc(post.repost_by_name||sAddr(post.repost_by))} reposted</span></div>`:'';
-  return`${repostHeader}<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${linkify(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button><button class="act-btn" onclick="toggleComments('${post.id}',this)"><span>💬</span><span class="act-cnt" id="cmtcnt-${post.id}">${post.comments_count||0}</span></button><button class="act-btn" onclick="repostPost('${post.id}','${post.author_wallet}',this)" id="rp-${post.id}"><span>🔁</span><span class="act-cnt" id="rpcnt-${post.id}">${post.reposts_count||0}</span></button><button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}${post.author_wallet!==userAddr?`<button class="act-btn" onclick="reportPost('${post.id}','${post.author_wallet}',this)" style="color:var(--muted);font-size:11px;"><span>🚩</span></button>`:''}</div></div></div></div>
+  return`${repostHeader}<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${linkify(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button><button class="act-btn" onclick="toggleComments('${post.id}',this)"><span>💬</span><span class="act-cnt" id="cmtcnt-${post.id}">${post.comments_count||0}</span></button><button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}${post.author_wallet!==userAddr?`<button class="act-btn" onclick="reportPost('${post.id}','${post.author_wallet}',this)" style="color:var(--muted);font-size:11px;"><span>🚩</span></button>`:''}</div></div></div></div>
 <div id="comments-${post.id}" style="display:none;border-top:1px solid var(--border);padding:0 20px 0 72px;"><div id="comments-list-${post.id}" style="padding:8px 0;"></div><div style="display:flex;gap:8px;padding:8px 0 12px;"><input id="comment-input-${post.id}" placeholder="Write a comment..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:8px 14px;color:var(--text);font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')submitComment('${post.id}')"/><button onclick="submitComment('${post.id}')" style="background:var(--gold);color:#08090C;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Send</button></div></div>`;
 }
 
@@ -2638,6 +2638,114 @@ async function unstakeGATE(){
 }
 async function loadRewardsPool(){
   try{const p=getReadProvider();const r=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,p);const bal=await r.poolBalance();const el=document.getElementById('rewardsPoolBal');if(el)el.textContent=parseFloat(ethers.formatEther(bal)).toFixed(0)+' GATE';}catch(e){}
+}
+
+// ── COMMENTS ──
+async function toggleComments(postId){
+  const el=document.getElementById('comments-'+postId);
+  if(!el)return;
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  if(!isOpen){loadComments(postId);setTimeout(function(){const inp=document.getElementById('comment-input-'+postId);if(inp)inp.focus();},100);}
+}
+
+async function loadComments(postId){
+  const el=document.getElementById('comments-list-'+postId);if(!el)return;
+  try{
+    const {data:comments}=await sb.from('comments').select('*').eq('post_id',postId).order('created_at',{ascending:true});
+    if(!comments||comments.length===0){el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No comments yet. Be first!</div>';return;}
+    const wallets=[...new Set(comments.map(function(c){return c.author_wallet;}))];
+    const {data:users}=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);
+    const usersMap={};if(users)users.forEach(function(u){usersMap[u.wallet]=u;});
+    el.innerHTML='';
+    const OW='0x0c31cf365d39dae89df36851363826eef2319d98';
+    comments.forEach(function(c){
+      const u=usersMap[c.author_wallet]||{};
+      const name=u.username||sAddr(c.author_wallet);
+      const av=u.avatar_url?('<img src="'+u.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>'):'🧑';
+      const canDel=userAddr&&(c.author_wallet===userAddr||userAddr===OW);
+      const div=document.createElement('div');
+      div.style.cssText='display:flex;gap:8px;padding:6px 0;align-items:flex-start;';
+      const delBtn=canDel?'<button onclick="deleteComment(''+c.id+'',''+postId+'',this)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px;">🗑️</button>':'';
+      const avDiv=document.createElement('div');avDiv.style.cssText='width:28px;height:28px;border-radius:50%;background:var(--bg3);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;';avDiv.innerHTML=av;
+      const bodyDiv=document.createElement('div');bodyDiv.style.cssText='flex:1;background:var(--bg3);border-radius:12px;padding:8px 12px;';
+      bodyDiv.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:12px;font-weight:700;">'+esc(name)+'</span><span style="font-size:11px;color:var(--muted);">'+tAgo(c.created_at)+'</span></div><div style="font-size:13px;line-height:1.5;">'+esc(c.content)+'</div>';
+      div.appendChild(avDiv);div.appendChild(bodyDiv);
+      if(canDel){const delBtnEl=document.createElement('button');delBtnEl.innerHTML='🗑️';delBtnEl.style.cssText='background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px;';delBtnEl.onclick=(function(cid,pid){return function(e){e.currentTarget.disabled=true;deleteComment(cid,pid,e.currentTarget);};})(c.id,postId);div.appendChild(delBtnEl);}
+      el.appendChild(div);
+    });
+    const cnt=document.getElementById('cmtcnt-'+postId);if(cnt)cnt.textContent=comments.length;
+    try{await sb.from('posts').update({comments_count:comments.length}).eq('id',postId);}catch(e){}
+  }catch(e){console.log('loadComments error:',e.message);}
+}
+
+async function submitComment(postId){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const inp=document.getElementById('comment-input-'+postId);if(!inp)return;
+  const text=inp.value.trim();if(!text)return;
+  inp.value='';
+  try{
+    await sb.from('comments').insert({post_id:postId,author_wallet:userAddr,content:text});
+    loadComments(postId);
+    try{const {data:post}=await sb.from('posts').select('author_wallet').eq('id',postId).single();if(post&&post.author_wallet!==userAddr)await createNotif(post.author_wallet,'comment',postId);}catch(e){}
+  }catch(e){showToast('Failed to post comment','err');inp.value=text;}
+}
+
+async function deleteComment(commentId,postId,btn){
+  try{btn.disabled=true;await sb.from('comments').delete().eq('id',commentId);loadComments(postId);}
+  catch(e){showToast('Failed','err');btn.disabled=false;}
+}
+
+// ── REPORT & MODERATION ──
+const OWNER_WALLET_MOD='0x0c31cf365d39dae89df36851363826eef2319d98';
+
+async function reportPost(postId,authorWallet,btn){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(btn.dataset.reported){showToast('Already reported','err');return;}
+  try{
+    await sb.from('reports').insert({post_id:postId,reporter_wallet:userAddr,author_wallet:authorWallet,reason:'inappropriate'});
+    btn.style.color='var(--red)';btn.dataset.reported='1';
+    showToast('🚩 Reported!','ok');
+  }catch(e){btn.style.color='var(--red)';showToast('🚩 Report sent!','ok');}
+}
+
+async function loadReportsBadge(){
+  if(!userAddr||userAddr!==OWNER_WALLET_MOD)return;
+  try{const {count}=await sb.from('reports').select('*',{count:'exact',head:true}).eq('reviewed',false);const badge=document.getElementById('reportsBadge');if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}}catch(e){}
+}
+
+async function loadModerationPanel(){
+  if(!userAddr||userAddr!==OWNER_WALLET_MOD){showToast('Access denied','err');return;}
+  const el=document.getElementById('modPanelContent');if(!el)return;
+  el.innerHTML='<div class="app-loader">Loading reports...</div>';
+  try{
+    const {data:reports}=await sb.from('reports').select('*').eq('reviewed',false).order('created_at',{ascending:false}).limit(50);
+    if(!reports||reports.length===0){el.innerHTML='<div class="app-empty"><div class="app-empty-ico">✅</div>No pending reports!</div>';return;}
+    const grouped={};
+    reports.forEach(function(r){if(!grouped[r.post_id])grouped[r.post_id]={count:0,post_id:r.post_id,author:r.author_wallet,ids:[]};grouped[r.post_id].count++;grouped[r.post_id].ids.push(r.id);});
+    const postIds=Object.keys(grouped);
+    const {data:posts}=await sb.from('posts').select('*').in('id',postIds);
+    const postsMap={};if(posts)posts.forEach(function(p){postsMap[p.id]=p;});
+    el.innerHTML='';
+    Object.values(grouped).forEach(function(g){
+      const post=postsMap[g.post_id];
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--bg2);border:1px solid rgba(255,77,77,0.3);border-radius:var(--r);padding:16px;margin-bottom:12px;';
+      const imgs=post&&post.image_urls&&post.image_urls.length>0?post.image_urls.map(function(u){return'<img src="'+u+'" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-right:6px;"/>';}).join(''):'';
+      card.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:10px;"><div style="font-size:13px;font-weight:700;color:var(--red);">🚩 '+g.count+' report(s)</div><div style="font-size:11px;color:var(--muted);">'+sAddr(g.author)+'</div></div><div style="font-size:14px;margin-bottom:8px;">'+(post?esc(post.content):'Post deleted')+'</div>'+(imgs?'<div style="margin-bottom:10px;">'+imgs+'</div>':'')+'<div style="display:flex;gap:8px;"><button onclick="moderatePost(''+g.post_id+'','delete','+JSON.stringify(g.ids)+')" style="flex:1;padding:8px;border-radius:8px;background:var(--red);color:#fff;font-size:13px;font-weight:700;cursor:pointer;border:none;">🗑️ Delete</button><button onclick="moderatePost(''+g.post_id+'','dismiss','+JSON.stringify(g.ids)+')" style="flex:1;padding:8px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:13px;cursor:pointer;">✓ Dismiss</button></div>';
+      el.appendChild(card);
+    });
+  }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+async function moderatePost(postId,action,reportIds){
+  try{
+    if(action==='delete')await sb.from('posts').delete().eq('id',postId);
+    if(reportIds&&reportIds.length>0)await sb.from('reports').update({reviewed:true}).in('id',reportIds);
+    showToast(action==='delete'?'Post deleted ✓':'Dismissed ✓','ok');
+    loadModerationPanel();if(action==='delete')loadPosts();
+  }catch(e){showToast('Failed','err');}
 }
 
 // ── DELETE & REPOST ──
