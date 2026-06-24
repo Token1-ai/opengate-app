@@ -1518,7 +1518,7 @@ async function loadPosts(){
   try{
     const postsRes=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').order('created_at',{ascending:false}).limit(15);
     const posts=postsRes.data;
-    if(postsRes.error)throw postsRes.error;
+    if(postsRes.error){console.log('loadPosts error:',postsRes.error);throw postsRes.error;}
     if(!posts||posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
     const postIds=posts.map(p=>p.id);
     let ls=new Set();
@@ -1540,7 +1540,7 @@ async function loadPosts(){
       btn2.onclick=function(){loadMorePosts(posts[posts.length-1].created_at);};
       more.appendChild(btn2);list.appendChild(more);
     }
-  }catch(e){list.innerHTML='<div class="app-empty">Failed to load posts</div>';}
+  }catch(e){console.log('loadPosts catch:',e);list.innerHTML='<div class="app-empty">Failed to load posts</div>';}
 }
 
 function renderImages(urls){
