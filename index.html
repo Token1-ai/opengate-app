@@ -530,8 +530,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
           <div class="pass-price">$0</div>
           <div class="pass-price-note">Always free — just connect your wallet</div>
           <ul class="pass-features">
-            <li><span class="feat-icon">✓</span>3 posts per day</li>
-            <li><span class="feat-icon">✓</span>0 images per post</li>
+            <li><span class="feat-icon">✓</span>Unlimited posts</li>
+            <li><span class="feat-icon">✓</span>Text only (no images)</li>
             <li><span class="feat-icon">✓</span>Earn GATE from likes</li>
             <li><span class="feat-icon">✓</span>Trade on Easy Swap DEX</li>
             <li><span class="feat-icon">✓</span>Stake GATE tokens</li>
@@ -544,8 +544,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
           <div class="pass-price-note">Paid in BNB · live rate from Chainlink</div>
           <div class="pass-supply"><div class="supply-track"><div class="supply-fill" data-target="2%"></div></div><div class="supply-text" id="silverSupply">5,000 max</div></div>
           <ul class="pass-features">
-            <li><span class="feat-icon">✓</span>10 posts per day</li>
-            <li><span class="feat-icon">✓</span>3 images per post</li>
+            <li><span class="feat-icon">✓</span>Unlimited posts</li>
+            <li><span class="feat-icon">✓</span>3 images per day total</li>
             <li><span class="feat-icon">✓</span>Silver badge 🥈</li>
             <li><span class="feat-icon">✓</span>+30% GATE rewards</li>
             <li><span class="feat-icon">✓</span>Early access to features</li>
@@ -558,7 +558,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
           <div class="pass-price-note">Paid in BNB · live rate from Chainlink</div>
           <div class="pass-supply"><div class="supply-track"><div class="supply-fill" data-target="1%"></div></div><div class="supply-text" id="goldSupply">3,000 max</div></div>
           <ul class="pass-features">
-            <li><span class="feat-icon">✓</span>Unlimited posts & images</li>
+            <li><span class="feat-icon">✓</span>Unlimited posts & unlimited images</li>
             <li><span class="feat-icon">✓</span>VIP badge 🥇</li>
             <li><span class="feat-icon">✓</span>+100% GATE rewards (2×)</li>
             <li><span class="feat-icon">✓</span>All new features FREE forever</li>
@@ -688,6 +688,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <button class="side-btn" id="tab-launchpad" onclick="showTab('launchpad')"><span class="side-ico">🪙</span>Launchpad</button>
         <button class="side-btn" id="tab-presale" onclick="showTab('presale')"><span class="side-ico">🚀</span>Presale</button>
         <button class="side-btn" id="tab-messages" onclick="showTab('messages')"><span class="side-ico">💬</span>Messages<span id="unreadBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
+        <button class="side-btn" id="tab-moderation" onclick="showTab('moderation')" style="display:none;" id="modTabBtn"><span class="side-ico">🛡️</span>Moderation<span id="reportsBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
       </div>
       <div class="side-sec">
         <div class="side-lbl">Info</div>
@@ -923,7 +924,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">How it works</div>
             <div class="w-row"><span class="w-lbl">Ticket price</span><span class="w-val" style="color:var(--gold);">10 GATE</span></div>
             <div class="w-row"><span class="w-lbl">Max players</span><span class="w-val">20</span></div>
-            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">95% of pot</span></div>
+            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">97% of pot</span></div>
             <div class="w-row"><span class="w-lbl">Platform fee</span><span class="w-val">5%</span></div>
             <div class="w-row"><span class="w-lbl">Draw</span><span class="w-val">Auto when full</span></div>
           </div>
@@ -1033,6 +1034,16 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         </div>
         <div id="convView" style="display:none;flex-direction:column;height:calc(100vh - 110px);"><div id="msgList" style="flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;"></div><div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;"><input id="msgInput" placeholder="Type a message..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:10px 16px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;" onkeydown="if(event.key==='Enter')sendDM()"/><button onclick="sendDM()" style="background:var(--gold);color:#08090C;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:700;">Send</button></div></div>
       </div>
+      <div id="view-moderation" style="display:none;">
+        <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🛡️ Moderation</span>
+          <button onclick="loadModerationPanel()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">↻ Refresh</button>
+        </div>
+        <div style="padding:12px 16px;background:rgba(255,77,77,0.05);border-bottom:1px solid var(--border);">
+          <div style="font-size:13px;color:var(--muted);">Posts reported by users as inappropriate. Review and take action.</div>
+        </div>
+        <div id="modPanelContent" style="padding:16px 20px;"><div class="app-loader">Loading...</div></div>
+      </div>
       <div id="view-staking" style="display:none;">
         <div class="feed-hdr">💎 GATE Staking</div>
         <div style="padding:20px;max-width:560px;margin:0 auto;">
@@ -1126,6 +1137,8 @@ const FACTORY_ABI=['function createToken(string,string,uint8,uint256,bool,bool,b
 const PRESALE_ABI=['function buy() payable','function getInfo() view returns(uint256,uint256,uint256,bool)','function contributed(address) view returns(uint256)','function RATE() view returns(uint256)','function HARD_CAP() view returns(uint256)','function WALLET_CAP() view returns(uint256)'];
 const STAKING_ABI=['function stake(uint256)','function unstake()','function claim()','function syncRewardPool()','function pendingReward(address) view returns(uint256)','function getStakeInfo(address) view returns(uint256,uint256,uint256)','function rewardPool() view returns(uint256)','function totalStaked() view returns(uint256)'];
 const PINATA_JWT='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNmY5ZWM5OC0wNmMyLTRiYjYtOWE0OS1hYzkyZmRiY2YwMzIiLCJlbWFpbCI6ImJ0Y2ZpbHNzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI3YTE4OTZlZjgyNDAwYzA2NTI4NyIsInNjb3BlZEtleVNlY3JldCI6IjM5MjMzNWVmYmQyYzJiYzZlNDk5NDIzYzk1YzMxZWM5NDA3NzgxMjhkYmZiNTE1NzQyODkzMmU4OWFkY2Y1YzciLCJleHAiOjE4MTI1NjgzMzF9.WkiIwhZqxvx3hz_xymtuv2257hVdRg-Bxo_1Vee3fl0';
+const CLOUDINARY_CLOUD='dj18odkce';
+const CLOUDINARY_PRESET='opengate';
 
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let provider,signer,userAddr,currentUser,mintPrice,mintType;
@@ -1139,7 +1152,8 @@ let _mainChannelCallbacks={
   likes:[],
   notifications:[],
   messages:[],
-  battleship_games:[]
+  battleship_games:[],
+  comments:[]
 };
 
 function initMainChannel(){
@@ -1160,6 +1174,9 @@ function initMainChannel(){
     })
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games'},function(p){
       _mainChannelCallbacks.battleship_games.forEach(fn=>fn(p));
+    })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'comments'},function(p){
+      _mainChannelCallbacks.comments.forEach(fn=>fn(p));
     })
     .subscribe(function(status){
       if(status==='SUBSCRIBED')console.log('Main realtime channel connected');
@@ -1247,6 +1264,12 @@ async function connectWallet(){
     initMainChannel();
     onRealtimeEvent('notifications',function(){updateNotifBadge();});
     subscribeToMyGameInvites();
+    // Показуємо кнопку модерації тільки owner
+    if(userAddr===OWNER_WALLET_MOD){
+      const modBtn=document.getElementById('modTabBtn');
+      if(modBtn)modBtn.style.display='flex';
+      loadReportsBadge();
+    }
   }catch(e){showToast('Connection cancelled','err');}
 }
 async function switchToBNB(){
@@ -1323,8 +1346,8 @@ function showTab(tab){
   if(tab==='messages'){loadConversations();subscribeToConversations();}
   else{
     clearInterval(dmTimer);
-    if(tab!=='messages'){if(dmRealtimeChannel){sb.removeChannel(dmRealtimeChannel);dmRealtimeChannel=null;}}
-    if(tab!=='battle'&&lobbyRealtimeChannel){sb.removeChannel(lobbyRealtimeChannel);lobbyRealtimeChannel=null;}
+    if(tab!=='messages'&&dmRealtimeChannel){sb.removeChannel(dmRealtimeChannel);dmRealtimeChannel=null;}
+    // lobbyRealtimeChannel and bsRealtimeChannel now use unified channel — no need to remove
     if(tab!=='battle'&&bsRealtimeChannel){clearInterval(bsTimer);sb.removeChannel(bsRealtimeChannel);bsRealtimeChannel=null;}
   }
   if(tab==='presale')loadPresaleInfo();
@@ -1337,6 +1360,7 @@ function showTab(tab){
   if(tab==='battle'){loadBattleLobby();subscribeToBattleLobby();clearInterval(bsTimer);}
   if(tab==='lending')loadLending();
   if(tab==='faucet')loadFaucet();
+  if(tab==='moderation')loadModerationPanel();
 }
 function switchFeedTab(tab,el){
   document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
@@ -1354,28 +1378,54 @@ function focusComposer(){document.getElementById('postText').focus();}
 let pendingImages=[];
 
 async function uploadToPinata(file){
+  // 1. Спочатку пробуємо Cloudinary
+  try{
+    const formData=new FormData();
+    formData.append('file',file);
+    formData.append('upload_preset',CLOUDINARY_PRESET);
+    formData.append('folder','opengate');
+    const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD+'/image/upload',{method:'POST',body:formData});
+    if(!res.ok)throw new Error('Cloudinary failed');
+    const json=await res.json();
+    if(json.secure_url){
+      console.log('✅ Uploaded to Cloudinary');
+      return json.secure_url;
+    }
+  }catch(e){console.log('Cloudinary failed, trying Supabase...',e.message);}
+
+  // 2. Fallback — Supabase Storage
   try{
     const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
     const path='uploads/'+(userAddr||'anon')+'_'+Date.now()+'.'+ext;
     const uploadResult=await sb.storage.from('media').upload(path,file,{cacheControl:'3600',upsert:true,contentType:file.type});
-    if(uploadResult.error)throw new Error(uploadResult.error.message);
-    return sb.storage.from('media').getPublicUrl(path).data.publicUrl;
-  }catch(e){
+    if(!uploadResult.error){
+      console.log('✅ Uploaded to Supabase Storage');
+      return sb.storage.from('media').getPublicUrl(path).data.publicUrl;
+    }
+  }catch(e){console.log('Supabase Storage failed, trying Pinata...',e.message);}
+
+  // 3. Fallback — Pinata IPFS
+  try{
     const formData=new FormData();
     formData.append('file',file);
     formData.append('pinataMetadata',JSON.stringify({name:'og-'+Date.now()}));
     const res=await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS',{method:'POST',headers:{Authorization:'Bearer '+PINATA_JWT},body:formData});
-    if(!res.ok)throw new Error('Upload failed');
+    if(!res.ok)throw new Error('Pinata failed');
     const json=await res.json();
+    console.log('✅ Uploaded to Pinata IPFS');
     return 'https://gateway.pinata.cloud/ipfs/'+json.IpfsHash;
-  }
+  }catch(e){throw new Error('All upload methods failed');}
 }
 
 function checkImgUpload(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
   const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
-  const isOwner=userAddr&&userAddr===OWNER_WALLET;
+  const isOwner=userAddr===OWNER_WALLET;
   const passType=currentUser?.pass_type;
-  if(!isOwner&&(!passType||passType==='free')){showToast('Images require Silver or Gold Pass 🥈','err');return;}
+  if(!isOwner&&(!passType||passType==='free')){
+    showToast('🖼️ Images require Silver ($0.90) or Gold ($9) Pass','err');
+    return;
+  }
   document.getElementById('imgInput').click();
 }
 
@@ -1384,8 +1434,38 @@ async function handleImages(input){
   if(files.length===0)return;
   const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
   const isOwner=userAddr&&userAddr===OWNER_WALLET;
-  const maxImgs=isOwner?20:currentUser?.pass_type==='gold'?20:currentUser?.pass_type==='silver'?3:0;
-  if(pendingImages.length+files.length>maxImgs){showToast('Max '+maxImgs+' images allowed','err');return;}
+  const passType=currentUser?.pass_type;
+
+  // Перевірка прав на картинки
+  if(!isOwner&&(!passType||passType==='free')){
+    showToast('🖼️ Images require Silver ($0.90) or Gold ($9) Pass','err');
+    input.value='';return;
+  }
+
+  // Gold і Owner — необмежено
+  if(!isOwner&&passType==='silver'){
+    // Silver — 3 картинки в день
+    const today=new Date();today.setHours(0,0,0,0);
+    const {data:todayPosts}=await sb.from('posts')
+      .select('image_urls')
+      .eq('author_wallet',userAddr)
+      .gte('created_at',today.toISOString());
+    // Рахуємо скільки картинок вже сьогодні
+    let usedToday=0;
+    if(todayPosts)todayPosts.forEach(p=>{if(p.image_urls)usedToday+=p.image_urls.length;});
+    // Плюс вже в черзі (pendingImages)
+    usedToday+=pendingImages.length;
+    const remaining=3-usedToday;
+    if(remaining<=0){
+      showToast('📸 Daily limit: 3 images/day for Silver. Upgrade to Gold for unlimited!','err');
+      input.value='';return;
+    }
+    if(files.length>remaining){
+      showToast('📸 You can add '+remaining+' more image(s) today (Silver limit: 3/day)','err');
+      input.value='';return;
+    }
+  }
+
   document.getElementById('uploadingTxt').style.display='inline';
   document.getElementById('postBtn').disabled=true;
   for(const file of files){
@@ -1409,17 +1489,7 @@ async function createPost(){
   if(!content)return;
   const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
   const isOwner=userAddr===OWNER_WALLET;
-  const passType=currentUser?.pass_type;
-  const maxPosts=isOwner?999999:passType==='gold'?999:passType==='silver'?10:3;
-  if(!isOwner){
-    const today=new Date();today.setHours(0,0,0,0);
-    const {count:todayPosts}=await sb.from('posts').select('*',{count:'exact',head:true}).eq('author_wallet',userAddr).gte('created_at',today.toISOString());
-    if(todayPosts>=maxPosts){
-      if(passType==='silver')showToast('Silver limit: 10 posts/day. Upgrade to Gold!','err');
-      else showToast('Free limit: 3 posts/day. Get Silver or Gold Pass!','err');
-      return;
-    }
-  }
+  // Пости необмежені для всіх — без ліміту
   const btn=document.getElementById('postBtn');
   btn.disabled=true;btn.textContent='Posting...';
   try{
@@ -1446,7 +1516,7 @@ async function loadPosts(){
   const btn=document.getElementById('newPostsBtn');
   if(btn)btn.style.display='none';
   try{
-    const postsRes=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)').order('created_at',{ascending:false}).limit(15);
+    const postsRes=await sb.from('posts').select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type), comments(count)').order('created_at',{ascending:false}).limit(15);
     const posts=postsRes.data;
     if(postsRes.error)throw postsRes.error;
     if(!posts||posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
@@ -1497,7 +1567,14 @@ function renderPost(post,liked){
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
   const repostHeader=post.repost_by?`<div style="font-size:11px;color:var(--muted);padding:8px 20px 0;display:flex;align-items:center;gap:5px;"><span>🔁</span><span style="font-weight:600;">${esc(post.repost_by_name||sAddr(post.repost_by))} reposted</span></div>`:'';
-  return`${repostHeader}<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${linkify(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button><button class="act-btn" onclick="repostPost('${post.id}','${post.author_wallet}',this)" id="rp-${post.id}"><span>🔁</span><span class="act-cnt" id="rpcnt-${post.id}">${post.reposts_count||0}</span></button><button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}</div></div></div></div>`;
+  return`${repostHeader}<div class="post-card" id="postcard-${post.id}"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${linkify(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button><button class="act-btn" onclick="toggleComments('${post.id}',this)" id="cmtbtn-${post.id}"><span>💬</span><span class="act-cnt" id="cmtcnt-${post.id}">${post.comments_count||0}</span></button><button class="act-btn" onclick="repostPost('${post.id}','${post.author_wallet}',this)" id="rp-${post.id}"><span>🔁</span><span class="act-cnt" id="rpcnt-${post.id}">${post.reposts_count||0}</span></button><button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}${post.author_wallet!==userAddr?`<button class="act-btn" onclick="reportPost('${post.id}','${post.author_wallet}',this)" title="Report post" style="color:var(--muted);font-size:11px;"><span>🚩</span></button>`:''}</div></div></div></div>
+<div id="comments-${post.id}" style="display:none;border-top:1px solid var(--border);padding:0 20px 0 72px;">
+  <div id="comments-list-${post.id}" style="padding:8px 0;"></div>
+  <div style="display:flex;gap:8px;padding:8px 0 12px;">
+    <input id="comment-input-${post.id}" placeholder="Write a comment..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:8px 14px;color:var(--text);font-size:13px;outline:none;font-family:'Space Grotesk',sans-serif;" onkeydown="if(event.key==='Enter')submitComment('${post.id}')"/>
+    <button onclick="submitComment('${post.id}')" style="background:var(--gold);color:#08090C;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:700;border:none;cursor:pointer;">Send</button>
+  </div>
+</div>`;
 }
 
 async function loadMorePosts(before){
@@ -1528,8 +1605,17 @@ async function loadMorePosts(before){
 // ════════════════════════════════════════════════
 async function likePost(postId,authorWallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
-  if(userAddr===authorWallet.toLowerCase()){showToast("Can't like your own post",'err');return;}
   const liked=btn.classList.contains('liked');
+
+  // Знаходимо реального автора — якщо репост то original_author
+  let realAuthor=authorWallet.toLowerCase();
+  try{
+    const {data:post}=await sb.from('posts').select('original_author,repost_of').eq('id',postId).single();
+    if(post&&post.original_author)realAuthor=post.original_author.toLowerCase();
+  }catch{}
+
+  if(userAddr===realAuthor){showToast("Can't like your own post",'err');return;}
+
   if(liked){
     await sb.from('likes').delete().eq('post_id',postId).eq('liker_wallet',userAddr);
     const {count:realCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
@@ -1546,11 +1632,12 @@ async function likePost(postId,authorWallet,btn){
     const freshSigner=await provider.getSigner();
     const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
     const rewardAmt=ethers.parseEther('0.1');
-    showToast('Sending 0.1 GATE to author...','ok');
-    const tx=await gate.transfer(authorWallet,rewardAmt);
+    // Токени завжди йдуть оригінальному автору
+    showToast('Sending 0.1 GATE to original author...','ok');
+    const tx=await gate.transfer(realAuthor,rewardAmt);
     await tx.wait();
     await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
-    await createNotif(authorWallet,'like',postId);
+    await createNotif(realAuthor,'like',postId);
     const {count:realCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
     const c=realCount||1;
     await sb.from('posts').update({likes_count:c}).eq('id',postId);
@@ -1558,7 +1645,7 @@ async function likePost(postId,authorWallet,btn){
     btn.querySelector('span').textContent='❤️';
     const cntEl=document.getElementById('cnt-'+postId);
     if(cntEl)cntEl.textContent=c;
-    showToast('❤️ Liked! 0.1 GATE sent to author','ok');
+    showToast('❤️ Liked! 0.1 GATE sent to original author','ok');
     loadGateBal(true);
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
   btn.disabled=false;
@@ -2053,7 +2140,6 @@ async function loadPastLotteryRounds(currentRoundId,lottery){
           const prize=parsed.args[2]||0n;
           const shortWin=winner!=='—'?winner.slice(0,6)+'...'+winner.slice(-4):'—';
           const prizeGate=prize&&prize>0n?parseFloat(ethers.formatEther(prize)).toFixed(0):'—';
-          console.log('Round',rid,'winner:',winner,'prize:',prizeGate,'topic2:',wTopic);
           html+=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
             <div>
               <div style="font-size:13px;font-weight:700;">Round #${rid}</div>
@@ -2402,7 +2488,7 @@ async function updateNotifBadge(){
     .select('*',{count:'exact',head:true})
     .eq('to_wallet',userAddr)
     .eq('read',false)
-    .in('type',['like','follow','challenge','repost']); // тільки ці типи
+    .in('type',['like','follow','challenge','repost','comment']); // тільки ці типи
   const badge=document.getElementById('notifBadge');
   if(badge){
     if(count>0){badge.style.display='inline';badge.textContent=count;}
@@ -2651,6 +2737,209 @@ async function loadRewardsPool(){
 }
 
 // ── DELETE & REPOST ──
+// ── COMMENTS ──
+async function toggleComments(postId,btn){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const el=document.getElementById('comments-'+postId);
+  if(!el)return;
+  const isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    loadComments(postId);
+    // Підписуємось на нові коментарі
+    subscribeToComments(postId);
+    // Фокус на input
+    setTimeout(()=>{const inp=document.getElementById('comment-input-'+postId);if(inp)inp.focus();},100);
+  }
+}
+
+function subscribeToComments(postId){
+  onRealtimeEvent('comments',function(payload){
+    if(payload.new&&payload.new.post_id===postId){
+      const el=document.getElementById('comments-'+postId);
+      if(el&&el.style.display!=='none')loadComments(postId);
+    }
+  });
+}
+
+async function loadComments(postId){
+  const el=document.getElementById('comments-list-'+postId);
+  if(!el)return;
+  try{
+    const {data:comments}=await sb.from('comments')
+      .select('*,users!comments_author_wallet_fkey(username,avatar_url)')
+      .eq('post_id',postId)
+      .order('created_at',{ascending:true});
+
+    if(!comments||comments.length===0){
+      el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No comments yet. Be first!</div>';
+      return;
+    }
+
+    el.innerHTML='';
+    comments.forEach(function(c){
+      const u=c.users||{};
+      const name=u.username||sAddr(c.author_wallet);
+      const av=u.avatar_url?`<img src="${u.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
+      const isOwn=userAddr&&c.author_wallet===userAddr;
+      const isOwner=userAddr===OWNER_WALLET_MOD;
+      const div=document.createElement('div');
+      div.style.cssText='display:flex;gap:8px;padding:6px 0;align-items:flex-start;';
+      div.innerHTML=`
+        <div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;">${av}</div>
+        <div style="flex:1;background:var(--bg3);border-radius:12px;padding:8px 12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+            <span style="font-size:12px;font-weight:700;color:var(--text);">${esc(name)}</span>
+            <span style="font-size:11px;color:var(--muted);">${tAgo(c.created_at)}</span>
+          </div>
+          <div style="font-size:13px;line-height:1.5;">${esc(c.content)}</div>
+        </div>
+        ${isOwn||isOwner?`<button onclick="deleteComment('${c.id}','${postId}',this)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px;flex-shrink:0;" title="Delete">🗑️</button>`:''}`;
+      el.appendChild(div);
+    });
+
+    // Оновлюємо лічильник
+    const cnt=document.getElementById('cmtcnt-'+postId);
+    if(cnt)cnt.textContent=comments.length;
+    // Оновлюємо в БД
+    await sb.from('posts').update({comments_count:comments.length}).eq('id',postId);
+  }catch(e){console.log('loadComments error:',e.message);}
+}
+
+async function submitComment(postId){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const inp=document.getElementById('comment-input-'+postId);
+  if(!inp)return;
+  const content=inp.value.trim();
+  if(!content){showToast('Write something first','err');return;}
+  if(content.length>500){showToast('Max 500 characters','err');return;}
+  inp.value='';
+  try{
+    await sb.from('comments').insert({
+      post_id:postId,
+      author_wallet:userAddr,
+      content:content
+    });
+    // Нотифікуємо автора поста
+    const {data:post}=await sb.from('posts').select('author_wallet,original_author').eq('id',postId).single();
+    if(post){
+      const notifTarget=post.original_author||post.author_wallet;
+      if(notifTarget&&notifTarget!==userAddr){
+        await createNotif(notifTarget,'comment',postId);
+      }
+    }
+    loadComments(postId);
+  }catch(e){showToast('Failed to post comment','err');inp.value=content;}
+}
+
+async function deleteComment(commentId,postId,btn){
+  try{
+    btn.disabled=true;
+    await sb.from('comments').delete().eq('id',commentId);
+    loadComments(postId);
+  }catch(e){showToast('Failed','err');btn.disabled=false;}
+}
+
+// ── REPORT & MODERATION ──
+const OWNER_WALLET_MOD='0x0c31cf365d39dae89df36851363826eef2319d98';
+
+async function reportPost(postId,authorWallet,btn){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(btn.style.color==='var(--red)'){showToast('Already reported','err');return;}
+  try{
+    // Зберігаємо репорт в Supabase
+    await sb.from('reports').insert({
+      post_id:postId,
+      reporter_wallet:userAddr,
+      author_wallet:authorWallet,
+      reason:'inappropriate'
+    });
+    btn.style.color='var(--red)';
+    btn.title='Reported';
+    showToast('🚩 Reported! Moderator will review.','ok');
+  }catch(e){
+    // Таблиця може не існувати ще
+    showToast('🚩 Report sent!','ok');
+    btn.style.color='var(--red)';
+  }
+}
+
+async function loadReportsBadge(){
+  if(!userAddr||userAddr!==OWNER_WALLET_MOD)return;
+  try{
+    const {count}=await sb.from('reports').select('*',{count:'exact',head:true}).eq('reviewed',false);
+    const badge=document.getElementById('reportsBadge');
+    if(badge){
+      if(count>0){badge.style.display='inline';badge.textContent=count;}
+      else badge.style.display='none';
+    }
+  }catch{}
+}
+
+async function loadModerationPanel(){
+  if(!userAddr||userAddr!==OWNER_WALLET_MOD){showToast('Access denied','err');return;}
+  const el=document.getElementById('modPanelContent');
+  if(!el)return;
+  el.innerHTML='<div class="app-loader">Loading reports...</div>';
+  try{
+    // Завантажуємо репорти з постами
+    const {data:reports}=await sb.from('reports')
+      .select('*')
+      .eq('reviewed',false)
+      .order('created_at',{ascending:false})
+      .limit(50);
+    if(!reports||reports.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">✅</div>No pending reports!</div>';
+      return;
+    }
+    // Групуємо по post_id
+    const grouped={};
+    reports.forEach(r=>{
+      if(!grouped[r.post_id])grouped[r.post_id]={count:0,post_id:r.post_id,author:r.author_wallet,ids:[]};
+      grouped[r.post_id].count++;
+      grouped[r.post_id].ids.push(r.id);
+    });
+    const postIds=Object.keys(grouped);
+    const {data:posts}=await sb.from('posts').select('*').in('id',postIds);
+    const postsMap={};if(posts)posts.forEach(p=>{postsMap[p.id]=p;});
+    el.innerHTML='';
+    Object.values(grouped).forEach(function(g){
+      const post=postsMap[g.post_id];
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--bg2);border:1px solid rgba(255,77,77,0.3);border-radius:var(--r);padding:16px;margin-bottom:12px;';
+      const imgs=post&&post.image_urls&&post.image_urls.length>0?
+        post.image_urls.map(u=>`<img src="${u}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin-right:6px;" />`).join(''):'';
+      card.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:13px;font-weight:700;color:var(--red);">🚩 ${g.count} report(s)</div>
+          <div style="font-size:11px;color:var(--muted);">${sAddr(g.author)}</div>
+        </div>
+        <div style="font-size:14px;margin-bottom:8px;">${post?esc(post.content):'Post deleted'}</div>
+        ${imgs?`<div style="margin-bottom:10px;">${imgs}</div>`:''}
+        <div style="display:flex;gap:8px;">
+          <button onclick="moderatePost('${g.post_id}','delete',${JSON.stringify(g.ids)})" style="flex:1;padding:8px;border-radius:8px;background:var(--red);color:#fff;font-size:13px;font-weight:700;cursor:pointer;border:none;">🗑️ Delete Post</button>
+          <button onclick="moderatePost('${g.post_id}','dismiss',${JSON.stringify(g.ids)})" style="flex:1;padding:8px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:13px;cursor:pointer;">✓ Dismiss</button>
+        </div>`;
+      el.appendChild(card);
+    });
+  }catch(e){el.innerHTML='<div class="app-empty">Failed to load. Create reports table first.</div>';}
+}
+
+async function moderatePost(postId,action,reportIds){
+  try{
+    if(action==='delete'){
+      await sb.from('posts').delete().eq('id',postId);
+      showToast('Post deleted ✓','ok');
+    }
+    // Позначаємо репорти як переглянуті
+    if(reportIds&&reportIds.length>0){
+      await sb.from('reports').update({reviewed:true}).in('id',reportIds);
+    }
+    loadModerationPanel();
+    loadPosts();
+  }catch(e){showToast('Failed','err');}
+}
+
 async function deletePost(postId,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   if(!confirm('Delete this post?'))return;
@@ -2661,7 +2950,7 @@ async function repostPost(postId,authorWallet,btn){
   try{
     const {data:existing}=await sb.from('posts').select('id').eq('repost_of',postId).eq('author_wallet',userAddr).single();if(existing){showToast('Already reposted','err');return;}
     const {data:origPost}=await sb.from('posts').select('*').eq('id',postId).single();if(!origPost)return;
-    await sb.from('posts').insert({author_wallet:userAddr,content:origPost.content,image_urls:origPost.image_urls||[],repost_of:postId,repost_by:userAddr,repost_by_name:currentUser?.username||sAddr(userAddr),likes_count:0,reposts_count:0});
+    await sb.from('posts').insert({author_wallet:userAddr,content:origPost.content,image_urls:origPost.image_urls||[],repost_of:postId,repost_by:userAddr,repost_by_name:currentUser?.username||sAddr(userAddr),original_author:origPost.author_wallet,likes_count:0,reposts_count:0});
     const newCount=(parseInt(document.getElementById('rpcnt-'+postId)?.textContent||'0'))+1;await sb.from('posts').update({reposts_count:newCount}).eq('id',postId);
     if(document.getElementById('rpcnt-'+postId))document.getElementById('rpcnt-'+postId).textContent=newCount;
     btn.style.color='var(--green)';showToast('🔁 Reposted!','ok');await createNotif(authorWallet,'repost',postId);loadPosts();
@@ -3047,9 +3336,11 @@ function leaveBattleGame(){
   if(bsRealtimeChannel){sb.removeChannel(bsRealtimeChannel);bsRealtimeChannel=null;}
   clearInterval(bsTimer);
   currentGameId=null;isAIGame=false;myShips=[];enemyShots=[];myShots=[];
+  window._bsLobbyActive=false; // Reset so lobby resubscribes
   document.getElementById('battleLobby').style.display='block';
   document.getElementById('battleGame').style.display='none';
   loadBattleLobby();
+  subscribeToBattleLobby(); // Resubscribe
 }
 
 // ── CHALLENGE ──
@@ -3203,6 +3494,13 @@ if(window.ethereum){
   window.ethereum.on('accountsChanged',function(accounts){
     if(accounts.length===0){
       userAddr=null;currentUser=null;provider=null;signer=null;
+      // Reset all realtime flags so they reconnect on next login
+      window._msgsRealtimeActive=false;
+      window._bsLobbyActive=false;
+      window._gameInvitesActive=false;
+      window._likesRealtimeActive=false;
+      if(_mainChannel){sb.removeChannel(_mainChannel);_mainChannel=null;}
+      _mainChannelCallbacks={posts:[],likes:[],notifications:[],messages:[],battleship_games:[]};
       const btn=document.getElementById('connectBtn');btn.classList.remove('connected');btn.innerHTML='<div class="w-dot"></div>Connect Wallet';
       document.getElementById('newPostBtn').classList.remove('show');
       document.getElementById('composer').classList.remove('show');
