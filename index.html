@@ -3841,26 +3841,33 @@ async function resolveIPFS(uri){
   if(uri.startsWith('data:')) return uri;
   if(uri.startsWith('ipfs://')){
     const hash=uri.slice(7);
-    // Use Cloudflare as primary (fastest, globally cached)
-    return 'https://cloudflare-ipfs.com/ipfs/'+hash;
+    return 'https://gateway.pinata.cloud/ipfs/'+hash;
   }
-  if(uri.startsWith('https://ipfs.io/ipfs/')) return uri.replace('https://ipfs.io/ipfs/','https://cloudflare-ipfs.com/ipfs/');
-  if(uri.startsWith('https://gateway.pinata.cloud/')) return uri;
+  if(uri.startsWith('https://ipfs.io/ipfs/')) return uri.replace('https://ipfs.io/ipfs/','https://gateway.pinata.cloud/ipfs/');
+  if(uri.startsWith('https://cloudflare-ipfs.com/')) return uri.replace('https://cloudflare-ipfs.com/','https://gateway.pinata.cloud/');
   return uri;
+}
+
+// 4 IPFS gateways tried in order until one works
+function getIPFSGateways(hash){
+  return [
+    'https://gateway.pinata.cloud/ipfs/'+hash,
+    'https://cloudflare-ipfs.com/ipfs/'+hash,
+    'https://ipfs.io/ipfs/'+hash,
+    'https://dweb.link/ipfs/'+hash,
+  ];
 }
 
 async function resolveIPFSWithFallback(uri){
   if(!uri) return '';
   if(uri.startsWith('data:')) return uri;
-  // Check cache first
   const cached=getCachedNFTImg(uri);
   if(cached) return cached;
   const hash=uri.startsWith('ipfs://')?uri.slice(7)
-    :uri.includes('/ipfs/')?uri.split('/ipfs/')[1]
+    :uri.includes('/ipfs/')?uri.split('/ipfs/').pop()
     :null;
   if(hash){
-    // Cloudflare is fastest and has best global caching
-    const primary='https://cloudflare-ipfs.com/ipfs/'+hash;
+    const primary='https://gateway.pinata.cloud/ipfs/'+hash;
     setCachedNFTImg(uri,primary);
     return primary;
   }
@@ -3944,18 +3951,16 @@ async function loadMarketplace(){
         im.loading='lazy';
         im.style.cssText='width:100%;height:100%;object-fit:cover;';
         im.alt=name;
-        // Try main URL first, fallback to other gateways on error
-        im.src=img;
-        im.onerror=async function(){
-          // Try Pinata as fallback
-          if(img.includes('cloudflare-ipfs.com')){
-            const hash=img.split('/ipfs/')[1];
-            if(hash) this.src='https://gateway.pinata.cloud/ipfs/'+hash;
-          } else if(img.includes('pinata.cloud')){
-            const hash=img.split('/ipfs/')[1];
-            if(hash) this.src='https://ipfs.io/ipfs/'+hash;
+        // Try gateways in order until one works
+        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _gateways=_hash?getIPFSGateways(_hash):[img];
+        let _gwIdx=0;
+        im.src=_gateways[_gwIdx];
+        im.onerror=function(){
+          _gwIdx++;
+          if(_gwIdx<_gateways.length){
+            this.src=_gateways[_gwIdx];
           } else {
-            // Show placeholder
             imgDiv.innerHTML='<div style="font-size:36px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
           }
         };
