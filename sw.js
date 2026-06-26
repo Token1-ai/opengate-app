@@ -1,9 +1,12 @@
-const CACHE_NAME = 'opengate-v3';
+const CACHE_NAME = 'opengate-v4';
 
-// Cache only local static files
+// Cache only local static files — served instantly from cache
 const ASSETS = [
   '/',
-  '/index.html'
+  '/index.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
 // Domains to NEVER cache — always fetch fresh from network
@@ -19,8 +22,7 @@ const BYPASS_HOSTS = [
   'bscscan.com',
   'googleapis.com',
   'cdnjs.cloudflare.com',
-  'jsdelivr.net',
-  'ethers.io'
+  'jsdelivr.net'
 ];
 
 self.addEventListener('install', e => {
@@ -48,33 +50,27 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Only handle GET requests
   if (e.request.method !== 'GET') return;
 
   const url = new URL(e.request.url);
 
-  // Skip cross-origin API/RPC/blockchain/CDN requests — always get fresh data
+  // Skip external API/RPC/blockchain — always fresh data
   const shouldBypass = BYPASS_HOSTS.some(host => url.host.includes(host));
   if (shouldBypass) return;
 
-  // Skip non-http(s) requests
   if (!url.protocol.startsWith('http')) return;
 
-  // For local files: Stale-While-Revalidate strategy
-  // — serve from cache instantly, update cache in background
+  // Stale-While-Revalidate for local files
   e.respondWith(
     caches.open(CACHE_NAME).then(cache => {
       return cache.match(e.request).then(cachedResponse => {
-        // Fetch from network and update cache in background
         const networkFetch = fetch(e.request).then(networkResponse => {
           if (networkResponse && networkResponse.status === 200) {
-            // Use e.waitUntil equivalent: write to cache properly
             cache.put(e.request, networkResponse.clone());
           }
           return networkResponse;
         }).catch(() => null);
 
-        // Return cached version immediately if available, else wait for network
         return cachedResponse || networkFetch;
       });
     })
