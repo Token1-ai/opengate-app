@@ -539,7 +539,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <h2 class="section-title fade">Three steps to earning</h2>
       <div class="steps">
         <div class="step fade"><div class="step-icon" style="background:rgba(38,217,138,0.1);">🔗</div><div class="step-title">Connect your wallet</div><p class="step-text">Use MetaMask or Trust Wallet. Your wallet is your account — no email, no password, no personal data.</p><div class="step-line"></div></div>
-        <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">✍️</div><div class="step-title">Post your content</div><p class="step-text">Create posts, share images, follow people. Posting is always free. No algorithm hiding your content.</p><div class="step-line"></div></div>
+        <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">✍️</div><div class="step-title">Post your content</div><p class="step-text">Create posts, share images, follow people. Posting is free for everyone. Silver & Gold Pass unlock image uploads.</p><div class="step-line"></div></div>
         <div class="step fade"><div class="step-icon" style="background:rgba(168,189,208,0.1);">💰</div><div class="step-title">Get paid for likes</div><p class="step-text">Every like sends 0.1 GATE straight to your wallet. Stake it, swap it on Easy Swap DEX, or hold it.</p><div class="step-line"></div></div>
         <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">🚀</div><div class="step-title">Grow with the platform</div><p class="step-text">Gold Pass holders earn 2× more GATE. Buy now — at mainnet launch the price goes up significantly.</p><div class="step-line"></div></div>
       </div>
@@ -556,8 +556,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
           <div class="pass-price">$0</div>
           <div class="pass-price-note">Always free — just connect your wallet</div>
           <ul class="pass-features">
-            <li><span class="feat-icon">✓</span>3 posts per day</li>
-            <li><span class="feat-icon">✓</span>0 images per post</li>
+            <li><span class="feat-icon">✓</span>Unlimited posts</li>
+            <li><span class="feat-icon">✓</span>No images (text only)</li>
             <li><span class="feat-icon">✓</span>Earn GATE from likes</li>
             <li><span class="feat-icon">✓</span>Trade on Easy Swap DEX</li>
             <li><span class="feat-icon">✓</span>Stake GATE tokens</li>
@@ -570,8 +570,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
           <div class="pass-price-note">Paid in BNB · live rate from Chainlink</div>
           <div class="pass-supply"><div class="supply-track"><div class="supply-fill" data-target="2%"></div></div><div class="supply-text" id="silverSupply">5,000 max</div></div>
           <ul class="pass-features">
-            <li><span class="feat-icon">✓</span>10 posts per day</li>
-            <li><span class="feat-icon">✓</span>3 images per post</li>
+            <li><span class="feat-icon">✓</span>Unlimited posts</li>
+            <li><span class="feat-icon">✓</span>Up to 3 images per post</li>
             <li><span class="feat-icon">✓</span>Silver badge 🥈</li>
             <li><span class="feat-icon">✓</span>+30% GATE rewards</li>
             <li><span class="feat-icon">✓</span>Early access to features</li>
@@ -630,7 +630,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <h2 class="section-title fade">No hidden fees</h2>
       <table class="fees-table fade">
         <tr><th>Action</th><th>Fee</th><th>Note</th></tr>
-        <tr><td>Create a post</td><td class="fee-zero">FREE</td><td style="color:var(--muted);">Always free</td></tr>
+        <tr><td>Create a post</td><td class="fee-zero">FREE</td><td style="color:var(--muted);">For everyone, unlimited</td></tr>
+        <tr><td>Post with images</td><td class="fee-val">Silver / Gold Pass</td><td style="color:var(--muted);">NFT pass required</td></tr>
         <tr><td>Send a like</td><td class="fee-val">0.1 GATE</td><td style="color:var(--muted);">Goes directly to the author</td></tr>
         <tr><td>Send a message</td><td class="fee-zero">FREE</td><td style="color:var(--muted);">Between any two users</td></tr>
         <tr><td>Staking GATE</td><td class="fee-zero">0%</td><td style="color:var(--muted);">No staking fees ever</td></tr>
@@ -670,8 +671,6 @@ textarea.form-inp{resize:vertical;min-height:80px;}
   <footer>
     <div><div class="footer-logo">OpenGate</div><div class="footer-copy">© 2025 OpenGate. Built on LitVM + BNB Chain.</div></div>
     <div class="footer-links">
-      <a href="https://www.easyswap.life" target="_blank">Easy Swap</a>
-      <a href="https://liteforge.explorer.caldera.xyz" target="_blank">LitVM Explorer</a>
       <a href="https://bscscan.com/address/0x16239880aEe6919Ed0a411859D8D8e5A7F2ef801" target="_blank">GoldPass</a>
       <a href="https://bscscan.com/address/0x1CcA4e53E66EbDcD31f4d7ae4E2A791C49CF4a46" target="_blank">SilverPass</a>
     </div>
@@ -696,7 +695,6 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <div class="side-lbl">Menu</div>
         <button class="side-btn active" id="tab-feed" onclick="showTab('feed')"><span class="side-ico">🏠</span>Home Feed</button>
         <button class="side-btn" id="tab-profile" onclick="showTab('profile')"><span class="side-ico">👤</span>My Profile</button>
-        <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🔄</span>Easy Swap</button>
         <button class="side-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="side-ico">🟡</span>Buy GATE</button>
         <button class="side-btn" id="tab-staking" onclick="showTab('staking')"><span class="side-ico">💎</span>Staking</button>
 
@@ -715,7 +713,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       </div>
       <div class="side-sec">
         <div class="side-lbl">Info</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.7;padding:0 12px;">Like a post → sends <span style="color:var(--gold);font-weight:700;">0.1 GATE</span> to the author.<br><br>Gold Pass = <span style="color:var(--gold);">2× rewards</span><br>Silver Pass = <span style="color:var(--silver);">1.3× rewards</span></div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;padding:0 12px;">Like a post → sends <span style="color:var(--gold);font-weight:700;">0.1 GATE</span> to the author.<br><br>📝 Posting is <span style="color:var(--green);font-weight:700;">free for everyone</span><br>🖼️ Images require <span style="color:var(--silver);">Silver</span> or <span style="color:var(--gold);">Gold Pass</span><br><br>Gold Pass = <span style="color:var(--gold);">2× rewards</span><br>Silver Pass = <span style="color:var(--silver);">1.3× rewards</span></div>
       </div>
     </div>
 
@@ -1497,7 +1495,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <button class="mob-btn active" onclick="showTab('feed')"><span class="mob-ico">🏠</span>Feed</button>
     <button class="mob-btn" onclick="showTab('profile')"><span class="mob-ico">👤</span>Profile</button>
     <button class="mob-btn" onclick="focusComposer();showTab('feed')"><span class="mob-ico">✍️</span>Post</button>
-    <button class="mob-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="mob-ico">🔄</span>Swap</button>
+    <button class="mob-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="mob-ico">🟡</span>GATE</button>
     <button class="mob-btn" onclick="showTab('staking')"><span class="mob-ico">💎</span>Stake</button>
 
     <button class="mob-btn" onclick="showTab('lending')"><span class="mob-ico">🏦</span>Lend</button>
@@ -1899,67 +1897,124 @@ function updateComposer(){
 function focusComposer(){ document.getElementById('postText').focus(); }
 let pendingImages = [];
 
+// Track images uploaded today for Silver (stored in memory per session)
+let _todayImgCount = 0;
+let _todayImgDate = '';
+function getTodayImgCount(){
+  const today = new Date().toDateString();
+  if(_todayImgDate !== today){ _todayImgDate=today; _todayImgCount=0; }
+  return _todayImgCount;
+}
+
+const CLOUDINARY_CLOUD = 'dj18odkce';
+const CLOUDINARY_PRESET = '50c5d7dd-bdcd-4d0d-aa49-076b23491b94';
+
+async function uploadToSupabase(file){
+  const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+  const path='uploads/'+(userAddr||'anon')+'_'+Date.now()+'_'+Math.random().toString(36).slice(2,7)+'.'+ext;
+  const result=await sb.storage.from('media').upload(path,file,{cacheControl:'3600',upsert:true,contentType:file.type});
+  if(result.error) throw new Error(result.error.message);
+  return sb.storage.from('media').getPublicUrl(path).data.publicUrl;
+}
+
+async function uploadToPinataOnly(file){
+  const formData=new FormData();
+  formData.append('file',file);
+  formData.append('pinataMetadata',JSON.stringify({name:'og-'+Date.now()}));
+  const res=await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS',{
+    method:'POST',
+    headers:{Authorization:'Bearer '+PINATA_JWT},
+    body:formData
+  });
+  if(!res.ok) throw new Error('Pinata upload failed: '+res.status);
+  const json=await res.json();
+  return 'https://gateway.pinata.cloud/ipfs/'+json.IpfsHash;
+}
+
+async function uploadToCloudinary(file){
+  const formData=new FormData();
+  formData.append('file',file);
+  formData.append('upload_preset',CLOUDINARY_PRESET);
+  formData.append('folder','opengate');
+  const res=await fetch('https://api.cloudinary.com/v1_1/'+CLOUDINARY_CLOUD+'/image/upload',{
+    method:'POST',
+    body:formData
+  });
+  if(!res.ok) throw new Error('Cloudinary upload failed: '+res.status);
+  const json=await res.json();
+  if(json.error) throw new Error(json.error.message);
+  return json.secure_url;
+}
+
 async function uploadToPinata(file){
-  // Upload via Supabase Storage
+  // Try all 3 services in parallel — use whichever succeeds first
   try{
-    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
-    const path='uploads/'+(userAddr||'anon')+'_'+Date.now()+'.'+ext;
-    const uploadResult=await sb.storage.from('media').upload(path,file,{
-      cacheControl:'3600',upsert:true,contentType:file.type
-    });
-    if(uploadResult.error) throw new Error(uploadResult.error.message);
-    const pubResult=sb.storage.from('media').getPublicUrl(path);
-    return pubResult.data.publicUrl;
+    const result=await Promise.any([
+      uploadToSupabase(file),
+      uploadToPinataOnly(file),
+      uploadToCloudinary(file)
+    ]);
+    return result;
   }catch(e){
-    // Fallback: try Pinata directly
-    const formData=new FormData();
-    formData.append('file',file);
-    formData.append('pinataMetadata',JSON.stringify({name:'og-'+Date.now()}));
-    const res=await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS',{
-      method:'POST',
-      headers:{Authorization:'Bearer '+PINATA_JWT},
-      body:formData
-    });
-    if(!res.ok) throw new Error('Upload failed');
-    const json=await res.json();
-    return 'https://gateway.pinata.cloud/ipfs/'+json.IpfsHash;
+    // All failed in parallel — try each sequentially as last resort
+    try{ return await uploadToSupabase(file); }catch(e1){}
+    try{ return await uploadToCloudinary(file); }catch(e2){}
+    try{ return await uploadToPinataOnly(file); }catch(e3){}
+    throw new Error('All upload methods failed');
   }
 }
 
-
-
 function checkImgUpload(){
-  const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
-  const isOwner=userAddr&&userAddr===OWNER_WALLET;
   const passType=currentUser?.pass_type;
-  if(!isOwner&&(!passType||passType==='free')){
+  if(!passType||passType==='free'){
     showToast('Images require Silver or Gold Pass 🥈','err');
+    return;
+  }
+  // Silver: check daily limit
+  if(passType==='silver'&&getTodayImgCount()>=3){
+    showToast('Silver limit: 3 images per day. Upgrade to Gold for unlimited!','err');
     return;
   }
   document.getElementById('imgInput').click();
 }
 
 async function handleImages(input){
-  const files = Array.from(input.files);
-  if(files.length === 0) return;
-  const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
-  const isOwner=userAddr&&userAddr===OWNER_WALLET;
-  const maxImgs = isOwner ? 20 : currentUser?.pass_type === 'gold' ? 20 : currentUser?.pass_type === 'silver' ? 3 : 0;
-  if(pendingImages.length + files.length > maxImgs){
-    showToast('Max ' + maxImgs + ' images allowed','err'); return;
+  const files=Array.from(input.files);
+  if(files.length===0) return;
+  const passType=currentUser?.pass_type;
+  const isGold=passType==='gold';
+  const isSilver=passType==='silver';
+  if(!isGold&&!isSilver){
+    showToast('Images require Silver or Gold Pass 🥈','err');
+    input.value='';return;
   }
-  document.getElementById('uploadingTxt').style.display = 'inline';
-  document.getElementById('postBtn').disabled = true;
+  // Silver: max 3 images per day total
+  if(isSilver){
+    const used=getTodayImgCount();
+    const remaining=3-used;
+    if(remaining<=0){showToast('Silver limit: 3 images per day. Upgrade to Gold!','err');input.value='';return;}
+    if(files.length>remaining){showToast('Silver: only '+remaining+' image(s) left today','err');input.value='';return;}
+  }
+  // Gold: max 20 per post
+  if(isGold&&pendingImages.length+files.length>20){
+    showToast('Max 20 images per post','err');input.value='';return;
+  }
+  document.getElementById('uploadingTxt').style.display='inline';
+  document.getElementById('postBtn').disabled=true;
+  let uploaded=0;
   for(const file of files){
     try{
-      const url = await uploadToPinata(file);
+      const url=await uploadToPinata(file);
       pendingImages.push(url);
+      _todayImgCount++;
+      uploaded++;
       renderImgPreviews();
-    }catch(e){ showToast('Failed to upload image','err'); }
+    }catch(e){showToast('Failed to upload: '+file.name,'err');}
   }
-  document.getElementById('uploadingTxt').style.display = 'none';
+  document.getElementById('uploadingTxt').style.display='none';
+  if(uploaded>0) showToast(uploaded+' image'+(uploaded>1?'s':'')+' uploaded ✓','ok');
   updateComposer();
-  input.value = '';
+  input.value='';
 }
 
 function renderImgPreviews(){
@@ -1979,21 +2034,6 @@ async function createPost(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const content=document.getElementById('postText').value.trim();
   if(!content) return;
-  // Check daily post limit (owner has unlimited)
-  const OWNER_WALLET='0x0c31cf365d39dae89df36851363826eef2319d98';
-  const isOwner=userAddr===OWNER_WALLET;
-  const passType=currentUser?.pass_type;
-  const maxPosts=isOwner?999999:passType==='gold'?999:passType==='silver'?10:3;
-  if(!isOwner){
-    const today=new Date();today.setHours(0,0,0,0);
-    const {count:todayPosts}=await sb.from('posts').select('*',{count:'exact',head:true})
-      .eq('author_wallet',userAddr).gte('created_at',today.toISOString());
-    if(todayPosts>=maxPosts){
-      if(passType==='silver') showToast('Silver limit: 10 posts/day. Upgrade to Gold for unlimited!','err');
-      else showToast('Free limit: 3 posts/day. Get Silver or Gold Pass for more!','err');
-      return;
-    }
-  }
   const btn=document.getElementById('postBtn');
   btn.disabled=true; btn.textContent='Posting...';
   try{
