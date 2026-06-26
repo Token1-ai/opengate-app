@@ -12,13 +12,13 @@
       "src": "https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ],
   "categories": ["finance", "social"],
