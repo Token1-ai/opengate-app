@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<link rel="icon" type="image/png" href="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
-<link rel="apple-touch-icon" href="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
+<link rel="icon" type="image/png" href="/icon-192.png"/>
+<link rel="apple-touch-icon" href="/icon-192.png"/>
 <link rel="manifest" href="/manifest.json"/>
 <meta name="theme-color" content="#F5C842"/>
 <meta name="mobile-web-app-capable" content="yes"/>
@@ -16,13 +16,13 @@
 <meta name="keywords" content="OpenGate, GATE token, Web3 social, DeFi, LitVM, BNB Chain, earn crypto"/>
 <meta property="og:title" content="OpenGate — Post. Earn. Own."/>
 <meta property="og:description" content="Social platform where every like sends GATE tokens to your wallet. No ads. No middleman."/>
-<meta property="og:image" content="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
+<meta property="og:image" content="/icon-512.png"/>
 <meta property="og:url" content="https://opengate.bond"/>
 <meta property="og:type" content="website"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="OpenGate — Post. Earn. Own."/>
 <meta name="twitter:description" content="Web3 social platform. Earn GATE tokens from likes."/>
-<meta name="twitter:image" content="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy"/>
+<meta name="twitter:image" content="/icon-512.png"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OpenGate — Post. Earn. Own.</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
@@ -507,7 +507,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 <!-- ══ LANDING ══ -->
 <div id="page-landing" class="page active">
   <nav id="landing-nav">
-    <div class="nav-logo"><img src="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy" style="width:34px;height:34px;border-radius:8px;object-fit:cover;" alt="OpenGate"/>OpenGate</div>
+    <div class="nav-logo"><img src="/icon-192.png" style="width:34px;height:34px;border-radius:8px;object-fit:cover;" alt="OpenGate"/>OpenGate</div>
     <ul class="nav-links">
       <li><a onclick="scrollSec('#how')">How it works</a></li>
       <li><a onclick="scrollSec('#passes')">Passes</a></li>
@@ -680,7 +680,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 <!-- ══ APP ══ -->
 <div id="page-app" class="page">
   <nav id="app-nav">
-    <div class="app-nav-logo" onclick="goLanding()"><img src="https://gateway.pinata.cloud/ipfs/bafkreiamkxg35myscurq5unztoh6vzp5kgkrkzxxctggdxfeqnqhbvsnyy" style="width:30px;height:30px;border-radius:7px;object-fit:cover;" alt="OpenGate"/>OpenGate</div>
+    <div class="app-nav-logo" onclick="goLanding()"><img src="/icon-192.png" style="width:30px;height:30px;border-radius:7px;object-fit:cover;" alt="OpenGate"/>OpenGate</div>
     <div class="app-nav-right">
       <button class="back-to-landing" onclick="goLanding()">← Landing</button>
       <button class="new-post-nav-btn" id="newPostBtn" onclick="focusComposer()">✍️ Post</button>
@@ -3836,7 +3836,77 @@ async function rollDice(){
 // ── LOTTERY ──
 let lotteryQty = 1;
 function setLotteryQty(qty){lotteryQty=qty;[1,2,3,5].forEach(q=>{const btn=document.getElementById('lqty'+q);if(!btn)return;if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});document.getElementById('lotteryCost').textContent=(qty*10)+' GATE';}
-async function loadLottery(){try{const p=getReadProvider();const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);const [roundId,playerCount,pot]=await lottery.getCurrentRound();document.getElementById('lotteryRound').textContent=roundId.toString();document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';document.getElementById('lotteryPlayers').textContent=playerCount.toString();document.getElementById('lotteryBar').style.width=(Number(playerCount)*100/20)+'%';if(userAddr){const myT=await lottery.getMyTickets(roundId);document.getElementById('myLotteryTickets').textContent=myT.toString();}}catch(e){}}
+async function loadLottery(){
+  try{
+    const p=getReadProvider();
+    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
+    const [roundId,playerCount,pot]=await lottery.getCurrentRound();
+    document.getElementById('lotteryRound').textContent=roundId.toString();
+    document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';
+    document.getElementById('lotteryPlayers').textContent=playerCount.toString();
+    document.getElementById('lotteryBar').style.width=(Number(playerCount)*100/20)+'%';
+    if(userAddr){
+      try{const myT=await lottery.getMyTickets(roundId);document.getElementById('myLotteryTickets').textContent=myT.toString();}catch(e){}
+    }
+    // Load past winners
+    loadLotteryWinners(lottery, Number(roundId));
+  }catch(e){
+    document.getElementById('pastLotteryRounds').innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load winners</div>';
+  }
+}
+
+async function loadLotteryWinners(lottery, currentRoundId){
+  const el=document.getElementById('pastLotteryRounds');
+  if(!el) return;
+  // No past rounds yet
+  if(currentRoundId<=1){
+    el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No past rounds yet</div>';
+    return;
+  }
+  try{
+    let html='';
+    // Load up to last 10 completed rounds
+    const from=Math.max(1, currentRoundId-10);
+    const promises=[];
+    for(let i=currentRoundId-1;i>=from;i--){
+      promises.push((async(roundNum)=>{
+        try{
+          // rounds(uint256) returns: pot, players[], winner, ticketPrice, drawn, timestamp
+          const r=await lottery.rounds(roundNum);
+          const pot=r[0]??r.pot??0n;
+          const winner=r[2]??r.winner??'';
+          const drawn=r[4]??r.drawn??false;
+          const players=r[1]??r.players??[];
+          if(!drawn||!winner||winner==='0x0000000000000000000000000000000000000000') return null;
+          return {roundNum, pot, winner, players:players.length||0};
+        }catch(e){return null;}
+      })(i));
+    }
+    const results=(await Promise.all(promises)).filter(Boolean);
+    if(results.length===0){
+      el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No completed rounds yet</div>';
+      return;
+    }
+    results.forEach(r=>{
+      const potGate=parseFloat(ethers.formatEther(r.pot)).toFixed(0);
+      const winnerShort=r.winner.slice(0,6)+'...'+r.winner.slice(-4);
+      const prize=(parseFloat(ethers.formatEther(r.pot))*0.95).toFixed(0);
+      html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:13px;font-weight:700;">Round #${r.roundNum}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.players} players · ${potGate} GATE pot</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:12px;font-weight:700;color:var(--green);">🏆 ${prize} GATE</div>
+          <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;cursor:pointer;" onclick="cpText('${r.winner}');showToast('Copied!','ok')" title="${r.winner}">${winnerShort} ⧉</div>
+        </div>
+      </div>`;
+    });
+    el.innerHTML=html||'<div style="font-size:13px;color:var(--muted);">No completed rounds yet</div>';
+  }catch(e){
+    el.innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load past rounds</div>';
+  }
+}
 async function buyLotteryTicket(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const btn=document.getElementById('buyTicketBtn');
