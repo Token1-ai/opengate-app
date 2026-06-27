@@ -1965,13 +1965,14 @@ async function uploadToPinata(file){
 }
 
 function checkImgUpload(){
+  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const passType=currentUser?.pass_type;
-  if(!passType||passType==='free'){
+  if(!isOwner&&(!passType||passType==='free')){
     showToast('Images require Silver or Gold Pass 🥈','err');
     return;
   }
-  // Silver: check daily limit
-  if(passType==='silver'&&getTodayImgCount()>=3){
+  if(!isOwner&&passType==='silver'&&getTodayImgCount()>=3){
     showToast('Silver limit: 3 images per day. Upgrade to Gold for unlimited!','err');
     return;
   }
@@ -1981,21 +1982,21 @@ function checkImgUpload(){
 async function handleImages(input){
   const files=Array.from(input.files);
   if(files.length===0) return;
+  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const passType=currentUser?.pass_type;
-  const isGold=passType==='gold';
+  const isGold=isOwner||passType==='gold';
   const isSilver=passType==='silver';
   if(!isGold&&!isSilver){
     showToast('Images require Silver or Gold Pass 🥈','err');
     input.value='';return;
   }
-  // Silver: max 3 images per day total
-  if(isSilver){
+  if(isSilver&&!isGold){
     const used=getTodayImgCount();
     const remaining=3-used;
     if(remaining<=0){showToast('Silver limit: 3 images per day. Upgrade to Gold!','err');input.value='';return;}
     if(files.length>remaining){showToast('Silver: only '+remaining+' image(s) left today','err');input.value='';return;}
   }
-  // Gold: max 20 per post
   if(isGold&&pendingImages.length+files.length>20){
     showToast('Max 20 images per post','err');input.value='';return;
   }
