@@ -3553,8 +3553,13 @@ async function bsFireAt(idx){
       bsPhase='over';
       bsSetStatus('🎉 YOU WIN!');
       showToast('🎉 YOU WIN! Claiming prize...','ok');
-      // Auto-claim prize from contract
-      bsAutoClaimPrize(game);
+      // Fetch fresh game data to get contract_game_id
+      try{
+        const freshRes=await sb.from('battleship_games').select('*').eq('id',currentBsGame).single();
+        bsAutoClaimPrize(freshRes.data||game);
+      }catch(e){
+        bsAutoClaimPrize(game);
+      }
     } else if(hit){
       bsSetStatus('💥 HIT! Shoot again!');
       showToast('💥 Hit! Shoot again!','ok');
@@ -3670,31 +3675,37 @@ async function bsPollGame(){
 }
 
 async function bsAutoClaimPrize(game){
-  if(!game||game.bet_token==='FREE'||parseFloat(game.bet_amount||0)<=0) return;
+  if(!game||game.bet_token==='FREE'||parseFloat(game.bet_amount||0)<=0){
+    showToast('🎉 You won!','ok');
+    return;
+  }
   const contractGameId=game.contract_game_id||0;
   const prizeAmt=(parseFloat(game.bet_amount||0)*2*0.97).toFixed(2);
   if(!contractGameId||contractGameId===0){
-    showToast('🎉 You won! (Free game)','ok');
+    showToast('🎉 You won! '+prizeAmt+' '+game.bet_token+' (free game — no contract stake)','ok');
     return;
   }
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    const coder=ethers.AbiCoder.defaultAbiCoder();
+    const iface=new ethers.Interface(['function declareWinner(uint256 gameId, address winner)']);
     showToast('🏆 Claiming '+prizeAmt+' '+game.bet_token+'... Confirm in wallet','ok');
-    const sel=ethers.id('declareWinner(uint256,address)').slice(0,10);
-    const data=sel+coder.encode(['uint256','address'],[BigInt(contractGameId),userAddr]).slice(2);
-    const tx=await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data,gasLimit:200000n});
+    const tx=await freshSigner.sendTransaction({
+      to:BATTLESHIP_ADDR,
+      data:iface.encodeFunctionData('declareWinner',[BigInt(contractGameId),userAddr]),
+      gasLimit:300000n
+    });
     showToast('⏳ Waiting for confirmation...','ok');
     await tx.wait();
     showToast('🏆 '+prizeAmt+' '+game.bet_token+' sent to your wallet!','ok');
     loadGateBal(true);
   }catch(e){
-    const msg=e.reason||e.message||'';
-    if(msg.includes('Not authorized')){
-      showToast('🎉 You won! Opponent must confirm the result.','ok');
+    const msg=e.reason||e.data?.message||e.message||'';
+    console.log('declareWinner error:',msg);
+    if(msg.includes('not in progress')||msg.includes('Not a player')){
+      showToast('🎉 You won! Could not auto-claim — check wallet or try manually','ok');
     } else {
-      showToast('🎉 Won! Prize: '+prizeAmt+' '+game.bet_token+' (check wallet)','ok');
+      showToast('🎉 Won! Prize: '+prizeAmt+' '+game.bet_token+' — confirm in wallet','ok');
     }
   }
 }
