@@ -671,8 +671,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
   <footer>
     <div><div class="footer-logo">OpenGate</div><div class="footer-copy">© 2025 OpenGate. Built on LitVM + BNB Chain.</div></div>
     <div class="footer-links">
-      <a href="https://bscscan.com/address/0x16239880aEe6919Ed0a411859D8D8e5A7F2ef801" target="_blank">GoldPass</a>
-      <a href="https://bscscan.com/address/0x1CcA4e53E66EbDcD31f4d7ae4E2A791C49CF4a46" target="_blank">SilverPass</a>
+      <a href="https://bscscan.com/address/0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c" target="_blank">GoldPass</a>
+      <a href="https://bscscan.com/address/0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89" target="_blank">SilverPass</a>
     </div>
   </footer>
 </div>
@@ -1516,8 +1516,8 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 // ── CONFIG ──
 const SUPABASE_URL = 'https://hgzthbidfdqomuotdocb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnenRoYmlkZmRxb211b3Rkb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTI2NjEsImV4cCI6MjA5NjU4ODY2MX0.otgk-jq2k0COrIE3cUEnRBPYKGnzAHRi3LEIQhE7khA';
-const GOLD_PASS  = '0x16239880aEe6919Ed0a411859D8D8e5A7F2ef801';
-const SILVER_PASS= '0x1CcA4e53E66EbDcD31f4d7ae4E2A791C49CF4a46';
+const GOLD_PASS  = '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
+const SILVER_PASS= '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
 const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
@@ -1787,8 +1787,8 @@ async function checkPassType(){
   try{
     const bnbP = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
     const nftAbi = ['function balanceOf(address) view returns(uint256)'];
-    const goldNFT   = new ethers.Contract('0x16239880aEe6919Ed0a411859D8D8e5A7F2ef801', nftAbi, bnbP);
-    const silverNFT = new ethers.Contract('0x1CcA4e53E66EbDcD31f4d7ae4E2A791C49CF4a46', nftAbi, bnbP);
+    const goldNFT   = new ethers.Contract('0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c', nftAbi, bnbP);
+    const silverNFT = new ethers.Contract('0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89', nftAbi, bnbP);
     const [goldBal, silverBal] = await Promise.all([
       goldNFT.balanceOf(userAddr),
       silverNFT.balanceOf(userAddr)
