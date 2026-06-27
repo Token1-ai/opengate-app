@@ -721,7 +721,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <div id="view-feed">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Home</span>
-          <button id="newPostsBtn" onclick="loadPosts()" style="display:none;background:var(--gold);color:#08090C;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;">↻ New posts</button>
+          <button id="newPostsBtn" onclick="loadPosts()" style="display:none;position:fixed;top:68px;left:50%;transform:translateX(-50%);background:rgba(245,200,66,0.92);backdrop-filter:blur(12px);color:#08090C;border-radius:20px;padding:8px 20px;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(245,200,66,0.4);z-index:50;transition:all .2s;white-space:nowrap;" onmouseover="this.style.background='var(--gold)';this.style.transform='translateX(-50%) translateY(-1px)'" onmouseout="this.style.background='rgba(245,200,66,0.92)';this.style.transform='translateX(-50%)'">↻ New posts</button>
         </div>
         <div class="feed-tabs">
           <button class="feed-tab active" onclick="switchFeedTab('all',this)">All Posts</button>
@@ -2051,12 +2051,11 @@ async function createPost(){
   btn.disabled=false; btn.textContent='Post';
 }
 let postsRealtimeChannel=null;
+let _feedRefreshTimer=null;
 function subscribeToNewPosts(){
   if(postsRealtimeChannel) return;
   postsRealtimeChannel=sb.channel('posts-feed')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},function(){
-      // If user is at top of feed — auto reload
-      // If scrolled down — show button instead
       const feedArea=document.querySelector('.feed-area');
       const scrollTop=feedArea?feedArea.scrollTop:window.scrollY;
       if(scrollTop<100){
@@ -2067,6 +2066,19 @@ function subscribeToNewPosts(){
       }
     })
     .subscribe();
+  // Auto-refresh every 15 seconds as reliable fallback
+  clearInterval(_feedRefreshTimer);
+  _feedRefreshTimer=setInterval(function(){
+    const feedView=document.getElementById('view-feed');
+    if(!feedView||feedView.style.display==='none') return;
+    const feedArea=document.querySelector('.feed-area');
+    const scrollTop=feedArea?feedArea.scrollTop:window.scrollY;
+    if(scrollTop<100) loadPosts();
+    else{
+      const btn=document.getElementById('newPostsBtn');
+      if(btn) btn.style.display='block';
+    }
+  },15000);
 }
 
 async function loadPosts(){
