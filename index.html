@@ -15,7 +15,7 @@
 <meta name="description" content="OpenGate — Web3 social platform. Post content, earn GATE tokens from likes. Built on LitVM + BNB Chain."/>
 <meta name="keywords" content="OpenGate, GATE token, Web3 social, DeFi, LitVM, BNB Chain, earn crypto"/>
 <meta property="og:title" content="OpenGate — Post. Earn. Own."/>
-<meta property="og:description" content="Social platform where every like sends GATE tokens to your wallet. No ads. No middleman."/>
+<meta property="og:description" content="Social platform where every like sends GATE tokens to your wallet. Your content earns for you."/>
 <meta property="og:image" content="/icon-512.png"/>
 <meta property="og:url" content="https://opengate.bond"/>
 <meta property="og:type" content="website"/>
@@ -520,7 +520,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <div class="hero-bg"></div><div class="grid-bg"></div>
     <div class="hero-tag"><div class="live-dot"></div>Live on LitVM + BNB Chain</div>
     <h1 class="hero-title">Post. Like.<br><span>Earn crypto.</span></h1>
-    <p class="hero-desc">OpenGate is a social platform where every like you receive sends GATE tokens directly to your wallet. No ads. No middleman. Your content earns for you.</p>
+    <p class="hero-desc">OpenGate is a social platform where every like you receive sends GATE tokens directly to your wallet. Your content earns for you.</p>
     <div class="hero-btns">
       <button class="btn-gold" onclick="openApp()">Open App →</button>
       <button class="btn-outline" onclick="openMintModal('gold')">Get Gold Pass — $9</button>
@@ -1531,7 +1531,7 @@ const GATE_REWARDS    = '0xc4da965B91F13D89fEd37fd75452cc596f663F3a';
 const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
 const GATE_LOTTERY    = '0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035';
 const GATE_DICE         = '0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855';
-const BATTLESHIP_ADDR   = '0x9058806b8DAe29d2851C56eB7BE786a7eAa5FE13';
+const BATTLESHIP_ADDR   = '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143';
 const GATE_LENDING      = '0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6';
 const GATE_FAUCET       = '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74';
 const FAUCET_ABI        = [
@@ -1871,7 +1871,7 @@ function showTab(tab){
   }
   if(tab==='presale') loadPresaleInfo();
   if(tab==='launchpad') loadLaunchpad();
-  if(tab==='notifs') loadNotifications();
+  if(tab==='notifs'){ loadNotifications(); markAllRead(); }
   if(tab==='explore') loadExploreDefault();
   if(tab==='market') loadMarketplace();
   if(tab==='dao') loadDAO();
@@ -3672,29 +3672,29 @@ async function bsPollGame(){
 async function bsAutoClaimPrize(game){
   if(!game||game.bet_token==='FREE'||parseFloat(game.bet_amount||0)<=0) return;
   const contractGameId=game.contract_game_id||0;
+  const prizeAmt=(parseFloat(game.bet_amount||0)*2*0.97).toFixed(2);
   if(!contractGameId||contractGameId===0){
-    showToast('🎉 You won! (Free game - no prize to claim)','ok');
+    showToast('🎉 You won! (Free game)','ok');
     return;
   }
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
     const coder=ethers.AbiCoder.defaultAbiCoder();
-    showToast('Claiming prize... Confirm in MetaMask 🏆','ok');
-    // Call declareWinner(gameId, winnerAddress)
+    showToast('🏆 Claiming '+prizeAmt+' '+game.bet_token+'... Confirm in wallet','ok');
     const sel=ethers.id('declareWinner(uint256,address)').slice(0,10);
     const data=sel+coder.encode(['uint256','address'],[BigInt(contractGameId),userAddr]).slice(2);
     const tx=await freshSigner.sendTransaction({to:BATTLESHIP_ADDR,data,gasLimit:200000n});
+    showToast('⏳ Waiting for confirmation...','ok');
     await tx.wait();
-    showToast('🏆 Prize automatically sent to your wallet!','ok');
+    showToast('🏆 '+prizeAmt+' '+game.bet_token+' sent to your wallet!','ok');
     loadGateBal(true);
   }catch(e){
     const msg=e.reason||e.message||'';
     if(msg.includes('Not authorized')){
       showToast('🎉 You won! Opponent must confirm the result.','ok');
     } else {
-      showToast('🎉 You won! Prize: '+(parseFloat(game.bet_amount||0)*2)+' '+game.bet_token,'ok');
-      console.log('declareWinner error:', msg);
+      showToast('🎉 Won! Prize: '+prizeAmt+' '+game.bet_token+' (check wallet)','ok');
     }
   }
 }
@@ -3841,46 +3841,61 @@ async function loadLottery(){
   try{
     const p=getReadProvider();
     const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
-    const [roundId,playerCount,pot]=await lottery.getCurrentRound();
+    // getCurrentRound() returns (roundId, playerCount, pot, isActive)
+    const round=await lottery.getCurrentRound();
+    const roundId=Number(round[0]);
+    const playerCount=Number(round[1]);
+    const pot=round[2];
     document.getElementById('lotteryRound').textContent=roundId.toString();
     document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';
     document.getElementById('lotteryPlayers').textContent=playerCount.toString();
-    document.getElementById('lotteryBar').style.width=(Number(playerCount)*100/20)+'%';
+    document.getElementById('lotteryBar').style.width=(playerCount*100/20)+'%';
     if(userAddr){
-      try{const myT=await lottery.getMyTickets(roundId);document.getElementById('myLotteryTickets').textContent=myT.toString();}catch(e){}
+      try{
+        const myT=await lottery.getMyTickets(roundId);
+        document.getElementById('myLotteryTickets').textContent=myT.toString();
+      }catch(e){}
     }
-    // Load past winners
-    loadLotteryWinners(lottery, Number(roundId));
+    loadLotteryWinners(lottery, roundId);
   }catch(e){
-    document.getElementById('pastLotteryRounds').innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load winners</div>';
+    document.getElementById('pastLotteryRounds').innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load lottery</div>';
   }
 }
 
 async function loadLotteryWinners(lottery, currentRoundId){
   const el=document.getElementById('pastLotteryRounds');
   if(!el) return;
-  // No past rounds yet
   if(currentRoundId<=1){
     el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No past rounds yet</div>';
     return;
   }
+  el.innerHTML='<div style="font-size:13px;color:var(--muted);">Loading winners...</div>';
   try{
-    let html='';
-    // Load up to last 10 completed rounds
     const from=Math.max(1, currentRoundId-10);
     const promises=[];
     for(let i=currentRoundId-1;i>=from;i--){
       promises.push((async(roundNum)=>{
         try{
-          // rounds(uint256) returns: pot, players[], winner, ticketPrice, drawn, timestamp
+          // rounds(uint256) returns: (uint256 pot, address[] players, address winner, uint256 ticketPrice, bool drawn, uint256 timestamp)
           const r=await lottery.rounds(roundNum);
-          const pot=r[0]??r.pot??0n;
-          const winner=r[2]??r.winner??'';
-          const drawn=r[4]??r.drawn??false;
-          const players=r[1]??r.players??[];
-          if(!drawn||!winner||winner==='0x0000000000000000000000000000000000000000') return null;
-          return {roundNum, pot, winner, players:players.length||0};
-        }catch(e){return null;}
+          const pot=r[0];
+          const players=r[1];
+          const winner=r[2];
+          const drawn=r[4];
+          // Also try by name in case ethers returns object
+          const potVal=r.pot??pot??0n;
+          const winnderVal=r.winner??winner??'';
+          const drawnVal=r.drawn??drawn??false;
+          const playersVal=r.players??players??[];
+          const zeroAddr='0x0000000000000000000000000000000000000000';
+          if(!drawnVal||!winnderVal||winnderVal===zeroAddr) return null;
+          return {
+            roundNum,
+            pot: potVal,
+            winner: winnderVal,
+            players: Array.isArray(playersVal)?playersVal.length:Number(playersVal)||0
+          };
+        }catch(e){ return null; }
       })(i));
     }
     const results=(await Promise.all(promises)).filter(Boolean);
@@ -3888,22 +3903,25 @@ async function loadLotteryWinners(lottery, currentRoundId){
       el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No completed rounds yet</div>';
       return;
     }
+    let html='';
     results.forEach(r=>{
       const potGate=parseFloat(ethers.formatEther(r.pot)).toFixed(0);
-      const winnerShort=r.winner.slice(0,6)+'...'+r.winner.slice(-4);
       const prize=(parseFloat(ethers.formatEther(r.pot))*0.95).toFixed(0);
+      const winnerShort=r.winner.slice(0,6)+'...'+r.winner.slice(-4);
+      const isMe=userAddr&&r.winner.toLowerCase()===userAddr.toLowerCase();
       html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
         <div>
-          <div style="font-size:13px;font-weight:700;">Round #${r.roundNum}</div>
+          <div style="font-size:13px;font-weight:700;">Round #${r.roundNum} ${isMe?'🎉 You won!':''}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.players} players · ${potGate} GATE pot</div>
         </div>
         <div style="text-align:right;">
           <div style="font-size:12px;font-weight:700;color:var(--green);">🏆 ${prize} GATE</div>
-          <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;cursor:pointer;" onclick="cpText('${r.winner}');showToast('Copied!','ok')" title="${r.winner}">${winnerShort} ⧉</div>
+          <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;cursor:pointer;"
+            onclick="cpText('${r.winner}');showToast('Copied!','ok')" title="${r.winner}">${winnerShort} ⧉</div>
         </div>
       </div>`;
     });
-    el.innerHTML=html||'<div style="font-size:13px;color:var(--muted);">No completed rounds yet</div>';
+    el.innerHTML=html;
   }catch(e){
     el.innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load past rounds</div>';
   }
@@ -4280,7 +4298,12 @@ async function loadNotifications(){
   }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
 }
 async function markRead(id){await sb.from('notifications').update({read:true}).eq('id',id);updateNotifBadge();}
-async function markAllRead(){if(!userAddr)return;await sb.from('notifications').update({read:true}).eq('to_wallet',userAddr).eq('read',false);loadNotifications();}
+async function markAllRead(){
+  if(!userAddr)return;
+  await sb.from('notifications').update({read:true}).eq('to_wallet',userAddr).eq('read',false);
+  await updateNotifBadge();
+  loadNotifications();
+}
 async function updateNotifBadge(){
   if(!userAddr)return;
   // Bell = likes, follows, challenges (not DMs)
