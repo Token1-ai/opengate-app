@@ -2055,9 +2055,16 @@ function subscribeToNewPosts(){
   if(postsRealtimeChannel) return;
   postsRealtimeChannel=sb.channel('posts-feed')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},function(){
-      // Show "new posts" button instead of auto-reloading
-      const btn=document.getElementById('newPostsBtn');
-      if(btn) btn.style.display='block';
+      // If user is at top of feed — auto reload
+      // If scrolled down — show button instead
+      const feedArea=document.querySelector('.feed-area');
+      const scrollTop=feedArea?feedArea.scrollTop:window.scrollY;
+      if(scrollTop<100){
+        loadPosts();
+      } else {
+        const btn=document.getElementById('newPostsBtn');
+        if(btn) btn.style.display='block';
+      }
     })
     .subscribe();
 }
