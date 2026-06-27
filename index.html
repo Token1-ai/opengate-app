@@ -721,7 +721,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <div id="view-feed">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Home</span>
-          <button id="newPostsBtn" onclick="loadPosts()" style="display:none;position:fixed;top:68px;left:50%;transform:translateX(-50%);background:rgba(245,200,66,0.92);backdrop-filter:blur(12px);color:#08090C;border-radius:20px;padding:8px 20px;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(245,200,66,0.4);z-index:50;transition:all .2s;white-space:nowrap;" onmouseover="this.style.background='var(--gold)';this.style.transform='translateX(-50%) translateY(-1px)'" onmouseout="this.style.background='rgba(245,200,66,0.92)';this.style.transform='translateX(-50%)'">↻ New posts</button>
+          <button id="newPostsBtn" onclick="loadPosts()" style="display:none;background:rgba(245,200,66,0.92);backdrop-filter:blur(12px);color:#08090C;border-radius:20px;padding:8px 20px;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(245,200,66,0.4);transition:all .2s;white-space:nowrap;">↻ New posts</button>
         </div>
         <div class="feed-tabs">
           <button class="feed-tab active" onclick="switchFeedTab('all',this)">All Posts</button>
@@ -2056,28 +2056,24 @@ function subscribeToNewPosts(){
   if(postsRealtimeChannel) return;
   postsRealtimeChannel=sb.channel('posts-feed')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},function(){
-      const feedArea=document.querySelector('.feed-area');
-      const scrollTop=feedArea?feedArea.scrollTop:window.scrollY;
-      if(scrollTop<100){
-        loadPosts();
-      } else {
-        const btn=document.getElementById('newPostsBtn');
-        if(btn) btn.style.display='block';
-      }
+      // Always show button — never auto-reload (would reset scroll position)
+      const btn=document.getElementById('newPostsBtn');
+      if(btn) btn.style.display='inline-block';
     })
     .subscribe();
-  // Auto-refresh every 15 seconds as reliable fallback
+  // Fallback: check for new posts every 15s — only show button, never auto-scroll
   clearInterval(_feedRefreshTimer);
-  _feedRefreshTimer=setInterval(function(){
+  _feedRefreshTimer=setInterval(async function(){
     const feedView=document.getElementById('view-feed');
     if(!feedView||feedView.style.display==='none') return;
-    const feedArea=document.querySelector('.feed-area');
-    const scrollTop=feedArea?feedArea.scrollTop:window.scrollY;
-    if(scrollTop<100) loadPosts();
-    else{
-      const btn=document.getElementById('newPostsBtn');
-      if(btn) btn.style.display='block';
-    }
+    try{
+      const {count}=await sb.from('posts').select('*',{count:'exact',head:true});
+      const currentCount=document.getElementById('postsList')?.children?.length||0;
+      if(count&&count>currentCount){
+        const btn=document.getElementById('newPostsBtn');
+        if(btn) btn.style.display='inline-block';
+      }
+    }catch(e){}
   },15000);
 }
 
