@@ -23,7 +23,9 @@
 <meta name="twitter:title" content="OpenGate — Post. Earn. Own."/>
 <meta name="twitter:description" content="Web3 social platform. Earn GATE tokens from likes."/>
 <meta name="twitter:image" content="/icon-512.png"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="google" content="notranslate"/>
+<meta http-equiv="Content-Language" content="en"/>
 <title>OpenGate — Post. Earn. Own.</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -220,6 +222,14 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 #toast.ok{border-color:rgba(38,217,138,.3);color:var(--green);}
 #toast.err{border-color:rgba(255,77,77,.3);color:var(--red);}
 
+/* PULL TO REFRESH */
+#ptr-indicator{position:fixed;top:56px;left:50%;transform:translateX(-50%) translateY(-60px);z-index:200;background:var(--bg2);border:1px solid var(--border-g);border-radius:100px;padding:8px 18px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--gold);box-shadow:0 4px 16px rgba(0,0,0,.4);transition:transform .2s ease,opacity .2s;opacity:0;pointer-events:none;}
+#ptr-indicator.visible{opacity:1;}
+#ptr-indicator.ready{color:var(--green);border-color:rgba(38,217,138,.4);}
+.ptr-spinner{width:16px;height:16px;border:2px solid rgba(245,200,66,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+.ptr-indicator.ready .ptr-spinner{border-top-color:var(--green);border-color:rgba(38,217,138,.3);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
 /* FADE */
 .fade{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease;}
 .fade.in{opacity:1;transform:translateY(0);}
@@ -345,22 +355,152 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 .app-empty-ico{font-size:40px;margin-bottom:12px;}
 
 /* MOB NAV */
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(8,9,12,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100;}
-@media(max-width:900px){
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(8,9,12,.97);backdrop-filter:blur(20px);border-top:1px solid var(--border);z-index:100;height:60px;}
+.mob-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;background:none;border:none;color:var(--muted);font-size:9px;font-weight:600;cursor:pointer;transition:color .2s;-webkit-tap-highlight-color:transparent;position:relative;}
+.mob-btn.active,.mob-btn:hover{color:var(--gold);}
+.mob-ico{font-size:22px;line-height:1;}
+
+/* DRAWER */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;-webkit-tap-highlight-color:transparent;}
+.drawer-overlay.open{display:block;}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:280px;background:var(--bg2);border-right:1px solid var(--border);z-index:160;transform:translateX(-100%);transition:transform .25s ease;overflow-y:auto;display:flex;flex-direction:column;}
+.drawer.open{transform:translateX(0);}
+.drawer-header{padding:20px 16px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.drawer-av{width:48px;height:48px;border-radius:50%;background:var(--bg3);border:2px solid var(--border-g);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;}
+.drawer-av img{width:100%;height:100%;object-fit:cover;}
+.drawer-name{font-size:15px;font-weight:700;margin-bottom:2px;}
+.drawer-addr{font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;}
+.drawer-body{padding:12px 8px;flex:1;}
+.drawer-lbl{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 10px 4px;}
+.drawer-btn{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;border:none;background:none;width:100%;text-align:left;-webkit-tap-highlight-color:transparent;}
+.drawer-btn:active{background:var(--bg3);}
+.drawer-btn.active{background:rgba(245,200,66,0.1);color:var(--gold);}
+.drawer-ico{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
+.drawer-badge{background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:auto;}
+.app-nav-menu-btn{display:none;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;overflow:hidden;background:var(--bg3);border:2px solid var(--border-g);cursor:pointer;-webkit-tap-highlight-color:transparent;flex-shrink:0;}
+
+/* ── RESPONSIVE — всі пристрої ── */
+
+/* Планшет горизонтальний (1024px+) — десктоп лейаут */
+@media(min-width:1024px){
+  .app-layout{grid-template-columns:240px 1fr 280px;}
+  .app-sl,.app-sr{display:block;}
+  .mob-nav{display:none!important;}
+  .app-nav-menu-btn{display:none!important;}
+  #app-nav .back-to-landing{display:block;}
+}
+
+/* Планшет портрет (768–1023px) — без правої панелі */
+@media(min-width:768px) and (max-width:1023px){
+  .app-layout{grid-template-columns:200px 1fr;max-width:100%;}
+  .app-sl{display:block;padding:16px 10px;}
+  .app-sr{display:none;}
+  .mob-nav{display:none!important;}
+  .app-nav-menu-btn{display:none!important;}
+  #app-nav .back-to-landing{display:block;}
+  .side-btn{font-size:13px;padding:8px 10px;}
+  .app-layout{padding-top:56px;}
+}
+
+/* Мобільний (до 767px) */
+@media(max-width:767px){
+  .app-sl,.app-sr{display:none!important;}
+  #app-nav .back-to-landing{display:none;}
+  .app-nav-menu-btn{display:flex!important;}
+  .new-post-nav-btn{display:none!important;}
   .mob-nav{display:flex;}
-  .mob-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px;background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;transition:color .2s;}
-  .mob-btn.active,.mob-btn:hover{color:var(--gold);}
+  #page-app{padding-bottom:64px;}
+
+  /* Шрифти та відступи */
+  .post-card{padding:12px 14px;}
+  .post-txt{font-size:14px;}
+  .post-hdr{gap:6px;}
+  .post-name{font-size:13px;}
+  .post-wlt{font-size:11px;}
+  .post-time{font-size:11px;}
+  .post-av{width:36px;height:36px;}
+  .comp-av{width:36px;height:36px;}
+  .feed-hdr{font-size:15px;padding:12px 14px;}
+  .feed-tab{font-size:13px;padding:11px;}
+
+  /* Composer */
+  .comp-input{font-size:15px;}
+  .composer{padding:12px 14px;}
+
+  /* App nav */
+  #app-nav{padding:0 12px;height:52px;}
+  #connectBtn{font-size:12px;padding:6px 10px;}
+  .app-nav-logo{font-size:15px;}
+  .app-nav-logo img{width:26px;height:26px;}
+
+  /* Модальні вікна — повна ширина знизу на мобільному */
+  .modal-overlay{align-items:flex-end;padding:0;}
+  .modal-overlay > div, .modal-overlay > .modal{
+    border-radius:20px 20px 0 0!important;
+    max-width:100%!important;
+    width:100%!important;
+    padding:24px 20px 32px!important;
+    max-height:90vh;
+    overflow-y:auto;
+  }
+  .edit-modal-inner{border-radius:20px 20px 0 0!important;max-width:100%!important;width:100%!important;}
+
+  /* Контент вкладок */
+  #view-faucet > div, #view-lending > div,
+  #view-presale > div > div, #view-staking > div,
+  #view-launchpad > div{padding:12px 14px!important;}
+
+  /* Battleship boards */
+  #myBoard, #enemyBoard{max-width:calc(50vw - 24px)!important;}
+
+  /* Battleship layout — стаки вертикально на мобільному */
+  #battleGame > div:nth-child(2){flex-direction:column!important;gap:12px!important;padding:10px!important;}
+  #battleGame > div:nth-child(2) > div{min-width:unset!important;width:100%!important;}
+  #myBoard, #enemyBoard{max-width:min(300px, calc(100vw - 32px))!important;margin:0 auto!important;}
+
+  /* Dice кнопки числа — менші на мобільному */
+  #dguess1,#dguess2,#dguess3,#dguess4,#dguess5,#dguess6{width:38px!important;height:38px!important;font-size:15px!important;}
+  /* Dice ставки */
+  #dbet50,#dbet100,#dbet200,#dbet500{font-size:13px!important;padding:8px 4px!important;}
+}
+
+/* iPhone SE / маленькі телефони (до 375px) */
+@media(max-width:375px){
+  .mob-btn{font-size:8px;}
   .mob-ico{font-size:20px;}
-  #page-app{padding-bottom:70px;}
+  .post-txt{font-size:13px;}
+  #app-nav{padding:0 10px;}
+  #connectBtn{font-size:11px;padding:5px 8px;}
+  .hero-title{font-size:42px;}
 }
+
+/* iPad Pro / великі планшети (1024–1366px) */
+@media(min-width:1024px) and (max-width:1366px){
+  .app-layout{max-width:100%;grid-template-columns:220px 1fr 260px;}
+}
+
+/* Landscape мобільний */
+@media(max-width:767px) and (orientation:landscape){
+  .mob-nav{height:50px;}
+  .mob-btn{padding:4px;}
+  .mob-ico{font-size:18px;}
+  #page-app{padding-bottom:54px;}
+  #app-nav{height:48px;}
+  .app-layout{padding-top:48px;}
+}
+
 @media(max-width:680px){
-  #landing-nav{padding:0 16px;}
+  #landing-nav{padding:0 14px;}
   .nav-links{display:none;}
-  .section{padding:60px 16px;}
-  #hero{padding:80px 16px 50px;}
-  .hero-numbers{gap:28px;}
-  footer{padding:36px 16px 24px;}
+  .section{padding:56px 14px;}
+  #hero{padding:76px 14px 44px;}
+  .hero-numbers{gap:20px;padding-top:28px;}
+  .hero-num{font-size:26px;}
+  footer{padding:32px 14px 20px;}
+  .hero-btns{flex-direction:column;align-items:center;}
+  .btn-gold,.btn-outline{width:100%;max-width:320px;text-align:center;}
 }
+
 </style>
 </head>
 <body>
@@ -417,23 +557,47 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 
 <!-- WALLET SELECTION MODAL -->
 <div class="modal-overlay" id="walletModal">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:380px;position:relative;">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:360px;position:relative;">
     <button class="modal-close-btn" onclick="document.getElementById('walletModal').classList.remove('open')">✕</button>
-    <div style="font-size:20px;font-weight:700;margin-bottom:6px;">Connect Wallet</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Choose your wallet to continue</div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:22px;font-weight:700;margin-bottom:4px;">Підключити гаманець</div>
+      <div style="font-size:13px;color:var(--muted);">Обери спосіб підключення</div>
+    </div>
     <div style="display:flex;flex-direction:column;gap:10px;">
-      <button onclick="connectWithWallet('metamask')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-align:left;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" style="width:36px;height:36px;"/>
-        <div><div style="font-size:15px;font-weight:700;color:var(--text);">MetaMask</div><div style="font-size:12px;color:var(--muted);">Most popular browser wallet</div></div>
+
+      <!-- MetaMask — завжди показується, deeplink на мобільному -->
+      <button onclick="connectWithWallet('metamask')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg3);border:2px solid rgba(245,200,66,0.3);border-radius:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" style="width:40px;height:40px;flex-shrink:0;"/>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">MetaMask</div>
+          <div style="font-size:12px;color:var(--muted);" id="mmDesc">Підключити або відкрити в додатку</div>
+        </div>
+        <div style="font-size:18px;">→</div>
       </button>
-      <button onclick="connectWithWallet('trust')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-align:left;" onmouseover="this.style.borderColor='#3375BB'" onmouseout="this.style.borderColor='var(--border)'">
-        <img src="https://trustwallet.com/assets/images/media/assets/trust_platform.svg" style="width:36px;height:36px;border-radius:8px;" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><rect width=%2236%22 height=%2236%22 rx=%228%22 fill=%22%233375BB%22/><text y=%2226%22 x=%224%22 font-size=%2222%22>🛡</text></svg>'"/>
-        <div><div style="font-size:15px;font-weight:700;color:var(--text);">Trust Wallet</div><div style="font-size:12px;color:var(--muted);">Mobile & browser wallet</div></div>
+
+      <!-- Trust Wallet -->
+      <button onclick="connectWithWallet('trust')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg3);border:2px solid rgba(51,117,187,0.3);border-radius:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;">
+        <div style="width:40px;height:40px;border-radius:10px;background:#3375BB;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🛡</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">Trust Wallet</div>
+          <div style="font-size:12px;color:var(--muted);">Підключити або відкрити в додатку</div>
+        </div>
+        <div style="font-size:18px;">→</div>
       </button>
-      <button onclick="connectWithWallet('injected')" style="display:flex;align-items:center;gap:14px;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:all .2s;text-align:left;" onmouseover="this.style.borderColor='var(--muted)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="width:36px;height:36px;border-radius:8px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;">🔗</div>
-        <div><div style="font-size:15px;font-weight:700;color:var(--text);">Other Wallet</div><div style="font-size:12px;color:var(--muted);">Any injected Web3 wallet</div></div>
+
+      <!-- Other -->
+      <button onclick="connectWithWallet('injected')" style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔗</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);">Інший гаманець</div>
+          <div style="font-size:12px;color:var(--muted);">Будь-який Web3 гаманець</div>
+        </div>
       </button>
+
+      <!-- Info для мобільного -->
+      <div id="mobileWalletHint" style="display:none;background:rgba(245,200,66,0.05);border:1px solid var(--border-g);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);line-height:1.6;text-align:center;">
+        📱 Натисни MetaMask або Trust Wallet вище — ми відкриємо сайт прямо в браузері додатку
+      </div>
     </div>
   </div>
 </div>
@@ -686,9 +850,9 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <button class="new-post-nav-btn" id="newPostBtn" onclick="focusComposer()">✍️ Post</button>
       <button id="pwaInstallBtn" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="installPWA()">📲 Install</button>
       <button id="connectBtn" onclick="connectWallet()"><div class="w-dot"></div>Connect Wallet</button>
+      <button class="app-nav-menu-btn" id="drawerOpenBtn" onclick="openDrawer()"><span id="drawerBtnContent">☰</span></button>
     </div>
   </nav>
-
   <div class="app-layout">
     <div class="app-sl">
       <div class="side-sec">
@@ -721,7 +885,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <div id="view-feed">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Home</span>
-          <button id="newPostsBtn" onclick="loadPosts()" style="display:none;background:rgba(245,200,66,0.92);backdrop-filter:blur(12px);color:#08090C;border-radius:20px;padding:8px 20px;font-size:13px;font-weight:700;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(245,200,66,0.4);transition:all .2s;white-space:nowrap;">↻ New posts</button>
+          <button id="newPostsBtn" onclick="loadPosts()" style="display:none;background:var(--gold);color:#08090C;border-radius:20px;padding:4px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;">↻ New posts</button>
         </div>
         <div class="feed-tabs">
           <button class="feed-tab active" onclick="switchFeedTab('all',this)">All Posts</button>
@@ -1196,7 +1360,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         </div>
 
         <!-- Listings grid -->
-        <div id="marketListings" style="padding:16px 20px;">
+        <div id="marketListings" style="padding:12px;">
           <div class="app-loader">Loading listings...</div>
         </div>
       </div>
@@ -1491,24 +1655,58 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     </div>
   </div>
 
+  <!-- PULL TO REFRESH INDICATOR -->
+  <div id="ptr-indicator"><div class="ptr-spinner"></div><span id="ptr-text">Pull to refresh</span></div>
+
+  <!-- DRAWER OVERLAY -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+  <!-- DRAWER MENU -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-header">
+      <div class="drawer-av" id="drawerAv" onclick="closeDrawer();showTab('profile')">🧑</div>
+      <div style="flex:1;min-width:0;">
+        <div class="drawer-name" id="drawerName">OpenGate</div>
+        <div class="drawer-addr" id="drawerAddr">Connect wallet →</div>
+      </div>
+      <button onclick="closeDrawer()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px;">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-lbl">Main</div>
+      <button class="drawer-btn active" id="drawer-feed" onclick="closeDrawer();showTab('feed')"><span class="drawer-ico">🏠</span>Home Feed</button>
+      <button class="drawer-btn" id="drawer-profile" onclick="closeDrawer();showTab('profile')"><span class="drawer-ico">👤</span>My Profile</button>
+      <button class="drawer-btn" id="drawer-notifs" onclick="closeDrawer();showTab('notifs')"><span class="drawer-ico">🔔</span>Notifications<span class="drawer-badge" id="drawerNotifBadge" style="display:none;"></span></button>
+      <button class="drawer-btn" id="drawer-messages" onclick="closeDrawer();showTab('messages')"><span class="drawer-ico">💬</span>Messages<span class="drawer-badge" id="drawerUnreadBadge" style="display:none;"></span></button>
+      <button class="drawer-btn" id="drawer-explore" onclick="closeDrawer();showTab('explore')"><span class="drawer-ico">🔍</span>Explore</button>
+
+      <div class="drawer-lbl">DeFi</div>
+      <button class="drawer-btn" onclick="closeDrawer();window.open('https://www.easyswap.life','_blank')"><span class="drawer-ico">🟡</span>Buy GATE</button>
+      <button class="drawer-btn" id="drawer-staking" onclick="closeDrawer();showTab('staking')"><span class="drawer-ico">💎</span>Staking</button>
+      <button class="drawer-btn" id="drawer-lending" onclick="closeDrawer();showTab('lending')"><span class="drawer-ico">🏦</span>Lending</button>
+      <button class="drawer-btn" id="drawer-presale" onclick="closeDrawer();showTab('presale')"><span class="drawer-ico">🚀</span>Presale</button>
+
+      <div class="drawer-lbl">Play</div>
+      <button class="drawer-btn" id="drawer-games" onclick="closeDrawer();showTab('games')"><span class="drawer-ico">🎮</span>Games</button>
+      <button class="drawer-btn" id="drawer-lottery" onclick="closeDrawer();showTab('lottery')"><span class="drawer-ico">🎰</span>Lottery</button>
+
+      <div class="drawer-lbl">More</div>
+      <button class="drawer-btn" id="drawer-market" onclick="closeDrawer();showTab('market')"><span class="drawer-ico">🛒</span>NFT Market</button>
+      <button class="drawer-btn" id="drawer-launchpad" onclick="closeDrawer();showTab('launchpad')"><span class="drawer-ico">🪙</span>Launchpad</button>
+      <button class="drawer-btn" id="drawer-faucet" onclick="closeDrawer();showTab('faucet')"><span class="drawer-ico">🚰</span>Faucet</button>
+
+      <div style="padding:16px 12px 8px;">
+        <button onclick="closeDrawer();goLanding()" style="width:100%;padding:10px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;">← Landing Page</button>
+        <button onclick="closeDrawer();triggerInstall()" id="drawerInstallBtn" style="display:none;width:100%;padding:11px;border-radius:10px;background:linear-gradient(135deg,rgba(245,200,66,0.15),rgba(38,217,138,0.08));border:1px solid var(--border-g);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;">📲 Встановити як додаток</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV — 4 tabs only -->
   <div class="mob-nav">
-    <button class="mob-btn active" onclick="showTab('feed')"><span class="mob-ico">🏠</span>Feed</button>
-    <button class="mob-btn" onclick="showTab('profile')"><span class="mob-ico">👤</span>Profile</button>
-    <button class="mob-btn" onclick="focusComposer();showTab('feed')"><span class="mob-ico">✍️</span>Post</button>
-    <button class="mob-btn" onclick="window.open('https://www.easyswap.life','_blank')"><span class="mob-ico">🟡</span>GATE</button>
-    <button class="mob-btn" onclick="showTab('staking')"><span class="mob-ico">💎</span>Stake</button>
-
-    <button class="mob-btn" onclick="showTab('lending')"><span class="mob-ico">🏦</span>Lend</button>
-    
-    
-    
-
-    <button class="mob-btn" onclick="showTab('market')"><span class="mob-ico">🛒</span>Market</button>
-    <button class="mob-btn" onclick="showTab('explore')"><span class="mob-ico">🔍</span>Explore</button>
-    <button class="mob-btn" onclick="showTab('notifs')"><span class="mob-ico">🔔</span>Notifs</button>
-    <button class="mob-btn" onclick="showTab('launchpad')"><span class="mob-ico">🪙</span>Launch</button>
-    <button class="mob-btn" onclick="showTab('presale')"><span class="mob-ico">🚀</span>Presale</button>
-    <button class="mob-btn" onclick="showTab('messages')"><span class="mob-ico">💬</span>DMs</button>
+    <button class="mob-btn active" id="mobbtn-feed" onclick="showTab('feed')"><span class="mob-ico">🏠</span>Feed</button>
+    <button class="mob-btn" id="mobbtn-post" onclick="focusComposer();showTab('feed')"><span class="mob-ico" style="width:42px;height:42px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:2px;margin-top:-10px;box-shadow:0 4px 12px rgba(245,200,66,.4);">✍️</span>Post</button>
+    <button class="mob-btn" id="mobbtn-notifs" onclick="showTab('notifs')" style="position:relative;"><span class="mob-ico">🔔</span>Notifs<span id="mobNotifDot" style="display:none;position:absolute;top:6px;right:calc(50% - 14px);width:8px;height:8px;border-radius:50%;background:var(--red);"></span></button>
+    <button class="mob-btn" id="mobbtn-menu" onclick="openDrawer()"><span class="mob-ico">☰</span>More</button>
   </div>
 </div>
 
@@ -1679,22 +1877,57 @@ function openApp(){
   loadPosts();
   subscribeToNewPosts();
   if(userAddr) loadGateBal();
+  // Show lang picker
+  var lp=document.getElementById('langPicker');
+  if(!lp){buildLangPicker();lp=document.getElementById('langPicker');}
+  if(lp)lp.style.display='flex';
+  applyLang();
 }
 function goLanding(){
   document.getElementById('page-app').classList.remove('active');
   document.getElementById('page-landing').classList.add('active');
   window.scrollTo(0,0);
+  // Hide lang picker
+  var lp=document.getElementById('langPicker');
+  if(lp)lp.style.display='none';
 }
 function scrollSec(id){ document.querySelector(id)?.scrollIntoView({behavior:'smooth'}); }
 
 // ── WALLET (ethers v6) ──
 async function connectWithWallet(type){
   document.getElementById('walletModal').classList.remove('open');
+
+  // Helper: check if MetaMask is available
+  function hasMetaMask(){
+    if(window.ethereum?.isMetaMask) return true;
+    if(window.ethereum?.providers) return window.ethereum.providers.some(p=>p.isMetaMask);
+    return false;
+  }
+  function hasTrust(){
+    return !!(window.trustwallet||window.ethereum?.isTrust||window.ethereum?.isTrustWallet);
+  }
+
+  if(type==='metamask'){
+    if(hasMetaMask()){
+      // Pick MetaMask from providers array if multiple wallets
+      if(window.ethereum?.providers){
+        const mm=window.ethereum.providers.find(p=>p.isMetaMask);
+        if(mm) window.ethereum=mm;
+      }
+      await connectWallet(); return;
+    }
+    // MetaMask not in browser — deeplink to app
+    const pageUrl=window.location.href.replace(/^https?:\/\//,'');
+    window.location.href='https://metamask.app.link/dapp/'+pageUrl;
+    return;
+  }
   if(type==='trust'){
-    // Trust Wallet injects as window.ethereum on mobile
-    if(!window.ethereum){
-      showToast('Open in Trust Wallet browser','err');
-      window.open('https://link.trustwallet.com/open_url?coin_id=60&url='+encodeURIComponent(window.location.href),'_blank');
+    if(window.trustwallet){ window.ethereum=window.trustwallet; }
+    else if(window.ethereum?.providers){
+      const tw=window.ethereum.providers.find(p=>p.isTrust||p.isTrustWallet);
+      if(tw){ window.ethereum=tw; }
+    } else if(!hasTrust()){
+      window.location.href='https://link.trustwallet.com/open_url?coin_id=60&url='+encodeURIComponent(window.location.href);
       return;
     }
   }
@@ -1703,47 +1936,19 @@ async function connectWithWallet(type){
 
 async function connectWallet(){
   if(!window.ethereum){
-    // Check for Trust Wallet specifically
-    if(window.trustwallet){
-      window.ethereum = window.trustwallet;
-    } else {
-      // Show wallet options modal
+    if(window.trustwallet) window.ethereum=window.trustwallet;
+    else{
       document.getElementById('walletModal').classList.add('open');
+      // Always show mobile hint — helpful on all phones
+      const h=document.getElementById('mobileWalletHint');
+      if(h)h.style.display='block';
       return;
     }
   }
   try{
-    provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send('eth_requestAccounts',[]);
-    signer = await provider.getSigner();
-    userAddr = (await signer.getAddress()).toLowerCase();
-    const btn = document.getElementById('connectBtn');
-    btn.classList.add('connected');
-    btn.innerHTML = `<div class="w-dot"></div>${userAddr.slice(0,6)}...${userAddr.slice(-4)}`;
-    document.getElementById('newPostBtn').classList.add('show');
-    document.getElementById('composer').classList.add('show');
-    await ensureUser();
-    loadGateBal();
-    loadPosts();
-    subscribeToNewPosts();
-    updateNotifBadge();
-    cleanupOldNotifications();
-    loadRewardsPool();
-    // Subscribe after userAddr confirmed
-    setTimeout(function(){
-      subscribeToConversations();
-      updateUnreadBadge();
-    }, 500);
-    // Realtime for notifications
-    try{
-      sb.channel('notifs-'+userAddr)
-        .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){
-          updateNotifBadge();
-        })
-        .subscribe();
-    }catch(e){}
-    subscribeToMyGameInvites();
-  } catch(e){ showToast('Connection cancelled','err'); }
+    const accounts=await window.ethereum.request({method:'eth_requestAccounts'});
+    if(accounts&&accounts.length>0) await _doConnect(accounts[0]);
+  }catch(e){ showToast('Connection cancelled','err'); }
 }
 
 async function switchToBNB(){
@@ -1845,10 +2050,18 @@ function showTab(tab){
   document.getElementById('view-games').style.display=tab==='games'?'block':'none';
   document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
   document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
+  // Scroll to top on mobile when switching tabs
+  window.scrollTo({top:0,behavior:'smooth'});
+  // Desktop sidebar
   document.querySelectorAll('.side-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+tab)?.classList.add('active');
-  document.querySelectorAll('.mob-btn').forEach((b,i)=>b.classList.toggle('active',(tab==='feed'&&i===0)||(tab==='profile'&&i===1)));
-  if(tab==='profile') loadProfile();
+  // Drawer
+  document.querySelectorAll('.drawer-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('drawer-'+tab)?.classList.add('active');
+  // Mobile bottom nav
+  document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('mobbtn-'+tab)?.classList.add('active');
+  if(tab==='feed') document.getElementById('mobbtn-feed')?.classList.add('active');  if(tab==='profile') loadProfile();
   if(tab==='staking'){ loadStakingInfo(); clearInterval(stakingTimer); stakingTimer=setInterval(loadStakingInfo,10000); }
   else clearInterval(stakingTimer);
   if(tab==='messages'){ loadConversations(); subscribeToConversations(); }
@@ -1881,6 +2094,8 @@ function showTab(tab){
   if(tab==='games'){}
   if(tab==='lending') loadLending();
   if(tab==='faucet') loadFaucet();
+  // Re-apply translations when switching tabs
+  if(currentLang&&currentLang!=='en') applyLang();
 }
 function switchFeedTab(tab,el){
   document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
@@ -2051,30 +2266,22 @@ async function createPost(){
   btn.disabled=false; btn.textContent='Post';
 }
 let postsRealtimeChannel=null;
-let _feedRefreshTimer=null;
 function subscribeToNewPosts(){
   if(postsRealtimeChannel) return;
   postsRealtimeChannel=sb.channel('posts-feed')
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},function(){
-      // Always show button — never auto-reload (would reset scroll position)
-      const btn=document.getElementById('newPostsBtn');
-      if(btn) btn.style.display='inline-block';
+      // If user is at top of feed — auto reload
+      // If scrolled down — show button instead
+      const feedArea=document.querySelector('.feed-area');
+      const scrollTop=feedArea?feedArea.scrollTop:window.scrollY;
+      if(scrollTop<100){
+        loadPosts();
+      } else {
+        const btn=document.getElementById('newPostsBtn');
+        if(btn) btn.style.display='block';
+      }
     })
     .subscribe();
-  // Fallback: check for new posts every 15s — only show button, never auto-scroll
-  clearInterval(_feedRefreshTimer);
-  _feedRefreshTimer=setInterval(async function(){
-    const feedView=document.getElementById('view-feed');
-    if(!feedView||feedView.style.display==='none') return;
-    try{
-      const {count}=await sb.from('posts').select('*',{count:'exact',head:true});
-      const currentCount=document.getElementById('postsList')?.children?.length||0;
-      if(count&&count>currentCount){
-        const btn=document.getElementById('newPostsBtn');
-        if(btn) btn.style.display='inline-block';
-      }
-    }catch(e){}
-  },15000);
 }
 
 async function loadPosts(){
@@ -2508,23 +2715,38 @@ async function uploadAvatarFile(input){
   const file=input.files[0];
   if(!file) return;
   const status=document.getElementById('uploadAvatarStatus');
-  // Show local preview immediately in thumb
+  // Show local preview immediately
   const localUrl=URL.createObjectURL(file);
   const thumb=document.getElementById('avatarThumb');
   if(thumb) thumb.innerHTML='<img src="'+localUrl+'" style="width:100%;height:100%;object-fit:cover;"/>';
-  status.textContent='Uploading...';
+  status.textContent='Завантаження...';
+  status.style.color='var(--muted)';
   try{
-    const url=await uploadToPinata(file);
+    // Avatar upload goes ONLY to Cloudinary — no wallet, no Supabase, no IPFS
+    // This prevents MetaMask from being triggered
+    let url='';
+    try{
+      url=await uploadToCloudinary(file);
+    }catch(e1){
+      // Fallback to Supabase storage (no wallet needed, just HTTP)
+      try{
+        url=await uploadToSupabase(file);
+      }catch(e2){
+        url=await uploadToPinataOnly(file);
+      }
+    }
     document.getElementById('editAvatar').value=url;
     const thumb2=document.getElementById('avatarThumb');
     if(thumb2) thumb2.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;"/>';
-    status.textContent='✓ Done! Click Save Profile';
+    status.textContent='✓ Готово! Натисни "Зберегти профіль"';
     status.style.color='var(--green)';
-    showToast('Photo ready! Click Save Profile ✓','ok');
+    showToast('Фото готове! ✓','ok');
   }catch(e){
-    status.textContent='Upload failed. Try again.';
-    status.style.color='var(--red)';
-    showToast('Upload failed','err');
+    // If all fail — use local object URL (works for this session)
+    document.getElementById('editAvatar').value=localUrl;
+    status.textContent='⚠️ Збережено локально. Натисни "Зберегти профіль"';
+    status.style.color='var(--gold)';
+    showToast('Використовуємо локальне фото','ok');
   }
 }
 function closeEditModal(){document.getElementById('editModal').classList.remove('open');}
@@ -2714,12 +2936,11 @@ async function borrowZkWithGATE(){
   if(!amt||parseFloat(amt)<=0){showToast('Enter collateral amount','err');return;}
   try{
     await switchToLitVM();
-    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
-    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,signer);
+    const freshSigner=await provider.getSigner();
     const amount=ethers.parseEther(amt);
-    showToast('Approving GATE...','ok');
-    await (await gate.approve(GATE_LENDING,amount)).wait();
+    await smartApprove(GATE_LENDING, amount, freshSigner);
     showToast('Borrowing zkLTC...','ok');
+    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,freshSigner);
     const tx=await lend.borrowZkWithGate(amount);
     await tx.wait();
     showToast('zkLTC borrowed! 🎉','ok');
@@ -2777,11 +2998,10 @@ async function loadMyLoans(){
 async function repayZkLoan(loanId, totalDue){
   try{
     await switchToLitVM();
-    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,signer);
-    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,signer);
+    const freshSigner=await provider.getSigner();
+    const lend=new ethers.Contract(GATE_LENDING,LENDING_ABI,freshSigner);
     const amount=ethers.parseEther(totalDue);
-    showToast('Approving GATE...','ok');
-    await (await gate.approve(GATE_LENDING,amount)).wait();
+    await smartApprove(GATE_LENDING, amount, freshSigner);
     showToast('Repaying loan...','ok');
     await (await lend.repayGateWithZk(loanId)).wait();
     showToast('Loan repaid! zkLTC returned 🎉','ok');
@@ -3196,10 +3416,10 @@ async function bsResumeGame(gameDbId,gameData){
       .subscribe(function(status){
         if(status==='SUBSCRIBED'){
           addBattleLog('🔴 Live');
-          bsTimer=setInterval(bsPollGame,3000);
+          bsTimer=setInterval(bsPollGame,5000);
         } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
           addBattleLog('⚠️ Using polling...');
-          bsTimer=setInterval(bsPollGame,3000);
+          bsTimer=setInterval(bsPollGame,5000);
         }
       });
 
@@ -3246,10 +3466,10 @@ function bsJoinPvP(gameDbId){
       if(status==='SUBSCRIBED'){
         addBattleLog('🔴 Live');
         // Start lightweight polling as backup (every 3s)
-        bsTimer=setInterval(bsPollGame,3000);
+        bsTimer=setInterval(bsPollGame,5000);
       } else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
         addBattleLog('⚠️ Using polling...');
-        bsTimer=setInterval(bsPollGame,3000);
+        bsTimer=setInterval(bsPollGame,5000);
       }
     });
 
@@ -3838,14 +4058,14 @@ async function rollDice(){
   if(!diceGuess){showToast('Pick a number first','err');return;}
   const btn=document.getElementById('rollBtn');
   if(diceToken==='zkLTC'){showToast('zkLTC dice coming soon! Use GATE for now.','err');return;}
+  btn.textContent='⏳ Checking...';btn.disabled=true;
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
     const amount=ethers.parseEther(diceBet.toString());
-    showToast('Approving GATE...','ok');
-    await (await gate.approve(GATE_DICE,amount)).wait();
-    btn.textContent='Rolling...';btn.disabled=true;
+    // Smart approve — skips tx if allowance already sufficient
+    await smartApprove(GATE_DICE, amount, freshSigner);
+    btn.textContent='🎲 Rolling...';
     const DICE_IFACE=new ethers.Interface(['function roll(uint8 guess, uint256 bet)']);
     const tx=await freshSigner.sendTransaction({to:GATE_DICE,data:DICE_IFACE.encodeFunctionData('roll',[diceGuess,amount])});
     const receipt=await tx.wait();
@@ -3955,14 +4175,13 @@ async function loadLotteryWinners(lottery, currentRoundId){
 async function buyLotteryTicket(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const btn=document.getElementById('buyTicketBtn');
+  btn.textContent='⏳ Checking...';btn.disabled=true;
   try{
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);
     const amount=ethers.parseEther((lotteryQty*10).toString());
-    showToast('Approving GATE...','ok');
-    await (await gate.approve(GATE_LOTTERY,amount)).wait();
-    btn.textContent='Buying...';btn.disabled=true;
+    await smartApprove(GATE_LOTTERY, amount, freshSigner);
+    btn.textContent='🎟️ Buying...';
     const LOTTERY_IFACE=new ethers.Interface(['function buyTicket(uint256 qty)']);
     const tx=await freshSigner.sendTransaction({to:GATE_LOTTERY,data:LOTTERY_IFACE.encodeFunctionData('buyTicket',[BigInt(lotteryQty)])});
     await tx.wait();
@@ -4073,7 +4292,7 @@ async function loadMarketplace(){
     }
     document.getElementById('mktListings').textContent=active.length;
     const grid=document.createElement('div');
-    grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;';
+    grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,45vw),1fr));gap:10px;';
     document.getElementById('marketListings').innerHTML='';
     document.getElementById('marketListings').appendChild(grid);
 
@@ -4097,7 +4316,9 @@ async function loadMarketplace(){
       const priceEth=parseFloat(ethers.formatEther(priceWei)).toFixed(4);
 
       const card=document.createElement('div');
-      card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;';
+      card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .15s;cursor:pointer;';
+      card.onmouseover=function(){this.style.transform='translateY(-2px)';};
+      card.onmouseout=function(){this.style.transform='none';};
       // Image
       const imgDiv=document.createElement('div');
       imgDiv.style.cssText='aspect-ratio:1;background:var(--bg3);overflow:hidden;position:relative;';
@@ -4106,7 +4327,6 @@ async function loadMarketplace(){
         im.loading='lazy';
         im.style.cssText='width:100%;height:100%;object-fit:cover;';
         im.alt=name;
-        // Try gateways in order until one works
         const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;
@@ -4116,32 +4336,32 @@ async function loadMarketplace(){
           if(_gwIdx<_gateways.length){
             this.src=_gateways[_gwIdx];
           } else {
-            imgDiv.innerHTML='<div style="font-size:36px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
+            imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
           }
         };
         imgDiv.appendChild(im);
       } else {
-        imgDiv.innerHTML='<div style="font-size:36px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
+        imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
       }
-      // Info
+      // Info — компактний для мобільного
       const info=document.createElement('div');
-      info.style.cssText='padding:12px;';
-      info.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:4px;">'+esc(name)+'</div>'
-        +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px;">by '+sAddr(l.seller)+'</div>'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;">'
-        +'<div style="font-family:monospace;font-size:14px;font-weight:700;color:var(--gold);">'+priceEth+' zkLTC</div>'
+      info.style.cssText='padding:8px 10px 10px;';
+      info.innerHTML=
+        '<div style="font-size:12px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(name)+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">'+sAddr(l.seller)+'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">'
+        +'<div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--gold);">'+priceEth+'<span style="font-size:10px;color:var(--muted);"> zkLTC</span></div>'
         +'</div>';
-      // Button
       const btnWrap=info.querySelector('div:last-child');
       const btn=document.createElement('button');
       if(isOwn){
-        btn.textContent='Cancel';
-        btn.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--red);border-radius:8px;padding:6px 10px;font-size:11px;cursor:pointer;';
-        btn.onclick=(function(idx){return function(){cancelNFTListing(idx);};})(listingIdx);
+        btn.textContent='✕ Cancel';
+        btn.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:6px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;';
+        btn.onclick=(function(idx){return function(e){e.stopPropagation();cancelNFTListing(idx);};})(listingIdx);
       } else {
         btn.textContent='Buy';
-        btn.style.cssText='background:var(--gold);color:#08090C;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;';
-        btn.onclick=(function(idx,pw){return function(){buyNFT(idx,pw);};})(listingIdx,priceWei);
+        btn.style.cssText='background:var(--gold);color:#08090C;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;';
+        btn.onclick=(function(idx,pw){return function(e){e.stopPropagation();buyNFT(idx,pw);};})(listingIdx,priceWei);
       }
       btnWrap.appendChild(btn);
       card.appendChild(imgDiv);card.appendChild(info);
@@ -4332,11 +4552,15 @@ async function markAllRead(){
 }
 async function updateNotifBadge(){
   if(!userAddr)return;
-  // Bell = likes, follows, challenges (not DMs)
   const {count}=await sb.from('notifications').select('*',{count:'exact',head:true})
     .eq('to_wallet',userAddr).eq('read',false).neq('type','dm');
   const badge=document.getElementById('notifBadge');
   if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}
+  // Sync to drawer + mob nav dot
+  const db=document.getElementById('drawerNotifBadge');
+  const md=document.getElementById('mobNotifDot');
+  if(db){if(count>0){db.style.display='inline';db.textContent=count;}else db.style.display='none';}
+  if(md)md.style.display=count>0?'block':'none';
 }
 async function updateUnreadBadge(){
   if(!userAddr)return;
@@ -4344,6 +4568,8 @@ async function updateUnreadBadge(){
     .eq('to_wallet',userAddr).eq('read',false);
   const badge=document.getElementById('unreadBadge');
   if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}
+  const db=document.getElementById('drawerUnreadBadge');
+  if(db){if(count>0){db.style.display='inline';db.textContent=count;}else db.style.display='none';}
 }
 async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===toWallet)return;try{await sb.from('notifications').insert({to_wallet:toWallet,from_wallet:userAddr,type,post_id:postId||undefined});}catch(e){}}
 
@@ -4378,9 +4604,7 @@ function subscribeToConversations(){
     })
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
-        // Reset so it can be recreated
         convsRealtimeChannel=null;
-        // Increase polling to compensate
         clearInterval(_msgPollTimer);
         _msgPollTimer=setInterval(async function(){
           if(!userAddr)return;
@@ -4391,14 +4615,13 @@ function subscribeToConversations(){
               const convList=document.getElementById('convList');
               if(convList&&convList.style.display!=='none')loadConversations();
             }
-            // Also refresh active DM
             if(currentDMWallet) loadMessages();
           }catch(e){}
-        },2000);
+        },15000); // fallback: every 15s (not 2s)
       }
     });
 
-  // Polling backup every 3s - also refreshes active DM view
+  // Polling backup — only when Realtime may miss something
   clearInterval(_msgPollTimer);
   _msgPollTimer=setInterval(async function(){
     if(!userAddr) return;
@@ -4412,10 +4635,13 @@ function subscribeToConversations(){
         const convList=document.getElementById('convList');
         if(convList&&convList.style.display!=='none') loadConversations();
       }
-      // Always refresh active DM view (catches outgoing msgs too)
-      if(currentDMWallet) loadMessages();
+      // Refresh DM only if tab is open
+      if(currentDMWallet){
+        const mv=document.getElementById('view-messages');
+        if(mv&&mv.style.display!=='none') loadMessages();
+      }
     }catch(e){}
-  },3000);
+  },20000); // every 20s instead of 3s — Realtime handles instant delivery
 }
 
 function handleNewMessage(m){
@@ -4515,12 +4741,12 @@ async function openDM(wallet){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
         // Fallback: increase polling frequency
         clearInterval(dmTimer);
-        dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},2000);
+        dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},10000);
       }
     });
-  // Polling backup for active DM every 5s (Realtime handles instant delivery)
+  // Polling backup for active DM — Realtime handles instant delivery
   clearInterval(dmTimer);
-  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},5000);
+  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},15000);
 }
 function openDMByAddr(){const addr=document.getElementById('newDmAddr').value.trim().toLowerCase();if(!addr||!addr.startsWith('0x')){showToast('Enter valid address','err');return;}openDM(addr);}
 function showConvList(){
@@ -4539,15 +4765,32 @@ async function loadMessages(){
   const el=document.getElementById('msgList');
   const {data:msgs}=await sb.from('messages').select('*').or('and(from_wallet.eq.'+userAddr+',to_wallet.eq.'+currentDMWallet+'),and(from_wallet.eq.'+currentDMWallet+',to_wallet.eq.'+userAddr+')').order('created_at',{ascending:true});
   if(!msgs||msgs.length===0){el.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;">No messages yet 👋</div>';return;}
-  const atBottom=(el.scrollHeight-el.scrollTop<=el.clientHeight+80)||(el.scrollHeight===0);
   el.innerHTML='';
-  msgs.forEach(function(m){
+  msgs.forEach(function(m,idx){
     const mine=m.from_wallet===userAddr;
+    const prev=msgs[idx-1];
+    const next=msgs[idx+1];
+    const sameAsPrev=prev&&prev.from_wallet===m.from_wallet;
+    const sameAsNext=next&&next.from_wallet===m.from_wallet;
+    // Group bubbles: first/middle/last in a sequence
+    const isFirst=!sameAsPrev;
+    const isLast=!sameAsNext;
+
     const wrap=document.createElement('div');
-    wrap.style.cssText='display:flex;justify-content:'+(mine?'flex-end':'flex-start')+';';
+    wrap.style.cssText='display:flex;justify-content:'+(mine?'flex-end':'flex-start')+';margin-bottom:'+(isLast?'8px':'2px')+';';
+
     const bubble=document.createElement('div');
-    bubble.style.cssText='max-width:70%;background:'+(mine?'var(--gold)':'var(--bg3)')+';color:'+(mine?'#08090C':'var(--text)')+';border-radius:'+(mine?'18px 18px 4px 18px':'18px 18px 18px 4px')+';padding:10px 14px;font-size:14px;line-height:1.5;';
+    // Rounded corners based on position in group
+    let radius;
+    if(mine){
+      radius=isFirst&&isLast?'18px 18px 4px 18px':isFirst?'18px 18px 4px 4px':isLast?'4px 18px 18px 4px':'4px 18px 18px 4px';
+    } else {
+      radius=isFirst&&isLast?'18px 18px 18px 4px':isFirst?'4px 18px 4px 4px':isLast?'4px 18px 18px 18px':'4px 18px 4px 4px';
+    }
+    bubble.style.cssText='max-width:75%;background:'+(mine?'var(--gold)':'var(--bg3)')+';color:'+(mine?'#08090C':'var(--text)')+';border-radius:'+radius+';padding:8px 12px;font-size:14px;line-height:1.5;word-break:break-word;';
+
     const txt=document.createElement('div');txt.textContent=m.content;bubble.appendChild(txt);
+
     if(!mine&&m.content.includes('challenges you to Battleship')){
       const btns=document.createElement('div');btns.style.cssText='display:flex;gap:6px;margin-top:8px;';
       const ab=document.createElement('button');ab.textContent='⚔️ Accept';ab.style.cssText='padding:6px 14px;background:var(--gold);color:#08090C;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;';
@@ -4556,10 +4799,16 @@ async function loadMessages(){
       db.onclick=(function(fw){return function(e){declineChallengeDM(fw,e);};})(m.from_wallet);
       btns.appendChild(ab);btns.appendChild(db);bubble.appendChild(btns);
     }
-    const timeEl=document.createElement('div');timeEl.style.cssText='font-size:10px;opacity:.6;margin-top:4px;text-align:'+(mine?'right':'left')+';';timeEl.textContent=tAgo(m.created_at);bubble.appendChild(timeEl);
+
+    // Show time only on last message of group
+    if(isLast){
+      const timeEl=document.createElement('div');
+      timeEl.style.cssText='font-size:10px;opacity:.5;margin-top:3px;text-align:'+(mine?'right':'left')+';';
+      timeEl.textContent=tAgo(m.created_at);
+      bubble.appendChild(timeEl);
+    }
     wrap.appendChild(bubble);el.appendChild(wrap);
   });
-  // Always scroll to bottom when loading messages
   setTimeout(function(){el.scrollTop=el.scrollHeight;},50);
 }
 async function sendDM(){if(!userAddr){showToast('Connect wallet first','err');return;}if(!currentDMWallet)return;const input=document.getElementById('msgInput');const content=input.value.trim();if(!content)return;input.value='';try{await sb.from('messages').insert({from_wallet:userAddr,to_wallet:currentDMWallet,content});await createNotif(currentDMWallet,'dm');loadMessages();}catch(e){showToast('Failed','err');input.value=content;}}
@@ -4569,7 +4818,21 @@ function openDMWith(wallet){showTab('messages');setTimeout(function(){openDM(wal
 // ── STAKING ──
 async function loadStakingInfo(){try{const p=getReadProvider();const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,p);const [rp,ts]=await Promise.all([sc.rewardPool(),sc.totalStaked()]);document.getElementById('rewardPoolVal').textContent=parseFloat(ethers.formatEther(rp)).toFixed(0)+' GATE';document.getElementById('totalStakedVal').textContent=parseFloat(ethers.formatEther(ts)).toFixed(2);if(userAddr){const [staked,pending]=await sc.getStakeInfo(userAddr);document.getElementById('myStaked').textContent=parseFloat(ethers.formatEther(staked)).toFixed(2);document.getElementById('myPending').textContent=parseFloat(ethers.formatEther(pending)).toFixed(4);}}catch(e){}}
 let stakingTimer;
-async function stakeGATE(){if(!userAddr){showToast('Connect wallet first','err');return;}const amt=document.getElementById('stakeAmount').value;if(!amt||parseFloat(amt)<=0){showToast('Enter amount','err');return;}try{await switchToLitVM();const freshSigner=await provider.getSigner();const gate=new ethers.Contract(GATE_TOKEN,GATE_ABI,freshSigner);const amount=ethers.parseEther(String(amt));showToast('Approving GATE...','ok');await(await gate.approve(GATE_STAKING,amount)).wait();showToast('Staking...','ok');const iface=new ethers.Interface(['function stake(uint256 amount)']);await(await freshSigner.sendTransaction({to:GATE_STAKING,data:iface.encodeFunctionData('stake',[amount])})).wait();showToast('Staked! 💎','ok');loadStakingInfo();loadGateBal();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}}
+async function stakeGATE(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const amt=document.getElementById('stakeAmount').value;
+  if(!amt||parseFloat(amt)<=0){showToast('Enter amount','err');return;}
+  try{
+    await switchToLitVM();
+    const freshSigner=await provider.getSigner();
+    const amount=ethers.parseEther(String(amt));
+    await smartApprove(GATE_STAKING, amount, freshSigner);
+    showToast('Staking...','ok');
+    const iface=new ethers.Interface(['function stake(uint256 amount)']);
+    await(await freshSigner.sendTransaction({to:GATE_STAKING,data:iface.encodeFunctionData('stake',[amount])})).wait();
+    showToast('Staked! 💎','ok');loadStakingInfo();loadGateBal();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}
+}
 async function claimGATE(){if(!userAddr){showToast('Connect wallet first','err');return;}try{await switchToLitVM();const freshSigner=await provider.getSigner();const iface=new ethers.Interface(['function claim()']);await(await freshSigner.sendTransaction({to:GATE_STAKING,data:iface.encodeFunctionData('claim',[])})).wait();showToast('Rewards claimed! 🎉','ok');loadStakingInfo();loadGateBal();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}}
 async function unstakeGATE(){if(!userAddr){showToast('Connect wallet first','err');return;}try{await switchToLitVM();const freshSigner=await provider.getSigner();const iface=new ethers.Interface(['function unstake()']);await(await freshSigner.sendTransaction({to:GATE_STAKING,data:iface.encodeFunctionData('unstake',[])})).wait();showToast('Unstaked! 💰','ok');loadStakingInfo();loadGateBal();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,50),'err');}}
 
@@ -4712,6 +4975,22 @@ async function deleteComment(commentId,postId,btn){
   }catch(e){showToast('Failed to delete','err');btn.disabled=false;}
 }
 // ── HELPERS ──
+// Smart approve — checks allowance first, approves MAX_UINT once if needed
+// This eliminates repeated approve transactions
+const MAX_UINT = ethers.MaxUint256;
+async function smartApprove(spender, amount, signerToUse){
+  const gate = new ethers.Contract(GATE_TOKEN, GATE_ABI, signerToUse);
+  const owner = await signerToUse.getAddress();
+  try{
+    const allowance = await gate.allowance(owner, spender);
+    if(allowance >= amount){
+      return; // Already approved enough — skip tx
+    }
+  }catch(e){}
+  // Approve max so user never needs to approve again for this spender
+  showToast('Approving GATE (one time only)...','ok');
+  await (await gate.approve(spender, MAX_UINT)).wait();
+}
 let toastT;
 function showToast(msg,type='ok'){
   // Filter wallet-level errors that confuse users
@@ -4759,7 +5038,535 @@ async function loadPassSupply(){
   }catch(e){}
 }
 
-// ── INIT ──
+// ── DRAWER ──
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+  updateDrawerUser();
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// Swipe LEFT on drawer → close. Swipe RIGHT → ignored.
+function initDrawerSwipe(){
+  var drawer=document.getElementById('drawer');
+  if(!drawer)return;
+  var sx=0,sy=0,active=false;
+
+  drawer.addEventListener('touchstart',function(e){
+    sx=e.touches[0].clientX;
+    sy=e.touches[0].clientY;
+    active=true;
+  },{passive:true});
+
+  drawer.addEventListener('touchmove',function(e){
+    if(!active)return;
+    var dx=e.touches[0].clientX-sx;
+    var dy=Math.abs(e.touches[0].clientY-sy);
+    if(dx<0&&dy<Math.abs(dx)){
+      // Horizontal left swipe — move drawer
+      var move=Math.max(dx,-280);
+      drawer.style.transition='none';
+      drawer.style.transform='translateX('+move+'px)';
+    }
+  },{passive:true});
+
+  function onEnd(e){
+    if(!active)return;
+    active=false;
+    var dx=(e.changedTouches[0]||e.touches[0]).clientX-sx;
+    drawer.style.transition='';
+    drawer.style.transform='';
+    if(dx<-60) closeDrawer();
+  }
+  drawer.addEventListener('touchend',onEnd,{passive:true});
+  drawer.addEventListener('touchcancel',function(){
+    active=false;
+    drawer.style.transition='';
+    drawer.style.transform='';
+  },{passive:true});
+}
+function updateDrawerUser(){
+  const av=document.getElementById('drawerAv');
+  const nm=document.getElementById('drawerName');
+  const ad=document.getElementById('drawerAddr');
+  const btn=document.getElementById('drawerOpenBtn');
+  const btnContent=document.getElementById('drawerBtnContent');
+  if(userAddr&&currentUser){
+    // Update avatar in drawer
+    if(currentUser.avatar_url){
+      av.innerHTML='<img src="'+currentUser.avatar_url+'" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent=\'🧑\'"/>';
+    } else {
+      av.textContent=currentUser.username?currentUser.username[0].toUpperCase():'🧑';
+    }
+    nm.textContent=currentUser.username||sAddr(userAddr);
+    ad.textContent=sAddr(userAddr);
+    // Show avatar in top-right nav button
+    if(btnContent){
+      if(currentUser.avatar_url){
+        btnContent.innerHTML='<img src="'+currentUser.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.innerHTML=\'👤\'"/>';
+        btn.style.fontSize='0';
+      } else {
+        btnContent.textContent=currentUser.username?currentUser.username[0].toUpperCase():'👤';
+        btn.style.fontSize='16px';
+      }
+    }
+  } else {
+    av.textContent='🧑';
+    nm.textContent='OpenGate';
+    ad.textContent='Tap to connect wallet';
+    av.onclick=function(){closeDrawer();connectWallet();};
+    if(btnContent){btnContent.textContent='☰';btn.style.fontSize='18px';}
+  }
+}
+// ── MOBILE WALLET FIX ──
+function isMobile(){return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);}
+
+// ── i18n ──
+const LANGS = {
+  en: {
+    feed:'Feed', profile:'Profile', post:'Post', notifs:'Notifs', more:'More',
+    home:'Home', allPosts:'All Posts', following:'Following',
+    connectWallet:'Connect Wallet', explore:'Explore', messages:'Messages',
+    staking:'Staking', lending:'Lending', presale:'Presale', games:'Games',
+    lottery:'Lottery', market:'NFT Market', launchpad:'Launchpad', faucet:'Faucet',
+    buyGate:'Buy GATE', landingPage:'← Landing Page',
+    whatsOnMind:"What's on your mind?", pullToRefresh:'Pull to refresh',
+    releaseToRefresh:'Release to refresh!', refreshing:'Refreshing...',
+    newPosts:'↻ New posts', search:'Search users, posts...',
+    mainMenu:'Main', defiFull:'DeFi', play:'Play',
+    // Staking
+    stakingTitle:'💎 GATE Staking', stakingDesc:'Stake your GATE tokens and earn ~365% APR. Rewards every second. No lock period.',
+    myStaked:'My Staked', pendingReward:'Pending Reward', totalStaked:'Total Staked',
+    stakeAmount:'Amount to stake (GATE)', stakeBtn:'Stake', claimBtn:'Claim Rewards', unstakeBtn:'Unstake All',
+    poolInfo:'Pool Info', apr:'APR', lockPeriod:'Lock period', none:'None', stakingFee:'Staking fee', rewardPool:'Reward pool',
+    // Faucet
+    faucetTitle:'🚰 GATE Faucet', faucetDesc:'New to OpenGate? Claim 100 GATE tokens to start. One claim per wallet.',
+    available:'GATE available', perClaim:'GATE per claim', totalClaims:'Total claims',
+    claimBtn2:'🚰 Claim 100 GATE', alreadyClaimed:'Already Claimed ✓', claimEligible:'✓ You are eligible!',
+    // Games
+    gamesTitle:'🎮 Games', vsAI:'Free, instant start', stakeMode:'With Stakes', freeMode:'Free Play',
+    // Lottery
+    currentPot:'Current Prize Pool', players:'Players', myTickets:'My tickets this round',
+    ticketPrice:'Ticket price', maxPlayers:'Max players', prize:'Prize', platformFee:'Platform fee',
+    draw:'Auto when full', pastWinners:'Past Winners', buyTicket:'🎟️ Buy Ticket',
+    // Messages
+    typeMsg:'Type a message...', send:'Send', newDmPlaceholder:'0x...',
+    // Profile
+    editProfile:'Edit Profile', follow:'Follow', following2:'Following', saveProfile:'Save Profile',
+    posts:'Posts', followers:'Followers', followingCount:'Following',
+    // Explore
+    trendingUsers:'Trending Users', latestPosts:'Latest Posts',
+    // Connect
+    connectTitle:'Connect Wallet', connectSub:'Choose your connection method',
+  },
+  ru: {
+    feed:'Лента', profile:'Профиль', post:'Пост', notifs:'Уведомл.', more:'Меню',
+    home:'Главная', allPosts:'Все посты', following:'Подписки',
+    connectWallet:'Подключить кошелёк', explore:'Поиск', messages:'Сообщения',
+    staking:'Стейкинг', lending:'Займы', presale:'Пресейл', games:'Игры',
+    lottery:'Лотерея', market:'NFT рынок', launchpad:'Лончпад', faucet:'Кран',
+    buyGate:'Купить GATE', landingPage:'← На главную',
+    whatsOnMind:'Что у вас на уме?', pullToRefresh:'Потяните для обновления',
+    releaseToRefresh:'Отпустите!', refreshing:'Обновляем...',
+    newPosts:'↻ Новые посты', search:'Поиск пользователей...',
+    mainMenu:'Главное', defiFull:'DeFi', play:'Игры',
+    stakingTitle:'💎 Стейкинг GATE', stakingDesc:'Стейкайте GATE и зарабатывайте ~365% APR. Награды каждую секунду. Без блокировки.',
+    myStaked:'Мой стейк', pendingReward:'Награда', totalStaked:'Всего в стейке',
+    stakeAmount:'Сумма для стейка (GATE)', stakeBtn:'Стейк', claimBtn:'Забрать награду', unstakeBtn:'Вывести всё',
+    poolInfo:'Инфо пула', apr:'APR', lockPeriod:'Блокировка', none:'Нет', stakingFee:'Комиссия', rewardPool:'Пул наград',
+    faucetTitle:'🚰 Кран GATE', faucetDesc:'Новичок? Получи 100 GATE бесплатно. Один раз на кошелёк.',
+    available:'GATE доступно', perClaim:'GATE за клейм', totalClaims:'Всего клеймов',
+    claimBtn2:'🚰 Получить 100 GATE', alreadyClaimed:'Уже получено ✓', claimEligible:'✓ Вы можете получить!',
+    gamesTitle:'🎮 Игры', vsAI:'Бесплатно, сразу', stakeMode:'Со ставками', freeMode:'Без ставок',
+    currentPot:'Призовой фонд', players:'Игроки', myTickets:'Мои билеты',
+    ticketPrice:'Цена билета', maxPlayers:'Макс игроков', prize:'Приз', platformFee:'Комиссия платформы',
+    draw:'Авто при заполнении', pastWinners:'Прошлые победители', buyTicket:'🎟️ Купить билет',
+    typeMsg:'Написать сообщение...', send:'Отправить', newDmPlaceholder:'0x...',
+    editProfile:'Ред. профиль', follow:'Подписаться', following2:'Подписан', saveProfile:'Сохранить',
+    posts:'Посты', followers:'Подписчики', followingCount:'Подписки',
+    trendingUsers:'Популярные', latestPosts:'Новые посты',
+    connectTitle:'Подключить кошелёк', connectSub:'Выбери способ подключения',
+  },
+  uk: {
+    feed:'Стрічка', profile:'Профіль', post:'Пост', notifs:'Сповіщ.', more:'Меню',
+    home:'Головна', allPosts:'Всі пости', following:'Підписки',
+    connectWallet:'Підключити гаманець', explore:'Пошук', messages:'Повідомлення',
+    staking:'Стейкінг', lending:'Позики', presale:'Пресейл', games:'Ігри',
+    lottery:'Лотерея', market:'NFT ринок', launchpad:'Лончпад', faucet:'Кран',
+    buyGate:'Купити GATE', landingPage:'← На головну',
+    whatsOnMind:'Що у вас на думці?', pullToRefresh:'Потягніть для оновлення',
+    releaseToRefresh:'Відпустіть!', refreshing:'Оновлення...',
+    newPosts:'↻ Нові пости', search:'Пошук користувачів...',
+    mainMenu:'Головне', defiFull:'DeFi', play:'Ігри',
+    stakingTitle:'💎 Стейкінг GATE', stakingDesc:'Стейкайте GATE і заробляйте ~365% APR. Нагороди щосекунди. Без блокування.',
+    myStaked:'Мій стейк', pendingReward:'Нагорода', totalStaked:'Всього в стейку',
+    stakeAmount:'Сума для стейку (GATE)', stakeBtn:'Стейк', claimBtn:'Забрати нагороду', unstakeBtn:'Вивести все',
+    poolInfo:'Інфо пулу', apr:'APR', lockPeriod:'Блокування', none:'Немає', stakingFee:'Комісія', rewardPool:'Пул нагород',
+    faucetTitle:'🚰 Кран GATE', faucetDesc:'Новачок? Отримай 100 GATE безкоштовно. Один раз на гаманець.',
+    available:'GATE доступно', perClaim:'GATE за клейм', totalClaims:'Всього клеймів',
+    claimBtn2:'🚰 Отримати 100 GATE', alreadyClaimed:'Вже отримано ✓', claimEligible:'✓ Ви можете отримати!',
+    gamesTitle:'🎮 Ігри', vsAI:'Безкоштовно, одразу', stakeMode:'Зі ставками', freeMode:'Без ставок',
+    currentPot:'Призовий фонд', players:'Гравці', myTickets:'Мої квитки',
+    ticketPrice:'Ціна квитка', maxPlayers:'Макс гравців', prize:'Приз', platformFee:'Комісія платформи',
+    draw:'Авто при заповненні', pastWinners:'Минулі переможці', buyTicket:'🎟️ Купити квиток',
+    typeMsg:'Написати повідомлення...', send:'Надіслати', newDmPlaceholder:'0x...',
+    editProfile:'Ред. профіль', follow:'Підписатись', following2:'Підписаний', saveProfile:'Зберегти',
+    posts:'Пости', followers:'Підписники', followingCount:'Підписки',
+    trendingUsers:'Популярні', latestPosts:'Нові пости',
+    connectTitle:'Підключити гаманець', connectSub:'Обери спосіб підключення',
+  },
+  hi: {
+    feed:'फीड', profile:'प्रोफाइल', post:'पोस्ट', notifs:'सूचना', more:'मेनू',
+    home:'होम', allPosts:'सभी पोस्ट', following:'फ़ॉलोइंग',
+    connectWallet:'वॉलेट जोड़ें', explore:'खोजें', messages:'संदेश',
+    staking:'स्टेकिंग', lending:'लोन', presale:'प्रीसेल', games:'गेम्स',
+    lottery:'लॉटरी', market:'NFT', launchpad:'लॉन्च', faucet:'फ़ॉसेट',
+    buyGate:'GATE खरीदें', landingPage:'← होम',
+    whatsOnMind:'आप क्या सोच रहे हैं?', pullToRefresh:'नीचे खींचें',
+    releaseToRefresh:'छोड़ें!', refreshing:'लोड हो रहा है...',
+    newPosts:'↻ नई पोस्ट', search:'खोजें...',
+    mainMenu:'मुख्य', defiFull:'DeFi', play:'खेलें',
+    stakingTitle:'💎 GATE स्टेकिंग', stakingDesc:'GATE स्टेक करें और ~365% APR कमाएं।',
+    myStaked:'मेरा स्टेक', pendingReward:'पुरस्कार', totalStaked:'कुल स्टेक',
+    stakeAmount:'स्टेक राशि (GATE)', stakeBtn:'स्टेक', claimBtn:'पुरस्कार लें', unstakeBtn:'सब निकालें',
+    poolInfo:'पूल जानकारी', apr:'APR', lockPeriod:'लॉक', none:'कोई नहीं', stakingFee:'शुल्क', rewardPool:'पुरस्कार पूल',
+    faucetTitle:'🚰 GATE फ़ॉसेट', faucetDesc:'100 GATE मुफ्त में पाएं।',
+    available:'GATE उपलब्ध', perClaim:'GATE प्रति क्लेम', totalClaims:'कुल क्लेम',
+    claimBtn2:'🚰 100 GATE लें', alreadyClaimed:'पहले ही लिया ✓', claimEligible:'✓ आप पात्र हैं!',
+    gamesTitle:'🎮 गेम्स', vsAI:'मुफ्त, तुरंत', stakeMode:'दांव के साथ', freeMode:'मुफ्त',
+    currentPot:'पुरस्कार राशि', players:'खिलाड़ी', myTickets:'मेरे टिकट',
+    ticketPrice:'टिकट मूल्य', maxPlayers:'अधिकतम खिलाड़ी', prize:'पुरस्कार', platformFee:'प्लेटफ़ॉर्म शुल्क',
+    draw:'भरने पर स्वतः', pastWinners:'पिछले विजेता', buyTicket:'🎟️ टिकट खरीदें',
+    typeMsg:'संदेश लिखें...', send:'भेजें', newDmPlaceholder:'0x...',
+    editProfile:'प्रोफ़ाइल संपादित करें', follow:'फ़ॉलो', following2:'फ़ॉलो कर रहे हैं', saveProfile:'सहेजें',
+    posts:'पोस्ट', followers:'फ़ॉलोअर्स', followingCount:'फ़ॉलोइंग',
+    trendingUsers:'ट्रेंडिंग', latestPosts:'नई पोस्ट',
+    connectTitle:'वॉलेट जोड़ें', connectSub:'कनेक्शन का तरीका चुनें',
+  },
+  zh: {
+    feed:'动态', profile:'我的', post:'发帖', notifs:'通知', more:'更多',
+    home:'主页', allPosts:'全部帖子', following:'关注',
+    connectWallet:'连接钱包', explore:'探索', messages:'消息',
+    staking:'质押', lending:'借贷', presale:'预售', games:'游戏',
+    lottery:'彩票', market:'NFT市场', launchpad:'发射台', faucet:'水龙头',
+    buyGate:'购买GATE', landingPage:'← 首页',
+    whatsOnMind:'你在想什么？', pullToRefresh:'下拉刷新',
+    releaseToRefresh:'松开刷新！', refreshing:'刷新中...',
+    newPosts:'↻ 新帖子', search:'搜索...',
+    mainMenu:'主要', defiFull:'DeFi', play:'游戏',
+    stakingTitle:'💎 GATE质押', stakingDesc:'质押GATE赚取~365% APR。无锁定期。',
+    myStaked:'我的质押', pendingReward:'待领奖励', totalStaked:'总质押量',
+    stakeAmount:'质押数量(GATE)', stakeBtn:'质押', claimBtn:'领取奖励', unstakeBtn:'全部取回',
+    poolInfo:'池信息', apr:'APR', lockPeriod:'锁定期', none:'无', stakingFee:'质押费', rewardPool:'奖励池',
+    faucetTitle:'🚰 GATE水龙头', faucetDesc:'新用户免费领取100 GATE。每钱包一次。',
+    available:'可用GATE', perClaim:'每次领取', totalClaims:'总领取次数',
+    claimBtn2:'🚰 领取100 GATE', alreadyClaimed:'已领取 ✓', claimEligible:'✓ 您有资格领取！',
+    gamesTitle:'🎮 游戏', vsAI:'免费，即时开始', stakeMode:'带赌注', freeMode:'免费玩',
+    currentPot:'当前奖池', players:'玩家', myTickets:'我的票',
+    ticketPrice:'票价', maxPlayers:'最多玩家', prize:'奖励', platformFee:'平台费',
+    draw:'满员自动开奖', pastWinners:'历史获奖者', buyTicket:'🎟️ 购买彩票',
+    typeMsg:'输入消息...', send:'发送', newDmPlaceholder:'0x...',
+    editProfile:'编辑资料', follow:'关注', following2:'已关注', saveProfile:'保存',
+    posts:'帖子', followers:'粉丝', followingCount:'关注',
+    trendingUsers:'热门用户', latestPosts:'最新帖子',
+    connectTitle:'连接钱包', connectSub:'选择连接方式',
+  },
+  tr: {
+    feed:'Akış', profile:'Profil', post:'Gönderi', notifs:'Bildirim', more:'Menü',
+    home:'Ana Sayfa', allPosts:'Tüm Gönderiler', following:'Takip',
+    connectWallet:'Cüzdan Bağla', explore:'Keşfet', messages:'Mesajlar',
+    staking:'Staking', lending:'Kredi', presale:'Ön Satış', games:'Oyunlar',
+    lottery:'Piyango', market:'NFT Pazar', launchpad:'Lansman', faucet:'Faucet',
+    buyGate:'GATE Al', landingPage:'← Ana Sayfa',
+    whatsOnMind:'Aklında ne var?', pullToRefresh:'Yenilemek için çek',
+    releaseToRefresh:'Bırak!', refreshing:'Yenileniyor...',
+    newPosts:'↻ Yeni gönderiler', search:'Ara...',
+    mainMenu:'Ana', defiFull:'DeFi', play:'Oyna',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE stake edin ve ~365% APR kazanın. Kilit yok.',
+    myStaked:'Stake\'im', pendingReward:'Ödül', totalStaked:'Toplam Stake',
+    stakeAmount:'Stake miktarı (GATE)', stakeBtn:'Stake', claimBtn:'Ödül Al', unstakeBtn:'Hepsini Çek',
+    poolInfo:'Havuz Bilgisi', apr:'APR', lockPeriod:'Kilit', none:'Yok', stakingFee:'Stake Ücreti', rewardPool:'Ödül Havuzu',
+    faucetTitle:'🚰 GATE Musluğu', faucetDesc:'Yeni misin? 100 GATE ücretsiz al.',
+    available:'GATE mevcut', perClaim:'GATE/talep', totalClaims:'Toplam talep',
+    claimBtn2:'🚰 100 GATE Al', alreadyClaimed:'Zaten alındı ✓', claimEligible:'✓ Hak kazandınız!',
+    gamesTitle:'🎮 Oyunlar', vsAI:'Ücretsiz, anında', stakeMode:'Bahisli', freeMode:'Ücretsiz',
+    currentPot:'Mevcut Ödül', players:'Oyuncular', myTickets:'Biletlerim',
+    ticketPrice:'Bilet fiyatı', maxPlayers:'Maks oyuncu', prize:'Ödül', platformFee:'Platform ücreti',
+    draw:'Dolu olunca otomatik', pastWinners:'Geçmiş Kazananlar', buyTicket:'🎟️ Bilet Al',
+    typeMsg:'Mesaj yaz...', send:'Gönder', newDmPlaceholder:'0x...',
+    editProfile:'Profili Düzenle', follow:'Takip Et', following2:'Takip Ediliyor', saveProfile:'Kaydet',
+    posts:'Gönderiler', followers:'Takipçiler', followingCount:'Takip',
+    trendingUsers:'Trend Olanlar', latestPosts:'Son Gönderiler',
+    connectTitle:'Cüzdan Bağla', connectSub:'Bağlantı yöntemini seç',
+  },
+  de: {
+    feed:'Feed', profile:'Profil', post:'Post', notifs:'Meldungen', more:'Menü',
+    home:'Start', allPosts:'Alle Beiträge', following:'Folge ich',
+    connectWallet:'Wallet verbinden', explore:'Entdecken', messages:'Nachrichten',
+    staking:'Staking', lending:'Leihen', presale:'Vorverkauf', games:'Spiele',
+    lottery:'Lotterie', market:'NFT Markt', launchpad:'Launchpad', faucet:'Faucet',
+    buyGate:'GATE kaufen', landingPage:'← Startseite',
+    whatsOnMind:'Was denkst du?', pullToRefresh:'Zum Aktualisieren ziehen',
+    releaseToRefresh:'Loslassen!', refreshing:'Aktualisierung...',
+    newPosts:'↻ Neue Beiträge', search:'Suche...',
+    mainMenu:'Haupt', defiFull:'DeFi', play:'Spielen',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE staken und ~365% APR verdienen. Keine Sperrfrist.',
+    myStaked:'Mein Stake', pendingReward:'Ausstehend', totalStaked:'Gesamt gestakt',
+    stakeAmount:'Stake-Betrag (GATE)', stakeBtn:'Staken', claimBtn:'Prämien abholen', unstakeBtn:'Alles abheben',
+    poolInfo:'Pool-Info', apr:'APR', lockPeriod:'Sperrfrist', none:'Keine', stakingFee:'Staking-Gebühr', rewardPool:'Prämienpool',
+    faucetTitle:'🚰 GATE Faucet', faucetDesc:'Neu hier? Hole kostenlos 100 GATE.',
+    available:'GATE verfügbar', perClaim:'GATE/Claim', totalClaims:'Gesamt Claims',
+    claimBtn2:'🚰 100 GATE holen', alreadyClaimed:'Bereits erhalten ✓', claimEligible:'✓ Berechtigt!',
+    gamesTitle:'🎮 Spiele', vsAI:'Kostenlos, sofort', stakeMode:'Mit Einsatz', freeMode:'Kostenlos',
+    currentPot:'Aktueller Jackpot', players:'Spieler', myTickets:'Meine Tickets',
+    ticketPrice:'Ticketpreis', maxPlayers:'Max Spieler', prize:'Prämie', platformFee:'Plattformgebühr',
+    draw:'Auto bei Vollfüllung', pastWinners:'Frühere Gewinner', buyTicket:'🎟️ Ticket kaufen',
+    typeMsg:'Nachricht schreiben...', send:'Senden', newDmPlaceholder:'0x...',
+    editProfile:'Profil bearbeiten', follow:'Folgen', following2:'Folge ich', saveProfile:'Speichern',
+    posts:'Beiträge', followers:'Follower', followingCount:'Folge ich',
+    trendingUsers:'Trending', latestPosts:'Neueste Beiträge',
+    connectTitle:'Wallet verbinden', connectSub:'Verbindungsmethode wählen',
+  },
+};
+
+function detectLang(){
+  const saved=localStorage.getItem('og_lang');
+  if(saved&&LANGS[saved]) return saved;
+  const bl=(navigator.language||navigator.userLanguage||'en').toLowerCase();
+  if(bl.startsWith('ru')) return 'ru';
+  if(bl.startsWith('uk')) return 'uk';
+  if(bl.startsWith('hi')) return 'hi';
+  if(bl.startsWith('zh')) return 'zh';
+  if(bl.startsWith('tr')) return 'tr';
+  if(bl.startsWith('de')) return 'de';
+  return 'en';
+}
+
+let currentLang=detectLang();
+function t(key){return(LANGS[currentLang]&&LANGS[currentLang][key])||LANGS.en[key]||key;}
+
+function setLang(lang){
+  if(!LANGS[lang])return;
+  currentLang=lang;
+  localStorage.setItem('og_lang',lang);
+  applyLang();
+}
+
+function applyLang(){
+  // Bottom nav
+  const mobMap={'mobbtn-feed':'feed','mobbtn-post':'post','mobbtn-notifs':'notifs','mobbtn-menu':'more'};
+  Object.keys(mobMap).forEach(function(id){
+    const el=document.getElementById(id);
+    if(!el)return;
+    Array.from(el.childNodes).forEach(function(n){if(n.nodeType===3&&n.textContent.trim())n.textContent=t(mobMap[id]);});
+  });
+  // Feed header & tabs
+  const fh=document.querySelector('#view-feed .feed-hdr span:first-child');
+  if(fh)fh.textContent=t('home');
+  const tabs=document.querySelectorAll('#view-feed .feed-tab');
+  if(tabs[0])tabs[0].textContent=t('allPosts');
+  if(tabs[1])tabs[1].textContent=t('following');
+  // Composer
+  const ci=document.getElementById('postText');
+  if(ci)ci.placeholder=t('whatsOnMind');
+  // Connect btn
+  const cb=document.getElementById('connectBtn');
+  if(cb&&!cb.classList.contains('connected'))cb.innerHTML='<div class="w-dot"></div>'+t('connectWallet');
+  // Drawer btns
+  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet'};
+  Object.keys(dm).forEach(function(id){
+    const el=document.getElementById(id);if(!el)return;
+    const ico=el.querySelector('.drawer-ico');const badge=el.querySelector('.drawer-badge');
+    el.innerHTML=(ico?ico.outerHTML:'')+t(dm[id]);if(badge)el.appendChild(badge);
+  });
+  // Drawer labels
+  const dlbls=document.querySelectorAll('.drawer-lbl');
+  ['mainMenu','defiFull','play','more'].forEach(function(k,i){if(dlbls[i])dlbls[i].textContent=t(k);});
+  // PTR, new posts, search
+  const pt=document.getElementById('ptr-text');if(pt)pt.textContent=t('pullToRefresh');
+  const np=document.getElementById('newPostsBtn');if(np&&np.style.display!=='none')np.textContent=t('newPosts');
+  const si=document.getElementById('searchInput');if(si)si.placeholder=t('search');
+  // Landing btn in drawer
+  document.querySelectorAll('.drawer-body button').forEach(function(b){if(b.textContent.includes('←'))b.textContent=t('landingPage');});
+
+  // ── Tab content translations ──
+
+  // Staking header
+  const sh=document.querySelector('#view-staking .feed-hdr');
+  if(sh)sh.textContent=t('stakingTitle');
+  // Staking desc
+  const sd=document.querySelector('#view-staking .bg-desc');
+  if(sd)sd.textContent=t('stakingDesc');
+  // Staking labels
+  // Staking labels via direct element text
+  const myStakedLbl=document.querySelector('#view-staking .gate-bal-lbl');
+  // (labels are inside the cards, skip - values update dynamically)
+  _qs('#view-staking #stakeAmount','placeholder',t('stakeAmount'));
+  _txt('stakeGATEBtn',t('stakeBtn'));
+  _txt('claimGATEBtn',t('claimBtn'));
+  _txt('unstakeGATEBtn',t('unstakeBtn'));
+
+  // Faucet header
+  const fth=document.querySelector('#view-faucet .feed-hdr');
+  if(fth)fth.textContent=t('faucetTitle');
+  // Faucet claim button
+  const fcb=document.getElementById('claimFaucetBtn');
+  if(fcb&&!fcb.disabled)fcb.textContent=t('claimBtn2');
+
+  // Games header
+  const gh=document.querySelector('#view-games .feed-hdr');
+  if(gh)gh.textContent=t('gamesTitle');
+
+  // Lottery header
+  const lh=document.querySelector('#view-lottery .feed-hdr');
+  if(lh)lh.textContent='🎰 '+t('lottery');
+  const btk=document.getElementById('buyTicketBtn');
+  if(btk&&!btk.disabled)btk.textContent=t('buyTicket');
+
+  // Messages
+  const mi=document.getElementById('msgInput');
+  if(mi)mi.placeholder=t('typeMsg');
+  const sb2=document.querySelector('#convView button');
+  if(sb2)sb2.textContent=t('send');
+
+  // Wallet modal
+  const wt=document.querySelector('#walletModal [style*="font-size:22px"]');
+  if(wt)wt.textContent=t('connectTitle');
+  const ws=document.querySelector('#walletModal [style*="font-size:13px"][style*="muted"]');
+  if(ws)ws.textContent=t('connectSub');
+
+  // Explore trending labels
+  const tl=document.querySelectorAll('#searchResults > div');
+  if(tl[0])tl[0].textContent=t('trendingUsers');
+  if(tl[2])tl[2].textContent=t('latestPosts');
+}
+
+// Helper: set text of element by id
+function _txt(id,text){const el=document.getElementById(id);if(el)el.textContent=text;}
+// Helper: set placeholder
+function _qs(sel,attr,val){const el=document.querySelector(sel);if(el)el[attr]=val;}
+
+// Language picker
+const LANG_FLAGS={en:'🇬🇧',ru:'🇷🇺',uk:'🇺🇦',hi:'🇮🇳',zh:'🇨🇳',tr:'🇹🇷',de:'🇩🇪'};
+const LANG_NAMES={en:'EN',ru:'RU',uk:'UK',hi:'HI',zh:'ZH',tr:'TR',de:'DE'};
+
+function buildLangPicker(){
+  const existing=document.getElementById('langPicker');
+  if(existing)return;
+  const wrap=document.createElement('div');
+  wrap.id='langPicker';
+  wrap.style.cssText='position:fixed;bottom:72px;right:12px;z-index:90;display:flex;flex-direction:column;gap:4px;align-items:flex-end;';
+  const menu=document.createElement('div');
+  menu.id='langMenu';
+  menu.style.cssText='display:none;flex-direction:column;gap:4px;align-items:flex-end;background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:8px;box-shadow:0 4px 20px rgba(0,0,0,.4);';
+  Object.keys(LANG_FLAGS).forEach(function(lang){
+    const btn=document.createElement('button');
+    btn.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 14px;background:none;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:var(--text);width:100%;white-space:nowrap;-webkit-tap-highlight-color:transparent;';
+    if(lang===currentLang)btn.style.cssText+=';background:rgba(245,200,66,0.1);color:var(--gold);';
+    btn.innerHTML=LANG_FLAGS[lang]+' '+LANG_NAMES[lang];
+    btn.onclick=function(){
+      setLang(lang);
+      toggle.textContent=LANG_FLAGS[lang];
+      menu.style.display='none';
+      menu.querySelectorAll('button').forEach(function(b){b.style.background='none';b.style.color='var(--text)';});
+      btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';
+    };
+    menu.appendChild(btn);
+  });
+  const toggle=document.createElement('button');
+  toggle.style.cssText='width:40px;height:40px;border-radius:50%;background:var(--bg2);border:1px solid var(--border);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.3);-webkit-tap-highlight-color:transparent;';
+  toggle.textContent=LANG_FLAGS[currentLang]||'🌐';
+  toggle.onclick=function(e){
+    e.stopPropagation();
+    menu.style.display=menu.style.display==='none'?'flex':'none';
+  };
+  document.addEventListener('click',function(){menu.style.display='none';});
+  wrap.appendChild(menu);
+  wrap.appendChild(toggle);
+  document.getElementById('page-app').appendChild(wrap);
+}
+
+// ── PULL TO REFRESH ──
+(function(){
+  var startY=0,currentY=0,pulling=false;
+  var THRESHOLD=70,MAX_PULL=120;
+
+  function ind(){return document.getElementById('ptr-indicator');}
+  function ptt(){return document.getElementById('ptr-text');}
+
+  function hide(){
+    var el=ind();if(!el)return;
+    el.style.transform='translateX(-50%) translateY(-70px)';
+    el.classList.remove('visible','ready');
+    var pt=ptt();if(pt)pt.textContent=t('pullToRefresh');
+    pulling=false;startY=0;currentY=0;
+  }
+
+  document.addEventListener('touchstart',function(e){
+    // Only trigger on Feed tab
+    var fv=document.getElementById('view-feed');
+    if(!fv||fv.style.display==='none')return;
+    var ap=document.getElementById('page-app');
+    if(!ap||!ap.classList.contains('active'))return;
+    // Must be scrolled to very top
+    if(window.scrollY>2)return;
+    // Don't trigger if touching inside a scrollable element (profile, drawer, modal)
+    var target=e.target;
+    while(target&&target!==document.body){
+      if(target.id==='drawer'||target.classList.contains('modal-overlay')||
+         target.id==='view-profile'||target.id==='msgList'||
+         target.id==='convListItems'||target.id==='notifsList'){
+        return;
+      }
+      target=target.parentElement;
+    }
+    startY=e.touches[0].clientY;
+    pulling=true;
+  },{passive:true});
+
+  document.addEventListener('touchmove',function(e){
+    if(!pulling)return;
+    if(window.scrollY>5){hide();return;}
+    currentY=e.touches[0].clientY;
+    var diff=Math.min(currentY-startY,MAX_PULL);
+    if(diff<=0){hide();return;}
+    var el=ind();if(!el)return;
+    var ty=Math.min(-70+diff*0.9,10);
+    el.style.transform='translateX(-50%) translateY('+ty+'px)';
+    el.classList.add('visible');
+    var pt=ptt();
+    if(diff>=THRESHOLD){
+      el.classList.add('ready');
+      if(pt)pt.textContent=t('releaseToRefresh');
+    }else{
+      el.classList.remove('ready');
+      if(pt)pt.textContent=t('pullToRefresh');
+    }
+    if(diff>10)e.preventDefault();
+  },{passive:false});
+
+  document.addEventListener('touchend',function(){
+    if(!pulling)return;
+    var diff=currentY-startY;
+    if(diff>=THRESHOLD){
+      var el=ind();
+      if(el){el.style.transform='translateX(-50%) translateY(0px)';el.classList.remove('ready');}
+      var pt=ptt();if(pt)pt.textContent=t('refreshing');
+      loadPosts();
+      loadGateBal(true);
+      setTimeout(hide,1200);
+    }else{
+      hide();
+    }
+    pulling=false;
+  },{passive:true});
+})();
+
 document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');}));
 
 // ── VISIBILITY: Pause Realtime when tab hidden, resume when visible ──
@@ -4788,11 +5595,11 @@ document.addEventListener('visibilitychange',function(){
               if(convList&&convList.style.display!=='none')loadConversations();
             }
           }catch(e){}
-        },5000);
+        },30000);
       }
       // Restart DM polling if in active chat
       if(currentDMWallet&&!dmTimer){
-        dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},5000);
+        dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},15000);
       }
       // Refresh data that might have changed
       updateUnreadBadge();
@@ -4808,22 +5615,212 @@ document.querySelectorAll('.fade').forEach(el=>obs.observe(el));
 const sObs=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.querySelectorAll('.supply-fill[data-target]').forEach(b=>{setTimeout(()=>b.style.width=b.dataset.target,300)});}),{threshold:0.2});
 document.querySelectorAll('.pass-card').forEach(c=>sObs.observe(c));
 loadPassSupply();
+initDrawerSwipe();
+initInstallBtn();
+buildLangPicker();
+// Apply lang after short delay to ensure DOM is fully rendered
+setTimeout(function(){ applyLang(); }, 100);
+// Re-apply when user opens app
+const _origOpenApp2=openApp;
+openApp=function(){
+  _origOpenApp2();
+  setTimeout(applyLang, 150);
+};
 let pwaPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pwaPrompt=e;const btn=document.getElementById('pwaInstallBtn');if(btn)btn.style.display='block';});
-async function installPWA(){if(!pwaPrompt)return;pwaPrompt.prompt();const result=await pwaPrompt.userChoice;if(result.outcome==='accepted')document.getElementById('pwaInstallBtn').style.display='none';pwaPrompt=null;}
+
+// PWA Install Banner
+function showPWABanner(){
+  if(localStorage.getItem('og_pwa_dismissed')) return;
+  if(window.matchMedia('(display-mode: standalone)').matches) return;
+  if(navigator.standalone) return;
+  const existing=document.getElementById('pwaBanner');
+  if(existing) return;
+
+  const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid=/Android/i.test(navigator.userAgent);
+  if(!isIOS && !isAndroid) return; // Desktop — не показуємо
+
+  // Тексти по мовах
+  const tx={
+    title:{uk:'Встанови OpenGate',ru:'Установи OpenGate',en:'Install OpenGate',hi:'OpenGate इंस्टॉल करें',zh:'安装 OpenGate',tr:"OpenGate'i Yükle",de:'OpenGate installieren'},
+    sub:{uk:'Відкривай без браузера — як справжній додаток',ru:'Открывай без браузера — как настоящее приложение',en:'Open without browser — like a native app',hi:'ब्राउज़र के बिना खोलें',zh:'像原生应用一样打开',tr:'Tarayıcı olmadan aç',de:'Ohne Browser öffnen'},
+    btn:{uk:'Встановити',ru:'Установить',en:'Install',hi:'इंस्टॉल करें',zh:'安装',tr:'Yükle',de:'Installieren'},
+    iosHint:{uk:'Натисни',ru:'Нажми',en:'Tap',hi:'टैप करें',zh:'点击',tr:'Dokunun',de:'Tippe'},
+    iosStep:{uk:'→ «На екран Додому»',ru:'→ «На экран Домой»',en:'→ Add to Home Screen',hi:'→ होम स्क्रीन पर जोड़ें',zh:'→ 添加到主屏幕',tr:'→ Ana Ekrana Ekle',de:'→ Zum Home-Bildschirm'},
+    close:{uk:'Закрити',ru:'Закрыть',en:'Close',hi:'बंद करें',zh:'关闭',tr:'Kapat',de:'Schließen'},
+    later:{uk:'Пізніше',ru:'Позже',en:'Later',hi:'बाद में',zh:'稍后',tr:'Sonra',de:'Später'},
+  };
+  const L=currentLang||'en';
+  const g=k=>tx[k][L]||tx[k]['en'];
+
+  const banner=document.createElement('div');
+  banner.id='pwaBanner';
+  banner.style.cssText=[
+    'position:fixed',
+    'bottom:70px',
+    'left:10px',
+    'right:10px',
+    'background:linear-gradient(135deg,#0E1018,#141720)',
+    'border:1.5px solid rgba(245,200,66,0.5)',
+    'border-radius:18px',
+    'padding:16px',
+    'z-index:300',
+    'box-shadow:0 8px 32px rgba(0,0,0,.8)',
+    'animation:pwaSlide .35s cubic-bezier(.34,1.56,.64,1)',
+    'pointer-events:all',
+  ].join(';');
+
+  if(isAndroid && pwaPrompt){
+    banner.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <img src="/icon-192.png" style="width:48px;height:48px;border-radius:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.4);"/>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:#EDF0F5;margin-bottom:2px;">${g('title')}</div>
+          <div style="font-size:12px;color:#5A6478;line-height:1.4;">${g('sub')}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="installPWA()" style="flex:1;padding:11px;border-radius:11px;background:var(--gold);color:#08090C;font-size:14px;font-weight:700;border:none;cursor:pointer;">📲 ${g('btn')}</button>
+        <button onclick="dismissPWA()" style="padding:11px 16px;border-radius:11px;background:rgba(255,255,255,0.06);color:#5A6478;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">${g('later')}</button>
+      </div>
+    `;
+  } else if(isIOS){
+    banner.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <img src="/icon-192.png" style="width:48px;height:48px;border-radius:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.4);"/>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:#EDF0F5;margin-bottom:2px;">${g('title')}</div>
+          <div style="font-size:12px;color:#5A6478;line-height:1.4;">${g('sub')}</div>
+        </div>
+        <button onclick="dismissPWA()" style="background:none;border:none;color:#5A6478;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;">✕</button>
+      </div>
+      <div style="background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);border-radius:11px;padding:12px;display:flex;align-items:center;gap:10px;">
+        <div style="font-size:22px;">⎙</div>
+        <div style="font-size:12px;color:#EDF0F5;line-height:1.5;">
+          ${g('iosHint')} <b style="color:var(--gold);">⎙ Share</b> ${g('iosStep')}
+        </div>
+      </div>
+    `;
+  }
+
+  document.body.appendChild(banner);
+}
+
+function triggerInstall(){
+  if(pwaPrompt){
+    installPWA();
+  } else {
+    // iOS або вже після prompt — показуємо банер з інструкцією
+    localStorage.removeItem('og_pwa_dismissed'); // скидаємо щоб показало
+    showPWABanner();
+  }
+}
+
+// Показуємо кнопку в drawer якщо ще не встановлено
+function initInstallBtn(){
+  if(window.matchMedia('(display-mode: standalone)').matches) return;
+  if(navigator.standalone) return;
+  const isMob=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if(!isMob) return;
+  const dbtn=document.getElementById('drawerInstallBtn');
+  if(dbtn) dbtn.style.display='block';
+}
+
+function dismissPWA(){
+  const b=document.getElementById('pwaBanner');
+  if(b){b.style.animation='pwaSlideOut .2s ease forwards';setTimeout(()=>b.remove(),200);}
+  localStorage.setItem('og_pwa_dismissed','1');
+}
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  pwaPrompt=e;
+  const btn=document.getElementById('pwaInstallBtn');if(btn)btn.style.display='block';
+  const dbtn=document.getElementById('drawerInstallBtn');if(dbtn)dbtn.style.display='block';
+  setTimeout(showPWABanner,4000);
+});
+
+if(/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!navigator.standalone){
+  setTimeout(showPWABanner,5000);
+}
+
+async function installPWA(){
+  if(!pwaPrompt)return;
+  pwaPrompt.prompt();
+  const result=await pwaPrompt.userChoice;
+  if(result.outcome==='accepted'){
+    const btn=document.getElementById('pwaInstallBtn');if(btn)btn.style.display='none';
+    const dbtn=document.getElementById('drawerInstallBtn');if(dbtn)dbtn.style.display='none';
+    dismissPWA();
+    showToast('✓ Додаток встановлено!','ok');
+  }
+  pwaPrompt=null;
+}
+
+// PWA animations
+const pwaStyle=document.createElement('style');
+pwaStyle.textContent=`
+@keyframes pwaSlide{from{transform:translateY(30px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes pwaSlideOut{from{transform:translateY(0);opacity:1;}to{transform:translateY(30px);opacity:0;}}
+`;
 loadPosts();
-window.ethereum?.on('accountsChanged',()=>location.reload());
-window.ethereum?.on('chainChanged',()=>location.reload());
-async function tryAutoConnect(){if(!window.ethereum)return;try{const accounts=await window.ethereum.request({method:'eth_accounts'});if(accounts&&accounts.length>0){provider=new ethers.BrowserProvider(window.ethereum);signer=await provider.getSigner();userAddr=(await signer.getAddress()).toLowerCase();const btn=document.getElementById('connectBtn');btn.classList.add('connected');btn.innerHTML='<div class="w-dot"></div>'+userAddr.slice(0,6)+'...'+userAddr.slice(-4);document.getElementById('newPostBtn').classList.add('show');document.getElementById('composer').classList.add('show');await ensureUser();loadGateBal();loadPosts();updateNotifBadge();cleanupOldNotifications();loadRewardsPool();
-    setTimeout(function(){
-      subscribeToConversations();
-      updateUnreadBadge();
-      try{sb.channel('notifs-auto-'+userAddr).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){updateNotifBadge();}).subscribe();}catch(e){}
-      subscribeToMyGameInvites();
-    },800);
-  }}catch(e){}}
+// wallet events handled in tryAutoConnect block below
+async function tryAutoConnect(){
+  // Show mobile deeplink hint if on mobile and no wallet
+  if(isMobile()&&!window.ethereum){
+    const hint=document.getElementById('mobileWalletHint');
+    if(hint)hint.style.display='block';
+  }
+  if(!window.ethereum)return;
+  try{
+    // Use eth_accounts (no popup) — only connects if already authorized
+    const accounts=await window.ethereum.request({method:'eth_accounts'});
+    if(accounts&&accounts.length>0){
+      await _doConnect(accounts[0]);
+    } else {
+      // Check if user previously connected — if so, try silent reconnect
+      const saved=localStorage.getItem('og_wallet');
+      if(saved){
+        // Try requesting accounts (may show popup on first visit after refresh)
+        const req=await window.ethereum.request({method:'eth_requestAccounts'}).catch(()=>null);
+        if(req&&req.length>0) await _doConnect(req[0]);
+      }
+    }
+  }catch(e){}
+}
+
+async function _doConnect(addr){
+  provider=new ethers.BrowserProvider(window.ethereum);
+  signer=await provider.getSigner();
+  userAddr=(await signer.getAddress()).toLowerCase();
+  // Save to localStorage so next visit auto-reconnects
+  localStorage.setItem('og_wallet',userAddr);
+  const btn=document.getElementById('connectBtn');
+  btn.classList.add('connected');
+  btn.innerHTML='<div class="w-dot"></div>'+userAddr.slice(0,6)+'...'+userAddr.slice(-4);
+  document.getElementById('newPostBtn').classList.add('show');
+  document.getElementById('composer').classList.add('show');
+  await ensureUser();
+  updateDrawerUser();
+  loadGateBal();loadPosts();updateNotifBadge();cleanupOldNotifications();loadRewardsPool();
+  setTimeout(applyLang, 300);
+  setTimeout(function(){
+    subscribeToConversations();
+    updateUnreadBadge();
+    try{sb.channel('notifs-auto-'+userAddr).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){updateNotifBadge();}).subscribe();}catch(e){}
+    subscribeToMyGameInvites();
+  },800);
+}
+
 tryAutoConnect();
-</script>
+// Also listen for wallet events to keep connected
+if(window.ethereum){
+  window.ethereum.on('accountsChanged',function(accounts){
+    if(accounts&&accounts.length>0){ _doConnect(accounts[0]); }
+    else { localStorage.removeItem('og_wallet'); location.reload(); }
+  });
+  window.ethereum.on('chainChanged',()=>location.reload());
+}</script>
 <script>
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').then(()=>console.log('SW registered')).catch(e=>console.log('SW error',e));});}
 </script>
