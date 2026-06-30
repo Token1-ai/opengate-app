@@ -27,9 +27,9 @@
 <meta name="google" content="notranslate"/>
 <meta http-equiv="Content-Language" content="en"/>
 <title>OpenGate — Post. Earn. Own.</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.13.3/dist/index.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.13.3/dist/index.umd.js" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -610,20 +610,23 @@ async function smartConnectWallet(){
   btn.disabled=true;
   btn.innerHTML='⏳ Підключення...';
   try{
-    // Wait up to 5s for the WalletConnect UMD bundle to finish loading from
-    // CDN if it hasn't already — this is what was failing before ("ще
-    // завантажується"). Most of the time it's ready almost instantly;
-    // this just covers slow connections gracefully instead of erroring out.
+    console.log('[Wallet] smartConnectWallet started. EthereumProvider available:',typeof window.EthereumProvider!=='undefined');
+    // Wait up to 10s for the WalletConnect UMD bundle to finish loading from
+    // CDN if it hasn't already. On slow mobile connections the ~400KB bundle
+    // can take a few seconds, especially on first load before browser caching.
     let waited=0;
-    while(typeof window.EthereumProvider==='undefined' && waited<5000){
-      await new Promise(r=>setTimeout(r,200));
-      waited+=200;
+    while(typeof window.EthereumProvider==='undefined' && waited<10000){
+      await new Promise(r=>setTimeout(r,250));
+      waited+=250;
+      if(waited%2000===0) console.log('[Wallet] still waiting for WalletConnect script...',waited+'ms');
     }
+    console.log('[Wallet] wait finished after',waited,'ms. Available:',typeof window.EthereumProvider!=='undefined');
     if(typeof window.EthereumProvider!=='undefined'){
       await connectViaWalletConnect();
     } else {
       // CDN genuinely unreachable — fall back to direct MetaMask deeplink
-      console.warn('[Wallet] WalletConnect script never loaded, falling back to MetaMask deeplink');
+      console.warn('[Wallet] WalletConnect script never loaded after 10s, falling back to MetaMask deeplink');
+      showToast('WalletConnect недоступний, відкриваємо MetaMask напряму...','ok');
       await connectWithWallet('metamask');
     }
   } finally {
@@ -1744,6 +1747,16 @@ async function smartConnectWallet(){
 </div>
 
 <script>
+// Global error catcher — with crossorigin set on script tags above, this
+// should now show real error messages/stack traces instead of the generic
+// "Script error." that browsers show for unhandled cross-origin script errors.
+window.addEventListener('error', function(e){
+  console.error('[Global Error]', e.message, '| file:', e.filename, '| line:', e.lineno, '| error:', e.error);
+});
+window.addEventListener('unhandledrejection', function(e){
+  console.error('[Unhandled Promise Rejection]', e.reason);
+});
+
 // ── PWA INSTALL — registered first, before anything else, so we never
 // miss the beforeinstallprompt event (it can fire very early on load) ──
 window.pwaPrompt=null;
@@ -1987,7 +2000,9 @@ async function connectWithWallet(type){
     }
     // MetaMask not in browser — deeplink to app
     const pageUrl=window.location.href.replace(/^https?:\/\//,'');
-    window.location.href='https://metamask.app.link/dapp/'+pageUrl;
+    const deeplinkUrl='https://metamask.app.link/dapp/'+pageUrl;
+    console.log('[Wallet] Opening MetaMask deeplink:',deeplinkUrl);
+    window.location.href=deeplinkUrl;
     return;
   }
   if(type==='trust'){
