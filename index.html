@@ -1697,6 +1697,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
       <div style="padding:16px 12px 8px;">
         <button onclick="closeDrawer();goLanding()" style="width:100%;padding:10px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;">← Landing Page</button>
         <button onclick="closeDrawer();triggerInstall()" id="drawerInstallBtn" style="display:none;width:100%;padding:11px;border-radius:10px;background:linear-gradient(135deg,rgba(245,200,66,0.15),rgba(38,217,138,0.08));border:1px solid var(--border-g);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;margin-top:8px;">📲 Встановити як додаток</button>
+        <button onclick="showPWADiagnostics()" style="width:100%;padding:8px;border-radius:10px;background:none;border:1px dashed var(--border);color:var(--muted);font-size:11px;cursor:pointer;margin-top:6px;">🔧 Чому не встановлюється?</button>
       </div>
     </div>
   </div>
@@ -1711,6 +1712,35 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 </div>
 
 <script>
+// ── PWA INSTALL — registered first, before anything else, so we never
+// miss the beforeinstallprompt event (it can fire very early on load) ──
+window.pwaPrompt=null;
+console.log('[PWA] Listener registered, waiting for beforeinstallprompt...');
+window.addEventListener('beforeinstallprompt',function(e){
+  console.log('[PWA] beforeinstallprompt FIRED ✓');
+  e.preventDefault();
+  window.pwaPrompt=e;
+  // Notify UI bits that may already be rendered
+  document.dispatchEvent(new CustomEvent('pwaPromptReady'));
+});
+window.addEventListener('appinstalled',function(){
+  console.log('[PWA] App installed ✓');
+  window.pwaPrompt=null;
+  localStorage.setItem('og_pwa_dismissed','1');
+  const b=document.getElementById('pwaBanner');if(b)b.remove();
+  const btn=document.getElementById('pwaInstallBtn');if(btn)btn.style.display='none';
+  const dbtn=document.getElementById('drawerInstallBtn');if(dbtn)dbtn.style.display='none';
+});
+// Log why prompt might not fire — helps diagnose on real devices via remote debug
+window.addEventListener('load',function(){
+  setTimeout(function(){
+    console.log('[PWA] 3s after load — pwaPrompt is:', window.pwaPrompt?'AVAILABLE':'still null');
+    console.log('[PWA] display-mode standalone:', window.matchMedia('(display-mode: standalone)').matches);
+    console.log('[PWA] navigator.standalone (iOS):', navigator.standalone);
+    console.log('[PWA] SW controller:', navigator.serviceWorker?.controller?'active':'none yet');
+  }, 3000);
+});
+
 // ── CONFIG ──
 const SUPABASE_URL = 'https://hgzthbidfdqomuotdocb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnenRoYmlkZmRxb211b3Rkb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTI2NjEsImV4cCI6MjA5NjU4ODY2MX0.otgk-jq2k0COrIE3cUEnRBPYKGnzAHRi3LEIQhE7khA';
@@ -1848,14 +1878,25 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let provider, signer, userAddr, currentUser, mintPrice, mintType;
 
 // ── RPC PROVIDER ──
-// Use MetaMask provider if connected (no rate limit), fallback to public RPC
+// Use MetaMask provider if connected (no rate limit), fallback to public RPC.
+// Cache the fallback providers — creating a new JsonRpcProvider every call
+// forces ethers to re-run network detection (eth_chainId) each time, which
+// doubles every RPC call and adds up fast with 10s-interval polling (staking tab).
+let _cachedLitVMProvider=null;
+let _cachedBNBProvider=null;
 function getReadProvider(){
   if(provider) return provider; // MetaMask already connected - use it!
-  return new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+  if(!_cachedLitVMProvider){
+    _cachedLitVMProvider=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http',undefined,{staticNetwork:true});
+  }
+  return _cachedLitVMProvider;
 }
 function getBNBProvider(){
   // BNB reads always use public RPC (not LitVM)
-  return new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+  if(!_cachedBNBProvider){
+    _cachedBNBProvider=new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/',undefined,{staticNetwork:true});
+  }
+  return _cachedBNBProvider;
 }
 
 // ── CACHE ──
@@ -1990,7 +2031,7 @@ async function ensureUser(){
 async function checkPassType(){
   if(!userAddr) return;
   try{
-    const bnbP = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+    const bnbP = getBNBProvider();
     const nftAbi = ['function balanceOf(address) view returns(uint256)'];
     const goldNFT   = new ethers.Contract('0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c', nftAbi, bnbP);
     const silverNFT = new ethers.Contract('0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89', nftAbi, bnbP);
@@ -2062,7 +2103,7 @@ function showTab(tab){
   document.querySelectorAll('.mob-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('mobbtn-'+tab)?.classList.add('active');
   if(tab==='feed') document.getElementById('mobbtn-feed')?.classList.add('active');  if(tab==='profile') loadProfile();
-  if(tab==='staking'){ loadStakingInfo(); clearInterval(stakingTimer); stakingTimer=setInterval(loadStakingInfo,10000); }
+  if(tab==='staking'){ loadStakingInfo(); clearInterval(stakingTimer); stakingTimer=setInterval(loadStakingInfo,20000); }
   else clearInterval(stakingTimer);
   if(tab==='messages'){ loadConversations(); subscribeToConversations(); }
   else {
@@ -2266,6 +2307,7 @@ async function createPost(){
   btn.disabled=false; btn.textContent='Post';
 }
 let postsRealtimeChannel=null;
+let notifsAutoChannel=null;
 function subscribeToNewPosts(){
   if(postsRealtimeChannel) return;
   postsRealtimeChannel=sb.channel('posts-feed')
@@ -4494,9 +4536,16 @@ async function showFollowersList(wallet, type){
 async function cleanupOldNotifications(){
   if(!userAddr)return;
   try{
+    // All notification types (likes, follows, challenges, DMs) — cleaned up after 24h
     const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
-    await sb.from('notifications').delete().eq('to_wallet',userAddr).lt('created_at',cutoff);
-  }catch(e){}
+    const res=await sb.from('notifications').delete().eq('to_wallet',userAddr).lt('created_at',cutoff);
+    // If this errors silently, it's almost always a Supabase RLS policy blocking
+    // DELETE for the anon key (no auth.uid() since there's no Supabase Auth here).
+    // Check: Supabase → Authentication → Policies → notifications table → DELETE policy
+    // should allow it for the anon role, e.g.: USING (true) or a wallet-based check
+    // that doesn't rely on auth.uid().
+    if(res.error) console.warn('cleanupOldNotifications blocked (likely RLS):', res.error.message);
+  }catch(e){console.warn('cleanupOldNotifications failed:',e.message);}
 }
 async function loadNotifications(){
   if(!userAddr)return;
@@ -4594,17 +4643,17 @@ function subscribeToConversations(){
   if(!userAddr||convsRealtimeChannel) return;
 
   // Realtime WebSocket - listens for ALL messages involving this user
-  convsRealtimeChannel=sb.channel('msgs-'+userAddr+'-'+Date.now())
+  convsRealtimeChannel=sb.channel('msgs-'+userAddr)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
       const m=payload.new;
       if(!m) return;
-      // Only handle messages TO or FROM this user
       if(m.to_wallet!==userAddr&&m.from_wallet!==userAddr) return;
       handleNewMessage(m);
     })
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
         convsRealtimeChannel=null;
+        // Only poll as a FALLBACK when Realtime fails — not always-on
         clearInterval(_msgPollTimer);
         _msgPollTimer=setInterval(async function(){
           if(!userAddr)return;
@@ -4617,31 +4666,11 @@ function subscribeToConversations(){
             }
             if(currentDMWallet) loadMessages();
           }catch(e){}
-        },15000); // fallback: every 15s (not 2s)
+        },20000); // fallback only
       }
     });
-
-  // Polling backup — only when Realtime may miss something
-  clearInterval(_msgPollTimer);
-  _msgPollTimer=setInterval(async function(){
-    if(!userAddr) return;
-    try{
-      const {count}=await sb.from('messages').select('*',{count:'exact',head:true})
-        .eq('to_wallet',userAddr).eq('read',false);
-      const c=count||0;
-      if(c!==_lastMsgCount){
-        _lastMsgCount=c;
-        updateUnreadBadge();
-        const convList=document.getElementById('convList');
-        if(convList&&convList.style.display!=='none') loadConversations();
-      }
-      // Refresh DM only if tab is open
-      if(currentDMWallet){
-        const mv=document.getElementById('view-messages');
-        if(mv&&mv.style.display!=='none') loadMessages();
-      }
-    }catch(e){}
-  },20000); // every 20s instead of 3s — Realtime handles instant delivery
+  // No always-on polling here — Realtime handles delivery.
+  // Polling only activates inside the CHANNEL_ERROR branch above.
 }
 
 function handleNewMessage(m){
@@ -4739,14 +4768,13 @@ async function openDM(wallet){
     })
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
-        // Fallback: increase polling frequency
+        // Fallback polling — only when Realtime connection fails
         clearInterval(dmTimer);
         dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},10000);
       }
     });
-  // Polling backup for active DM — Realtime handles instant delivery
-  clearInterval(dmTimer);
-  dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},15000);
+  // No always-on polling — Realtime delivers messages instantly.
+  // dmTimer only activates inside the CHANNEL_ERROR branch above.
 }
 function openDMByAddr(){const addr=document.getElementById('newDmAddr').value.trim().toLowerCase();if(!addr||!addr.startsWith('0x')){showToast('Enter valid address','err');return;}openDM(addr);}
 function showConvList(){
@@ -5547,7 +5575,10 @@ function buildLangPicker(){
       el.classList.remove('ready');
       if(pt)pt.textContent=t('pullToRefresh');
     }
-    if(diff>10)e.preventDefault();
+    // Only block native scroll once we've committed to a pull gesture (>10px),
+    // and only while actively pulling — avoids forcing the browser into
+    // synchronous (non-passive) touch handling on every single touchmove.
+    if(diff>10) e.preventDefault();
   },{passive:false});
 
   document.addEventListener('touchend',function(){
@@ -5626,19 +5657,96 @@ openApp=function(){
   _origOpenApp2();
   setTimeout(applyLang, 150);
 };
-let pwaPrompt=null;
+// PWA Install Banner — supports Android, iOS, macOS Safari, and desktop Chrome/Edge
+// On-device diagnostics — shows exactly which PWA installability requirement
+// is failing, directly on screen (no USB/remote debug needed).
+async function showPWADiagnostics(){
+  const lines=[];
+  const ua=navigator.userAgent;
 
-// PWA Install Banner
+  // 1. HTTPS check
+  lines.push((location.protocol==='https:'?'✅':'❌')+' HTTPS: '+location.protocol);
+
+  // 2. Manifest reachable + valid
+  try{
+    const res=await fetch('/manifest.json',{cache:'no-store'});
+    if(res.ok){
+      const m=await res.json();
+      lines.push('✅ manifest.json завантажується');
+      lines.push((m.icons&&m.icons.length>=2?'✅':'❌')+' Іконки: '+(m.icons?m.icons.length:0));
+      lines.push((m.start_url?'✅':'❌')+' start_url: '+(m.start_url||'—'));
+      lines.push((m.display==='standalone'||m.display==='fullscreen'?'✅':'❌')+' display: '+m.display);
+      lines.push((m.name||m.short_name?'✅':'❌')+' name: '+(m.name||m.short_name||'—'));
+    } else {
+      lines.push('❌ manifest.json HTTP '+res.status);
+    }
+  }catch(e){
+    lines.push('❌ manifest.json не завантажується: '+e.message);
+  }
+
+  // 3. Service Worker
+  if('serviceWorker' in navigator){
+    try{
+      const reg=await navigator.serviceWorker.getRegistration();
+      if(reg){
+        lines.push('✅ Service Worker зареєстрований');
+        lines.push((reg.active?'✅':'⏳')+' SW стан: '+(reg.active?'active':(reg.installing?'installing':'waiting')));
+      } else {
+        lines.push('❌ Service Worker НЕ зареєстрований');
+      }
+    }catch(e){
+      lines.push('❌ SW помилка: '+e.message);
+    }
+  } else {
+    lines.push('❌ Service Worker не підтримується браузером');
+  }
+
+  // 4. Already installed?
+  lines.push((window.matchMedia('(display-mode: standalone)').matches?'⚠️':'✅')+' Вже встановлено: '+window.matchMedia('(display-mode: standalone)').matches);
+
+  // 5. beforeinstallprompt status
+  lines.push((window.pwaPrompt?'✅':'❌')+' beforeinstallprompt отримано: '+!!window.pwaPrompt);
+
+  // 6. Browser
+  const isChrome=/Chrome/i.test(ua)&&!/Edg|OPR/i.test(ua);
+  lines.push('ℹ️ Браузер: '+(isChrome?'Chrome':ua.match(/Edg|OPR|Firefox|Samsung/i)?.[0]||'інший'));
+
+  // 7. dismissed flag
+  const dismissed=localStorage.getItem('og_pwa_dismissed');
+  lines.push((dismissed?'⚠️':'✅')+' Раніше закрито банер: '+!!dismissed);
+
+  const html=lines.map(l=>'<div style="padding:4px 0;border-bottom:1px solid var(--border);">'+esc(l)+'</div>').join('');
+
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:400px;width:100%;max-height:80vh;overflow-y:auto;">
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px;">🔧 PWA Діагностика</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Скопіюй цей текст і надішли розробнику</div>
+      <div style="font-family:monospace;font-size:11px;">${html}</div>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;margin-top:16px;padding:10px;border-radius:10px;background:var(--gold);color:#08090C;border:none;font-weight:700;cursor:pointer;">Закрити</button>
+    </div>
+  `;
+  modal.onclick=function(e){if(e.target===modal)modal.remove();};
+  document.body.appendChild(modal);
+}
+
 function showPWABanner(){
-  if(localStorage.getItem('og_pwa_dismissed')) return;
+  if(localStorage.getItem('og_pwa_dismissed')){
+    console.log('[PWA] Banner skipped — og_pwa_dismissed flag is set in localStorage');
+    return;
+  }
   if(window.matchMedia('(display-mode: standalone)').matches) return;
   if(navigator.standalone) return;
   const existing=document.getElementById('pwaBanner');
   if(existing) return;
 
-  const isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const isAndroid=/Android/i.test(navigator.userAgent);
-  if(!isIOS && !isAndroid) return; // Desktop — не показуємо
+  const ua=navigator.userAgent;
+  const isIOS=/iPhone|iPad|iPod/i.test(ua);
+  const isMac=/Macintosh/i.test(ua) && !isIOS;
+  const isAndroid=/Android/i.test(ua);
+  const isSafari=/^((?!chrome|android).)*safari/i.test(ua);
+  const isChromeLike=/Chrome|Edg|OPR/i.test(ua) && !isSafari;
 
   // Тексти по мовах
   const tx={
@@ -5647,19 +5755,22 @@ function showPWABanner(){
     btn:{uk:'Встановити',ru:'Установить',en:'Install',hi:'इंस्टॉल करें',zh:'安装',tr:'Yükle',de:'Installieren'},
     iosHint:{uk:'Натисни',ru:'Нажми',en:'Tap',hi:'टैप करें',zh:'点击',tr:'Dokunun',de:'Tippe'},
     iosStep:{uk:'→ «На екран Додому»',ru:'→ «На экран Домой»',en:'→ Add to Home Screen',hi:'→ होम स्क्रीन पर जोड़ें',zh:'→ 添加到主屏幕',tr:'→ Ana Ekrana Ekle',de:'→ Zum Home-Bildschirm'},
-    close:{uk:'Закрити',ru:'Закрыть',en:'Close',hi:'बंद करें',zh:'关闭',tr:'Kapat',de:'Schließen'},
+    macSafariStep:{uk:'→ «Додати на Dock»',ru:'→ «Добавить в Dock»',en:'→ Add to Dock',hi:'→ डॉक में जोड़ें',zh:'→ 添加到程序坞',tr:'→ Dock\'a Ekle',de:'→ Zum Dock hinzufügen'},
     later:{uk:'Пізніше',ru:'Позже',en:'Later',hi:'बाद में',zh:'稍后',tr:'Sonra',de:'Später'},
   };
   const L=currentLang||'en';
-  const g=k=>tx[k][L]||tx[k]['en'];
+  const g=k=>(tx[k]&&tx[k][L])||(tx[k]&&tx[k]['en'])||'';
 
   const banner=document.createElement('div');
   banner.id='pwaBanner';
+  const isMobile=isIOS||isAndroid;
   banner.style.cssText=[
     'position:fixed',
-    'bottom:70px',
-    'left:10px',
-    'right:10px',
+    isMobile?'bottom:70px':'bottom:20px',
+    isMobile?'left:10px':'auto',
+    isMobile?'right:10px':'auto',
+    isMobile?'':'right:20px',
+    isMobile?'':'width:320px',
     'background:linear-gradient(135deg,#0E1018,#141720)',
     'border:1.5px solid rgba(245,200,66,0.5)',
     'border-radius:18px',
@@ -5668,60 +5779,83 @@ function showPWABanner(){
     'box-shadow:0 8px 32px rgba(0,0,0,.8)',
     'animation:pwaSlide .35s cubic-bezier(.34,1.56,.64,1)',
     'pointer-events:all',
-  ].join(';');
+  ].filter(Boolean).join(';');
 
-  if(isAndroid && pwaPrompt){
-    banner.innerHTML=`
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-        <img src="/icon-192.png" style="width:48px;height:48px;border-radius:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.4);"/>
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:700;color:#EDF0F5;margin-bottom:2px;">${g('title')}</div>
-          <div style="font-size:12px;color:#5A6478;line-height:1.4;">${g('sub')}</div>
-        </div>
+  const installRow=(text)=>`
+    <div style="display:flex;gap:8px;">
+      <button onclick="smartInstall()" style="flex:1;padding:11px;border-radius:11px;background:var(--gold);color:#08090C;font-size:14px;font-weight:700;border:none;cursor:pointer;">📲 ${text}</button>
+      <button onclick="dismissPWA()" style="padding:11px 16px;border-radius:11px;background:rgba(255,255,255,0.06);color:#5A6478;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">${g('later')}</button>
+    </div>`;
+
+  const manualRow=(icon,stepText)=>`
+    <div style="background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);border-radius:11px;padding:12px;display:flex;align-items:center;gap:10px;">
+      <div style="font-size:20px;">${icon}</div>
+      <div style="font-size:12px;color:#EDF0F5;line-height:1.5;">${stepText}</div>
+    </div>`;
+
+  const header=(showClose)=>`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+      <img src="/icon-192.png" style="width:48px;height:48px;border-radius:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.4);"/>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:700;color:#EDF0F5;margin-bottom:2px;">${g('title')}</div>
+        <div style="font-size:12px;color:#5A6478;line-height:1.4;">${g('sub')}</div>
       </div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="installPWA()" style="flex:1;padding:11px;border-radius:11px;background:var(--gold);color:#08090C;font-size:14px;font-weight:700;border:none;cursor:pointer;">📲 ${g('btn')}</button>
-        <button onclick="dismissPWA()" style="padding:11px 16px;border-radius:11px;background:rgba(255,255,255,0.06);color:#5A6478;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">${g('later')}</button>
-      </div>
-    `;
-  } else if(isIOS){
-    banner.innerHTML=`
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-        <img src="/icon-192.png" style="width:48px;height:48px;border-radius:12px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.4);"/>
-        <div style="flex:1;">
-          <div style="font-size:15px;font-weight:700;color:#EDF0F5;margin-bottom:2px;">${g('title')}</div>
-          <div style="font-size:12px;color:#5A6478;line-height:1.4;">${g('sub')}</div>
-        </div>
-        <button onclick="dismissPWA()" style="background:none;border:none;color:#5A6478;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;">✕</button>
-      </div>
-      <div style="background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.2);border-radius:11px;padding:12px;display:flex;align-items:center;gap:10px;">
-        <div style="font-size:22px;">⎙</div>
-        <div style="font-size:12px;color:#EDF0F5;line-height:1.5;">
-          ${g('iosHint')} <b style="color:var(--gold);">⎙ Share</b> ${g('iosStep')}
-        </div>
-      </div>
-    `;
+      ${showClose?'<button onclick="dismissPWA()" style="background:none;border:none;color:#5A6478;font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;">✕</button>':''}
+    </div>`;
+
+  // ── Branch by platform — keep it SIMPLE: one button that "just works" ──
+  if(isIOS){
+    // No native install API on iOS Safari — only manual path exists.
+    banner.innerHTML = header(true) + manualRow('⎙', `${g('iosHint')} <b style="color:var(--gold);">⎙ Share</b> ${g('iosStep')}`);
+  } else if(isMac && isSafari){
+    banner.innerHTML = header(true) + manualRow('⎙', `${g('iosHint')} <b style="color:var(--gold);">⎙ Share</b> ${g('macSafariStep')}`);
+  } else if(isAndroid || isChromeLike){
+    // Android Chrome, desktop Chrome/Edge/Opera — always show ONE "Install"
+    // button. If the native prompt isn't ready yet at click time, smartInstall()
+    // below waits briefly and retries before falling back to instructions.
+    banner.innerHTML = header(false) + installRow(g('btn'));
+  } else {
+    return; // Unsupported browser (e.g. Firefox desktop) — no install path, skip silently
   }
 
   document.body.appendChild(banner);
 }
 
 function triggerInstall(){
-  if(pwaPrompt){
-    installPWA();
-  } else {
-    // iOS або вже після prompt — показуємо банер з інструкцією
-    localStorage.removeItem('og_pwa_dismissed'); // скидаємо щоб показало
-    showPWABanner();
-  }
+  smartInstall();
 }
 
-// Показуємо кнопку в drawer якщо ще не встановлено
+// One button to rule them all: tries the native install prompt; if it's not
+// ready yet (race with beforeinstallprompt), waits up to ~2s and retries
+// before quietly falling back to on-screen instructions. This is what makes
+// "Встановити" work with a single tap for most people, most of the time —
+// exactly like before — without making anyone hunt through browser menus.
+async function smartInstall(){
+  if(window.pwaPrompt){
+    await installPWA();
+    return;
+  }
+  // Prompt not ready yet — wait briefly in case it's about to fire
+  let waited=0;
+  while(!window.pwaPrompt && waited<2000){
+    await new Promise(r=>setTimeout(r,200));
+    waited+=200;
+  }
+  if(window.pwaPrompt){
+    await installPWA();
+    return;
+  }
+  // Still not available — this browser/session genuinely doesn't support
+  // one-tap install right now. Show the manual fallback instead of nothing.
+  const ua=navigator.userAgent;
+  const isAndroid=/Android/i.test(ua);
+  showToast(isAndroid?'Меню ⋮ → "Встановити додаток"':'Шукай іконку встановлення в адресному рядку','ok');
+}
+
+// Показуємо кнопку в drawer якщо ще не встановлено (усі платформи, не лише мобільні)
 function initInstallBtn(){
   if(window.matchMedia('(display-mode: standalone)').matches) return;
   if(navigator.standalone) return;
-  const isMob=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if(!isMob) return;
   const dbtn=document.getElementById('drawerInstallBtn');
   if(dbtn) dbtn.style.display='block';
 }
@@ -5732,29 +5866,51 @@ function dismissPWA(){
   localStorage.setItem('og_pwa_dismissed','1');
 }
 
-window.addEventListener('beforeinstallprompt',e=>{
-  e.preventDefault();
-  pwaPrompt=e;
+// If beforeinstallprompt fires AFTER the banner is already showing manual
+// instructions, swap it out for the real one-tap install banner.
+document.addEventListener('pwaPromptReady', function(){
+  console.log('[PWA] Prompt became ready — upgrading banner if shown');
   const btn=document.getElementById('pwaInstallBtn');if(btn)btn.style.display='block';
   const dbtn=document.getElementById('drawerInstallBtn');if(dbtn)dbtn.style.display='block';
-  setTimeout(showPWABanner,4000);
+  const existing=document.getElementById('pwaBanner');
+  if(existing){
+    // A manual-instructions banner is already showing — replace it with the
+    // real one-tap install banner now that the browser supports it.
+    // IMPORTANT: clear the dismissed flag here, because the user hasn't
+    // actually dismissed THIS (better) version of the banner yet.
+    existing.remove();
+    localStorage.removeItem('og_pwa_dismissed');
+    showPWABanner();
+  }
+  // If no banner is showing yet, the scheduled setTimeout(showPWABanner, 4500)
+  // below will pick up window.pwaPrompt naturally once it fires — no need to
+  // duplicate that here.
 });
 
-if(/iPhone|iPad|iPod/i.test(navigator.userAgent)&&!navigator.standalone){
-  setTimeout(showPWABanner,5000);
-}
+// Trigger banner on load for platforms that show manual instructions
+// (no beforeinstallprompt event exists for iOS/Safari/in-app browsers)
+(function(){
+  const ua=navigator.userAgent;
+  const isIOS=/iPhone|iPad|iPod/i.test(ua);
+  const isMac=/Macintosh/i.test(ua) && !isIOS;
+  const isAndroid=/Android/i.test(ua);
+  const isSafari=/^((?!chrome|android).)*safari/i.test(ua);
+  if((isIOS && !navigator.standalone) || (isMac && isSafari) || isAndroid){
+    setTimeout(showPWABanner, 4500);
+  }
+})();
 
 async function installPWA(){
-  if(!pwaPrompt)return;
-  pwaPrompt.prompt();
-  const result=await pwaPrompt.userChoice;
+  if(!window.pwaPrompt)return;
+  window.pwaPrompt.prompt();
+  const result=await window.pwaPrompt.userChoice;
   if(result.outcome==='accepted'){
     const btn=document.getElementById('pwaInstallBtn');if(btn)btn.style.display='none';
     const dbtn=document.getElementById('drawerInstallBtn');if(dbtn)dbtn.style.display='none';
     dismissPWA();
     showToast('✓ Додаток встановлено!','ok');
   }
-  pwaPrompt=null;
+  window.pwaPrompt=null;
 }
 
 // PWA animations
@@ -5807,7 +5963,11 @@ async function _doConnect(addr){
   setTimeout(function(){
     subscribeToConversations();
     updateUnreadBadge();
-    try{sb.channel('notifs-auto-'+userAddr).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){updateNotifBadge();}).subscribe();}catch(e){}
+    try{
+      if(!notifsAutoChannel){
+        notifsAutoChannel=sb.channel('notifs-'+userAddr).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(){updateNotifBadge();}).subscribe();
+      }
+    }catch(e){}
     subscribeToMyGameInvites();
   },800);
 }
@@ -5822,7 +5982,14 @@ if(window.ethereum){
   window.ethereum.on('chainChanged',()=>location.reload());
 }</script>
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').then(()=>console.log('SW registered')).catch(e=>console.log('SW error',e));});}
+if('serviceWorker' in navigator){
+  // Register immediately (not waiting for window.load) — Chrome needs an
+  // active SW with a fetch handler to consider the site PWA-installable,
+  // and delaying registration delays/blocks the beforeinstallprompt event.
+  navigator.serviceWorker.register('/sw.js')
+    .then(reg=>console.log('[PWA] SW registered:',reg.scope))
+    .catch(e=>console.log('[PWA] SW registration failed:',e.message));
+}
 </script>
 </body>
 </html>
