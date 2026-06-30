@@ -2076,8 +2076,13 @@ async function connectViaWalletConnect(triedIds){
     // baked in at init time and can't be swapped on an existing one).
     wcProvider=await window.EthereumProvider.init({
       projectId: pid,
-      chains: [4441], // LitVM — primary chain used by OpenGate
-      optionalChains: [56, 4441], // BNB Chain + LitVM
+      // BNB Chain (56) is a well-known public chain that every wallet's
+      // WalletConnect integration recognizes. LitVM (4441) is custom/unknown
+      // to wallet registries — putting it in the *required* `chains` array
+      // can cause wallets to silently reject the session instead of showing
+      // an error, which looked like "nothing happens, falls back to deeplink".
+      chains: [56],
+      optionalChains: [4441, 56],
       showQrModal: true,
       methods: ['eth_sendTransaction','eth_signTransaction','eth_sign','personal_sign','eth_signTypedData','wallet_switchEthereumChain','wallet_addEthereumChain'],
       events: ['chainChanged','accountsChanged'],
@@ -2092,6 +2097,7 @@ async function connectViaWalletConnect(triedIds){
         icons: [window.location.origin+'/icon-192.png']
       },
     });
+    console.log('[WalletConnect] Provider initialized with projectId:',pid);
     wcProvider.on('accountsChanged',function(accounts){
       if(accounts&&accounts.length>0){ _doConnect(accounts[0]); }
       else { localStorage.removeItem('og_wallet'); location.reload(); }
@@ -2101,8 +2107,13 @@ async function connectViaWalletConnect(triedIds){
       localStorage.removeItem('og_wallet');
       showToast('WalletConnect відключено','ok');
     });
+    wcProvider.on('display_uri',function(uri){
+      console.log('[WalletConnect] display_uri (QR/deeplink URI):',uri);
+    });
 
+    console.log('[WalletConnect] Calling enable()...');
     const accounts=await wcProvider.enable();
+    console.log('[WalletConnect] enable() resolved with accounts:',accounts);
     if(accounts&&accounts.length>0){
       window.ethereum=wcProvider; // route subsequent ethers calls through WC
       provider=new ethers.BrowserProvider(wcProvider);
@@ -2110,6 +2121,7 @@ async function connectViaWalletConnect(triedIds){
       await _doConnect(accounts[0]);
     }
   }catch(e){
+    console.error('[WalletConnect] connectViaWalletConnect failed:',e);
     const msg=(e?.message||'').toLowerCase();
     if(msg.includes('rejected')||msg.includes('user closed')){
       showToast('Підключення скасовано','err');
