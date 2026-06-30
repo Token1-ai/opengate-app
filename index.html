@@ -29,6 +29,7 @@
 <title>OpenGate — Post. Earn. Own.</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@walletconnect/ethereum-provider@2.13.3/dist/index.umd.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -585,6 +586,16 @@ textarea.form-inp{resize:vertical;min-height:80px;}
         <div style="font-size:18px;">→</div>
       </button>
 
+      <!-- WalletConnect — для PWA на мобільному без вбудованого гаманця -->
+      <button onclick="connectWithWallet('walletconnect')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg3);border:2px solid rgba(59,130,246,0.3);border-radius:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;">
+        <div style="width:40px;height:40px;border-radius:10px;background:#3B99FC;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;color:#fff;">🔗</div>
+        <div style="flex:1;">
+          <div style="font-size:15px;font-weight:700;color:var(--text);">WalletConnect</div>
+          <div style="font-size:12px;color:var(--muted);">QR-код або будь-який гаманець</div>
+        </div>
+        <div style="font-size:18px;">→</div>
+      </button>
+
       <!-- Other -->
       <button onclick="connectWithWallet('injected')" style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;cursor:pointer;text-align:left;width:100%;-webkit-tap-highlight-color:transparent;">
         <div style="width:40px;height:40px;border-radius:10px;background:var(--bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔗</div>
@@ -596,7 +607,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 
       <!-- Info для мобільного -->
       <div id="mobileWalletHint" style="display:none;background:rgba(245,200,66,0.05);border:1px solid var(--border-g);border-radius:10px;padding:12px;font-size:12px;color:var(--muted);line-height:1.6;text-align:center;">
-        📱 Натисни MetaMask або Trust Wallet вище — ми відкриємо сайт прямо в браузері додатку
+        📱 Якщо встановлений додаток OpenGate — обери <b style="color:var(--gold);">WalletConnect</b> вище, щоб підключити гаманець не виходячи з нього
       </div>
     </div>
   </div>
@@ -1879,24 +1890,20 @@ let provider, signer, userAddr, currentUser, mintPrice, mintType;
 
 // ── RPC PROVIDER ──
 // Use MetaMask provider if connected (no rate limit), fallback to public RPC.
-// Cache the fallback providers — creating a new JsonRpcProvider every call
-// forces ethers to re-run network detection (eth_chainId) each time, which
-// doubles every RPC call and adds up fast with 10s-interval polling (staking tab).
-let _cachedLitVMProvider=null;
-let _cachedBNBProvider=null;
+// NOTE: earlier attempts to "optimize" this by passing network options
+// (staticNetwork, explicit Network objects) caused real breakage — Contract's
+// internal .clone() calls failed, and in some sandboxed preview environments
+// (not the live site) even network detection itself broke. Plain, uncached
+// JsonRpcProvider construction is the version that's actually reliable.
+// The minor extra eth_chainId call per fresh provider is a worthwhile
+// trade for correctness over a micro-optimization that kept backfiring.
 function getReadProvider(){
   if(provider) return provider; // MetaMask already connected - use it!
-  if(!_cachedLitVMProvider){
-    _cachedLitVMProvider=new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http',undefined,{staticNetwork:true});
-  }
-  return _cachedLitVMProvider;
+  return new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
 }
 function getBNBProvider(){
   // BNB reads always use public RPC (not LitVM)
-  if(!_cachedBNBProvider){
-    _cachedBNBProvider=new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/',undefined,{staticNetwork:true});
-  }
-  return _cachedBNBProvider;
+  return new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
 }
 
 // ── CACHE ──
@@ -1972,8 +1979,118 @@ async function connectWithWallet(type){
       return;
     }
   }
+  if(type==='walletconnect'){
+    await connectViaWalletConnect();
+    return;
+  }
   await connectWallet();
 }
+
+// ── WALLETCONNECT — for installed PWA / browsers without an injected wallet.
+// On desktop with MetaMask extension, nothing here changes that flow at all;
+// this is purely an additional connection option for when window.ethereum
+// isn't available (e.g. the OpenGate PWA installed on a phone home screen).
+// ── WALLETCONNECT PROJECT ID POOL ──
+// Reown's free Starter plan caps each project at 500 active users/month.
+// To scale past that without paying yet, register several free projects
+// (each its own Project ID, all under dashboard.reown.com) and rotate
+// between them. When one fills up its monthly quota, the connection
+// attempt will fail/be rejected by the relay — we detect that and
+// automatically retry with the next ID in the list, so users are
+// transparently routed to whichever project still has room.
+//
+// HOW TO ADD MORE: create additional free projects at dashboard.reown.com
+// (different project names under the same "OpenGate" team work fine),
+// copy each "Project ID", and add it to this array. Order doesn't matter —
+// we rotate randomly so load spreads evenly instead of always hammering
+// the first ID until IT specifically fills up.
+const WALLETCONNECT_PROJECT_IDS=[
+  'a589ad2d884ca362de8e07ac6971ec85', // OpenGate (team 1)
+  '8f4bebbc7a1825f8bd8ed01297b6c4f4', // OpenGate (team 2)
+  'f0ec2e878a22cccc4241506fca622eae', // OpenGate (team 3)
+  '2f53f95ef6bbc51d76edfa800da4d0b1', // OpenGate (team 4)
+  'fceb518a977ba9be3fa8b7373f0a0872', // OpenGate (team 5)
+];
+// Sticky pick per browser session — once a user lands on a working project ID
+// we keep using it for the rest of their session (avoids re-pairing mid-use).
+function pickWalletConnectProjectId(excludeIds){
+  excludeIds=excludeIds||[];
+  const candidates=WALLETCONNECT_PROJECT_IDS.filter(id=>!excludeIds.includes(id));
+  if(candidates.length===0) return null;
+  // Random pick spreads load evenly across all registered free projects
+  return candidates[Math.floor(Math.random()*candidates.length)];
+}
+let wcProvider=null;
+async function connectViaWalletConnect(triedIds){
+  triedIds=triedIds||[];
+  try{
+    if(typeof window.EthereumProvider==='undefined'){
+      showToast('WalletConnect ще завантажується, спробуй ще раз через секунду','err');
+      return;
+    }
+    const pid=pickWalletConnectProjectId(triedIds);
+    if(!pid){
+      showToast('Всі WalletConnect проекти зайняті, спробуй пізніше','err');
+      return;
+    }
+    showToast('Відкриваємо WalletConnect...','ok');
+    // Always build a fresh provider for this attempt — switching project IDs
+    // mid-session requires a new EthereumProvider instance (the projectId is
+    // baked in at init time and can't be swapped on an existing one).
+    wcProvider=await window.EthereumProvider.init({
+      projectId: pid,
+      chains: [4441], // LitVM — primary chain used by OpenGate
+      optionalChains: [56, 4441], // BNB Chain + LitVM
+      showQrModal: true,
+      methods: ['eth_sendTransaction','eth_signTransaction','eth_sign','personal_sign','eth_signTypedData','wallet_switchEthereumChain','wallet_addEthereumChain'],
+      events: ['chainChanged','accountsChanged'],
+      rpcMap: {
+        4441: 'https://liteforge.rpc.caldera.xyz/http',
+        56: 'https://bsc-dataseed.binance.org/'
+      },
+      metadata: {
+        name: 'OpenGate',
+        description: 'Post. Earn. Own. Web3 social platform on LitVM + BNB Chain.',
+        url: window.location.origin,
+        icons: [window.location.origin+'/icon-192.png']
+      },
+    });
+    wcProvider.on('accountsChanged',function(accounts){
+      if(accounts&&accounts.length>0){ _doConnect(accounts[0]); }
+      else { localStorage.removeItem('og_wallet'); location.reload(); }
+    });
+    wcProvider.on('chainChanged',()=>location.reload());
+    wcProvider.on('disconnect',function(){
+      localStorage.removeItem('og_wallet');
+      showToast('WalletConnect відключено','ok');
+    });
+
+    const accounts=await wcProvider.enable();
+    if(accounts&&accounts.length>0){
+      window.ethereum=wcProvider; // route subsequent ethers calls through WC
+      provider=new ethers.BrowserProvider(wcProvider);
+      localStorage.setItem('og_wc_project_id',pid); // remember which project worked
+      await _doConnect(accounts[0]);
+    }
+  }catch(e){
+    const msg=(e?.message||'').toLowerCase();
+    if(msg.includes('rejected')||msg.includes('user closed')){
+      showToast('Підключення скасовано','err');
+      return;
+    }
+    // Quota / capacity errors from the relay — try the next free project ID
+    const isQuotaError=msg.includes('quota')||msg.includes('limit')||msg.includes('429')||msg.includes('too many')||msg.includes('capacity')||msg.includes('rate');
+    const pid=pickWalletConnectProjectId(triedIds);
+    if(isQuotaError && WALLETCONNECT_PROJECT_IDS.length>triedIds.length+1){
+      console.warn('[WalletConnect] Project ID hit quota, trying next one:',e.message);
+      const nextTried=[...triedIds, pid].filter(Boolean);
+      await connectViaWalletConnect(nextTried);
+      return;
+    }
+    showToast('Помилка WalletConnect: '+(e?.message||'').slice(0,50),'err');
+  }
+}
+
 
 async function connectWallet(){
   if(!window.ethereum){
@@ -5045,11 +5162,13 @@ async function loadPassSupply(){
     const gold=new ethers.Contract(GOLD_PASS,abi,p);
     const silver=new ethers.Contract(SILVER_PASS,abi,p);
     const [gMinted,gMax,sMinted,sMax]=await Promise.all([
-      gold.totalSupply().catch(()=>0n),
-      gold.MAX_SUPPLY().catch(()=>3000n),
-      silver.totalSupply().catch(()=>0n),
-      silver.MAX_SUPPLY().catch(()=>5000n),
+      gold.totalSupply().catch(e=>{console.warn('[Supply] Gold totalSupply() failed:',e.message);return 0n;}),
+      gold.MAX_SUPPLY().catch(e=>{console.warn('[Supply] Gold MAX_SUPPLY() failed:',e.message);return 3000n;}),
+      silver.totalSupply().catch(e=>{console.warn('[Supply] Silver totalSupply() failed:',e.message);return 0n;}),
+      silver.MAX_SUPPLY().catch(e=>{console.warn('[Supply] Silver MAX_SUPPLY() failed:',e.message);return 5000n;}),
     ]);
+    console.log('[Supply] Gold minted:',gMinted.toString(),'/ max:',gMax.toString());
+    console.log('[Supply] Silver minted:',sMinted.toString(),'/ max:',sMax.toString());
     const gLeft=Number(gMax)-Number(gMinted);
     const sLeft=Number(sMax)-Number(sMinted);
     const gEl=document.getElementById('goldSupply');
@@ -5063,7 +5182,7 @@ async function loadPassSupply(){
     document.querySelectorAll('.pass-card.silver .supply-fill').forEach(b=>{
       b.style.width=Math.min(100,(Number(sMinted)/5000)*100)+'%';
     });
-  }catch(e){}
+  }catch(e){console.warn('[Supply] loadPassSupply failed entirely:',e.message);}
 }
 
 // ── DRAWER ──
