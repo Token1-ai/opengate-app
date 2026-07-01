@@ -945,6 +945,91 @@ async function smartConnectWallet(){
       <div id="view-profile" style="display:none;">
         <div id="profileContent"><div class="app-loader">Connect wallet to view profile</div></div>
       </div>
+      <div id="view-bnblottery" style="display:none;">
+        <div class="feed-hdr">💰 BNB Lottery</div>
+        <div style="max-width:520px;margin:0 auto;padding:24px 16px;">
+
+          <!-- Coming Soon Hero -->
+          <div style="text-align:center;padding:40px 20px;background:linear-gradient(135deg,rgba(245,200,66,0.08),rgba(38,217,138,0.04));border:1px solid rgba(245,200,66,0.25);border-radius:20px;margin-bottom:20px;">
+            <div style="font-size:64px;margin-bottom:16px;">💰</div>
+            <div style="font-size:24px;font-weight:800;margin-bottom:8px;">BNB Lottery</div>
+            <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:20px;letter-spacing:.05em;">COMING SOON</div>
+            <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">
+              Перша реальна лотерея на OpenGate.<br/>
+              Квитки за BNB або USDT. 10 переможців.<br/>
+              Рандом через <b style="color:var(--text);">Chainlink VRF</b> — чесно і прозоро.
+            </div>
+            <div style="font-size:13px;font-weight:700;color:var(--gold);">🔔 Слідкуйте за новинами!</div>
+          </div>
+
+          <!-- Features grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">🎟️</div>
+              <div style="font-size:13px;font-weight:700;">$0.90 / квиток</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">BNB або USDT</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">🏆</div>
+              <div style="font-size:13px;font-weight:700;">10 переможців</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Різні частки призу</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">⏱️</div>
+              <div style="font-size:13px;font-weight:700;">7 днів / раунд</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Авто-старт наступного</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">🔐</div>
+              <div style="font-size:13px;font-weight:700;">Chainlink VRF</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">100% чесний рандом</div>
+            </div>
+          </div>
+
+          <!-- Prize distribution -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Розподіл призів</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;">🥇 1-е місце</span>
+                <span style="font-size:13px;font-weight:700;color:var(--gold);">~30%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;">🥈 2-е місце</span>
+                <span style="font-size:13px;font-weight:700;color:var(--gold);">~20%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;">🥉 3-є місце</span>
+                <span style="font-size:13px;font-weight:700;color:var(--gold);">~15%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;color:var(--muted);">4-10 місця</span>
+                <span style="font-size:13px;font-weight:700;color:var(--muted);">~31%</span>
+              </div>
+              <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;color:var(--muted);">Комісія платформи</span>
+                <span style="font-size:12px;color:var(--muted);">10%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;color:var(--muted);">Seed наступного раунду</span>
+                <span style="font-size:12px;color:var(--muted);">4%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Social links -->
+          <div style="text-align:center;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Дізнавайся першим про запуск:</div>
+            <a href="https://x.com/OpenGatelive" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;font-size:13px;font-weight:700;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              @OpenGatelive
+            </a>
+          </div>
+
+        </div>
+      </div>
+
       <div id="view-faucet" style="display:none;">
         <div class="feed-hdr">🚰 GATE Faucet</div>
         <div style="padding:20px;max-width:500px;margin:0 auto;">
@@ -1087,6 +1172,14 @@ async function smartConnectWallet(){
             <div style="font-size:15px;font-weight:700;">Lending</div>
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">Borrow with collateral</div>
             <div style="font-size:11px;color:var(--silver);margin-top:6px;">10% APR · zkLTC ↔ GATE</div>
+          </div>
+          <!-- BNB Lottery — Coming Soon -->
+          <div onclick="showTab('bnblottery')" style="background:linear-gradient(135deg,rgba(245,200,66,0.05),rgba(38,217,138,0.03));border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,200,66,0.3)'">
+            <div style="position:absolute;top:8px;right:8px;background:var(--gold);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">SOON</div>
+            <div style="font-size:36px;margin-bottom:8px;">💰</div>
+            <div style="font-size:15px;font-weight:700;">BNB Lottery</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">10 winners · 7 days</div>
+            <div style="font-size:11px;color:var(--gold);margin-top:6px;">$0.90 · BNB or USDT</div>
           </div>
         </div>
       </div>
@@ -2255,6 +2348,7 @@ function showTab(tab){
   document.getElementById('view-games').style.display=tab==='games'?'block':'none';
   document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
   document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
+  document.getElementById('view-bnblottery').style.display=tab==='bnblottery'?'block':'none';
   // Scroll to top on mobile when switching tabs
   window.scrollTo({top:0,behavior:'smooth'});
   // Desktop sidebar
