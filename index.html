@@ -559,172 +559,74 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 
 <!-- WALLET SELECTION MODAL -->
 <div class="modal-overlay" id="walletModal">
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:28px 24px 36px;width:100%;max-width:480px;position:relative;" id="walletModalInner">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;position:relative;">
     <button class="modal-close-btn" onclick="document.getElementById('walletModal').classList.remove('open')">✕</button>
 
-    <!-- Desktop view: simple direct connect -->
+    <!-- Desktop -->
     <div id="walletDesktop">
       <div style="text-align:center;margin-bottom:24px;">
         <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" style="width:60px;height:60px;margin-bottom:12px;"/>
         <div style="font-size:20px;font-weight:700;margin-bottom:4px;">Підключити гаманець</div>
-        <div style="font-size:13px;color:var(--muted);">Підключіть MetaMask щоб користуватись OpenGate</div>
       </div>
       <button onclick="connectWallet()" style="width:100%;padding:16px;border-radius:14px;background:var(--gold);color:#08090C;font-size:16px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;">
-        🦊 Підключити MetaMask
+        🦊 MetaMask
       </button>
       <button onclick="connectWithWallet('trust')" style="width:100%;padding:14px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:600;cursor:pointer;">
         🛡 Trust Wallet
       </button>
     </div>
 
-    <!-- Mobile view: step-by-step guide -->
+    <!-- Mobile -->
     <div id="walletMobile" style="display:none;">
-      <!-- Step indicator -->
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:24px;">
-        <div id="step-dot-1" style="width:8px;height:8px;border-radius:50%;background:var(--gold);"></div>
-        <div id="step-dot-2" style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div>
-        <div id="step-dot-3" style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div>
+      <div style="text-align:center;margin-bottom:28px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" style="width:64px;height:64px;margin-bottom:16px;"/>
+        <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Відкрити в MetaMask</div>
+        <div style="font-size:14px;color:var(--muted);line-height:1.6;">OpenGate відкриється прямо в браузері MetaMask — гаманець підключиться автоматично</div>
       </div>
-
-      <!-- Step 1: Choose wallet -->
-      <div id="walletStep1">
-        <div style="text-align:center;margin-bottom:20px;">
-          <div style="font-size:32px;margin-bottom:8px;">👛</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Обери гаманець</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.5;">Натисни на свій гаманець нижче — він відкриється для підключення</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <button onclick="openInWallet('metamask')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg3);border:2px solid rgba(245,200,66,0.3);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;width:100%;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" style="width:42px;height:42px;flex-shrink:0;"/>
-            <div style="text-align:left;">
-              <div style="font-size:15px;font-weight:700;color:var(--text);">MetaMask</div>
-              <div style="font-size:12px;color:var(--muted);">Найпопулярніший Web3 гаманець</div>
-            </div>
-            <div style="margin-left:auto;font-size:18px;color:var(--muted);">→</div>
-          </button>
-          <button onclick="openInWallet('trust')" style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg3);border:2px solid rgba(51,117,187,0.3);border-radius:14px;cursor:pointer;-webkit-tap-highlight-color:transparent;width:100%;">
-            <div style="width:42px;height:42px;border-radius:10px;background:#3375BB;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🛡</div>
-            <div style="text-align:left;">
-              <div style="font-size:15px;font-weight:700;color:var(--text);">Trust Wallet</div>
-              <div style="font-size:12px;color:var(--muted);">Мобільний гаманець від Binance</div>
-            </div>
-            <div style="margin-left:auto;font-size:18px;color:var(--muted);">→</div>
-          </button>
-        </div>
-      </div>
-
-      <!-- Step 2: Instructions inside wallet browser -->
-      <div id="walletStep2" style="display:none;">
-        <div style="text-align:center;margin-bottom:20px;">
-          <div style="font-size:32px;margin-bottom:8px;">📱</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:6px;">Відкрий сайт у гаманці</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.6;">Ти переходиш в <b id="walletBrandName" style="color:var(--gold);">MetaMask</b>. Там:</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:12px;">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);color:#08090C;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">1</div>
-            <div style="font-size:13px;color:var(--text);line-height:1.5;">Знайди <b>🌐 Браузер</b> або адресний рядок внизу</div>
-          </div>
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:12px;">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);color:#08090C;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">2</div>
-            <div style="font-size:13px;color:var(--text);line-height:1.5;">Введи <b style="color:var(--gold);">opengate.bond</b> і відкрий сайт</div>
-          </div>
-          <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--bg3);border-radius:12px;">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--gold);color:#08090C;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">3</div>
-            <div style="font-size:13px;color:var(--text);line-height:1.5;">Натисни <b>Connect Wallet</b> — гаманець підключиться автоматично</div>
-          </div>
-        </div>
-        <button id="goToWalletBtn" onclick="goToWalletNow()" style="width:100%;padding:16px;border-radius:14px;background:var(--gold);color:#08090C;font-size:16px;font-weight:700;border:none;cursor:pointer;margin-bottom:10px;">
-          Перейти в гаманець →
-        </button>
-        <button onclick="showWalletStep(1)" style="width:100%;padding:10px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;">
-          ← Назад
-        </button>
-      </div>
-
-      <!-- Step 3: Already connected tip -->
-      <div id="walletStep3" style="display:none;">
-        <div style="text-align:center;">
-          <div style="font-size:48px;margin-bottom:12px;">✅</div>
-          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Наступного разу — автоматично</div>
-          <div style="font-size:13px;color:var(--muted);line-height:1.6;">Після першого підключення через браузер гаманця, PWA-додаток буде підключатись сам при відкритті</div>
-        </div>
-      </div>
+      <button onclick="window.location.href='https://metamask.app.link/dapp/opengate.bond'" style="width:100%;padding:18px;border-radius:14px;background:var(--gold);color:#08090C;font-size:17px;font-weight:700;border:none;cursor:pointer;margin-bottom:12px;-webkit-tap-highlight-color:transparent;">
+        🦊 Відкрити в MetaMask
+      </button>
+      <button onclick="window.location.href='https://link.trustwallet.com/open_url?coin_id=60&url=https://opengate.bond'" style="width:100%;padding:16px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        🛡 Відкрити в Trust Wallet
+      </button>
     </div>
   </div>
 </div>
 
 <script>
-let _walletType='metamask';
-let _walletUrl='';
-
-function toggleMoreWalletOptions(){} // kept for compatibility
+function toggleMoreWalletOptions(){}
 
 function initWalletModal(){
   const isMob=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   document.getElementById('walletDesktop').style.display=isMob?'none':'block';
   document.getElementById('walletMobile').style.display=isMob?'block':'none';
-  // On desktop, modal should not be bottom-sheet
-  const inner=document.getElementById('walletModalInner');
+  const inner=document.getElementById('walletModal').querySelector('div');
   if(!isMob) inner.style.borderRadius='24px';
 }
 
-function showWalletStep(n){
-  [1,2,3].forEach(function(i){
-    const el=document.getElementById('walletStep'+i);
-    if(el) el.style.display=(i===n)?'block':'none';
-    const dot=document.getElementById('step-dot-'+i);
-    if(dot) dot.style.background=(i<=n)?'var(--gold)':'var(--border)';
-  });
-}
+function showWalletStep(){}
+function openInWallet(){}
+function goToWalletNow(){}
 
-function openInWallet(type){
-  _walletType=type;
-  document.getElementById('walletBrandName').textContent=type==='metamask'?'MetaMask':'Trust Wallet';
-  if(type==='metamask'){
-    _walletUrl='https://metamask.app.link/dapp/opengate.bond';
-  } else {
-    _walletUrl='https://link.trustwallet.com/open_url?coin_id=60&url=https://opengate.bond';
+function handleConnectClick(){
+  if(window.ethereum){
+    connectWallet();
+    return;
   }
-  showWalletStep(2);
+  const modal=document.getElementById('walletModal');
+  if(modal){
+    modal.classList.add('open');
+    initWalletModal();
+  }
 }
 
-function goToWalletNow(){
-  window.open(_walletUrl,'_blank');
-}
-
-// Override connectWallet button to use new modal flow on mobile
 async function smartConnectWallet(){
-  const btn=document.getElementById('primaryConnectBtn');
-  if(btn){
-    const originalText=btn.innerHTML;
-    btn.disabled=true;
-    btn.innerHTML='⏳ Підключення...';
-    try{
-      if(window.ethereum){
-        await connectWallet();
-        return;
-      }
-      // Mobile without injected wallet — show modal guide
-      document.getElementById('walletModal').classList.add('open');
-      initWalletModal();
-      showWalletStep(1);
-    } catch(e){
-      showToast('Помилка: '+(e?.message||'').slice(0,40),'err');
-    } finally {
-      btn.disabled=false;
-      btn.innerHTML=originalText;
-    }
+  if(window.ethereum){
+    await connectWallet();
+  } else {
+    handleConnectClick();
   }
 }
-
-// Init modal on open
-document.getElementById('walletModal').addEventListener('click',function(e){
-  if(e.target===this) this.classList.remove('open');
-});
-
-// When modal opens — init view
-const _origWalletModalOpen=document.getElementById('connectBtn')?.onclick;
 </script>
 
 
