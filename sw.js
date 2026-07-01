@@ -1,15 +1,15 @@
-const CACHE_NAME = 'opengate-v4';
+const CACHE_NAME = 'opengate-v5';
 
-// Cache only local static files — served instantly from cache
+// Cache ONLY icons and manifest — NOT index.html!
+// index.html must always be fetched fresh from the network so users
+// always get the latest version after Vercel deployments.
 const ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
 ];
 
-// Domains to NEVER cache — always fetch fresh from network
+// Never cache these domains
 const BYPASS_HOSTS = [
   'supabase.co',
   'pinata.cloud',
@@ -22,14 +22,16 @@ const BYPASS_HOSTS = [
   'bscscan.com',
   'googleapis.com',
   'cdnjs.cloudflare.com',
-  'jsdelivr.net'
+  'jsdelivr.net',
+  'unpkg.com',
+  'walletconnect.org',
+  'walletconnect.com',
+  'reown.net'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
@@ -37,13 +39,9 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      )
+      Promise.all(keys.map(key => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      }))
     )
   );
   self.clients.claim();
@@ -54,25 +52,61 @@ self.addEventListener('fetch', e => {
 
   const url = new URL(e.request.url);
 
-  // Skip external API/RPC/blockchain — always fresh data
-  const shouldBypass = BYPASS_HOSTS.some(host => url.host.includes(host));
-  if (shouldBypass) return;
-
+  // Skip external APIs — always fresh
+  if (BYPASS_HOSTS.some(h => url.host.includes(h))) return;
   if (!url.protocol.startsWith('http')) return;
 
-  // Stale-While-Revalidate for local files
-  e.respondWith(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.match(e.request).then(cachedResponse => {
-        const networkFetch = fetch(e.request).then(networkResponse => {
-          if (networkResponse && networkResponse.status === 200) {
-            cache.put(e.request, networkResponse.clone());
-          }
-          return networkResponse;
-        }).catch(() => null);
+  // index.html and / — Network First (always fresh from Vercel)
+  // Falls back to cache only if offline
+  if (url.pathname === '/' || url.pathname === '/index.html') {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          // Update cache with fresh version
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+          return res;
+        })
+        .catch(() => caches.match(e.request)) // offline fallback
+    );
+    return;
+  }
 
-        return cachedResponse || networkFetch;
-      });
-    })
+  // Icons and manifest — Cache First (rarely change)
+  e.respondWith(
+    caches.open(CACHE_NAME).then(cache =>
+      cache.match(e.request).then(cached => {
+        const network = fetch(e.request).then(res => {
+          if (res && res.status === 200) cache.put(e.request, res.clone());
+          return res;
+        }).catch(() => null);
+        return cached || network;
+      })
+    )
+  );
+});
+
+// Push notifications support (for future use with Firebase/Supabase)
+self.addEventListener('push', e => {
+  if (!e.data) return;
+  try {
+    const data = e.data.json();
+    e.waitUntil(
+      self.registration.showNotification(data.title || 'OpenGate', {
+        body: data.body || '',
+        icon: '/icon-192.png',
+        badge: '/icon-192.png',
+        data: data
+      })
+    );
+  } catch(err) {
+    console.log('[SW] Push error:', err);
+  }
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.openWindow(e.notification.data?.url || '/')
   );
 });
