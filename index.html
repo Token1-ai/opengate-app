@@ -29,7 +29,7 @@
 <title>OpenGate — Post. Earn. Own.</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.13.3/dist/index.umd.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@metamask/sdk@0.26.5/dist/browser/es.js" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -283,21 +283,22 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .img-preview-wrap{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
 .img-preview-wrap img{width:100%;height:100%;object-fit:cover;}
 .img-preview-del{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.7);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-.post-images{display:grid;gap:4px;margin-bottom:10px;border-radius:10px;overflow:hidden;}
-.post-images img{width:100%;object-fit:cover;max-height:300px;cursor:pointer;}
+.post-images{display:grid;gap:4px;margin-bottom:10px;border-radius:10px;overflow:hidden;max-width:100%;}
+.post-images img{width:100%;height:100%;object-fit:cover;max-height:400px;cursor:pointer;display:block;}
+.post-images.grid-1 img{max-height:400px;object-fit:contain;background:var(--bg3);}
 .post-images.grid-2{grid-template-columns:1fr 1fr;}
-.post-images.grid-2 img,.post-images.grid-3 img,.post-images.grid-4 img{max-height:150px;}
+.post-images.grid-2 img,.post-images.grid-3 img,.post-images.grid-4 img{max-height:200px;}
 .post-images.grid-3{grid-template-columns:1fr 1fr;}
 .post-images.grid-4{grid-template-columns:1fr 1fr;}
 .upload-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .2s;}
 .upload-btn:hover{color:var(--gold);}
 .uploading-indicator{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;}
-.post-card{padding:16px 20px;border-bottom:1px solid var(--border);transition:background .15s;}
+.post-card{padding:16px 20px;border-bottom:1px solid var(--border);transition:background .15s;overflow:hidden;}
 .post-card:hover{background:rgba(255,255,255,0.015);}
 .post-inner{display:flex;gap:12px;}
 .post-av{width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;}
 .post-av img{width:100%;height:100%;object-fit:cover;}
-.post-body{flex:1;min-width:0;}
+.post-body{flex:1;min-width:0;overflow:hidden;}
 .post-hdr{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
 .post-name{font-size:14px;font-weight:700;}
 .post-wlt{font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;}
@@ -604,31 +605,47 @@ function toggleMoreWalletOptions(){
 // waits for the CDN script if it hasn't finished loading yet instead of
 // failing instantly, and only falls back to a MetaMask deeplink if
 // WalletConnect genuinely can't be used.
+let mmSDK=null;
+
 async function smartConnectWallet(){
   const btn=document.getElementById('primaryConnectBtn');
   const originalText=btn.innerHTML;
   btn.disabled=true;
   btn.innerHTML='⏳ Підключення...';
   try{
-    console.log('[Wallet] smartConnectWallet started. EthereumProvider available:',typeof window.EthereumProvider!=='undefined');
-    // Wait up to 10s for the WalletConnect UMD bundle to finish loading from
-    // CDN if it hasn't already. On slow mobile connections the ~400KB bundle
-    // can take a few seconds, especially on first load before browser caching.
-    let waited=0;
-    while(typeof window.EthereumProvider==='undefined' && waited<10000){
-      await new Promise(r=>setTimeout(r,250));
-      waited+=250;
-      if(waited%2000===0) console.log('[Wallet] still waiting for WalletConnect script...',waited+'ms');
+    // If already have window.ethereum (desktop extension or MetaMask browser)
+    if(window.ethereum){
+      await connectWallet();
+      return;
     }
-    console.log('[Wallet] wait finished after',waited,'ms. Available:',typeof window.EthereumProvider!=='undefined');
-    if(typeof window.EthereumProvider!=='undefined'){
-      await connectViaWalletConnect();
-    } else {
-      // CDN genuinely unreachable — fall back to direct MetaMask deeplink
-      console.warn('[Wallet] WalletConnect script never loaded after 10s, falling back to MetaMask deeplink');
-      showToast('WalletConnect недоступний, відкриваємо MetaMask напряму...','ok');
-      await connectWithWallet('metamask');
+
+    // Mobile PWA without injected wallet — use MetaMask SDK
+    // SDK handles deep linking back to PWA after signing
+    if(typeof window.MetaMaskSDK!=='undefined'){
+      if(!mmSDK){
+        mmSDK=new window.MetaMaskSDK.MetaMaskSDK({
+          dappMetadata:{
+            name:'OpenGate',
+            url:window.location.origin,
+            iconUrl:window.location.origin+'/icon-192.png',
+          },
+          checkInstallationImmediately:false,
+          useDeeplink:true,
+        });
+        await mmSDK.init();
+      }
+      window.ethereum=mmSDK.getProvider();
+      await connectWallet();
+      return;
     }
+
+    // Fallback — direct MetaMask deeplink
+    console.warn('[Wallet] MetaMask SDK not loaded, falling back to deeplink');
+    await connectWithWallet('metamask');
+
+  } catch(e){
+    console.error('[Wallet] smartConnectWallet error:',e);
+    showToast('Помилка підключення: '+(e?.message||'').slice(0,40),'err');
   } finally {
     btn.disabled=false;
     btn.innerHTML=originalText;
