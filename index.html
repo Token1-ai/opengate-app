@@ -29,7 +29,7 @@
 <title>OpenGate — Post. Earn. Own.</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@metamask/sdk@0.26.5/dist/browser/es.js" crossorigin="anonymous"></script>
+
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet"/>
 <style>
 :root{
@@ -613,39 +613,32 @@ async function smartConnectWallet(){
   btn.disabled=true;
   btn.innerHTML='⏳ Підключення...';
   try{
-    // If already have window.ethereum (desktop extension or MetaMask browser)
+    // Desktop with MetaMask extension — connect directly
     if(window.ethereum){
       await connectWallet();
       return;
     }
 
-    // Mobile PWA without injected wallet — use MetaMask SDK
-    // SDK handles deep linking back to PWA after signing
-    if(typeof window.MetaMaskSDK!=='undefined'){
-      if(!mmSDK){
-        mmSDK=new window.MetaMaskSDK.MetaMaskSDK({
-          dappMetadata:{
-            name:'OpenGate',
-            url:window.location.origin,
-            iconUrl:window.location.origin+'/icon-192.png',
-          },
-          checkInstallationImmediately:false,
-          useDeeplink:true,
-        });
-        await mmSDK.init();
-      }
-      window.ethereum=mmSDK.getProvider();
-      await connectWallet();
+    // Mobile PWA — use MetaMask deeplink with return_url
+    // This opens MetaMask, user confirms, MetaMask returns user back to PWA
+    const currentUrl=encodeURIComponent(window.location.href);
+    const deeplinkUrl=`https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}?mm_return=1`;
+    
+    // Check if returning from MetaMask (mm_return=1 in URL)
+    // This happens when MetaMask redirects back after user approved connection
+    if(window.location.search.includes('mm_return=1')){
+      // Clean URL and try auto-connect
+      window.history.replaceState({},document.title,window.location.pathname);
+      await tryAutoConnect();
       return;
     }
-
-    // Fallback — direct MetaMask deeplink
-    console.warn('[Wallet] MetaMask SDK not loaded, falling back to deeplink');
-    await connectWithWallet('metamask');
-
+    
+    // Open MetaMask with return URL
+    window.location.href=`https://metamask.app.link/dapp/${window.location.host}`;
+    
   } catch(e){
-    console.error('[Wallet] smartConnectWallet error:',e);
-    showToast('Помилка підключення: '+(e?.message||'').slice(0,40),'err');
+    console.error('[Wallet] error:',e);
+    showToast('Помилка: '+(e?.message||'').slice(0,40),'err');
   } finally {
     btn.disabled=false;
     btn.innerHTML=originalText;
@@ -6177,7 +6170,13 @@ async function _doConnect(addr){
   },800);
 }
 
-tryAutoConnect();
+// Check if returning from MetaMask deeplink — auto-connect immediately
+if(window.location.search.includes('mm_return=1')){
+  window.history.replaceState({},document.title,window.location.pathname);
+  setTimeout(tryAutoConnect, 500);
+} else {
+  tryAutoConnect();
+}
 // Also listen for wallet events to keep connected
 if(window.ethereum){
   window.ethereum.on('accountsChanged',function(accounts){
