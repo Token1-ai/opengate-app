@@ -1112,11 +1112,14 @@ async function smartConnectWallet(){
                 </div>
 
                 <!-- Quick amounts -->
+                <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Min: $0.10 · No maximum limit</div>
                 <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+                  <button onclick="document.getElementById('bnbbs-amount').value='0.10'" style="padding:5px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$0.10</button>
                   <button onclick="document.getElementById('bnbbs-amount').value='1'" style="padding:5px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$1</button>
                   <button onclick="document.getElementById('bnbbs-amount').value='5'" style="padding:5px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$5</button>
                   <button onclick="document.getElementById('bnbbs-amount').value='10'" style="padding:5px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$10</button>
                   <button onclick="document.getElementById('bnbbs-amount').value='50'" style="padding:5px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$50</button>
+                  <button onclick="document.getElementById('bnbbs-amount').value='100'" style="padding:5px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$100</button>
                 </div>
 
                 <!-- Action buttons -->
@@ -1124,7 +1127,7 @@ async function smartConnectWallet(){
                   <button onclick="bnbbsMatchmake()" style="flex:1;padding:12px;border-radius:12px;background:var(--gold);color:#08090C;border:none;font-size:14px;font-weight:700;cursor:pointer;">🔍 Find Game</button>
                   <button onclick="bnbbsCreate()" style="flex:1;padding:12px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;">+ Create Room</button>
                 </div>
-                <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Find Game auto-joins existing room with same stake, or creates new one</div>
+                <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">🔍 Find Game — joins existing room with same stake, or creates new one automatically</div>
               </div>
 
               <!-- Open rooms list -->
@@ -6505,7 +6508,7 @@ async function bnbbsLoadRooms(){
     }
     const rooms = await Promise.all(ids.map(id => c.getGame(id).then(g=>({id:Number(id),g}))));
     const wallets = [...new Set(rooms.map(r=>r.g.player1.toLowerCase()))];
-    const {data:profiles} = await sb.from('users').select('wallet,username,avatar').in('wallet',wallets);
+    const {data:profiles} = await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets).catch(()=>({data:[]}));
     const profileMap = {};
     (profiles||[]).forEach(p=>{profileMap[p.wallet]=p;});
 
@@ -6513,7 +6516,7 @@ async function bnbbsLoadRooms(){
       const p1 = g.player1.toLowerCase();
       const prof = profileMap[p1]||{};
       const name = prof.username || p1.slice(0,6)+'...'+p1.slice(-4);
-      const av = prof.avatar ? `<img src="${prof.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>` : '👤';
+      const av = prof.avatar_url ? `<img src="${prof.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>` : '👤';
       const amount = (Number(g.betAmount)/1e6).toFixed(2);
       const tok = Number(g.token)===0 ? 'USDT' : 'USDC';
       const isMe = p1 === userAddr?.toLowerCase();
@@ -6584,17 +6587,20 @@ async function bnbbsCreate(){
     showToast('Creating game...','ok');
     const contract = new ethers.Contract(BNB_BATTLE_ADDR, BNB_BATTLE_ABI, bnbSigner);
     const tx = await contract.createGame(amountRaw, tokenIdx);
-    const receipt = await tx.wait();
-    // Get game ID from event
-    const iface = new ethers.Interface(['event GameCreated(uint256 indexed id, address indexed player1, uint256 bet, uint8 token)']);
-    const log = receipt.logs.find(l=>{ try{ iface.parseLog(l); return true; }catch(e){ return false; }});
-    if(log){
-      const parsed = iface.parseLog(log);
-      bnbbsGameId = Number(parsed.args.id);
-      showToast('Room created! Waiting for opponent...','ok');
-      await bnbbsLoadGame(bnbbsGameId);
-      await bnbbsLoadRooms();
+    showToast('Transaction sent, waiting...','ok');
+    await tx.wait();
+    // Get game ID — use gameCount since it increments with each game
+    try{
+      const newGameId = await contract.gameCount();
+      bnbbsGameId = Number(newGameId);
+    } catch(e){
+      // Fallback: try to get from getMyActiveGame
+      const activeId = await contract.getMyActiveGame(userAddr);
+      bnbbsGameId = Number(activeId);
     }
+    showToast('Room created! Waiting for opponent...','ok');
+    await bnbbsLoadGame(bnbbsGameId);
+    await bnbbsLoadRooms();
   }catch(e){
     if(e.code===4001||e.message?.includes('rejected')) showToast('Cancelled','err');
     else showToast('Error: '+e.message?.slice(0,50),'err');
@@ -6632,6 +6638,8 @@ async function bnbbsJoin(gameId){
 }
 
 async function bnbbsCancelGame(gameId){
+  const btn = event?.target;
+  if(btn){ btn.disabled=true; btn.textContent='...'; }
   try{
     await switchToBNB();
     const bnbProv = new ethers.BrowserProvider(window.ethereum);
@@ -6644,7 +6652,11 @@ async function bnbbsCancelGame(gameId){
     document.getElementById('bnbbs-lobby').style.display='block';
     document.getElementById('bnbbs-game').style.display='none';
     await bnbbsLoadRooms();
-  }catch(e){ showToast('Error: '+e.message?.slice(0,40),'err'); }
+  }catch(e){
+    if(btn){ btn.disabled=false; btn.textContent='Cancel'; }
+    if(e.code===4001||e.message?.includes('rejected')) showToast('Cancelled','err');
+    else showToast('Error: '+e.message?.slice(0,50),'err');
+  }
 }
 
 async function leaveBNBGame(){
