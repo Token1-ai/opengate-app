@@ -6437,9 +6437,12 @@ async function initBNBBattle(){
     document.getElementById('bnbbs-main').style.display='none';
     return;
   }
+  const OWNER = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const isOwner = userAddr?.toLowerCase() === OWNER;
+
   // Check pass — use currentUser first, then fallback to contract check
   let pass = currentUser?.pass_type;
-  if(!pass || pass==='free'){
+  if(!isOwner && (!pass || pass==='free')){
     // Double-check directly from BNB Chain contracts
     try{
       const bnbP = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
@@ -6454,7 +6457,7 @@ async function initBNBBattle(){
       else if(sBal > 0n) pass = 'silver';
     }catch(e){}
   }
-  if(!pass || pass==='free'){
+  if(!isOwner && (!pass || pass==='free')){
     document.getElementById('bnbbs-noconn').style.display='none';
     document.getElementById('bnbbs-nopass').style.display='block';
     document.getElementById('bnbbs-main').style.display='none';
