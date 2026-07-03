@@ -1040,7 +1040,10 @@ async function smartConnectWallet(){
             <div style="font-size:48px;margin-bottom:12px;">🔒</div>
             <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Pass Required</div>
             <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">BNB Battleship is available for Gold and Silver Pass holders only.<br/>Get your pass to access real-money games.</div>
-            <button onclick="showTab('presale')" style="padding:12px 24px;background:var(--gold);color:#08090C;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Get a Pass →</button>
+            <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+              <button onclick="document.getElementById('page-app').classList.remove('active');document.getElementById('page-landing').classList.add('active');setTimeout(function(){var el=document.getElementById('passes');if(el)el.scrollIntoView({behavior:'smooth'});},100);" style="padding:12px 24px;background:var(--gold);color:#08090C;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">🥇 Get Gold Pass — $9</button>
+              <button onclick="document.getElementById('page-app').classList.remove('active');document.getElementById('page-landing').classList.add('active');setTimeout(function(){var el=document.getElementById('passes');if(el)el.scrollIntoView({behavior:'smooth'});},100);" style="padding:12px 24px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">🥈 Get Silver Pass — $0.90</button>
+            </div>
           </div>
 
           <!-- Not connected -->
@@ -6434,7 +6437,23 @@ async function initBNBBattle(){
     document.getElementById('bnbbs-main').style.display='none';
     return;
   }
-  const pass = currentUser?.pass_type;
+  // Check pass — use currentUser first, then fallback to contract check
+  let pass = currentUser?.pass_type;
+  if(!pass || pass==='free'){
+    // Double-check directly from BNB Chain contracts
+    try{
+      const bnbP = new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+      const abi = ['function balanceOf(address) view returns(uint256)'];
+      const goldC = new ethers.Contract(GOLD_PASS, abi, bnbP);
+      const silverC = new ethers.Contract(SILVER_PASS, abi, bnbP);
+      const [gBal, sBal] = await Promise.all([
+        goldC.balanceOf(userAddr).catch(()=>0n),
+        silverC.balanceOf(userAddr).catch(()=>0n)
+      ]);
+      if(gBal > 0n) pass = 'gold';
+      else if(sBal > 0n) pass = 'silver';
+    }catch(e){}
+  }
   if(!pass || pass==='free'){
     document.getElementById('bnbbs-noconn').style.display='none';
     document.getElementById('bnbbs-nopass').style.display='block';
@@ -6446,10 +6465,10 @@ async function initBNBBattle(){
   document.getElementById('bnbbs-main').style.display='block';
   bnbbsInitBoards();
   await bnbbsLoadRooms();
-  // Start polling rooms
   if(bnbbsRoomsInterval) clearInterval(bnbbsRoomsInterval);
   bnbbsRoomsInterval = setInterval(bnbbsLoadRooms, 10000);
   // Check if already in a game
+
   try{
     const c = getBNBBattleContract(false);
     const gid = await c.getMyActiveGame(userAddr);
