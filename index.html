@@ -6495,13 +6495,15 @@ async function bnbbsLoadRooms(){
   if(!el) return;
   try{
     const c = getBNBBattleContract(false);
+    const gameCount = await c.gameCount().catch(()=>0n);
+    console.log('[BNBBattle] gameCount:', gameCount.toString());
     const ids = await c.getOpenGames();
+    console.log('[BNBBattle] openGames:', ids);
     if(!ids || ids.length === 0){
       el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">No open rooms. Be the first to create one!</div>';
       return;
     }
     const rooms = await Promise.all(ids.map(id => c.getGame(id).then(g=>({id:Number(id),g}))));
-    // Load player profiles from Supabase
     const wallets = [...new Set(rooms.map(r=>r.g.player1.toLowerCase()))];
     const {data:profiles} = await sb.from('users').select('wallet,username,avatar').in('wallet',wallets);
     const profileMap = {};
@@ -6528,7 +6530,8 @@ async function bnbbsLoadRooms(){
       </div>`;
     }).join('');
   }catch(e){
-    el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">Failed to load rooms</div>';
+    console.error('[BNBBattle] loadRooms error:', e);
+    el.innerHTML=`<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">Error: ${e.message?.slice(0,80)}</div>`;
   }
 }
 
