@@ -1072,21 +1072,20 @@ async function smartConnectWallet(){
 
               <!-- YOUR FLEET label -->
               <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;">YOUR FLEET</div>
+              <div id="bnbbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto 8px;"></div>
 
-              <!-- Your board -->
-              <div id="bnbbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-bottom:8px;"></div>
+              <!-- Ships panel — reuse existing ship buttons logic -->
+              <div id="bnbbs-ships-panel" style="padding:8px 0;"></div>
 
               <!-- Ready / Random buttons -->
               <div id="bnbbs-setup-btns" style="display:flex;gap:8px;margin-bottom:12px;justify-content:center;">
-                <button onclick="bnbbsRandomize()" style="padding:9px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;">🎲 Random</button>
+                <button onclick="bnbbsRandomPlaceShips()" style="padding:9px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;">🎲 Random</button>
                 <button onclick="bnbbsMarkReady()" id="bnbbs-ready-btn" style="padding:9px 20px;background:var(--gold);color:#08090C;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">✓ Ready</button>
               </div>
 
               <!-- ENEMY FLEET label -->
               <div style="text-align:center;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.1em;margin-bottom:6px;" id="bnbbs-enemy-label">ENEMY FLEET — CLICK TO FIRE!</div>
-
-              <!-- Enemy board -->
-              <div id="bnbbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;margin-bottom:12px;"></div>
+              <div id="bnbbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto 12px;"></div>
 
               <!-- Battle log -->
               <div id="bnbbs-log" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px;max-height:120px;overflow-y:auto;font-size:12px;color:var(--muted);"></div>
@@ -6405,19 +6404,166 @@ async function _doConnect(addr){
   },800);
 }
 
-// ── BNB BATTLESHIP ──────────────────────────────────────────────────────────
+// ── BNB BATTLESHIP BOARD — uses same logic as AI game ──────────────────────
 
-let bnbbsToken = 'USDT'; // current token selection
-let bnbbsGameId = null;  // active game ID
-let bnbbsMyShips = [];   // my ship positions (17 cells)
-let bnbbsMyShots = {};   // my shots {cell: hit/miss}
-let bnbbsEnemyShots = {}; // enemy shots on my board
+let bnbbsPlaced = [];       // placed ship segments
+let bnbbsSelectedSize = 0;  // currently selected ship size
+let bnbbsShipSizes = [4,3,3,2,2,2,1,1,1,1]; // same as BS_SHIP_SIZES
+
+function bnbbsAddLog(msg){
+  const el=document.getElementById('bnbbs-log');
+  if(!el)return;
+  const d=document.createElement('div');
+  d.textContent=msg;
+  d.style.cssText='padding:2px 0;border-bottom:1px solid var(--border);';
+  el.appendChild(d);
+  el.scrollTop=el.scrollHeight;
+}
+
+function bnbbsInitBoards(){
+  bnbbsMyShips=[];
+  bnbbsPlaced=[];
+  bnbbsSelectedSize=0;
+  bnbbsMyShots={};
+  bnbbsEnemyShots={};
+  bnbbsBuildBoards();
+  bnbbsBuildShipBtns();
+  const log=document.getElementById('bnbbs-log');
+  if(log) log.innerHTML='';
+}
+
+function bnbbsBuildBoards(){
+  const myBoard=document.getElementById('bnbbs-myboard');
+  const enemyBoard=document.getElementById('bnbbs-enemyboard');
+  if(!myBoard||!enemyBoard)return;
+  myBoard.innerHTML='';
+  enemyBoard.innerHTML='';
+  for(var i=0;i<100;i++){
+    (function(idx){
+      var mc=document.createElement('div');
+      mc.id='bnbbs-my-'+idx;
+      mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
+      mc.onclick=function(){bnbbsPlaceShipCell(idx);};
+      myBoard.appendChild(mc);
+
+      var ec=document.createElement('div');
+      ec.id='bnbbs-en-'+idx;
+      ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:not-allowed;';
+      ec.onclick=function(){bnbbsFire(idx);};
+      enemyBoard.appendChild(ec);
+    })(i);
+  }
+}
+
+function bnbbsBuildShipBtns(){
+  const panel=document.getElementById('bnbbs-ships-panel');
+  if(!panel)return;
+  // Count remaining ships to place
+  const placed=bnbbsMyShips.length;
+  const total=bnbbsShipSizes.reduce(function(a,b){return a+b;},0);
+  if(placed>=total){
+    panel.innerHTML='<div style="text-align:center;font-size:12px;color:var(--green);padding:4px;">✓ All ships placed! Click Ready.</div>';
+    document.getElementById('bnbbs-ready-btn').style.display='inline-block';
+    return;
+  }
+  // Ship buttons — same as AI game
+  var sizeCounts={};
+  bnbbsShipSizes.forEach(function(s){sizeCounts[s]=(sizeCounts[s]||0)+1;});
+  // Count placed by size
+  var placedBySize={};
+  var temp=[...bnbbsMyShips];
+  // Simple count: placed cells / ship size
+  panel.innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;padding:4px 0;">'
+    +bnbbsShipSizes.map(function(size,i){
+      var label='■'.repeat(size);
+      var isSel=bnbbsSelectedSize===size;
+      return '<button onclick="bnbbsSelectSize('+size+')" style="padding:5px 10px;border-radius:8px;background:'+(isSel?'var(--gold)':'var(--bg3)')+';border:1px solid '+(isSel?'var(--gold)':'var(--border)')+';color:'+(isSel?'#08090C':'var(--muted)')+';font-size:11px;cursor:pointer;font-family:monospace;">'+label+'</button>';
+    }).join('')
+    +'</div><div style="text-align:center;font-size:11px;color:var(--muted);margin-top:4px;">'+placed+'/'+total+' cells placed</div>';
+}
+
+function bnbbsSelectSize(size){
+  bnbbsSelectedSize=size;
+  bnbbsBuildShipBtns();
+}
+
+function bnbbsPlaceShipCell(idx){
+  if(bnbbsIsReady)return;
+  if(bnbbsMyShips.includes(idx)){
+    // Remove ship at this cell
+    bnbbsMyShips=bnbbsMyShips.filter(function(c){return c!==idx;});
+  } else {
+    bnbbsMyShips.push(idx);
+  }
+  bnbbsRenderMyBoard();
+  bnbbsBuildShipBtns();
+}
+
+function bnbbsRandomPlaceShips(){
+  bnbbsMyShips=[];
+  bnbbsShipSizes.forEach(function(size){
+    var ok=false,tries=0;
+    while(!ok&&tries++<2000){
+      var h=Math.random()>.5;
+      var r=Math.floor(Math.random()*(h?10:11-size));
+      var c=Math.floor(Math.random()*(h?11-size:10));
+      var cells=[];
+      for(var i=0;i<size;i++) cells.push(h?(r*10+c+i):((r+i)*10+c));
+      var valid=true;
+      cells.forEach(function(ci){
+        var cr=Math.floor(ci/10),cc=ci%10;
+        for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){
+          var nr=cr+dr,nc=cc+dc;
+          if(nr>=0&&nr<10&&nc>=0&&nc<10&&bnbbsMyShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc))valid=false;
+        }
+      });
+      if(valid){cells.forEach(function(x){bnbbsMyShips.push(x);});ok=true;}
+    }
+  });
+  bnbbsRenderMyBoard();
+  bnbbsBuildShipBtns();
+}
+
+function bnbbsRenderMyBoard(){
+  for(var i=0;i<100;i++){
+    var c=document.getElementById('bnbbs-my-'+i);
+    if(!c)continue;
+    var isShip=bnbbsMyShips.includes(i);
+    var shot=bnbbsEnemyShots[i];
+    if(shot==='hit') c.style.background='#ef4444';
+    else if(shot==='miss') c.style.background='rgba(255,255,255,0.08)';
+    else if(isShip) c.style.background='rgba(38,217,138,0.35)';
+    else c.style.background='var(--bg3)';
+    c.style.cursor=bnbbsIsReady?'default':'crosshair';
+  }
+}
+
+function bnbbsRenderEnemyBoard(){
+  var canFire=bnbbsMyTurn&&bnbbsIsReady;
+  for(var i=0;i<100;i++){
+    var c=document.getElementById('bnbbs-en-'+i);
+    if(!c)continue;
+    var shot=bnbbsMyShots[i];
+    if(shot==='hit') c.style.background='#ef4444';
+    else if(shot==='miss') c.style.background='rgba(255,255,255,0.08)';
+    else c.style.background='var(--bg3)';
+    c.style.cursor=canFire&&!shot?'crosshair':'not-allowed';
+  }
+}
+
+function bnbbsRenderBoards(){
+  bnbbsRenderMyBoard();
+  bnbbsRenderEnemyBoard();
+}
+let bnbbsGameId = null;
+let bnbbsMyShips = [];
+let bnbbsMyShots = {};
+let bnbbsEnemyShots = {};
 let bnbbsMyTurn = false;
 let bnbbsIsReady = false;
 let bnbbsRealtimeChannel = null;
 let bnbbsRoomsInterval = null;
-
-const BNBBS_SHIPS = [5,4,3,3,2]; // ship sizes
+let bnbbsToken = 'USDT';
 
 function getBNBBattleProvider(){
   return new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
@@ -6702,151 +6848,6 @@ function bnbbsSubscribe(gameId){
 }
 
 // ── Ship placement ─────────────────────────────────────────────────────────
-
-function bnbbsInitBoards(){
-  const myBoard = document.getElementById('bnbbs-myboard');
-  const enemyBoard = document.getElementById('bnbbs-enemyboard');
-  if(!myBoard||!enemyBoard) return;
-  myBoard.innerHTML='';
-  enemyBoard.innerHTML='';
-  for(let i=0;i<100;i++){
-    const mc = document.createElement('div');
-    mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
-    mc.dataset.cell=i;
-    mc.onclick=()=>bnbbsToggleShip(i);
-    myBoard.appendChild(mc);
-    const ec = document.createElement('div');
-    ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
-    ec.dataset.cell=i;
-    ec.onclick=()=>bnbbsFire(i);
-    enemyBoard.appendChild(ec);
-  }
-}
-
-function bnbbsRandomize(){
-  bnbbsMyShips=[];
-  const occupied=new Set();
-  for(const size of BNBBS_SHIPS){
-    let placed=false;
-    let attempts=0;
-    while(!placed&&attempts<200){
-      attempts++;
-      const horizontal=Math.random()<0.5;
-      const row=Math.floor(Math.random()*(horizontal?10:11-size));
-      const col=Math.floor(Math.random()*(horizontal?11-size:10));
-      const cells=[];
-      let valid=true;
-      for(let s=0;s<size;s++){
-        const cell=horizontal?(row*10+col+s):((row+s)*10+col);
-        if(occupied.has(cell)){valid=false;break;}
-        cells.push(cell);
-      }
-      if(valid){
-        cells.forEach(c=>{occupied.add(c);bnbbsMyShips.push(c);});
-        placed=true;
-      }
-    }
-  }
-  bnbbsRenderBoards();
-}
-
-function bnbbsToggleShip(cell){
-  if(bnbbsIsReady) return;
-  const idx=bnbbsMyShips.indexOf(cell);
-  if(idx>=0) bnbbsMyShips.splice(idx,1);
-  else if(bnbbsMyShips.length<17) bnbbsMyShips.push(cell);
-  bnbbsRenderBoards();
-}
-
-async function bnbbsMarkReady(){
-  if(bnbbsMyShips.length!==17){ showToast('Place all 17 ship cells first','err'); return; }
-  bnbbsIsReady=true;
-  document.getElementById('bnbbs-ready-btn').disabled=true;
-  document.getElementById('bnbbs-ready-btn').textContent='✓ Ready!';
-  // Save to Supabase
-  try{
-    await sb.from('battleship_games').upsert({
-      contract_game_id: bnbbsGameId,
-      [userAddr?.toLowerCase()===await getBNBBattleContract(false).getGame(bnbbsGameId).then(g=>g.player1.toLowerCase()) ? 'player1_board' : 'player2_board']: JSON.stringify(bnbbsMyShips),
-      status: 'playing'
-    },{onConflict:'contract_game_id'});
-    showToast('Ready! Waiting for opponent...','ok');
-  }catch(e){}
-}
-
-async function bnbbsFire(cell){
-  if(!bnbbsMyTurn){ showToast('Not your turn','err'); return; }
-  if(bnbbsMyShots[cell]!==undefined){ showToast('Already fired here','err'); return; }
-  if(!bnbbsGameId) return;
-  try{
-    // Get enemy board from Supabase to check hit
-    const c = getBNBBattleContract(false);
-    const g = await c.getGame(bnbbsGameId);
-    const isP1 = g.player1.toLowerCase()===userAddr?.toLowerCase();
-    const enemyCol = isP1 ? 'player2_board' : 'player1_board';
-    const {data:gameData} = await sb.from('battleship_games').select('*').eq('contract_game_id',bnbbsGameId).single();
-    if(!gameData) return;
-    const enemyShips = JSON.parse(gameData[enemyCol]||'[]');
-    const isHit = enemyShips.includes(cell);
-    bnbbsMyShots[cell] = isHit ? 'hit' : 'miss';
-    bnbbsRenderBoards();
-    // Save shot to Supabase
-    const shotsKey = isP1 ? 'player1_shots' : 'player2_shots';
-    const shots = JSON.parse(gameData[shotsKey]||'{}');
-    shots[cell] = isHit ? 'hit' : 'miss';
-    // Check win
-    const hitsCount = Object.values(shots).filter(v=>v==='hit').length;
-    const won = hitsCount >= 17;
-    await sb.from('battleship_games').update({
-      [shotsKey]: JSON.stringify(shots),
-      ...(won ? {status:'finished',winner_wallet:userAddr?.toLowerCase()} : {current_turn: isP1?2:1}),
-    }).eq('contract_game_id',bnbbsGameId);
-    if(won){
-      showToast('🎉 YOU WIN! Paying out...','ok');
-      // Call oracle
-      await fetch('/api/oracle',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-oracle-secret':'opengate-oracle-2026'},
-        body:JSON.stringify({action:'declareWinner',gameId:bnbbsGameId,winner:userAddr})
-      });
-    } else {
-      // Update turn via oracle
-      await fetch('/api/oracle',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-oracle-secret':'opengate-oracle-2026'},
-        body:JSON.stringify({action:'updateTurn',gameId:bnbbsGameId,turn:isP1?2:1})
-      });
-      if(!isHit) bnbbsMyTurn=false;
-      bnbbsRenderBoards();
-    }
-  }catch(e){ showToast('Error: '+e.message?.slice(0,40),'err'); }
-}
-
-function bnbbsRenderBoards(){
-  const myBoard=document.getElementById('bnbbs-myboard');
-  const enemyBoard=document.getElementById('bnbbs-enemyboard');
-  if(!myBoard||!enemyBoard) return;
-  // My board
-  for(let i=0;i<100;i++){
-    const cell=myBoard.children[i];
-    if(!cell) continue;
-    const isShip=bnbbsMyShips.includes(i);
-    const shotHere=bnbbsEnemyShots[i];
-    if(shotHere==='hit') cell.style.background='#ef4444';
-    else if(shotHere==='miss') cell.style.background='rgba(255,255,255,0.1)';
-    else if(isShip) cell.style.background='#26D98A';
-    else cell.style.background='var(--bg3)';
-  }
-  // Enemy board
-  for(let i=0;i<100;i++){
-    const cell=enemyBoard.children[i];
-    if(!cell) continue;
-    const shot=bnbbsMyShots[i];
-    if(shot==='hit') cell.style.background='#ef4444';
-    else if(shot==='miss') cell.style.background='rgba(255,255,255,0.1)';
-    else cell.style.background='var(--bg3)';
-  }
-}
 
 async function switchToBNB(){
   if(!window.ethereum) return;
