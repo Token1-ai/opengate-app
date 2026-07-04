@@ -1102,7 +1102,10 @@ async function smartConnectWallet(){
               <!-- Open rooms -->
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
-                <button onclick="bnbbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span id="bnbbs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <button onclick="bnbbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
+                </div>
               </div>
               <div id="bnbbs-rooms"><div class="app-loader">Loading...</div></div>
             </div>
@@ -2030,36 +2033,18 @@ const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
 const GATE_LOTTERY    = '0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035';
 const GATE_DICE         = '0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855';
 const BATTLESHIP_ADDR   = '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143';
-const BNB_BATTLE_ADDR   = '0x22597403bFa0982803Be28D070a14b6E45700dc0';
-const USDT_BNB_ADDR     = '0x55d398326f99059fF775485246999027B3197955';
-const USDC_BNB_ADDR     = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
-const BNB_BATTLE_ABI    = [
-  'function createGame(uint256 amount, uint8 token) returns(uint256)',
-  'function joinGame(uint256 gameId)',
-  'function cancelGame(uint256 gameId)',
-  'function claimLobbyTimeout(uint256 gameId)',
-  'function getGame(uint256 gameId) view returns(tuple(address player1,address player2,uint256 betAmount,uint8 token,uint8 status,address winner,uint256 createdAt,uint256 lastMoveAt,uint8 currentTurn))',
-  'function getOpenGames() view returns(uint256[])',
-  'function getMyActiveGame(address player) view returns(uint256)',
-  'function gameCount() view returns(uint256)',
-];
-const ERC20_ABI = [
-  'function approve(address spender, uint256 amount) returns(bool)',
-  'function allowance(address owner, address spender) view returns(uint256)',
-  'function balanceOf(address) view returns(uint256)',
-];
 const GATE_LENDING      = '0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6';
 const GATE_FAUCET       = '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74';
 const FAUCET_ABI        = [
-  'function claim() nonpayable',
+  'function claim()',
   'function hasClaimed(address) view returns(bool)',
   'function faucetBalance() view returns(uint256)',
   'function claimCount() view returns(uint256)',
 ];
 const LENDING_ABI       = [
   'function borrowGateWithZk() payable',
-  'function repayGateWithZk(uint256) nonpayable',
-  'function borrowZkWithGate(uint256) nonpayable',
+  'function repayGateWithZk(uint256)',
+  'function borrowZkWithGate(uint256)',
   'function repayZkWithGate(uint256) payable',
   'function calcInterest(uint256,uint256) view returns(uint256)',
   'function getZkLoanInfo(uint256) view returns(address,uint256,uint256,uint256,uint256,bool)',
@@ -2079,7 +2064,7 @@ const BATTLESHIP_ABI    = [
   'function gameCount() view returns(uint256)',
 ];
 const DICE_ABI        = [
-  'function roll(uint8,uint256) nonpayable',
+  'function roll(uint8,uint256)',
   'function getStats() view returns(uint256,uint256,uint256)',
   'function getMyGames(address) view returns(tuple(address player,uint256 bet,uint8 guess,uint8 result,bool won,uint256 payout,uint256 timestamp)[])',
   'function housePool() view returns(uint256)',
@@ -2087,8 +2072,8 @@ const DICE_ABI        = [
   'function playerLosses(address) view returns(uint256)',
 ];
 const LOTTERY_ABI     = [
-  'function buyTicket(uint256) nonpayable',
-  'function draw() nonpayable',
+  'function buyTicket(uint256)',
+  'function draw()',
   'function getCurrentRound() view returns(uint256,uint256,uint256,bool)',
   'function getRoundPlayers(uint256) view returns(address[])',
   'function getMyTickets(uint256) view returns(uint256)',
@@ -2110,11 +2095,11 @@ const DAO_ABI         = [
   'function MIN_TOKENS_TO_VOTE() view returns(uint256)',
 ];
 const REWARDS_ABI     = [
-  'function sendLikeReward(address author) external nonpayable',
+  'function sendLikeReward(address author) external',
   'function getRewardFor(address author) external view returns(uint256)',
   'function poolBalance() external view returns(uint256)',
   'function rewardPool() external view returns(uint256)',
-  'function syncPool() external nonpayable',
+  'function syncPool() external',
 ];
 const NFT_MARKET_ABI  = [
   'function listNFT(address,uint256,uint256) returns(uint256)',
@@ -2151,10 +2136,10 @@ const PRESALE_ABI   = [
   'function WALLET_CAP() view returns(uint256)',
 ];
 const STAKING_ABI = [
-  'function stake(uint256) nonpayable',
-  'function unstake() nonpayable',
-  'function claim() nonpayable',
-  'function syncRewardPool() nonpayable',
+  'function stake(uint256)',
+  'function unstake()',
+  'function claim()',
+  'function syncRewardPool()',
   'function pendingReward(address) view returns(uint256)',
   'function getStakeInfo(address) view returns(uint256,uint256,uint256)',
   'function rewardPool() view returns(uint256)',
@@ -2403,7 +2388,25 @@ async function connectWallet(){
 
 // ── BNB BATTLESHIP ─────────────────────────────────────────────────────────
 
-// State
+// Constants
+var BNB_BATTLE_ADDR='0x22597403bFa0982803Be28D070a14b6E45700dc0';
+var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
+var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
+var BNB_BATTLE_ABI=[
+  'function createGame(uint256 amount, uint8 token) returns(uint256)',
+  'function joinGame(uint256 gameId)',
+  'function cancelGame(uint256 gameId)',
+  'function claimLobbyTimeout(uint256 gameId)',
+  'function getGame(uint256 gameId) view returns(tuple(address player1,address player2,uint256 betAmount,uint8 token,uint8 status,address winner,uint256 createdAt,uint256 lastMoveAt,uint8 currentTurn))',
+  'function getOpenGames() view returns(uint256[])',
+  'function getMyActiveGame(address player) view returns(uint256)',
+  'function gameCount() view returns(uint256)',
+];
+var ERC20_SIMPLE_ABI=[
+  'function approve(address spender, uint256 amount) returns(bool)',
+  'function allowance(address owner, address spender) view returns(uint256)',
+  'function balanceOf(address) view returns(uint256)',
+];
 var bnbbsToken='USDT', bnbbsGameId=null, bnbbsOrientation='h';
 var bnbbsMyShips=[], bnbbsPlaced=[], bnbbsSelectedSize=0;
 var bnbbsMyShots={}, bnbbsEnemyShots={};
@@ -2455,11 +2458,24 @@ async function initBNBBattle(){
   await bnbbsLoadRooms();
   if(bnbbsRoomsInterval) clearInterval(bnbbsRoomsInterval);
   bnbbsRoomsInterval=setInterval(bnbbsLoadRooms,10000);
-  // Check active game
+  // Check active game — show banner instead of auto-entering
   try{
     var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
     var gid=await c.getMyActiveGame(userAddr);
-    if(gid&&Number(gid)>0){ bnbbsGameId=Number(gid); bnbbsEnterGame(); }
+    if(gid&&Number(gid)>0){
+      bnbbsGameId=Number(gid);
+      // Show resume banner in lobby instead of auto-entering
+      var banner=document.createElement('div');
+      banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+      banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ You have an active game!</div>';
+      var resumeBtn=document.createElement('button');
+      resumeBtn.textContent='↩ Continue';
+      resumeBtn.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;';
+      resumeBtn.onclick=function(){bnbbsEnterGame();};
+      banner.appendChild(resumeBtn);
+      var rooms=document.getElementById('bnbbs-rooms');
+      if(rooms) rooms.parentNode.insertBefore(banner,rooms);
+    }
   }catch(e){}
 }
 
@@ -2478,18 +2494,25 @@ async function bnbbsLoadRooms(){
   try{
     var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
     var ids=await c.getOpenGames();
-    console.log('[BNBBattle] gameCount open:',ids.length);
+    console.log('[BNBBattle] open games:',ids.length);
+
+    // Show USDT balance
+    try{
+      var usdtC=new ethers.Contract(USDT_BNB_ADDR,ERC20_SIMPLE_ABI,getBNBBattleProvider());
+      var bal=await usdtC.balanceOf(userAddr);
+      var balEl=document.getElementById('bnbbs-balance');
+      if(balEl) balEl.textContent='Balance: $'+(Number(bal)/1e6).toFixed(2)+' USDT';
+    }catch(e){}
+
     if(!ids||ids.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games yet.<br>Create one above!</div>';
       return;
     }
+    var now=Math.floor(Date.now()/1000);
     var rooms=await Promise.all(ids.map(function(id){return c.getGame(id).then(function(g){return {id:Number(id),g};});}));
     var wallets=[...new Set(rooms.map(function(r){return r.g.player1.toLowerCase();}))];
     var profiles=[];
-    try{
-      var pr=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);
-      profiles=pr.data||[];
-    }catch(e){}
+    try{var pr=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);profiles=pr.data||[];}catch(e){}
     var profileMap={};
     profiles.forEach(function(p){profileMap[p.wallet]=p;});
     el.innerHTML=rooms.map(function(item){
@@ -2500,16 +2523,26 @@ async function bnbbsLoadRooms(){
       var amount=(Number(item.g.betAmount)/1e6).toFixed(2);
       var tok=Number(item.g.token)===0?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;">'
+      var createdAt=Number(item.g.createdAt);
+      var lobbyTimeout=4*60*60; // 4 hours
+      var expired=createdAt>0&&(now-createdAt)>lobbyTimeout;
+      var timeLeft='';
+      if(!expired&&createdAt>0){
+        var secsLeft=lobbyTimeout-(now-createdAt);
+        var h=Math.floor(secsLeft/3600);var m=Math.floor((secsLeft%3600)/60);
+        timeLeft=' · '+h+'h '+m+'m left';
+      }
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(expired?'rgba(255,77,77,0.3)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;gap:12px;">'
         +'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+av+'</div>'
         +'<div><div style="font-size:14px;font-weight:700;">'+esc(name)+'</div>'
-        +'<div style="font-size:13px;color:var(--gold);margin-top:3px;">💰 $'+amount+' '+tok+'</div></div>'
+        +'<div style="font-size:13px;color:var(--gold);margin-top:3px;">💰 $'+amount+' '+tok+(expired?'<span style="color:var(--red);font-size:11px;"> · Expired</span>':'<span style="color:var(--muted);font-size:11px;">'+timeLeft+'</span>')+'</div></div>'
         +'</div>'
         +'<div style="display:flex;gap:6px;">'
-        +(!isMe?'<button onclick="openDM(\''+p1+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;">💬 DM</button>':'')
-        +(!isMe?'<button onclick="bnbbsJoin('+item.id+')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button>'
-                :'<button onclick="bnbbsCancelGame('+item.id+',event)" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;">✕ Cancel</button>')
+        +(isMe&&expired?'<button onclick="bnbbsClaimRefund('+item.id+',event)" style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,.4);color:var(--gold);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">💰 Refund</button>':'')
+        +(isMe&&!expired?'<button onclick="bnbbsCancelGame('+item.id+',event)" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;">✕ Cancel</button>':'')
+        +(!isMe&&!expired?'<button onclick="openDMWith(\''+p1+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;">💬 DM</button>':'')
+        +(!isMe&&!expired?'<button onclick="bnbbsJoin('+item.id+')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button>':'')
         +'</div></div>';
     }).join('');
   }catch(e){
@@ -2553,14 +2586,24 @@ async function bnbbsCreate(){
     var tokenIdx=bnbbsToken==='USDT'?0:1;
     var bnbProv=new ethers.BrowserProvider(window.ethereum);
     var bnbSigner=await bnbProv.getSigner();
-    // Approve
+    var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
+
+    // ── Check balance FIRST ──
+    var bal=await tok.balanceOf(userAddr);
+    if(bal<amountRaw){
+      showToast('Insufficient '+bnbbsToken+' balance. You have $'+(Number(bal)/1e6).toFixed(2),'err');
+      return;
+    }
+
+    // ── Approve exact amount ──
     showToast('Approving '+bnbbsToken+'...','ok');
-    var tok=new ethers.Contract(tokenAddr,ERC20_ABI,bnbSigner);
     var allowance=await tok.allowance(userAddr,BNB_BATTLE_ADDR);
     if(allowance<amountRaw){
-      var appTx=await tok.approve(BNB_BATTLE_ADDR,amountRaw*100n);
+      var appTx=await tok.approve(BNB_BATTLE_ADDR,amountRaw);
       await appTx.wait();
     }
+
+    // ── Create game ──
     showToast('Creating game...','ok');
     var contract=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,bnbSigner);
     var tx=await contract.createGame(amountRaw,tokenIdx);
@@ -2569,11 +2612,30 @@ async function bnbbsCreate(){
     catch(e){var aid=await contract.getMyActiveGame(userAddr);bnbbsGameId=Number(aid);}
     showToast('Room created! Waiting for opponent...','ok');
     await bnbbsLoadRooms();
-    // Show notification banner
     bnbbsShowWaitBanner();
   }catch(e){
     if(e.code===4001||e.message?.includes('rejected'))showToast('Cancelled','err');
     else showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+}
+
+// ── Claim refund after 4h lobby timeout ──
+async function bnbbsClaimRefund(gameId,ev){
+  var btn=ev&&ev.target;
+  if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    await _switchToBNBChain();
+    var bnbProv=new ethers.BrowserProvider(window.ethereum);
+    var bnbSigner=await bnbProv.getSigner();
+    var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,bnbSigner);
+    showToast('Claiming refund...','ok');
+    var tx=await c.claimLobbyTimeout(gameId);
+    await tx.wait();
+    showToast('✅ Refund received!','ok');
+    await bnbbsLoadRooms();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='💰 Refund';}
+    showToast('Error: '+(e.message||'').slice(0,50),'err');
   }
 }
 
@@ -2596,12 +2658,21 @@ async function bnbbsJoin(gameId){
     var g=await c.getGame(gameId);
     var amountRaw=g.betAmount;
     var tokenAddr=Number(g.token)===0?USDT_BNB_ADDR:USDC_BNB_ADDR;
-    // Approve
-    showToast('Approving...','ok');
-    var tok=new ethers.Contract(tokenAddr,ERC20_ABI,bnbSigner);
+    var tokenName=Number(g.token)===0?'USDT':'USDC';
+    var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
+
+    // ── Check balance FIRST ──
+    var bal=await tok.balanceOf(userAddr);
+    if(bal<amountRaw){
+      showToast('Insufficient '+tokenName+'. You have $'+(Number(bal)/1e6).toFixed(2),'err');
+      return;
+    }
+
+    // ── Approve exact amount ──
+    showToast('Approving '+tokenName+'...','ok');
     var allowance=await tok.allowance(userAddr,BNB_BATTLE_ADDR);
     if(allowance<amountRaw){
-      var appTx=await tok.approve(BNB_BATTLE_ADDR,amountRaw*100n);
+      var appTx=await tok.approve(BNB_BATTLE_ADDR,amountRaw);
       await appTx.wait();
     }
     showToast('Joining...','ok');
@@ -2609,9 +2680,8 @@ async function bnbbsJoin(gameId){
     await tx.wait();
     bnbbsGameId=gameId;
     var amount=(Number(g.betAmount)/1e6).toFixed(2);
-    var tok2=Number(g.token)===0?'USDT':'USDC';
     showToast('Joined! Place your ships.','ok');
-    bnbbsEnterGame('$'+amount+' '+tok2);
+    bnbbsEnterGame('$'+amount+' '+tokenName);
   }catch(e){
     if(e.code===4001||e.message?.includes('rejected'))showToast('Cancelled','err');
     else showToast('Error: '+(e.message||'').slice(0,50),'err');
@@ -2831,9 +2901,28 @@ function bnbbsRandomPlaceShips(){
 async function bnbbsMarkReady(){
   if(bnbbsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all ships first!','err');return;}
   bnbbsIsReady=true;
-  bnbbsRenderBoards();
+
+  // ── LOCK the board — remove all click/hover handlers ──
+  for(var i=0;i<100;i++){
+    var mc=document.getElementById('bnbbs-my-'+i);
+    if(mc){
+      mc.onclick=null;
+      mc.onmouseover=null;
+      mc.onmouseout=null;
+      mc.style.cursor='default';
+    }
+  }
+  // Re-render ships as locked (no cursor crosshair)
+  bnbbsMyShips.forEach(function(idx){
+    var c=document.getElementById('bnbbs-my-'+idx);
+    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.5);border:1px solid var(--green);cursor:default;';
+  });
+
   document.getElementById('bnbbs-ships-panel').style.display='none';
   document.getElementById('bnbbs-ready-btn').style.display='none';
+  document.getElementById('bnbbs-status').textContent='⏳ Ships locked! Waiting for opponent...';
+  showToast('Ships locked! ✓','ok');
+
   // Save to Supabase
   try{
     var c2=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
@@ -2843,9 +2932,7 @@ async function bnbbsMarkReady(){
     var upd={contract_game_id:bnbbsGameId,status:'playing'};
     upd[col]=JSON.stringify(bnbbsMyShips);
     await sb.from('battleship_games').upsert(upd,{onConflict:'contract_game_id'});
-    showToast('Ready! Waiting for opponent...','ok');
-    document.getElementById('bnbbs-status').textContent='⏳ Waiting for opponent to place ships...';
-  }catch(e){showToast('Ready (DB save failed)','ok');}
+  }catch(e){console.error('DB save failed:',e);}
 }
 
 // ── Fire ──
