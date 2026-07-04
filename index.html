@@ -2464,13 +2464,15 @@ async function initBNBBattle(){
     var gid=await c.getMyActiveGame(userAddr);
     if(gid&&Number(gid)>0){
       bnbbsGameId=Number(gid);
-      // Show resume banner in lobby instead of auto-entering
+      // Remove existing banners first
+      document.querySelectorAll('.bnbbs-resume-banner').forEach(function(b){b.remove();});
       var banner=document.createElement('div');
+      banner.className='bnbbs-resume-banner';
       banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
       banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ You have an active game!</div>';
       var resumeBtn=document.createElement('button');
       resumeBtn.textContent='↩ Continue';
-      resumeBtn.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;';
+      resumeBtn.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;';
       resumeBtn.onclick=function(){bnbbsEnterGame();};
       banner.appendChild(resumeBtn);
       var rooms=document.getElementById('bnbbs-rooms');
@@ -2501,7 +2503,7 @@ async function bnbbsLoadRooms(){
       var usdtC=new ethers.Contract(USDT_BNB_ADDR,ERC20_SIMPLE_ABI,getBNBBattleProvider());
       var bal=await usdtC.balanceOf(userAddr);
       var balEl=document.getElementById('bnbbs-balance');
-      if(balEl) balEl.textContent='Balance: $'+(Number(bal)/1e6).toFixed(2)+' USDT';
+      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2)+' USDT';
     }catch(e){}
 
     if(!ids||ids.length===0){
@@ -2520,7 +2522,7 @@ async function bnbbsLoadRooms(){
       var prof=profileMap[p1]||{};
       var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
       var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
-      var amount=(Number(item.g.betAmount)/1e6).toFixed(2);
+      var amount=parseFloat(ethers.formatUnits(item.g.betAmount,18)).toFixed(2);
       var tok=Number(item.g.token)===0?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
       var createdAt=Number(item.g.createdAt);
@@ -2559,7 +2561,7 @@ async function bnbbsMatchmake(){
     showToast('Searching...','ok');
     var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
     var ids=await c.getOpenGames();
-    var amountRaw=BigInt(Math.round(amount*1e6));
+    var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
     var tokenIdx=bnbbsToken==='USDT'?0:1;
     for(var i=0;i<ids.length;i++){
       var g=await c.getGame(ids[i]);
@@ -2581,7 +2583,7 @@ async function bnbbsCreate(){
   if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
   try{
     await _switchToBNBChain();
-    var amountRaw=BigInt(Math.round(amount*1e6));
+    var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
     var tokenAddr=bnbbsToken==='USDT'?USDT_BNB_ADDR:USDC_BNB_ADDR;
     var tokenIdx=bnbbsToken==='USDT'?0:1;
     var bnbProv=new ethers.BrowserProvider(window.ethereum);
@@ -2591,7 +2593,7 @@ async function bnbbsCreate(){
     // ── Check balance FIRST ──
     var bal=await tok.balanceOf(userAddr);
     if(bal<amountRaw){
-      showToast('Insufficient '+bnbbsToken+' balance. You have $'+(Number(bal)/1e6).toFixed(2),'err');
+      showToast('Insufficient '+bnbbsToken+' balance. You have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');
       return;
     }
 
@@ -2664,7 +2666,7 @@ async function bnbbsJoin(gameId){
     // ── Check balance FIRST ──
     var bal=await tok.balanceOf(userAddr);
     if(bal<amountRaw){
-      showToast('Insufficient '+tokenName+'. You have $'+(Number(bal)/1e6).toFixed(2),'err');
+      showToast('Insufficient '+tokenName+'. You have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');
       return;
     }
 
@@ -2679,7 +2681,7 @@ async function bnbbsJoin(gameId){
     var tx=await c.joinGame(gameId);
     await tx.wait();
     bnbbsGameId=gameId;
-    var amount=(Number(g.betAmount)/1e6).toFixed(2);
+    var amount=parseFloat(ethers.formatUnits(g.betAmount,18)).toFixed(2);
     showToast('Joined! Place your ships.','ok');
     bnbbsEnterGame('$'+amount+' '+tokenName);
   }catch(e){
@@ -2719,6 +2721,7 @@ function bnbbsEnterGame(stakeInfo){
   bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;
   bnbbsMyShots={};bnbbsEnemyShots={};
   bnbbsMyTurn=false;bnbbsIsReady=false;
+  bnbbsBuildBoardDOM();
   bnbbsRenderBoards();
   bnbbsBuildShipBtns();
   document.getElementById('bnbbs-ships-panel').style.display='block';
@@ -2743,7 +2746,8 @@ function leaveBNBGame(){
 }
 
 // ── Board rendering (SAME as testnet bsRenderBoards) ──
-function bnbbsRenderBoards(){
+// ── Build boards once (called only on enter game) ──
+function bnbbsBuildBoardDOM(){
   var myEl=document.getElementById('bnbbs-myboard');
   var enEl=document.getElementById('bnbbs-enemyboard');
   if(!myEl||!enEl) return;
@@ -2752,41 +2756,59 @@ function bnbbsRenderBoards(){
     (function(idx){
       var mc=document.createElement('div');
       mc.id='bnbbs-my-'+idx;
-      mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);'+(bnbbsIsReady?'cursor:default;':'cursor:crosshair;');
-      if(!bnbbsIsReady){
-        mc.onclick=function(){bnbbsPlaceShip(idx);};
-        mc.onmouseover=function(){bnbbsHover(idx,true);};
-        mc.onmouseout=function(){bnbbsHover(idx,false);};
-      }
+      mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
+      mc.onclick=function(){if(!bnbbsIsReady)bnbbsPlaceShip(idx);};
+      mc.onmouseover=function(){if(!bnbbsIsReady)bnbbsHover(idx,true);};
+      mc.onmouseout=function(){if(!bnbbsIsReady)bnbbsHover(idx,false);};
       myEl.appendChild(mc);
       var ec=document.createElement('div');
       ec.id='bnbbs-en-'+idx;
-      ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:'+(bnbbsMyTurn&&bnbbsIsReady?'crosshair':'not-allowed')+';';
+      ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:not-allowed;';
       ec.onclick=function(){bnbbsFire(idx);};
       enEl.appendChild(ec);
     })(i);
   }
-  // Paint MY ships
-  bnbbsMyShips.forEach(function(idx){
-    var c=document.getElementById('bnbbs-my-'+idx);
-    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.35);border:1px solid var(--green);'+(bnbbsIsReady?'cursor:default;':'cursor:crosshair;');
-  });
-  // Enemy shots on MY board
-  Object.keys(bnbbsEnemyShots).forEach(function(idx){
-    var c=document.getElementById('bnbbs-my-'+idx);
-    if(!c) return;
-    var hit=bnbbsEnemyShots[idx]==='hit';
-    c.style.cssText='aspect-ratio:1;border-radius:2px;background:'+(hit?'rgba(255,77,77,0.8)':'rgba(90,100,120,0.4)')+';border:'+(hit?'2px solid #ff4d4d':'1px solid var(--muted)')+';cursor:default;';
-    c.innerHTML='<b style="color:#fff;font-size:'+(hit?'13':'10')+'px;line-height:1;">'+(hit?'✕':'•')+'</b>';
-  });
-  // MY shots on enemy board
-  Object.keys(bnbbsMyShots).forEach(function(idx){
-    var c=document.getElementById('bnbbs-en-'+idx);
-    if(!c) return;
-    var hit=bnbbsMyShots[idx]==='hit';
-    c.style.cssText='aspect-ratio:1;border-radius:2px;background:'+(hit?'rgba(255,77,77,0.8)':'rgba(90,100,120,0.4)')+';border:'+(hit?'2px solid #ff4d4d':'1px solid var(--muted)')+';cursor:default;';
-    c.innerHTML='<b style="color:#fff;font-size:'+(hit?'13':'10')+'px;line-height:1;">'+(hit?'✕':'•')+'</b>';
-  });
+}
+
+// ── Render boards — only update colors, never rebuild DOM ──
+function bnbbsRenderBoards(){
+  // MY board
+  for(var i=0;i<100;i++){
+    var mc=document.getElementById('bnbbs-my-'+i);
+    if(!mc) return bnbbsBuildBoardDOM(); // DOM not ready yet
+    var isShip=bnbbsMyShips.includes(i);
+    var enemyShot=bnbbsEnemyShots[i];
+    if(enemyShot==='hit'){
+      mc.style.background='rgba(255,77,77,0.8)';mc.style.border='2px solid #ff4d4d';
+      mc.innerHTML='<b style="color:#fff;font-size:13px;line-height:1;">✕</b>';
+    } else if(enemyShot==='miss'){
+      mc.style.background='rgba(90,100,120,0.4)';mc.style.border='1px solid var(--muted)';
+      mc.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';
+    } else if(isShip){
+      mc.style.background=bnbbsIsReady?'rgba(38,217,138,0.5)':'rgba(38,217,138,0.35)';
+      mc.style.border='1px solid var(--green)';mc.innerHTML='';
+    } else {
+      mc.style.background='var(--bg3)';mc.style.border='1px solid var(--border)';mc.innerHTML='';
+    }
+    mc.style.cursor=bnbbsIsReady?'default':'crosshair';
+  }
+  // ENEMY board
+  var canFire=bnbbsMyTurn&&bnbbsIsReady;
+  for(var j=0;j<100;j++){
+    var ec=document.getElementById('bnbbs-en-'+j);
+    if(!ec) return;
+    var myShot=bnbbsMyShots[j];
+    if(myShot==='hit'){
+      ec.style.background='rgba(255,77,77,0.8)';ec.style.border='2px solid #ff4d4d';
+      ec.innerHTML='<b style="color:#fff;font-size:13px;line-height:1;">✕</b>';
+    } else if(myShot==='miss'){
+      ec.style.background='rgba(90,100,120,0.4)';ec.style.border='1px solid var(--muted)';
+      ec.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';
+    } else {
+      ec.style.background='var(--bg3)';ec.style.border='1px solid var(--border)';ec.innerHTML='';
+    }
+    ec.style.cursor=canFire&&!myShot?'crosshair':'not-allowed';
+  }
 }
 
 // ── Ship placement (SAME as testnet) ──
@@ -3119,6 +3141,7 @@ async function loadGateBal(force=false){
 
 // ── APP TABS ──
 function showTab(tab){
+  localStorage.setItem('og_active_tab', tab);
   document.getElementById('view-feed').style.display=tab==='feed'?'block':'none';
   document.getElementById('view-profile').style.display=tab==='profile'?'block':'none';
   document.getElementById('view-staking').style.display=tab==='staking'?'block':'none';
@@ -7063,13 +7086,32 @@ if(window.location.search.includes('mm_return=1')){
 } else {
   tryAutoConnect();
 }
+// Restore tab after chain switch reload
+var _returnTab=sessionStorage.getItem('og_return_tab');
+if(_returnTab){
+  sessionStorage.removeItem('og_return_tab');
+  // Wait for app to initialize then switch tab
+  setTimeout(function(){
+    var appPage=document.getElementById('page-app');
+    if(appPage){
+      document.getElementById('page-landing').classList.remove('active');
+      appPage.classList.add('active');
+      showTab(_returnTab);
+    }
+  },1500);
+}
 // Also listen for wallet events to keep connected
 if(window.ethereum){
   window.ethereum.on('accountsChanged',function(accounts){
     if(accounts&&accounts.length>0){ _doConnect(accounts[0]); }
     else { localStorage.removeItem('og_wallet'); location.reload(); }
   });
-  window.ethereum.on('chainChanged',()=>location.reload());
+  window.ethereum.on('chainChanged',function(){
+    // Save current tab before reload
+    var activeTab=localStorage.getItem('og_active_tab')||'feed';
+    sessionStorage.setItem('og_return_tab',activeTab);
+    location.reload();
+  });
 }</script>
 <script>
 if('serviceWorker' in navigator){
