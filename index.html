@@ -2030,6 +2030,24 @@ const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
 const GATE_LOTTERY    = '0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035';
 const GATE_DICE         = '0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855';
 const BATTLESHIP_ADDR   = '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143';
+const BNB_BATTLE_ADDR   = '0x22597403bFa0982803Be28D070a14b6E45700dc0';
+const USDT_BNB_ADDR     = '0x55d398326f99059fF775485246999027B3197955';
+const USDC_BNB_ADDR     = '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
+const BNB_BATTLE_ABI    = [
+  'function createGame(uint256 amount, uint8 token) returns(uint256)',
+  'function joinGame(uint256 gameId)',
+  'function cancelGame(uint256 gameId)',
+  'function claimLobbyTimeout(uint256 gameId)',
+  'function getGame(uint256 gameId) view returns(tuple(address player1,address player2,uint256 betAmount,uint8 token,uint8 status,address winner,uint256 createdAt,uint256 lastMoveAt,uint8 currentTurn))',
+  'function getOpenGames() view returns(uint256[])',
+  'function getMyActiveGame(address player) view returns(uint256)',
+  'function gameCount() view returns(uint256)',
+];
+const ERC20_ABI = [
+  'function approve(address spender, uint256 amount) returns(bool)',
+  'function allowance(address owner, address spender) view returns(uint256)',
+  'function balanceOf(address) view returns(uint256)',
+];
 const GATE_LENDING      = '0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6';
 const GATE_FAUCET       = '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74';
 const FAUCET_ABI        = [
