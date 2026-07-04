@@ -2583,6 +2583,7 @@ async function bnbbsCreate(){
   if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
   try{
     await _switchToBNBChain();
+    sessionStorage.removeItem('og_pending_bnb_action'); // switch succeeded without reload
     var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
     var tokenAddr=bnbbsToken==='USDT'?USDT_BNB_ADDR:USDC_BNB_ADDR;
     var tokenIdx=bnbbsToken==='USDT'?0:1;
@@ -2652,8 +2653,13 @@ function bnbbsShowWaitBanner(){
 // ── Join game ──
 async function bnbbsJoin(gameId){
   if(!userAddr){showToast('Connect wallet first','err');return;}
+  // Save pending join in case chain switch causes reload
+  sessionStorage.setItem('og_pending_bnb_action',JSON.stringify({
+    action:'join',gameId:gameId,tab:'bnbbattle'
+  }));
   try{
     await _switchToBNBChain();
+    sessionStorage.removeItem('og_pending_bnb_action'); // clear if switch succeeded without reload
     var bnbProv=new ethers.BrowserProvider(window.ethereum);
     var bnbSigner=await bnbProv.getSigner();
     var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,bnbSigner);
@@ -2775,7 +2781,7 @@ function bnbbsRenderBoards(){
   // MY board
   for(var i=0;i<100;i++){
     var mc=document.getElementById('bnbbs-my-'+i);
-    if(!mc) return bnbbsBuildBoardDOM(); // DOM not ready yet
+    if(!mc) return; // DOM not ready, skip
     var isShip=bnbbsMyShips.includes(i);
     var enemyShot=bnbbsEnemyShots[i];
     if(enemyShot==='hit'){
@@ -2945,15 +2951,25 @@ async function bnbbsMarkReady(){
   document.getElementById('bnbbs-status').textContent='⏳ Ships locked! Waiting for opponent...';
   showToast('Ships locked! ✓','ok');
 
-  // Save to Supabase
+  // Save ships to Supabase (best effort - don't block game if fails)
   try{
     var c2=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
     var gd=await c2.getGame(bnbbsGameId);
     var isP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
     var col=isP1?'player1_board':'player2_board';
-    var upd={contract_game_id:bnbbsGameId,status:'playing'};
-    upd[col]=JSON.stringify(bnbbsMyShips);
-    await sb.from('battleship_games').upsert(upd,{onConflict:'contract_game_id'});
+    // Check if row exists
+    var existing=await sb.from('battleship_games').select('id').eq('contract_game_id',bnbbsGameId).maybeSingle();
+    if(existing.data){
+      // Update existing row
+      var upd2={};upd2[col]=JSON.stringify(bnbbsMyShips);upd2.status='playing';
+      await sb.from('battleship_games').update(upd2).eq('contract_game_id',bnbbsGameId);
+    } else {
+      // Insert new row
+      var ins={contract_game_id:bnbbsGameId,status:'playing'};
+      ins[col]=JSON.stringify(bnbbsMyShips);
+      ins[isP1?'player1_wallet':'player2_wallet']=userAddr.toLowerCase();
+      await sb.from('battleship_games').insert(ins);
+    }
   }catch(e){console.error('DB save failed:',e);}
 }
 
@@ -3052,10 +3068,34 @@ function bnbbsHandleUpdate(game){
 
 async function _switchToBNBChain(){
   if(!window.ethereum) return;
-  try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]});}
-  catch(e){
-    if(e.code===4902) await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x38',chainName:'BNB Smart Chain',rpcUrls:['https://bsc-dataseed.binance.org/'],nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},blockExplorerUrls:['https://bscscan.com']}]});
+  // Check if already on BNB Chain
+  try{
+    var chainId=await window.ethereum.request({method:'eth_chainId'});
+    if(chainId==='0x38') return; // Already on BNB — no switch needed, no reload
+  }catch(e){}
+  // Need to switch — save pending action to restore after reload
+  var pendingAction=sessionStorage.getItem('og_pending_bnb_action');
+  if(!pendingAction){
+    // Save current state so we can retry after reload
+    var amount=document.getElementById('bnbbs-amount')?.value||'';
+    sessionStorage.setItem('og_pending_bnb_action',JSON.stringify({
+      action:'create',
+      amount:amount,
+      token:bnbbsToken,
+      tab:'bnbbattle'
+    }));
   }
+  try{
+    await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]});
+  }catch(e){
+    if(e.code===4902){
+      await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x38',chainName:'BNB Smart Chain',rpcUrls:['https://bsc-dataseed.binance.org/'],nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},blockExplorerUrls:['https://bscscan.com']}]});
+      // After adding network, try switching again
+      await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]});
+    }
+  }
+  // If we got here without reload - clear pending and continue
+  sessionStorage.removeItem('og_pending_bnb_action');
 }
 
 async function switchToBNB(){
@@ -7088,15 +7128,32 @@ if(window.location.search.includes('mm_return=1')){
 }
 // Restore tab after chain switch reload
 var _returnTab=sessionStorage.getItem('og_return_tab');
-if(_returnTab){
+var _pendingBNB=sessionStorage.getItem('og_pending_bnb_action');
+if(_returnTab||_pendingBNB){
   sessionStorage.removeItem('og_return_tab');
-  // Wait for app to initialize then switch tab
+  var _tab=_returnTab||(_pendingBNB?JSON.parse(_pendingBNB).tab:'feed');
   setTimeout(function(){
     var appPage=document.getElementById('page-app');
     if(appPage){
       document.getElementById('page-landing').classList.remove('active');
       appPage.classList.add('active');
-      showTab(_returnTab);
+      showTab(_tab);
+      // Restore pending BNB action
+      if(_pendingBNB){
+        sessionStorage.removeItem('og_pending_bnb_action');
+        var pending=JSON.parse(_pendingBNB);
+        setTimeout(function(){
+          // Set amount and token, then auto-create
+          var amtEl=document.getElementById('bnbbs-amount');
+          if(amtEl&&pending.amount) amtEl.value=pending.amount;
+          if(pending.token) bnbbsToken=pending.token;
+          showToast('Network switched! Retrying...','ok');
+          setTimeout(function(){
+            if(pending.action==='create') bnbbsCreate();
+            else if(pending.action==='join'&&pending.gameId) bnbbsJoin(pending.gameId);
+          },800);
+        },1000);
+      }
     }
   },1500);
 }
