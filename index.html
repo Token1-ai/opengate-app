@@ -2930,20 +2930,16 @@ async function bnbbsMarkReady(){
   if(bnbbsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all ships first!','err');return;}
   bnbbsIsReady=true;
 
-  // ── LOCK the board — remove all click/hover handlers ──
-  for(var i=0;i<100;i++){
-    var mc=document.getElementById('bnbbs-my-'+i);
-    if(mc){
-      mc.onclick=null;
-      mc.onmouseover=null;
-      mc.onmouseout=null;
-      mc.style.cursor='default';
-    }
+  // ── LOCK the board completely ──
+  var myBoard=document.getElementById('bnbbs-myboard');
+  if(myBoard){
+    myBoard.style.pointerEvents='none'; // blocks ALL clicks/hovers on entire board
+    myBoard.style.cursor='default';
   }
-  // Re-render ships as locked (no cursor crosshair)
+  // Make ships look locked
   bnbbsMyShips.forEach(function(idx){
     var c=document.getElementById('bnbbs-my-'+idx);
-    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.5);border:1px solid var(--green);cursor:default;';
+    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.6);border:2px solid var(--green);cursor:default;';
   });
 
   document.getElementById('bnbbs-ships-panel').style.display='none';
