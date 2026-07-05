@@ -2184,7 +2184,10 @@ let provider, signer, userAddr, currentUser, mintPrice, mintType;
 // The minor extra eth_chainId call per fresh provider is a worthwhile
 // trade for correctness over a micro-optimization that kept backfiring.
 function getReadProvider(){
-  if(provider) return provider; // MetaMask already connected - use it!
+  // Провайдер MetaMask годиться для читання LitVM лише коли MetaMask
+  // РЕАЛЬНО на LitVM (0x1159). Якщо користувач на BNB (грає в Battleship),
+  // читаємо через публічний RPC LitVM — інакше баланси/стейкінг ламались.
+  if(provider && window._ogChainId==='0x1159') return provider;
   return new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
 }
 function getBNBProvider(){
@@ -7455,12 +7458,19 @@ if(window.ethereum){
     if(accounts&&accounts.length>0){ _doConnect(accounts[0]); }
     else { localStorage.removeItem('og_wallet'); location.reload(); }
   });
-  window.ethereum.on('chainChanged',function(){
-    // Save current tab before reload
-    var activeTab=localStorage.getItem('og_active_tab')||'feed';
-    sessionStorage.setItem('og_return_tab',activeTab);
-    location.reload();
+  window.ethereum.on('chainChanged',function(id){
+    // FIXED: більше НЕ перезавантажуємо сторінку при зміні мережі —
+    // це викидало користувача на головну при лайках/стейкінгу/грі.
+    // Просто оновлюємо провайдер; всі функції і так створюють свіжий
+    // signer після switchToLitVM/_switchToBNBChain.
+    window._ogChainId=id;
+    try{
+      provider=new ethers.BrowserProvider(window.ethereum);
+      if(userAddr){ provider.getSigner().then(function(s){signer=s;}).catch(function(){}); }
+    }catch(e){}
   });
+  // Запам'ятовуємо поточну мережу для getReadProvider
+  window.ethereum.request({method:'eth_chainId'}).then(function(id){window._ogChainId=id;}).catch(function(){});
 }</script>
 <script>
 if('serviceWorker' in navigator){
