@@ -2387,19 +2387,24 @@ async function connectWallet(){
 }
 
 // ── BNB BATTLESHIP ─────────────────────────────────────────────────────────
+// v2 FIXED: правильні ходи, відновлення після refresh, захист від читів,
+// кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0x22597403bFa0982803Be28D070a14b6E45700dc0';
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
+var ORACLE_HDR='opengate-oracle-2026';
 var BNB_BATTLE_ABI=[
   'function createGame(uint256 amount, uint8 token) returns(uint256)',
   'function joinGame(uint256 gameId)',
   'function cancelGame(uint256 gameId)',
   'function claimLobbyTimeout(uint256 gameId)',
+  'function claimMoveTimeout(uint256 gameId)',
   'function getGame(uint256 gameId) view returns(tuple(address player1,address player2,uint256 betAmount,uint8 token,uint8 status,address winner,uint256 createdAt,uint256 lastMoveAt,uint8 currentTurn))',
   'function getOpenGames() view returns(uint256[])',
   'function getMyActiveGame(address player) view returns(uint256)',
   'function gameCount() view returns(uint256)',
+  'event GameCreated(uint256 indexed id, address indexed player1, uint256 bet, uint8 token)',
 ];
 var ERC20_SIMPLE_ABI=[
   'function approve(address spender, uint256 amount) returns(bool)',
@@ -2411,11 +2416,34 @@ var ERC20_SIMPLE_ABI=[
 var bnbbsToken='USDT', bnbbsGameId=null, bnbbsOrientation='h';
 var bnbbsMyShips=[], bnbbsPlaced=[], bnbbsSelectedSize=0;
 var bnbbsMyShots={}, bnbbsEnemyShots={};
-var bnbbsMyTurn=false, bnbbsIsReady=false;
+var bnbbsMyTurn=false, bnbbsIsReady=false, bnbbsIsP1=null, bnbbsGameFinished=false;
 var bnbbsRealtimeChannel=null, bnbbsRoomsInterval=null;
+var _bnbbsNotifiedActive=0;
 
 function getBNBBattleProvider(){
   return new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+}
+function bnbbsContractRead(){
+  return new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
+}
+async function bnbbsContractWrite(){
+  await _switchToBNBChain();
+  var p=new ethers.BrowserProvider(window.ethereum);
+  var s=await p.getSigner();
+  return new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,s);
+}
+async function bnbbsOracle(body){
+  try{
+    var r=await fetch('/api/oracle',{method:'POST',headers:{'Content-Type':'application/json','x-oracle-secret':ORACLE_HDR},body:JSON.stringify(body)});
+    var j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok) console.warn('[Oracle]',r.status,j);
+    return j||{};
+  }catch(e){ console.warn('[Oracle] fetch failed:',e.message); return {error:e.message}; }
+}
+// ВАЖЛИВО: тестнет-ігри лежать у тій самій таблиці і їхні contract_game_id
+// можуть збігатися з BNB-іграми. Всі запити BNB-гри фільтрують bet_token IS NULL.
+function bnbbsGameQuery(){
+  return sb.from('battleship_games').select('*').eq('contract_game_id',bnbbsGameId).is('bet_token',null);
 }
 function bnbbsAddLog(msg){
   var el=document.getElementById('bnbbs-log'); if(!el) return;
@@ -2438,7 +2466,7 @@ async function initBNBBattle(){
   var pass=currentUser&&currentUser.pass_type;
   if(!isOwner&&(!pass||pass==='free')){
     try{
-      var bnbP=new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+      var bnbP=getBNBBattleProvider();
       var nftAbi=['function balanceOf(address) view returns(uint256)'];
       var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
       var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
@@ -2458,26 +2486,6 @@ async function initBNBBattle(){
   if(bnbbsRoomsInterval) clearInterval(bnbbsRoomsInterval);
   await bnbbsLoadRooms();
   bnbbsRoomsInterval=setInterval(bnbbsLoadRooms,8000);
-  // Check active game
-  try{
-    var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
-    var gid=await c.getMyActiveGame(userAddr);
-    if(gid&&Number(gid)>0){
-      bnbbsGameId=Number(gid);
-      document.querySelectorAll('.bnbbs-resume-banner').forEach(function(b){b.remove();});
-      var banner=document.createElement('div');
-      banner.className='bnbbs-resume-banner';
-      banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
-      banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ You have an active game!</div>';
-      var rb=document.createElement('button');
-      rb.textContent='↩ Continue';
-      rb.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;';
-      rb.onclick=function(){bnbbsEnterGame();};
-      banner.appendChild(rb);
-      var rooms=document.getElementById('bnbbs-rooms');
-      if(rooms) rooms.parentNode.insertBefore(banner,rooms);
-    }
-  }catch(e){}
 }
 
 // ── Token selector ──
@@ -2489,14 +2497,55 @@ function bnbbsSetToken(tok){
   if(c){c.style.background=tok==='USDC'?'rgba(59,130,246,0.2)':'var(--bg3)';c.style.borderColor=tok==='USDC'?'#3B82F6':'var(--border)';c.style.color=tok==='USDC'?'#3B82F6':'var(--muted)';}
 }
 
+// ── Активна гра: банер + нотифікація (працює для творця кімнати теж) ──
+async function bnbbsCheckActiveGame(){
+  if(!userAddr) return;
+  try{
+    var c=bnbbsContractRead();
+    var gid=Number(await c.getMyActiveGame(userAddr));
+    if(!gid){
+      document.querySelectorAll('.bnbbs-resume-banner').forEach(function(b){b.remove();});
+      return;
+    }
+    var g=await c.getGame(gid);
+    if(Number(g.status)!==1) return; // цікавлять лише Playing
+    bnbbsGameId=gid;
+    if(document.querySelector('.bnbbs-resume-banner')) return;
+    document.querySelectorAll('.wait-banner').forEach(function(b){b.remove();});
+    var banner=document.createElement('div');
+    banner.className='bnbbs-resume-banner';
+    banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+    banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ Active game — opponent is waiting!</div>';
+    var rb=document.createElement('button');
+    rb.textContent='⚔️ Enter Game';
+    rb.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;';
+    rb.onclick=function(){bnbbsEnterGame();};
+    banner.appendChild(rb);
+    var rooms=document.getElementById('bnbbs-rooms');
+    if(rooms) rooms.parentNode.insertBefore(banner,rooms);
+    if(_bnbbsNotifiedActive!==gid){
+      _bnbbsNotifiedActive=gid;
+      showToast('⚓ Opponent joined your BNB Battleship game!','ok');
+    }
+  }catch(e){}
+}
+
 // ── Load lobby ──
 async function bnbbsLoadRooms(){
   var el=document.getElementById('bnbbs-rooms'); if(!el) return;
+  // Не опитуємо лобі, коли ми всередині гри
+  var gb=document.getElementById('bnbbs-gameboard');
+  if(gb&&gb.style.display!=='none') return;
+  // Якщо вкладку закрито — зупиняємо інтервал
+  var view=document.getElementById('view-bnbbattle');
+  if(!view||view.style.display==='none'){
+    if(bnbbsRoomsInterval){clearInterval(bnbbsRoomsInterval);bnbbsRoomsInterval=null;}
+    return;
+  }
   try{
-    var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
+    var c=bnbbsContractRead();
     var ids=await c.getOpenGames();
-    console.log('[BNBBattle] open games:',ids.length);
-    // Show balance
+    // Balance
     try{
       var uC=new ethers.Contract(USDT_BNB_ADDR,ERC20_SIMPLE_ABI,getBNBBattleProvider());
       var bal=await uC.balanceOf(userAddr);
@@ -2505,10 +2554,19 @@ async function bnbbsLoadRooms(){
     }catch(e){}
     if(!ids||ids.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
+      bnbbsCheckActiveGame();
       return;
     }
     var now=Math.floor(Date.now()/1000);
-    var rooms=await Promise.all(ids.map(function(id){return c.getGame(id).then(function(g){return {id:Number(id),g};});}));
+    var minBet=ethers.parseUnits('0.1',18);
+    var rooms=await Promise.all(ids.map(function(id){return c.getGame(id).then(function(g){return {id:Number(id),g:g};});}));
+    // Фільтруємо сміттєві кімнати зі ставкою менше $0.10 (створені напряму через контракт)
+    rooms=rooms.filter(function(r){return r.g.betAmount>=minBet;});
+    if(rooms.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
+      bnbbsCheckActiveGame();
+      return;
+    }
     var wallets=[...new Set(rooms.map(function(r){return r.g.player1.toLowerCase();}))];
     var profiles=[];
     try{var pr=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);profiles=pr.data||[];}catch(e){}
@@ -2522,7 +2580,7 @@ async function bnbbsLoadRooms(){
       var tok=Number(item.g.token)===0?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
       var createdAt=Number(item.g.createdAt);
-      var expired=createdAt>0&&(now-createdAt)>4*3600;
+      var expired=createdAt>0&&(now-createdAt)>24*3600;
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(expired?'rgba(255,77,77,0.3)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;gap:12px;">'
         +'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+av+'</div>'
@@ -2536,6 +2594,7 @@ async function bnbbsLoadRooms(){
         +(!isMe&&!expired?'<button onclick="bnbbsJoin('+item.id+')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button>':'')
         +'</div></div>';
     }).join('');
+    bnbbsCheckActiveGame();
   }catch(e){
     console.error('[BNBBattle] loadRooms:',e);
     el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">Error loading rooms</div>';
@@ -2548,7 +2607,7 @@ async function bnbbsMatchmake(){
   if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
   try{
     showToast('Searching...','ok');
-    var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
+    var c=bnbbsContractRead();
     var ids=await c.getOpenGames();
     var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
     var tokenIdx=bnbbsToken==='USDT'?0:1;
@@ -2591,9 +2650,23 @@ async function bnbbsCreate(){
     showToast('Creating game...','ok');
     var contract=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,bnbSigner);
     var tx=await contract.createGame(amountRaw,tokenIdx);
-    await tx.wait();
-    var newId=await contract.gameCount().catch(async function(){return await contract.getMyActiveGame(userAddr);});
-    bnbbsGameId=Number(newId);
+    var receipt=await tx.wait();
+    // FIXED: беремо id гри з події GameCreated (gameCount мав race condition)
+    var newId=0;
+    try{
+      for(var li=0;li<receipt.logs.length;li++){
+        try{
+          var pl=contract.interface.parseLog(receipt.logs[li]);
+          if(pl&&pl.name==='GameCreated'&&pl.args.player1.toLowerCase()===userAddr.toLowerCase()){
+            newId=Number(pl.args.id); break;
+          }
+        }catch(e2){}
+      }
+    }catch(e3){}
+    if(!newId){
+      try{ newId=Number(await contract.getMyActiveGame(userAddr)); }catch(e4){}
+    }
+    bnbbsGameId=newId||null;
     showToast('Room created! Waiting for opponent...','ok');
     await bnbbsLoadRooms();
     bnbbsShowWaitBanner();
@@ -2613,14 +2686,11 @@ function bnbbsShowWaitBanner(){
   if(rooms){var ex=rooms.parentNode.querySelector('.wait-banner');if(ex)ex.remove();rooms.parentNode.insertBefore(banner,rooms);}
 }
 
-// ── Claim refund ──
+// ── Claim refund (24h lobby timeout) ──
 async function bnbbsClaimRefund(gameId,ev){
   var btn=ev&&ev.target;if(btn){btn.disabled=true;btn.textContent='...';}
   try{
-    await _switchToBNBChain();
-    var bnbProv=new ethers.BrowserProvider(window.ethereum);
-    var bnbSigner=await bnbProv.getSigner();
-    var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,bnbSigner);
+    var c=await bnbbsContractWrite();
     showToast('Claiming refund...','ok');
     var tx=await c.claimLobbyTimeout(gameId);
     await tx.wait();
@@ -2636,11 +2706,8 @@ async function bnbbsClaimRefund(gameId,ev){
 async function bnbbsCancelGame(gameId,ev){
   var btn=ev&&ev.target;if(btn){btn.disabled=true;btn.textContent='...';}
   try{
-    await _switchToBNBChain();
+    var c=await bnbbsContractWrite();
     sessionStorage.removeItem('og_pending_bnb_action');
-    var bnbProv=new ethers.BrowserProvider(window.ethereum);
-    var bnbSigner=await bnbProv.getSigner();
-    var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,bnbSigner);
     var tx=await c.cancelGame(gameId);
     await tx.wait();
     showToast('Cancelled. Funds refunded.','ok');
@@ -2658,15 +2725,14 @@ async function bnbbsJoin(gameId){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   sessionStorage.setItem('og_pending_bnb_action',JSON.stringify({action:'join',gameId:gameId,tab:'bnbbattle'}));
   try{
-    await _switchToBNBChain();
+    var c=await bnbbsContractWrite();
     sessionStorage.removeItem('og_pending_bnb_action');
-    var bnbProv=new ethers.BrowserProvider(window.ethereum);
-    var bnbSigner=await bnbProv.getSigner();
-    var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,bnbSigner);
     var g=await c.getGame(gameId);
     var amountRaw=g.betAmount;
     var tokenAddr=Number(g.token)===0?USDT_BNB_ADDR:USDC_BNB_ADDR;
     var tokenName=Number(g.token)===0?'USDT':'USDC';
+    var bnbProv=new ethers.BrowserProvider(window.ethereum);
+    var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
     if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
@@ -2690,42 +2756,110 @@ async function bnbbsJoin(gameId){
   }
 }
 
-// ── Enter game ──
-function bnbbsEnterGame(stakeInfo){
+// ── Кнопка "опонент AFK" (claimMoveTimeout) ──
+function bnbbsEnsureTimeoutBtn(){
+  if(document.getElementById('bnbbs-timeout-btn')) return;
+  var hdr=document.querySelector('#bnbbs-gameboard > div:first-child');
+  if(!hdr) return;
+  var b=document.createElement('button');
+  b.id='bnbbs-timeout-btn';
+  b.textContent='⏱ Claim win';
+  b.title='If opponent is inactive for 5+ minutes, you win the pot';
+  b.style.cssText='display:none;background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,.4);color:var(--gold);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-right:8px;';
+  b.onclick=bnbbsClaimMoveTimeout;
+  hdr.insertBefore(b,hdr.lastElementChild);
+}
+async function bnbbsClaimMoveTimeout(){
+  if(!bnbbsGameId) return;
+  try{
+    showToast('Checking timeout...','ok');
+    var c=await bnbbsContractWrite();
+    var tx=await c.claimMoveTimeout(bnbbsGameId);
+    await tx.wait();
+    bnbbsGameFinished=true;bnbbsMyTurn=false;
+    document.getElementById('bnbbs-status').textContent='🎉 YOU WIN (opponent timed out)!';
+    showToast('🏆 Opponent timed out — prize sent to your wallet!','ok');
+    // Позначаємо в базі без winner_wallet (перемога вже виплачена контрактом)
+    try{
+      var res=await bnbbsGameQuery().maybeSingle();
+      if(res&&res.data) await sb.from('battleship_games').update({status:'finished'}).eq('id',res.data.id);
+    }catch(e){}
+    var tb=document.getElementById('bnbbs-timeout-btn'); if(tb) tb.style.display='none';
+  }catch(e){
+    var m=(e.reason||e.message||'');
+    if(m.indexOf('Timeout not reached')>=0) showToast('Opponent still has time (5 min per move)','err');
+    else if(m.indexOf('Only opponent')>=0) showToast('It is your move — you cannot claim timeout','err');
+    else showToast('Error: '+m.slice(0,50),'err');
+  }
+}
+
+// ── Enter game (FIXED: відновлює дошку і постріли після refresh) ──
+async function bnbbsEnterGame(stakeInfo){
   document.getElementById('bnbbs-lobby').style.display='none';
   document.getElementById('bnbbs-gameboard').style.display='block';
-  if(stakeInfo) document.getElementById('bnbbs-stake-display').textContent=stakeInfo;
-  document.getElementById('bnbbs-status').textContent='Place ships then click ✓ Ready';
+  document.querySelectorAll('.bnbbs-resume-banner,.wait-banner').forEach(function(b){b.remove();});
   // Reset state
   bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;
   bnbbsMyShots={};bnbbsEnemyShots={};
-  bnbbsMyTurn=false;bnbbsIsReady=false;
-  // Build boards
+  bnbbsMyTurn=false;bnbbsIsReady=false;bnbbsIsP1=null;bnbbsGameFinished=false;
   bnbbsBuildBoardDOM();
   bnbbsBuildShipBtns();
+  bnbbsEnsureTimeoutBtn();
+  var tb0=document.getElementById('bnbbs-timeout-btn'); if(tb0) tb0.style.display='none';
   document.getElementById('bnbbs-ships-panel').style.display='block';
   document.getElementById('bnbbs-ready-btn').style.display='none';
   var randomBtn2=document.getElementById('bnbbs-random-btn');
   if(randomBtn2) randomBtn2.style.display='inline-block';
   var setupBtns2=document.getElementById('bnbbs-setup-btns');
   if(setupBtns2) setupBtns2.style.display='block';
-  // Restore board pointer events
   var myBoard2=document.getElementById('bnbbs-myboard');
   if(myBoard2){myBoard2.style.pointerEvents='';myBoard2.style.cursor='';}
   document.getElementById('bnbbs-log').innerHTML='';
-  bnbbsAddLog('⚓ Game! Place ships on LEFT board then click Ready.');
-  // Subscribe
+  document.getElementById('bnbbs-status').textContent='Loading game...';
+  // Realtime (ігноруємо тестнет-рядки з таким самим id)
   if(bnbbsRealtimeChannel){sb.removeChannel(bnbbsRealtimeChannel);bnbbsRealtimeChannel=null;}
   bnbbsRealtimeChannel=sb.channel('bnbbs-'+bnbbsGameId+'-'+Date.now())
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+bnbbsGameId},function(payload){
-      if(payload.new) bnbbsHandleUpdate(payload.new);
+      if(payload.new&&!payload.new.bet_token) bnbbsHandleUpdate(payload.new);
     }).subscribe();
+  // Restore from chain + DB
+  try{
+    var c=bnbbsContractRead();
+    var gd=await c.getGame(bnbbsGameId);
+    bnbbsIsP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
+    if(!stakeInfo){
+      var amt=parseFloat(ethers.formatUnits(gd.betAmount,18)).toFixed(2);
+      stakeInfo='$'+amt+' '+(Number(gd.token)===0?'USDT':'USDC');
+    }
+    document.getElementById('bnbbs-stake-display').textContent=stakeInfo;
+    var res=await bnbbsGameQuery().maybeSingle();
+    if(res&&res.data){
+      var g=res.data;
+      var myB=[];
+      try{ myB=JSON.parse((bnbbsIsP1?g.player1_board:g.player2_board)||'[]')||[]; }catch(e){}
+      if(myB.length>0){
+        bnbbsMyShips=myB;
+        bnbbsLockBoard();
+        bnbbsAddLog('↩ Your board restored from server');
+      }
+      try{ bnbbsMyShots=JSON.parse((bnbbsIsP1?g.player1_shots:g.player2_shots)||'{}')||{}; }catch(e){bnbbsMyShots={};}
+      try{ bnbbsEnemyShots=JSON.parse((bnbbsIsP1?g.player2_shots:g.player1_shots)||'{}')||{}; }catch(e){bnbbsEnemyShots={};}
+      bnbbsRenderBoards();
+      bnbbsHandleUpdate(g);
+    }
+  }catch(e){ console.warn('[BNBBattle] restore failed:',e); }
+  if(!bnbbsIsReady){
+    document.getElementById('bnbbs-status').textContent='Place ships then click ✓ Ready';
+    bnbbsAddLog('⚓ Place ships on the LEFT board, then click Ready.');
+    bnbbsRenderBoards();
+  }
 }
 
 function leaveBNBGame(){
   if(bnbbsRealtimeChannel){sb.removeChannel(bnbbsRealtimeChannel);bnbbsRealtimeChannel=null;}
   bnbbsGameId=null;bnbbsMyShips=[];bnbbsMyShots={};bnbbsEnemyShots={};
-  bnbbsMyTurn=false;bnbbsIsReady=false;
+  bnbbsMyTurn=false;bnbbsIsReady=false;bnbbsIsP1=null;bnbbsGameFinished=false;
+  var tb=document.getElementById('bnbbs-timeout-btn'); if(tb) tb.style.display='none';
   document.getElementById('bnbbs-lobby').style.display='block';
   document.getElementById('bnbbs-gameboard').style.display='none';
   bnbbsLoadRooms();
@@ -2755,24 +2889,24 @@ function bnbbsBuildBoardDOM(){
   }
 }
 
-// ── Render boards (color only, no DOM rebuild) ──
+// ── Render boards (FIXED: continue замість return) ──
 function bnbbsRenderBoards(){
   for(var i=0;i<100;i++){
     var mc=document.getElementById('bnbbs-my-'+i);
-    if(!mc) return;
+    if(!mc) continue;
     if(bnbbsEnemyShots[i]==='hit'){mc.style.background='rgba(255,77,77,0.8)';mc.style.border='2px solid #ff4d4d';mc.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
     else if(bnbbsEnemyShots[i]==='miss'){mc.style.background='rgba(90,100,120,0.4)';mc.style.border='1px solid var(--muted)';mc.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
     else if(bnbbsMyShips.includes(i)){mc.style.background=bnbbsIsReady?'rgba(38,217,138,0.6)':'rgba(38,217,138,0.35)';mc.style.border='1px solid var(--green)';mc.innerHTML='';}
     else{mc.style.background='var(--bg3)';mc.style.border='1px solid var(--border)';mc.innerHTML='';}
   }
-  var canFire=bnbbsMyTurn&&bnbbsIsReady;
+  var canFire=bnbbsMyTurn&&bnbbsIsReady&&!bnbbsGameFinished;
   for(var j=0;j<100;j++){
     var ec=document.getElementById('bnbbs-en-'+j);
-    if(!ec) return;
+    if(!ec) continue;
     if(bnbbsMyShots[j]==='hit'){ec.style.background='rgba(255,77,77,0.8)';ec.style.border='2px solid #ff4d4d';ec.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
     else if(bnbbsMyShots[j]==='miss'){ec.style.background='rgba(90,100,120,0.4)';ec.style.border='1px solid var(--muted)';ec.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
     else{ec.style.background='var(--bg3)';ec.style.border='1px solid var(--border)';ec.innerHTML='';}
-    ec.style.cursor=canFire&&!bnbbsMyShots[j]?'crosshair':'not-allowed';
+    ec.style.cursor=canFire&&bnbbsMyShots[j]===undefined?'crosshair':'not-allowed';
   }
 }
 
@@ -2854,15 +2988,18 @@ function bnbbsToggleOrientation(){
   var btn=document.getElementById('bnbbs-orient-btn');
   if(btn) btn.textContent=bnbbsOrientation==='h'?'↔ Horizontal':'↕ Vertical';
 }
-function bnbbsClearShips(){bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;bnbbsRenderBoards();bnbbsBuildShipBtns();}
+function bnbbsClearShips(){
+  if(bnbbsIsReady) return;
+  bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;bnbbsRenderBoards();bnbbsBuildShipBtns();
+}
 
-// ── Random placement (guaranteed to place ALL ships) ──
+// ── Random placement ──
 function bnbbsRandomPlaceShips(){
+  if(bnbbsIsReady) return;
   var success=false;
   for(var attempt=0;attempt<50&&!success;attempt++){
     bnbbsMyShips=[];bnbbsPlaced=[];
     success=true;
-    // Sort by size descending — place big ships first (more room)
     var sizes=BS_SHIP_SIZES.slice().sort(function(a,b){return b-a;});
     for(var si=0;si<sizes.length;si++){
       var size=sizes[si];
@@ -2887,149 +3024,226 @@ function bnbbsRandomPlaceShips(){
   showToast('Ships placed!','ok');
 }
 
-// ── Ready — LOCK board ──
-async function bnbbsMarkReady(){
-  if(bnbbsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all '+BS_SHIP_SIZES.length+' ships first!','err');return;}
+// ── Lock board UI (спільне для Ready і restore) ──
+function bnbbsLockBoard(){
   bnbbsIsReady=true;
-  // LOCK entire board with CSS — 100% reliable
   var myBoard=document.getElementById('bnbbs-myboard');
   if(myBoard){myBoard.style.pointerEvents='none';myBoard.style.cursor='default';}
-  // Darker ships = locked look
-  bnbbsMyShips.forEach(function(idx){
-    var c=document.getElementById('bnbbs-my-'+idx);
-    if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.65);border:2px solid #26D98A;cursor:default;';
-  });
-  // Hide ALL setup controls
   document.getElementById('bnbbs-ships-panel').style.display='none';
   document.getElementById('bnbbs-ready-btn').style.display='none';
   var randomBtn=document.getElementById('bnbbs-random-btn');
   if(randomBtn) randomBtn.style.display='none';
   var setupBtns=document.getElementById('bnbbs-setup-btns');
   if(setupBtns) setupBtns.style.display='none';
-  document.getElementById('bnbbs-status').textContent='⏳ Locked! Waiting for opponent...';
-  showToast('✓ Ships locked!','ok');
-  // Save to Supabase (best effort)
-  if(bnbbsGameId){
-    try{
-      var c2=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
-      var gd=await c2.getGame(bnbbsGameId);
-      var isP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
-      var boardCol=isP1?'player1_board':'player2_board';
-      var walletCol=isP1?'player1_wallet':'player2_wallet';
-      // Check if row exists
-      var ex=await sb.from('battleship_games').select('id').eq('contract_game_id',bnbbsGameId).maybeSingle();
-      if(ex&&ex.data){
-        var u={};u[boardCol]=JSON.stringify(bnbbsMyShips);u.status='playing';
-        await sb.from('battleship_games').update(u).eq('contract_game_id',bnbbsGameId);
-      } else {
-        var ins={contract_game_id:bnbbsGameId,status:'playing'};
-        ins[boardCol]=JSON.stringify(bnbbsMyShips);
-        ins[walletCol]=userAddr.toLowerCase();
-        ins.current_turn=gd.player1.toLowerCase();
-        await sb.from('battleship_games').insert(ins);
+  bnbbsRenderBoards();
+}
+
+// ── Ready (FIXED: не перезаписує вже збережену дошку, скидає таймер) ──
+async function bnbbsMarkReady(){
+  if(bnbbsIsReady) return;
+  if(bnbbsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all '+BS_SHIP_SIZES.length+' ships first!','err');return;}
+  if(!bnbbsGameId){showToast('No active game','err');return;}
+  var btn=document.getElementById('bnbbs-ready-btn'); if(btn) btn.disabled=true;
+  try{
+    if(bnbbsIsP1===null){
+      var gd=await bnbbsContractRead().getGame(bnbbsGameId);
+      bnbbsIsP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
+    }
+    var boardCol=bnbbsIsP1?'player1_board':'player2_board';
+    var walletCol=bnbbsIsP1?'player1_wallet':'player2_wallet';
+    var ex=await bnbbsGameQuery().maybeSingle();
+    if(ex&&ex.data&&ex.data[boardCol]){
+      // Дошка вже збережена раніше (наприклад, після refresh) — відновлюємо, НЕ перезаписуємо
+      try{ bnbbsMyShips=JSON.parse(ex.data[boardCol])||[]; }catch(e){}
+      bnbbsLockBoard();
+      document.getElementById('bnbbs-status').textContent='⏳ Locked! Waiting for opponent...';
+      showToast('Your board was already saved — restored it','ok');
+      bnbbsHandleUpdate(ex.data);
+      return;
+    }
+    if(ex&&ex.data){
+      var payload={};
+      payload[boardCol]=JSON.stringify(bnbbsMyShips);
+      payload[walletCol]=userAddr.toLowerCase();
+      payload.status='playing';
+      var ur=await sb.from('battleship_games').update(payload).eq('id',ex.data.id);
+      if(ur.error) throw new Error(ur.error.message);
+    } else {
+      var gd2=await bnbbsContractRead().getGame(bnbbsGameId);
+      var ins={contract_game_id:bnbbsGameId,status:'playing'};
+      ins[boardCol]=JSON.stringify(bnbbsMyShips);
+      ins[walletCol]=userAddr.toLowerCase();
+      ins.current_turn=gd2.player1.toLowerCase();
+      var ir=await sb.from('battleship_games').insert(ins);
+      if(ir.error){
+        // Race: суперник вставив рядок одночасно — повторюємо як update
+        var ex2=await bnbbsGameQuery().maybeSingle();
+        if(ex2&&ex2.data){
+          var p2={};
+          p2[boardCol]=JSON.stringify(bnbbsMyShips);
+          p2[walletCol]=userAddr.toLowerCase();
+          var ur2=await sb.from('battleship_games').update(p2).eq('id',ex2.data.id);
+          if(ur2.error) throw new Error(ur2.error.message);
+        } else throw new Error(ir.error.message);
       }
-    }catch(e){console.error('DB save:',e);}
+    }
+    bnbbsLockBoard();
+    document.getElementById('bnbbs-status').textContent='⏳ Locked! Waiting for opponent...';
+    showToast('✓ Ships locked!','ok');
+    bnbbsAddLog('✓ Board saved. Waiting for opponent...');
+    // Скидаємо 5-хвилинний таймер на контракті, щоб час розстановки не рахувався
+    bnbbsOracle({action:'resetTimer',gameId:bnbbsGameId});
+    // Підтягнути свіжий стан (можливо суперник вже готовий)
+    var fresh=await bnbbsGameQuery().maybeSingle();
+    if(fresh&&fresh.data) bnbbsHandleUpdate(fresh.data);
+  }catch(e){
+    if(btn) btn.disabled=false;
+    showToast('Save failed: '+(e.message||'').slice(0,50),'err');
   }
 }
 
-// ── Fire ──
+// ── Fire (FIXED: синхронізація з сервером, правильний хід після влучання) ──
 async function bnbbsFire(idx){
+  if(bnbbsGameFinished) return;
   if(!bnbbsIsReady){showToast('Click Ready first!','err');return;}
   if(!bnbbsMyTurn){showToast('Not your turn','err');return;}
-  if(bnbbsMyShots[idx]!==undefined){showToast('Already fired here','err');return;}
   if(!bnbbsGameId) return;
   try{
-    // Get game data
-    var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
-    var gd=await c.getGame(bnbbsGameId);
-    var isP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
-    var res=await sb.from('battleship_games').select('*').eq('contract_game_id',bnbbsGameId).single();
-    if(!res.data){showToast('Game data not found','err');return;}
+    var res=await bnbbsGameQuery().maybeSingle();
+    if(!res||!res.data){showToast('Game data not found','err');return;}
     var game=res.data;
-    var enemyShips=JSON.parse(game[isP1?'player2_board':'player1_board']||'[]');
+    if(game.status==='finished'){bnbbsHandleUpdate(game);return;}
+    if(bnbbsIsP1===null){
+      var gd0=await bnbbsContractRead().getGame(bnbbsGameId);
+      bnbbsIsP1=gd0.player1.toLowerCase()===userAddr.toLowerCase();
+    }
+    var isP1=bnbbsIsP1;
+    // Хід перевіряємо за сервером, а не за локальним станом
+    if((game.current_turn||'').toLowerCase()!==userAddr.toLowerCase()){
+      bnbbsMyTurn=false;bnbbsRenderBoards();
+      showToast('Not your turn','err');return;
+    }
+    // Синхронізуємо свої постріли з сервером (щоб refresh не ламав гру)
+    var myKey=isP1?'player1_shots':'player2_shots';
+    var srv={}; try{srv=JSON.parse(game[myKey]||'{}')||{};}catch(e){}
+    bnbbsMyShots=Object.assign({},srv,bnbbsMyShots);
+    if(bnbbsMyShots[idx]!==undefined){showToast('Already fired here','err');bnbbsRenderBoards();return;}
+    var enemyShips=[];
+    try{enemyShips=JSON.parse(game[isP1?'player2_board':'player1_board']||'[]')||[];}catch(e){}
     if(enemyShips.length===0){showToast('Opponent still placing ships, wait...','err');return;}
-    // Process shot
     var hit=enemyShips.includes(idx);
     bnbbsMyShots[idx]=hit?'hit':'miss';
     bnbbsRenderBoards();
-    bnbbsAddLog(hit?('💥 Hit! '+bnbbsCoord(idx)):'💧 Miss '+bnbbsCoord(idx));
-    // Check win
-    var hitCount=Object.keys(bnbbsMyShots).filter(function(k){return bnbbsMyShots[k]==='hit';}).length;
-    var won=hitCount>=enemyShips.length;
-    // Update DB
+    bnbbsAddLog(hit?('💥 Hit! '+bnbbsCoord(idx)):('💧 Miss '+bnbbsCoord(idx)));
+    // FIXED: перемога = ВСІ клітинки суперника влучені (а не лічильник локальних хітів)
+    var won=enemyShips.every(function(s){return bnbbsMyShots[s]==='hit';});
     var upd={};
-    var shotsKey=isP1?'player1_shots':'player2_shots';
-    upd[shotsKey]=JSON.stringify(bnbbsMyShots);
+    upd[myKey]=JSON.stringify(bnbbsMyShots);
+    var oppWallet=(isP1?(game.player2_wallet||''):(game.player1_wallet||'')).toLowerCase();
     if(won){
-      upd.status='finished';upd.winner_wallet=userAddr.toLowerCase();
+      upd.status='finished';
+      upd.winner_wallet=userAddr.toLowerCase();
     } else if(!hit){
-      // Miss — switch turn
       bnbbsMyTurn=false;
-      upd.current_turn=isP1?gd.player2.toLowerCase():gd.player1.toLowerCase();
-      document.getElementById('bnbbs-status').textContent='⏳ Opponent\'s turn...';
+      upd.current_turn=oppWallet;
+      document.getElementById('bnbbs-status').textContent="⏳ Opponent's turn...";
     } else {
-      // Hit — keep turn
+      upd.current_turn=userAddr.toLowerCase();
       document.getElementById('bnbbs-status').textContent='💥 HIT! Shoot again!';
     }
-    await sb.from('battleship_games').update(upd).eq('contract_game_id',bnbbsGameId);
-    if(won){
-      bnbbsMyTurn=false;
-      document.getElementById('bnbbs-status').textContent='🎉 YOU WIN!';
-      showToast('🎉 YOU WIN! Paying out...','ok');
-      try{
-        await fetch('/api/oracle',{method:'POST',headers:{'Content-Type':'application/json','x-oracle-secret':'opengate-oracle-2026'},body:JSON.stringify({action:'declareWinner',gameId:bnbbsGameId,winner:userAddr})});
-      }catch(e){}
+    var wr=await sb.from('battleship_games').update(upd).eq('id',game.id);
+    if(wr.error){
+      showToast('Move rejected: '+(wr.error.message||'').slice(0,40),'err');
+      delete bnbbsMyShots[idx];
+      bnbbsMyTurn=true;
+      bnbbsRenderBoards();
+      return;
     }
-    // Update oracle turn
-    if(!won){
-      try{
-        await fetch('/api/oracle',{method:'POST',headers:{'Content-Type':'application/json','x-oracle-secret':'opengate-oracle-2026'},body:JSON.stringify({action:'updateTurn',gameId:bnbbsGameId,turn:isP1?2:1})});
-      }catch(e){}
+    bnbbsRenderBoards();
+    if(won){
+      bnbbsMyTurn=false;bnbbsGameFinished=true;
+      document.getElementById('bnbbs-status').textContent='🎉 YOU WIN! Sending prize...';
+      showToast('🎉 YOU WIN! Paying out...','ok');
+      var orRes=await bnbbsOracle({action:'declareWinner',gameId:bnbbsGameId,winner:userAddr});
+      if(orRes&&orRes.success){
+        showToast('🏆 Prize sent to your wallet!','ok');
+        bnbbsAddLog('🏆 Payout TX: '+(orRes.tx||''));
+      } else {
+        showToast('Win saved. Payout pending — retry from support if not received.','err');
+        bnbbsAddLog('⚠ Oracle: '+JSON.stringify(orRes||{}).slice(0,140));
+      }
+      var tb=document.getElementById('bnbbs-timeout-btn'); if(tb) tb.style.display='none';
+    } else {
+      // FIXED: після влучання хід залишається у стрілка (раніше помилково
+      // передавався супернику на контракті). Виклик також скидає 5-хв таймер.
+      var myNum=isP1?1:2;
+      var oppNum=isP1?2:1;
+      bnbbsOracle({action:'updateTurn',gameId:bnbbsGameId,turn:hit?myNum:oppNum});
     }
   }catch(e){showToast('Error: '+(e.message||'').slice(0,40),'err');}
 }
 
 function bnbbsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/10)+1);}
 
-// ── Realtime game update ──
+// ── Realtime game update (FIXED: відновлення стану, кнопка таймауту) ──
 function bnbbsHandleUpdate(game){
   if(!game||!bnbbsGameId) return;
+  if(game.bet_token) return; // тестнет-рядок з таким самим id — ігноруємо
   if(game.status==='finished'){
-    var won=(game.winner_wallet||'')===userAddr.toLowerCase();
+    bnbbsGameFinished=true;bnbbsMyTurn=false;
+    var won=(game.winner_wallet||'').toLowerCase()===userAddr.toLowerCase();
     document.getElementById('bnbbs-status').textContent=won?'🎉 YOU WIN!':'💀 You lost!';
-    showToast(won?'🎉 YOU WIN!':'💀 You lost!',won?'ok':'err');
-    bnbbsMyTurn=false;return;
+    if(!won&&game.winner_wallet) showToast('💀 You lost!','err');
+    var tbF=document.getElementById('bnbbs-timeout-btn'); if(tbF) tbF.style.display='none';
+    bnbbsRenderBoards();
+    return;
   }
-  var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
-  c.getGame(bnbbsGameId).then(function(gd){
-    var isP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
-    var myTurn=(game.current_turn||'').toLowerCase()===userAddr.toLowerCase();
-    // Load enemy shots on my board
-    var enemyRaw=JSON.parse(isP1?game.player2_shots||'{}':game.player1_shots||'{}');
-    var prevLen=Object.keys(bnbbsEnemyShots).length;
-    bnbbsEnemyShots=enemyRaw;
-    if(Object.keys(bnbbsEnemyShots).length>prevLen){
-      var keys=Object.keys(bnbbsEnemyShots);
-      var lastK=keys[keys.length-1];
-      if(lastK) bnbbsAddLog(bnbbsEnemyShots[lastK]==='hit'?('💥 Enemy hit '+bnbbsCoord(Number(lastK))):'💧 Enemy missed '+bnbbsCoord(Number(lastK)));
+  var apply=function(isP1){
+    bnbbsIsP1=isP1;
+    // Відновити мою дошку, якщо локальний стан загубився
+    if(!bnbbsIsReady){
+      var myB=[];
+      try{myB=JSON.parse((isP1?game.player1_board:game.player2_board)||'[]')||[];}catch(e){}
+      if(myB.length>0){ bnbbsMyShips=myB; bnbbsLockBoard(); }
     }
-    // Check if both placed — start battle
-    if(game.player1_board&&game.player2_board&&bnbbsIsReady){
-      bnbbsMyTurn=myTurn;
-      bnbbsRenderBoards();
-      if(myTurn){
-        document.getElementById('bnbbs-status').textContent='⚔️ YOUR TURN — fire!';
-        var enLabel=document.getElementById('bnbbs-enemy-label');
-        if(enLabel) enLabel.textContent='ENEMY FLEET — CLICK TO FIRE!';
-      } else {
-        document.getElementById('bnbbs-status').textContent='⏳ Opponent\'s turn...';
+    // Синхронізація моїх пострілів
+    try{
+      var mine=JSON.parse((isP1?game.player1_shots:game.player2_shots)||'{}')||{};
+      bnbbsMyShots=Object.assign({},mine,bnbbsMyShots);
+    }catch(e){}
+    // Постріли суперника + лог нових
+    var oldEn=bnbbsEnemyShots||{};
+    var newEn={};
+    try{newEn=JSON.parse((isP1?game.player2_shots:game.player1_shots)||'{}')||{};}catch(e){}
+    Object.keys(newEn).forEach(function(k){
+      if(oldEn[k]===undefined){
+        bnbbsAddLog(newEn[k]==='hit'?('💥 Enemy hit '+bnbbsCoord(Number(k))+'!'):('💧 Enemy missed '+bnbbsCoord(Number(k))));
       }
-    } else if(game.player1_board&&game.player2_board&&!bnbbsIsReady){
+    });
+    bnbbsEnemyShots=newEn;
+    var myTurn=(game.current_turn||'').toLowerCase()===userAddr.toLowerCase();
+    var bothReady=!!(game.player1_board&&game.player2_board);
+    var tb=document.getElementById('bnbbs-timeout-btn');
+    if(bothReady&&bnbbsIsReady){
+      bnbbsMyTurn=myTurn;
+      document.getElementById('bnbbs-status').textContent=myTurn?'⚔️ YOUR TURN — fire!':"⏳ Opponent's turn...";
+      var enLabel=document.getElementById('bnbbs-enemy-label');
+      if(enLabel) enLabel.textContent=myTurn?'ENEMY FLEET — CLICK TO FIRE!':'Enemy Fleet';
+      if(tb) tb.style.display=myTurn?'none':'inline-block';
+    } else if(!bothReady&&bnbbsIsReady){
+      document.getElementById('bnbbs-status').textContent='⏳ Waiting for opponent to place ships...';
+      if(tb) tb.style.display='none';
+    } else if(bothReady&&!bnbbsIsReady){
       document.getElementById('bnbbs-status').textContent='⏳ Opponent ready! Place your ships and click Ready.';
-    } else if((isP1?game.player2_board:game.player1_board)&&!bnbbsIsReady){
-      document.getElementById('bnbbs-status').textContent='⏳ Opponent placed ships. Place yours and click Ready!';
     }
-  }).catch(function(){});
+    bnbbsRenderBoards();
+  };
+  if(bnbbsIsP1!==null){ apply(bnbbsIsP1); }
+  else {
+    bnbbsContractRead().getGame(bnbbsGameId).then(function(gd){
+      apply(gd.player1.toLowerCase()===userAddr.toLowerCase());
+    }).catch(function(){});
+  }
 }
 
 
