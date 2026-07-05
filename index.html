@@ -1623,6 +1623,30 @@ async function smartConnectWallet(){
         </div>
 
         <!-- Listings grid -->
+        <!-- FREE MINT — featured banner -->
+        <div id="freeMintSection" style="display:none;margin:14px;background:linear-gradient(145deg,rgba(124,58,237,0.14),rgba(245,200,66,0.07));border:1.5px solid rgba(245,200,66,0.4);border-radius:18px;overflow:hidden;">
+          <div style="display:flex;flex-wrap:wrap;gap:18px;padding:18px;align-items:center;">
+            <img id="freeMintImg" src="/merlin.jpg" alt="Merlin NFT" style="width:200px;max-width:45vw;border-radius:14px;border:2px solid var(--border-g);box-shadow:0 8px 24px rgba(0,0,0,.5);flex-shrink:0;"/>
+            <div style="flex:1;min-width:220px;">
+              <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:10px;font-weight:800;padding:3px 10px;border-radius:100px;letter-spacing:.06em;margin-bottom:8px;">🎁 FREE MINT</div>
+              <div style="font-size:24px;font-weight:800;margin-bottom:6px;font-family:'DM Serif Display',serif;">Merlin — OpenGate Heroes</div>
+              <div style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:10px;">The legendary archmage of ancient times. Master of time, space, and transformation. Mint as many as you want — <b style="color:var(--green);">completely FREE</b>. Use it as your avatar or sell it on the marketplace!</div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Already minted: <span id="freeMintCount" style="color:var(--gold);font-weight:700;font-family:'Space Mono',monospace;">—</span></div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button id="followXBtn" onclick="ogFollowX()" style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;background:#000;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  1. Follow @OpenGatelive
+                </button>
+                <button id="claimNFTBtn" onclick="ogClaimFreeNFT()" disabled style="padding:12px 24px;border-radius:12px;background:var(--gold);color:#08090C;border:none;font-size:14px;font-weight:800;cursor:pointer;opacity:.4;">
+                  🎁 2. Claim Free NFT
+                </button>
+              </div>
+              <div id="freeMintStatus" style="font-size:12px;color:var(--muted);margin-top:10px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale</div>
         <div id="marketListings" style="padding:12px;">
           <div class="app-loader">Loading listings...</div>
         </div>
@@ -2832,6 +2856,12 @@ async function bnbbsEnterGame(stakeInfo){
       stakeInfo='$'+amt+' '+(Number(gd.token)===0?'USDT':'USDC');
     }
     document.getElementById('bnbbs-stake-display').textContent=stakeInfo;
+    // Гра активна на контракті → кнопка Claim win доступна одразу
+    // (контракт сам відхилить, якщо таймаут не настав або зараз твій хід)
+    if(Number(gd.status)===1){
+      var tbA=document.getElementById('bnbbs-timeout-btn');
+      if(tbA) tbA.style.display='inline-block';
+    }
     var res=await bnbbsGameQuery().maybeSingle();
     if(res&&res.data){
       var g=res.data;
@@ -3232,7 +3262,6 @@ function bnbbsHandleUpdate(game){
       if(tb) tb.style.display=myTurn?'none':'inline-block';
     } else if(!bothReady&&bnbbsIsReady){
       document.getElementById('bnbbs-status').textContent='⏳ Waiting for opponent to place ships...';
-      if(tb) tb.style.display='none';
     } else if(bothReady&&!bnbbsIsReady){
       document.getElementById('bnbbs-status').textContent='⏳ Opponent ready! Place your ships and click Ready.';
     }
@@ -5532,6 +5561,83 @@ async function finalizeProposal(id){}
 async function cancelDAOProposal(id){}
 
 // ── MARKETPLACE ──
+
+// ── FREE MINT: Merlin — OpenGate Heroes ──
+// ⬇⬇⬇ ВСТАВ СЮДИ АДРЕСУ КОНТРАКТУ OpenGateMerlin ПІСЛЯ ДЕПЛОЮ В REMIX ⬇⬇⬇
+var FREE_NFT_ADDR='0x156DCCFe6C64DC9BE20d3D17778cC9DA7c96957D';
+// ⬆⬆⬆ наприклад: var FREE_NFT_ADDR='0x1234...abcd'; ⬆⬆⬆
+var FREE_NFT_ABI=['function mint(uint256 qty)','function totalSupply() view returns(uint256)','function mintOpen() view returns(bool)'];
+
+function initFreeMint(){
+  var sec=document.getElementById('freeMintSection');
+  if(!sec) return;
+  if(!FREE_NFT_ADDR){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  // Якщо вже підписався раніше — одразу вмикаємо кнопку Claim
+  if(localStorage.getItem('og_followed_x')==='1') ogUnlockClaim();
+  // Лічильник мінтів
+  try{
+    var c=new ethers.Contract(FREE_NFT_ADDR,FREE_NFT_ABI,getReadProvider());
+    c.totalSupply().then(function(n){
+      var el=document.getElementById('freeMintCount');
+      if(el) el.textContent=n.toString();
+    }).catch(function(){});
+    c.mintOpen().then(function(open){
+      if(!open){
+        var b=document.getElementById('claimNFTBtn');
+        if(b){b.disabled=true;b.style.opacity='.4';b.textContent='Mint closed';}
+      }
+    }).catch(function(){});
+  }catch(e){}
+}
+
+function ogUnlockClaim(){
+  var fb=document.getElementById('followXBtn');
+  var cb=document.getElementById('claimNFTBtn');
+  if(fb){fb.style.opacity='.6';fb.innerHTML='✓ Following @OpenGatelive';fb.style.borderColor='rgba(38,217,138,.4)';fb.style.color='var(--green)';}
+  if(cb){cb.disabled=false;cb.style.opacity='1';cb.style.boxShadow='0 4px 16px rgba(245,200,66,.35)';}
+}
+
+function ogFollowX(){
+  window.open('https://x.com/OpenGatelive','_blank');
+  localStorage.setItem('og_followed_x','1');
+  ogUnlockClaim();
+  var st=document.getElementById('freeMintStatus');
+  if(st) st.textContent='Great! Now claim your free NFT 👉';
+  showToast('Thanks for following! Claim your NFT 🎁','ok');
+}
+
+async function ogClaimFreeNFT(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(!FREE_NFT_ADDR){showToast('Mint not configured yet','err');return;}
+  var btn=document.getElementById('claimNFTBtn');
+  var st=document.getElementById('freeMintStatus');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Minting...';}
+  try{
+    await switchToLitVM();
+    var freshSigner=await provider.getSigner();
+    var c=new ethers.Contract(FREE_NFT_ADDR,FREE_NFT_ABI,freshSigner);
+    showToast('Confirm in wallet (free — only gas)','ok');
+    var tx=await c.mint(1);
+    if(st) st.textContent='⏳ Waiting for confirmation...';
+    await tx.wait();
+    showToast('🎉 Merlin NFT minted! Check your profile avatar options','ok');
+    if(st) st.innerHTML='<span style="color:var(--green);font-weight:700;">✓ Minted! You can mint more, set it as avatar (Profile → Edit → NFT) or list it for sale.</span>';
+    // Оновлюємо лічильник
+    try{
+      var rc=new ethers.Contract(FREE_NFT_ADDR,FREE_NFT_ABI,getReadProvider());
+      var n=await rc.totalSupply();
+      var el=document.getElementById('freeMintCount');
+      if(el) el.textContent=n.toString();
+    }catch(e2){}
+  }catch(e){
+    var m=(e.reason||e.message||'Failed');
+    if(e.code===4001||m.indexOf('rejected')>=0) showToast('Cancelled','err');
+    else showToast(m.slice(0,60),'err');
+  }
+  if(btn){btn.disabled=false;btn.textContent='🎁 Mint Another';btn.style.opacity='1';}
+}
+
 // ── NFT IMAGE CACHE ──
 const _nftImgCache={};
 const _nftMetaCache={};
@@ -5605,6 +5711,7 @@ async function fetchNFTMeta(uri){
   return data;
 }
 async function loadMarketplace(){
+  initFreeMint();
   try{
     const p=getReadProvider();
     const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
