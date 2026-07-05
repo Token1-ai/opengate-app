@@ -2707,30 +2707,83 @@ async function bnbbsJoin(gameId){
 }
 
 // ── Enter game ──
-function bnbbsEnterGame(stakeInfo){
+async function bnbbsEnterGame(stakeInfo){
   document.getElementById('bnbbs-lobby').style.display='none';
   document.getElementById('bnbbs-gameboard').style.display='block';
   if(stakeInfo) document.getElementById('bnbbs-stake-display').textContent=stakeInfo;
-  document.getElementById('bnbbs-status').textContent='Place ships then click ✓ Ready';
+
   // Reset state
   bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;
   bnbbsMyShots={};bnbbsEnemyShots={};
   bnbbsMyTurn=false;bnbbsIsReady=false;
-  // Build boards
+
+  // Build boards DOM
   bnbbsBuildBoardDOM();
-  bnbbsBuildShipBtns();
-  document.getElementById('bnbbs-ships-panel').style.display='block';
-  document.getElementById('bnbbs-ready-btn').style.display='none';
-  var randomBtn2=document.getElementById('bnbbs-random-btn');
-  if(randomBtn2) randomBtn2.style.display='inline-block';
-  var setupBtns2=document.getElementById('bnbbs-setup-btns');
-  if(setupBtns2) setupBtns2.style.display='block';
-  // Restore board pointer events
-  var myBoard2=document.getElementById('bnbbs-myboard');
-  if(myBoard2){myBoard2.style.pointerEvents='';myBoard2.style.cursor='';}
+
+  // Check if already placed ships in Supabase
+  var alreadyReady=false;
+  if(bnbbsGameId){
+    try{
+      var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
+      var gd=await c.getGame(bnbbsGameId);
+      var isP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
+      var res=await sb.from('battleship_games').select('*').eq('contract_game_id',bnbbsGameId).single();
+      if(res.data){
+        var boardCol=isP1?'player1_board':'player2_board';
+        var shotsCol=isP1?'player1_shots':'player2_shots';
+        var enemyShotsCol=isP1?'player2_shots':'player1_shots';
+        var savedShips=JSON.parse(res.data[boardCol]||'[]');
+        var savedShots=JSON.parse(res.data[shotsCol]||'{}');
+        var savedEnemyShots=JSON.parse(res.data[enemyShotsCol]||'{}');
+        if(savedShips.length>0){
+          // Ships already placed — restore and lock board
+          bnbbsMyShips=savedShips;
+          bnbbsMyShots=savedShots;
+          bnbbsEnemyShots=savedEnemyShots;
+          bnbbsIsReady=true;
+          alreadyReady=true;
+          // Lock board
+          var myBoard=document.getElementById('bnbbs-myboard');
+          if(myBoard){myBoard.style.pointerEvents='none';}
+          bnbbsRenderBoards();
+          // Check whose turn
+          var myTurn=(res.data.current_turn||'').toLowerCase()===userAddr.toLowerCase();
+          bnbbsMyTurn=myTurn;
+          if(myTurn) document.getElementById('bnbbs-status').textContent='⚔️ YOUR TURN — fire!';
+          else document.getElementById('bnbbs-status').textContent='⏳ Waiting for opponent...';
+        }
+      }
+    }catch(e){console.error('Load game state:',e);}
+  }
+
+  if(!alreadyReady){
+    // Fresh start — show ship placement
+    bnbbsBuildShipBtns();
+    document.getElementById('bnbbs-ships-panel').style.display='block';
+    document.getElementById('bnbbs-ready-btn').style.display='none';
+    var randomBtn2=document.getElementById('bnbbs-random-btn');
+    if(randomBtn2) randomBtn2.style.display='inline-block';
+    var setupBtns2=document.getElementById('bnbbs-setup-btns');
+    if(setupBtns2) setupBtns2.style.display='block';
+    var myBoard2=document.getElementById('bnbbs-myboard');
+    if(myBoard2){myBoard2.style.pointerEvents='';myBoard2.style.cursor='';}
+    document.getElementById('bnbbs-status').textContent='Place ships then click ✓ Ready';
+    bnbbsAddLog('⚓ Place ships on LEFT board then click Ready.');
+  } else {
+    // Already ready — hide setup controls
+    document.getElementById('bnbbs-ships-panel').style.display='none';
+    var rb=document.getElementById('bnbbs-ready-btn');
+    if(rb) rb.style.display='none';
+    var rndBtn=document.getElementById('bnbbs-random-btn');
+    if(rndBtn) rndBtn.style.display='none';
+    var setupBtns3=document.getElementById('bnbbs-setup-btns');
+    if(setupBtns3) setupBtns3.style.display='none';
+    bnbbsAddLog('⚓ Resumed game. Ships locked.');
+  }
+
   document.getElementById('bnbbs-log').innerHTML='';
-  bnbbsAddLog('⚓ Game! Place ships on LEFT board then click Ready.');
-  // Subscribe
+
+  // Subscribe to realtime
   if(bnbbsRealtimeChannel){sb.removeChannel(bnbbsRealtimeChannel);bnbbsRealtimeChannel=null;}
   bnbbsRealtimeChannel=sb.channel('bnbbs-'+bnbbsGameId+'-'+Date.now())
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+bnbbsGameId},function(payload){
