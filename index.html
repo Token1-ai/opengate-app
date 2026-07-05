@@ -3102,7 +3102,11 @@ async function bnbbsMarkReady(){
       var gd2=await bnbbsContractRead().getGame(bnbbsGameId);
       var ins={contract_game_id:bnbbsGameId,status:'playing'};
       ins[boardCol]=JSON.stringify(bnbbsMyShips);
-      ins[walletCol]=userAddr.toLowerCase();
+      // Обидва гаманці беремо з контракту — надійніше і потрібно тригеру
+      ins.player1_wallet=gd2.player1.toLowerCase();
+      if(gd2.player2&&gd2.player2!=='0x0000000000000000000000000000000000000000'){
+        ins.player2_wallet=gd2.player2.toLowerCase();
+      }
       ins.current_turn=gd2.player1.toLowerCase();
       var ir=await sb.from('battleship_games').insert(ins);
       if(ir.error){
