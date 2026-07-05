@@ -5607,14 +5607,36 @@ function ogUnlockClaim(){
 
 function ogFollowX(){
   window.open('https://x.com/OpenGatelive','_blank');
-  localStorage.setItem('og_followed_x','1');
-  ogUnlockClaim();
   var st=document.getElementById('freeMintStatus');
-  if(st) st.textContent='Great! Now claim your free NFT 👉';
-  showToast('Thanks for following! Claim your NFT 🎁','ok');
+  var cb=document.getElementById('claimNFTBtn');
+  var fb=document.getElementById('followXBtn');
+  if(fb){fb.style.opacity='.6';fb.innerHTML='✓ Opened @OpenGatelive';}
+  // 10-секундна "перевірка підписки" — щоб реально встигли натиснути Follow
+  var left=10;
+  if(cb){cb.disabled=true;cb.style.opacity='.4';}
+  var timer=setInterval(function(){
+    left--;
+    if(cb) cb.textContent='⏳ Verifying follow... '+left+'s';
+    if(st) st.textContent='Make sure you clicked Follow on @OpenGatelive!';
+    if(left<=0){
+      clearInterval(timer);
+      localStorage.setItem('og_followed_x','1');
+      if(cb) cb.textContent='🎁 2. Claim Free NFT';
+      ogUnlockClaim();
+      if(st) st.textContent='Great! Now claim your free NFT 👉';
+      showToast('Thanks for following! Claim your NFT 🎁','ok');
+    }
+  },1000);
 }
 
 async function ogClaimFreeNFT(){
+  // Жорстка перевірка: без кліку на Follow мінт не запускається
+  if(localStorage.getItem('og_followed_x')!=='1'){
+    showToast('Follow @OpenGatelive on X first! 𝕏','err');
+    var fb2=document.getElementById('followXBtn');
+    if(fb2){fb2.style.borderColor='var(--gold)';fb2.style.boxShadow='0 0 0 3px rgba(245,200,66,.3)';setTimeout(function(){fb2.style.boxShadow='';},1200);}
+    return;
+  }
   if(!userAddr){showToast('Connect wallet first','err');return;}
   if(!FREE_NFT_ADDR){showToast('Mint not configured yet','err');return;}
   var btn=document.getElementById('claimNFTBtn');
