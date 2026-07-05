@@ -1128,8 +1128,8 @@ async function smartConnectWallet(){
               <div style="flex:1;min-width:280px;">
                 <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
                 <div id="bnbbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
-                <div style="text-align:center;margin-top:10px;">
-                  <button onclick="bnbbsRandomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
+                <div style="text-align:center;margin-top:10px;" id="bnbbs-setup-btns">
+                  <button id="bnbbs-random-btn" onclick="bnbbsRandomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
                   <button id="bnbbs-ready-btn" onclick="bnbbsMarkReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
                 </div>
               </div>
@@ -2705,6 +2705,13 @@ function bnbbsEnterGame(stakeInfo){
   bnbbsBuildShipBtns();
   document.getElementById('bnbbs-ships-panel').style.display='block';
   document.getElementById('bnbbs-ready-btn').style.display='none';
+  var randomBtn2=document.getElementById('bnbbs-random-btn');
+  if(randomBtn2) randomBtn2.style.display='inline-block';
+  var setupBtns2=document.getElementById('bnbbs-setup-btns');
+  if(setupBtns2) setupBtns2.style.display='block';
+  // Restore board pointer events
+  var myBoard2=document.getElementById('bnbbs-myboard');
+  if(myBoard2){myBoard2.style.pointerEvents='';myBoard2.style.cursor='';}
   document.getElementById('bnbbs-log').innerHTML='';
   bnbbsAddLog('⚓ Game! Place ships on LEFT board then click Ready.');
   // Subscribe
@@ -2892,9 +2899,13 @@ async function bnbbsMarkReady(){
     var c=document.getElementById('bnbbs-my-'+idx);
     if(c) c.style.cssText='aspect-ratio:1;border-radius:2px;background:rgba(38,217,138,0.65);border:2px solid #26D98A;cursor:default;';
   });
-  // Hide setup controls
+  // Hide ALL setup controls
   document.getElementById('bnbbs-ships-panel').style.display='none';
   document.getElementById('bnbbs-ready-btn').style.display='none';
+  var randomBtn=document.getElementById('bnbbs-random-btn');
+  if(randomBtn) randomBtn.style.display='none';
+  var setupBtns=document.getElementById('bnbbs-setup-btns');
+  if(setupBtns) setupBtns.style.display='none';
   document.getElementById('bnbbs-status').textContent='⏳ Locked! Waiting for opponent...';
   showToast('✓ Ships locked!','ok');
   // Save to Supabase (best effort)
