@@ -2465,15 +2465,31 @@ async function initBNBBattle(){
     if(gid&&Number(gid)>0){
       bnbbsGameId=Number(gid);
       document.querySelectorAll('.bnbbs-resume-banner').forEach(function(b){b.remove();});
+      // Check game status
+      var gameData=await c.getGame(bnbbsGameId);
       var banner=document.createElement('div');
       banner.className='bnbbs-resume-banner';
-      banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
-      banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ You have an active game!</div>';
+      banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;';
+      var amount=parseFloat(ethers.formatUnits(gameData.betAmount,18)).toFixed(2);
+      var tok=Number(gameData.token)===0?'USDT':'USDC';
+      var isWaiting=Number(gameData.status)===0;
+      var isCreator=gameData.player1.toLowerCase()===userAddr.toLowerCase();
+      banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ Active game #'+bnbbsGameId+' — $'+amount+' '+tok+(isWaiting?' (waiting for opponent)':' (playing)')+'</div>';
+      var btnDiv=document.createElement('div');
+      btnDiv.style.cssText='display:flex;gap:8px;';
       var rb=document.createElement('button');
       rb.textContent='↩ Continue';
-      rb.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;';
-      rb.onclick=function(){bnbbsEnterGame();};
-      banner.appendChild(rb);
+      rb.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;';
+      rb.onclick=function(){bnbbsEnterGame('$'+amount+' '+tok);};
+      btnDiv.appendChild(rb);
+      if(isWaiting&&isCreator){
+        var cb=document.createElement('button');
+        cb.textContent='✕ Cancel & Refund';
+        cb.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;';
+        cb.onclick=function(){bnbbsCancelGame(bnbbsGameId,{target:cb});bnbbsGameId=null;banner.remove();};
+        btnDiv.appendChild(cb);
+      }
+      banner.appendChild(btnDiv);
       var rooms=document.getElementById('bnbbs-rooms');
       if(rooms) rooms.parentNode.insertBefore(banner,rooms);
     }
@@ -2722,8 +2738,22 @@ function bnbbsEnterGame(stakeInfo){
     }).subscribe();
 }
 
-function leaveBNBGame(){
+async function leaveBNBGame(){
   if(bnbbsRealtimeChannel){sb.removeChannel(bnbbsRealtimeChannel);bnbbsRealtimeChannel=null;}
+  // If game is in Waiting status — offer to cancel and get refund
+  if(bnbbsGameId){
+    try{
+      var c=new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
+      var g=await c.getGame(bnbbsGameId);
+      if(Number(g.status)===0&&g.player1.toLowerCase()===userAddr.toLowerCase()){
+        // Game is waiting and I'm the creator — cancel to get refund
+        if(confirm('Cancel your game and get refund?')){
+          await bnbbsCancelGame(bnbbsGameId,null);
+          return;
+        }
+      }
+    }catch(e){}
+  }
   bnbbsGameId=null;bnbbsMyShips=[];bnbbsMyShots={};bnbbsEnemyShots={};
   bnbbsMyTurn=false;bnbbsIsReady=false;
   document.getElementById('bnbbs-lobby').style.display='block';
@@ -5719,7 +5749,7 @@ let _msgPollTimer=null;
 function subscribeToConversations(){
   if(!userAddr||convsRealtimeChannel) return;
 
-  // Realtime WebSocket - listens for ALL messages involving this user
+  // Realtime WebSocket
   convsRealtimeChannel=sb.channel('msgs-'+userAddr)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
       const m=payload.new;
@@ -5730,24 +5760,31 @@ function subscribeToConversations(){
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
         convsRealtimeChannel=null;
-        // Only poll as a FALLBACK when Realtime fails — not always-on
-        clearInterval(_msgPollTimer);
-        _msgPollTimer=setInterval(async function(){
-          if(!userAddr)return;
-          try{
-            const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
-            const c=count||0;
-            if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();
-              const convList=document.getElementById('convList');
-              if(convList&&convList.style.display!=='none')loadConversations();
-            }
-            if(currentDMWallet) loadMessages();
-          }catch(e){}
-        },20000); // fallback only
       }
     });
-  // No always-on polling here — Realtime handles delivery.
-  // Polling only activates inside the CHANNEL_ERROR branch above.
+
+  // Always-on polling every 10s for badge — reliable regardless of Realtime
+  clearInterval(_msgPollTimer);
+  _msgPollTimer=setInterval(async function(){
+    if(!userAddr) return;
+    try{
+      const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
+      const c=count||0;
+      if(c!==_lastMsgCount){
+        _lastMsgCount=c;
+        updateUnreadBadge();
+        // Show toast notification if new messages
+        if(c>(_lastMsgCount||0)){
+          showToast('💬 New message!','ok');
+        }
+        const convList=document.getElementById('convList');
+        if(convList&&convList.style.display!=='none') loadConversations();
+        if(currentDMWallet) loadMessages();
+      } else {
+        _lastMsgCount=c;
+      }
+    }catch(e){}
+  },10000);
 }
 
 function handleNewMessage(m){
