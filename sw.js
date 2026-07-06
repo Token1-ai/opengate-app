@@ -1,4 +1,4 @@
-const CACHE_NAME = 'opengate-v5';
+const CACHE_NAME = 'opengate-v6';
 
 // Cache ONLY icons and manifest — NOT index.html!
 // index.html must always be fetched fresh from the network so users
@@ -60,7 +60,7 @@ self.addEventListener('fetch', e => {
   // Falls back to cache only if offline
   if (url.pathname === '/' || url.pathname === '/index.html') {
     e.respondWith(
-      fetch(e.request)
+      fetch(e.request, { cache: 'no-cache' })
         .then(res => {
           // Update cache with fresh version
           const clone = res.clone();
