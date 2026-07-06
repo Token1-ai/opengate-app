@@ -74,6 +74,12 @@ module.exports = async function handler(req, res) {
     const p1 = onChain.player1.toLowerCase();
     const p2 = onChain.player2.toLowerCase();
 
+    // Залізний ліміт ставки: ігри понад $50 не обслуговуються
+    const MAX_BET = 50n * 10n ** 18n;
+    if (BigInt(onChain.betAmount) > MAX_BET) {
+      return res.status(400).json({ error: 'Max stake is $50 — game not served' });
+    }
+
     // Виплата + оновлення бази
     async function payout(winnerAddr, dbRowId, extraUpdate) {
       const tx = await contract.declareWinner(gameId, winnerAddr, { gasLimit: 250_000 });
