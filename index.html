@@ -2447,6 +2447,7 @@ var bnbbsMyTurn=false, bnbbsIsReady=false, bnbbsIsP1=null, bnbbsGameFinished=fal
 var bnbbsRealtimeChannel=null, bnbbsRoomsInterval=null, bnbbsPollTimer=null;
 var bnbbsChainGD=null; // кеш даних гри з контракту (щоб не смикати RPC зайвий раз)
 var bnbbsLastStateTs=0; // сторож: застарілі оновлення стану ігноруються
+var bnbbsFiring=false; // замок: один постріл за раз, швидкі кліки ігноруються
 
 // Кілька публічних RPC BNB Chain — якщо один "затикається", беремо наступний
 var BNB_RPCS=[
@@ -2876,7 +2877,7 @@ async function bnbbsEnterGame(stakeInfo){
   bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;
   bnbbsMyShots={};bnbbsEnemyShots={};
   bnbbsMyTurn=false;bnbbsIsReady=false;bnbbsIsP1=null;bnbbsGameFinished=false;
-  bnbbsLastStateTs=0;
+  bnbbsLastStateTs=0;bnbbsFiring=false;
   bnbbsBuildBoardDOM();
   bnbbsBuildShipBtns();
   bnbbsEnsureTimeoutBtn();
@@ -2968,7 +2969,7 @@ async function bnbbsEnterGame(stakeInfo){
 }
 
 function leaveBNBGame(){
-  bnbbsChainGD=null;bnbbsLastStateTs=0;
+  bnbbsChainGD=null;bnbbsLastStateTs=0;bnbbsFiring=false;
   if(bnbbsPollTimer){clearInterval(bnbbsPollTimer);bnbbsPollTimer=null;}
   if(bnbbsRealtimeChannel){sb.removeChannel(bnbbsRealtimeChannel);bnbbsRealtimeChannel=null;}
   bnbbsGameId=null;bnbbsMyShips=[];bnbbsMyShots={};bnbbsEnemyShots={};
@@ -3203,11 +3204,13 @@ async function bnbbsMarkReady(){
 
 // ── Fire (FIXED: синхронізація з сервером, правильний хід після влучання) ──
 async function bnbbsFire(idx){
+  if(bnbbsFiring) return; // попередній постріл ще летить — ігноруємо клік
   if(bnbbsGameFinished) return;
   if(!bnbbsIsReady){showToast('Click Ready first!','err');return;}
   if(!bnbbsMyTurn){showToast('Not your turn','err');return;}
   if(!bnbbsGameId) return;
   if(bnbbsMyShots[idx]!==undefined){showToast('Already fired here','err');return;}
+  bnbbsFiring=true;
   bnbbsMyTurn=false; // блок від дабл-кліку, поки сервер рахує постріл
   document.getElementById('bnbbs-status').textContent='🎯 Firing '+bnbbsCoord(idx)+'...';
   bnbbsMyShots[idx]='pending';
@@ -3241,6 +3244,8 @@ async function bnbbsFire(idx){
     bnbbsRenderBoards();
     showToast('Shot failed: '+m.slice(0,50),'err');
     bnbbsAddLog('⚠ Shot failed: '+m.slice(0,120));
+  }finally{
+    bnbbsFiring=false;
   }
 }
 
