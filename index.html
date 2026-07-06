@@ -2485,6 +2485,28 @@ async function bnbbsOracle(body){
     return j||{};
   }catch(e){ console.warn('[Oracle] fetch failed:',e.message); return {error:e.message}; }
 }
+// ── EDGE FUNCTION: захищена гра (анти-чит) ──
+var EDGE_BS_URL=SUPABASE_URL+'/functions/v1/battleship';
+async function bnbbsGetSig(){
+  var key='ogbs_sig_'+bnbbsGameId+'_'+(userAddr||'').toLowerCase();
+  var s=sessionStorage.getItem(key);
+  if(s) return s;
+  var p=new ethers.BrowserProvider(window.ethereum);
+  var signer=await p.getSigner();
+  showToast('Sign once to secure this game (free, no gas)','ok');
+  s=await signer.signMessage('OpenGate Battleship v4 game '+bnbbsGameId);
+  sessionStorage.setItem(key,s);
+  return s;
+}
+async function bnbbsEdge(action,extra){
+  var sig=await bnbbsGetSig();
+  var body=Object.assign({action:action,gameId:bnbbsGameId,wallet:userAddr,signature:sig},extra||{});
+  var r=await fetch(EDGE_BS_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},body:JSON.stringify(body)});
+  var j=null;try{j=await r.json();}catch(e){}
+  if(!r.ok||(j&&j.error)) throw new Error((j&&j.error)||('HTTP '+r.status));
+  return j||{};
+}
+
 // ВАЖЛИВО: тестнет-ігри лежать у тій самій таблиці і їхні contract_game_id
 // можуть збігатися з BNB-іграми. Всі запити BNB-гри фільтрують bet_token IS NULL.
 function bnbbsGameQuery(){
@@ -2604,9 +2626,10 @@ async function bnbbsLoadRooms(){
     }
     var now=Math.floor(Date.now()/1000);
     var minBet=ethers.parseUnits('0.1',18);
+    var maxBet=ethers.parseUnits('50',18);
     var rooms=await ogTimeout(Promise.all(ids.map(function(id){return c.getGame(id).then(function(g){return {id:Number(id),g:g};});})),12000);
     // Фільтруємо сміттєві кімнати зі ставкою менше $0.10 (створені напряму через контракт)
-    rooms=rooms.filter(function(r){return r.g.betAmount>=minBet;});
+    rooms=rooms.filter(function(r){return r.g.betAmount>=minBet&&r.g.betAmount<=maxBet;});
     if(rooms.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
       bnbbsCheckActiveGame();
@@ -2650,6 +2673,7 @@ async function bnbbsLoadRooms(){
 async function bnbbsMatchmake(){
   var amount=parseFloat(document.getElementById('bnbbs-amount').value);
   if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
+  if(amount>50){showToast('Max stake $50','err');return;}
   try{
     showToast('Searching...','ok');
     var c=bnbbsContractRead();
@@ -2674,6 +2698,7 @@ async function bnbbsCreate(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   var amount=parseFloat(document.getElementById('bnbbs-amount').value);
   if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
+  if(amount>50){showToast('Max stake $50','err');return;}
   sessionStorage.setItem('og_pending_bnb_action',JSON.stringify({action:'create',amount:String(amount),token:bnbbsToken,tab:'bnbbattle'}));
   try{
     await _switchToBNBChain();
@@ -2897,15 +2922,15 @@ async function bnbbsEnterGame(stakeInfo){
       var tbA=document.getElementById('bnbbs-timeout-btn');
       if(tbA) tbA.style.display='inline-block';
     }
-    var res=await bnbbsGameQuery().maybeSingle();
-    if(res&&res.data){
-      var g=res.data;
-      var myB=[];
-      try{ myB=JSON.parse((bnbbsIsP1?g.player1_board:g.player2_board)||'[]')||[]; }catch(e){}
-      if(myB.length>0){
-        bnbbsMyShips=myB;
+    var st=null;
+    try{ st=await ogTimeout(bnbbsEdge('getState'),25000); }
+    catch(eS){ bnbbsAddLog('⚠ State load: '+(eS.message||'').slice(0,80)); }
+    if(st&&st.state){
+      var g=st.state;
+      if(st.myBoard&&st.myBoard.length===20){
+        bnbbsMyShips=st.myBoard;
         bnbbsLockBoard();
-        bnbbsAddLog('↩ Your board restored from server');
+        bnbbsAddLog('↩ Your board restored (server-protected)');
       }
       try{ bnbbsMyShots=JSON.parse((bnbbsIsP1?g.player1_shots:g.player2_shots)||'{}')||{}; }catch(e){bnbbsMyShots={};}
       try{ bnbbsEnemyShots=JSON.parse((bnbbsIsP1?g.player2_shots:g.player1_shots)||'{}')||{}; }catch(e){bnbbsEnemyShots={};}
@@ -3145,7 +3170,6 @@ function bnbbsLockBoard(){
 async function bnbbsMarkReady(){
   if(bnbbsIsReady){showToast('Board already locked','err');return;}
   if(bnbbsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all '+BS_SHIP_SIZES.length+' ships first!','err');return;}
-  // Дошка має містити рівно 20 унікальних клітинок — інакше база відхилить
   var uq={};bnbbsMyShips.forEach(function(x){uq[x]=1;});
   if(Object.keys(uq).length!==20){
     showToast('Board error — press Clear and place ships again','err');
@@ -3153,67 +3177,23 @@ async function bnbbsMarkReady(){
   }
   if(!bnbbsGameId){showToast('No active game','err');return;}
   var btn=document.getElementById('bnbbs-ready-btn'); if(btn) btn.disabled=true;
-  bnbbsAddLog('Saving board...');
+  bnbbsAddLog('Saving board (protected)...');
   try{
-    // Дані гри беремо з кешу (заповнюється при вході в гру) — без походу в RPC
-    var gd=bnbbsChainGD;
-    if(!gd||bnbbsIsP1===null){
-      gd=await ogTimeout(bnbbsContractRead().getGame(bnbbsGameId),10000);
-      bnbbsChainGD=gd;
-      bnbbsIsP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
-    }
-    var boardCol=bnbbsIsP1?'player1_board':'player2_board';
-    var walletCol=bnbbsIsP1?'player1_wallet':'player2_wallet';
-    var ex=await ogTimeout(bnbbsGameQuery().maybeSingle(),12000);
-    if(ex&&ex.data&&ex.data[boardCol]){
-      // Дошка вже збережена раніше (наприклад, після refresh) — відновлюємо, НЕ перезаписуємо
-      try{ bnbbsMyShips=JSON.parse(ex.data[boardCol])||[]; }catch(e){}
-      bnbbsLockBoard();
-      document.getElementById('bnbbs-status').textContent='⏳ Locked! Waiting for opponent...';
+    var res=await ogTimeout(bnbbsEdge('saveBoard',{board:bnbbsMyShips}),25000);
+    if(res.alreadySaved&&res.myBoard){
+      bnbbsMyShips=res.myBoard;
       showToast('Your board was already saved — restored it','ok');
-      bnbbsHandleUpdate(ex.data);
-      return;
-    }
-    if(ex&&ex.data){
-      var payload={};
-      payload[boardCol]=JSON.stringify(bnbbsMyShips);
-      payload[walletCol]=userAddr.toLowerCase();
-      payload.status='playing';
-      var ur=await ogTimeout(sb.from('battleship_games').update(payload).eq('id',ex.data.id),12000);
-      if(ur.error) throw new Error(ur.error.message);
     } else {
-      var ins={contract_game_id:bnbbsGameId,status:'playing'};
-      ins[boardCol]=JSON.stringify(bnbbsMyShips);
-      // Обидва гаманці беремо з контракту — надійніше і потрібно тригеру
-      ins.player1_wallet=gd.player1.toLowerCase();
-      if(gd.player2&&gd.player2!=='0x0000000000000000000000000000000000000000'){
-        ins.player2_wallet=gd.player2.toLowerCase();
-      }
-      ins.current_turn=gd.player1.toLowerCase();
-      var ir=await ogTimeout(sb.from('battleship_games').insert(ins),12000);
-      if(ir.error){
-        // Race: суперник вставив рядок одночасно — повторюємо як update
-        var ex2=await ogTimeout(bnbbsGameQuery().maybeSingle(),12000);
-        if(ex2&&ex2.data){
-          var p2={};
-          p2[boardCol]=JSON.stringify(bnbbsMyShips);
-          p2[walletCol]=userAddr.toLowerCase();
-          var ur2=await ogTimeout(sb.from('battleship_games').update(p2).eq('id',ex2.data.id),12000);
-          if(ur2.error) throw new Error(ur2.error.message);
-        } else throw new Error(ir.error.message);
-      }
+      showToast('✓ Ships locked!','ok');
     }
     bnbbsLockBoard();
     document.getElementById('bnbbs-status').textContent='⏳ Locked! Waiting for opponent...';
-    showToast('✓ Ships locked!','ok');
-    bnbbsAddLog('✓ Board saved. Waiting for opponent...');
-    var fresh=await bnbbsGameQuery().maybeSingle();
-    if(fresh&&fresh.data) bnbbsHandleUpdate(fresh.data);
+    bnbbsAddLog('✓ Board saved on secure server. Waiting for opponent...');
+    if(res.state) bnbbsHandleUpdate(res.state);
   }catch(e){
-    showToast('Save failed: '+(e.message||'').slice(0,50),'err');
+    showToast('Save failed: '+(e.message||'').slice(0,60),'err');
     bnbbsAddLog('⚠ Save failed: '+(e.message||'').slice(0,120));
   }finally{
-    // Кнопка НІКОЛИ не залишається мертвою
     if(btn&&!bnbbsIsReady) btn.disabled=false;
   }
 }
@@ -3224,61 +3204,17 @@ async function bnbbsFire(idx){
   if(!bnbbsIsReady){showToast('Click Ready first!','err');return;}
   if(!bnbbsMyTurn){showToast('Not your turn','err');return;}
   if(!bnbbsGameId) return;
+  if(bnbbsMyShots[idx]!==undefined){showToast('Already fired here','err');return;}
+  bnbbsMyTurn=false; // блок від дабл-кліку, поки сервер рахує постріл
+  bnbbsRenderBoards();
   try{
-    var res=await bnbbsGameQuery().maybeSingle();
-    if(!res||!res.data){showToast('Game data not found','err');return;}
-    var game=res.data;
-    if(game.status==='finished'){bnbbsHandleUpdate(game);return;}
-    if(bnbbsIsP1===null){
-      var gd0=bnbbsChainGD||await ogTimeout(bnbbsContractRead().getGame(bnbbsGameId),10000);
-      bnbbsChainGD=gd0;
-      bnbbsIsP1=gd0.player1.toLowerCase()===userAddr.toLowerCase();
-    }
-    var isP1=bnbbsIsP1;
-    // Хід перевіряємо за сервером, а не за локальним станом
-    if((game.current_turn||'').toLowerCase()!==userAddr.toLowerCase()){
-      bnbbsMyTurn=false;bnbbsRenderBoards();
-      showToast('Not your turn','err');return;
-    }
-    // Синхронізуємо свої постріли з сервером (щоб refresh не ламав гру)
-    var myKey=isP1?'player1_shots':'player2_shots';
-    var srv={}; try{srv=JSON.parse(game[myKey]||'{}')||{};}catch(e){}
-    bnbbsMyShots=Object.assign({},srv,bnbbsMyShots);
-    if(bnbbsMyShots[idx]!==undefined){showToast('Already fired here','err');bnbbsRenderBoards();return;}
-    var enemyShips=[];
-    try{enemyShips=JSON.parse(game[isP1?'player2_board':'player1_board']||'[]')||[];}catch(e){}
-    if(enemyShips.length===0){showToast('Opponent still placing ships, wait...','err');return;}
-    var hit=enemyShips.includes(idx);
-    bnbbsMyShots[idx]=hit?'hit':'miss';
-    bnbbsRenderBoards();
-    bnbbsAddLog(hit?('💥 Hit! '+bnbbsCoord(idx)):('💧 Miss '+bnbbsCoord(idx)));
-    // FIXED: перемога = ВСІ клітинки суперника влучені (а не лічильник локальних хітів)
-    var won=enemyShips.every(function(s){return bnbbsMyShots[s]==='hit';});
-    var upd={};
-    upd[myKey]=JSON.stringify(bnbbsMyShots);
-    var oppWallet=(isP1?(game.player2_wallet||''):(game.player1_wallet||'')).toLowerCase();
-    if(won){
-      upd.status='finished';
-      upd.winner_wallet=userAddr.toLowerCase();
-    } else if(!hit){
-      bnbbsMyTurn=false;
-      upd.current_turn=oppWallet;
-      document.getElementById('bnbbs-status').textContent="⏳ Opponent's turn...";
-    } else {
-      upd.current_turn=userAddr.toLowerCase();
-      document.getElementById('bnbbs-status').textContent='💥 HIT! Shoot again!';
-    }
-    var wr=await sb.from('battleship_games').update(upd).eq('id',game.id);
-    if(wr.error){
-      showToast('Move rejected: '+(wr.error.message||'').slice(0,40),'err');
-      delete bnbbsMyShots[idx];
-      bnbbsMyTurn=true;
+    var res=await ogTimeout(bnbbsEdge('fire',{cell:idx}),25000);
+    bnbbsMyShots[idx]=res.result;
+    bnbbsAddLog(res.result==='hit'?('💥 Hit! '+bnbbsCoord(idx)):('💧 Miss '+bnbbsCoord(idx)));
+    if(res.state) bnbbsHandleUpdate(res.state);
+    if(res.won){
+      bnbbsGameFinished=true;bnbbsMyTurn=false;
       bnbbsRenderBoards();
-      return;
-    }
-    bnbbsRenderBoards();
-    if(won){
-      bnbbsMyTurn=false;bnbbsGameFinished=true;
       document.getElementById('bnbbs-status').textContent='🎉 YOU WIN! Sending prize...';
       showToast('🎉 YOU WIN! Paying out...','ok');
       var orRes=await bnbbsOracle({action:'declareWinner',gameId:bnbbsGameId,winner:userAddr});
@@ -3286,14 +3222,20 @@ async function bnbbsFire(idx){
         showToast('🏆 Prize sent to your wallet!','ok');
         bnbbsAddLog('🏆 Payout TX: '+(orRes.tx||''));
       } else {
-        showToast('Win saved. Payout pending — retry from support if not received.','err');
+        showToast('Win saved. Payout pending — re-enter game to retry.','err');
         bnbbsAddLog('⚠ Oracle: '+JSON.stringify(orRes||{}).slice(0,140));
       }
-      var tb=document.getElementById('bnbbs-timeout-btn'); if(tb) tb.style.display='none';
+      var tbW=document.getElementById('bnbbs-timeout-btn'); if(tbW) tbW.style.display='none';
+    } else if(res.result==='hit'){
+      document.getElementById('bnbbs-status').textContent='💥 HIT! Shoot again!';
     }
-    // v4: жодних oracle-викликів на кожен хід — таймер AFK живе в базі
-    // (last_move_at оновлює тригер автоматично при кожному записі)
-  }catch(e){showToast('Error: '+(e.message||'').slice(0,40),'err');}
+  }catch(e){
+    var m=(e.message||'');
+    if(m.indexOf('Not your turn')<0&&m.indexOf('Already fired')<0) bnbbsMyTurn=true;
+    bnbbsRenderBoards();
+    showToast('Shot failed: '+m.slice(0,50),'err');
+    bnbbsAddLog('⚠ Shot failed: '+m.slice(0,120));
+  }
 }
 
 function bnbbsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/10)+1);}
@@ -3784,7 +3726,7 @@ function renderPost(post,liked){
   const name=u.username||sAddr(post.author_wallet);
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
-  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${esc(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
+  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${linkify(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
           <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
           ${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')\" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}
           ${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}
@@ -6466,7 +6408,7 @@ async function loadComments(postId){
             <span style="font-size:11px;color:var(--muted);">${tAgo(c.created_at)}</span>
             ${c.author_wallet===userAddr?`<button onclick="deleteComment('${c.id}','${postId}',this)" style="background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;margin-left:auto;padding:0 4px;" title="Delete">✕</button>`:''}
           </div>
-          <div style="font-size:13px;color:var(--text);line-height:1.5;word-break:break-word;">${esc(c.content)}</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.5;word-break:break-word;">${linkify(c.content)}</div>
         </div>
       </div>`;
     });
@@ -6550,6 +6492,15 @@ function showToast(msg,type='ok'){
 function cpText(t){navigator.clipboard.writeText(t);}
 function sAddr(a){return a?a.slice(0,6)+'...'+a.slice(-4):'';}
 function esc(s){return s?s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'):'';}
+// Робить URL у тексті клікабельними (безпечно: спочатку екранування, потім лінки)
+function linkify(s){
+  var e=esc(s);
+  return e.replace(/(https?:\/\/[^\s<]+)/g,function(u){
+    var clean=u.replace(/[.,!?;:)\]]+$/,'');
+    var tail=u.slice(clean.length);
+    return '<a href="'+clean+'" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:underline;word-break:break-all;">'+clean+'</a>'+tail;
+  });
+}
 function tAgo(ts){const d=(Date.now()-new Date(ts))/1000;if(d<60)return'now';if(d<3600)return Math.floor(d/60)+'m';if(d<86400)return Math.floor(d/3600)+'h';return Math.floor(d/86400)+'d';}
 
 // ── SUPPLY COUNTS ──
