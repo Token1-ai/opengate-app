@@ -2444,7 +2444,7 @@ var bnbbsToken='USDT', bnbbsGameId=null, bnbbsOrientation='h';
 var bnbbsMyShips=[], bnbbsPlaced=[], bnbbsSelectedSize=0;
 var bnbbsMyShots={}, bnbbsEnemyShots={};
 var bnbbsMyTurn=false, bnbbsIsReady=false, bnbbsIsP1=null, bnbbsGameFinished=false;
-var bnbbsRealtimeChannel=null, bnbbsRoomsInterval=null;
+var bnbbsRealtimeChannel=null, bnbbsRoomsInterval=null, bnbbsPollTimer=null;
 var _bnbbsNotifiedActive=0;
 
 function getBNBBattleProvider(){
@@ -2849,6 +2849,15 @@ async function bnbbsEnterGame(stakeInfo){
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+bnbbsGameId},function(payload){
       if(payload.new&&!payload.new.bet_token) bnbbsHandleUpdate(payload.new);
     }).subscribe();
+  // Резервне опитування кожні 4с — гра синхронізується навіть якщо Realtime мовчить
+  if(bnbbsPollTimer) clearInterval(bnbbsPollTimer);
+  bnbbsPollTimer=setInterval(async function(){
+    if(!bnbbsGameId||bnbbsGameFinished){clearInterval(bnbbsPollTimer);bnbbsPollTimer=null;return;}
+    try{
+      var pr=await bnbbsGameQuery().maybeSingle();
+      if(pr&&pr.data) bnbbsHandleUpdate(pr.data);
+    }catch(e){}
+  },4000);
   // Restore from chain + DB
   try{
     var c=bnbbsContractRead();
@@ -2889,6 +2898,7 @@ async function bnbbsEnterGame(stakeInfo){
 }
 
 function leaveBNBGame(){
+  if(bnbbsPollTimer){clearInterval(bnbbsPollTimer);bnbbsPollTimer=null;}
   if(bnbbsRealtimeChannel){sb.removeChannel(bnbbsRealtimeChannel);bnbbsRealtimeChannel=null;}
   bnbbsGameId=null;bnbbsMyShips=[];bnbbsMyShots={};bnbbsEnemyShots={};
   bnbbsMyTurn=false;bnbbsIsReady=false;bnbbsIsP1=null;bnbbsGameFinished=false;
