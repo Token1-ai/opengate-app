@@ -2417,7 +2417,7 @@ async function connectWallet(){
 // v2 FIXED: правильні ходи, відновлення після refresh, захист від читів,
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
-var BNB_BATTLE_ADDR='0x22597403bFa0982803Be28D070a14b6E45700dc0';
+var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
 var ORACLE_HDR='opengate-oracle-2026';
@@ -2797,27 +2797,30 @@ function bnbbsEnsureTimeoutBtn(){
   hdr.insertBefore(b,hdr.lastElementChild);
 }
 async function bnbbsClaimMoveTimeout(){
-  if(!bnbbsGameId) return;
+  if(!bnbbsGameId||!userAddr) return;
+  var tb=document.getElementById('bnbbs-timeout-btn');
+  if(tb){tb.disabled=true;tb.textContent='⏳ Checking...';}
   try{
-    showToast('Checking timeout...','ok');
-    var c=await bnbbsContractWrite();
-    var tx=await c.claimMoveTimeout(bnbbsGameId);
-    await tx.wait();
-    bnbbsGameFinished=true;bnbbsMyTurn=false;
-    document.getElementById('bnbbs-status').textContent='🎉 YOU WIN (opponent timed out)!';
-    showToast('🏆 Opponent timed out — prize sent to your wallet!','ok');
-    // Позначаємо в базі без winner_wallet (перемога вже виплачена контрактом)
-    try{
-      var res=await bnbbsGameQuery().maybeSingle();
-      if(res&&res.data) await sb.from('battleship_games').update({status:'finished'}).eq('id',res.data.id);
-    }catch(e){}
-    var tb=document.getElementById('bnbbs-timeout-btn'); if(tb) tb.style.display='none';
+    showToast('Checking opponent timeout...','ok');
+    // v4: таймаут вирішує oracle по базі — гравцю не потрібна транзакція і газ
+    var orr=await bnbbsOracle({action:'claimTimeout',gameId:bnbbsGameId,claimer:userAddr});
+    if(orr&&orr.success){
+      bnbbsGameFinished=true;bnbbsMyTurn=false;
+      document.getElementById('bnbbs-status').textContent='🎉 YOU WIN (opponent timed out)!';
+      showToast('🏆 Opponent timed out — prize sent to your wallet!','ok');
+      bnbbsAddLog('🏆 Timeout payout TX: '+(orr.tx||''));
+      if(tb) tb.style.display='none';
+    } else {
+      var m=(orr&&(orr.error||''))+(orr&&orr.detail?(' ('+orr.detail+')'):'');
+      if(m.indexOf('still has time')>=0) showToast('Opponent still has time — '+(orr.detail||'wait a bit'),'err');
+      else if(m.indexOf('your move')>=0) showToast('It is your move — you cannot claim','err');
+      else showToast('Claim failed: '+m.slice(0,60),'err');
+      bnbbsAddLog('⚠ Timeout claim: '+m.slice(0,120));
+    }
   }catch(e){
-    var m=(e.reason||e.message||'');
-    if(m.indexOf('Timeout not reached')>=0) showToast('Opponent still has time (5 min per move)','err');
-    else if(m.indexOf('Only opponent')>=0) showToast('It is your move — you cannot claim timeout','err');
-    else showToast('Error: '+m.slice(0,50),'err');
+    showToast('Error: '+(e.message||'').slice(0,50),'err');
   }
+  if(tb){tb.disabled=false;tb.textContent='⏱ Claim win';}
 }
 
 // ── Enter game (FIXED: відновлює дошку і постріли після refresh) ──
@@ -2888,6 +2891,26 @@ async function bnbbsEnterGame(stakeInfo){
       try{ bnbbsEnemyShots=JSON.parse((bnbbsIsP1?g.player2_shots:g.player1_shots)||'{}')||{}; }catch(e){bnbbsEnemyShots={};}
       bnbbsRenderBoards();
       bnbbsHandleUpdate(g);
+      // АВТО-ПОВТОР ВИПЛАТИ: якщо я виграв, але oracle не виплатив
+      // (наприклад, закінчився газ) — пробуємо ще раз при вході в гру
+      if(g.status==='finished'
+         && (g.winner_wallet||'').toLowerCase()===userAddr.toLowerCase()
+         && !g.oracle_confirmed){
+        document.getElementById('bnbbs-status').textContent='🎉 YOU WIN! Retrying payout...';
+        showToast('Retrying prize payout...','ok');
+        bnbbsOracle({action:'declareWinner',gameId:bnbbsGameId,winner:userAddr}).then(function(orr){
+          if(orr&&orr.success){
+            document.getElementById('bnbbs-status').textContent='🏆 Prize paid!';
+            showToast('🏆 Prize sent to your wallet!','ok');
+            bnbbsAddLog('🏆 Payout TX: '+(orr.tx||''));
+          } else {
+            document.getElementById('bnbbs-status').textContent='🎉 YOU WIN — payout pending';
+            var errTxt=orr?(orr.error||'')+(orr.detail?(' / '+orr.detail):''):'no response';
+            bnbbsAddLog('⚠ Oracle error: '+errTxt.slice(0,200));
+            showToast('Payout failed: '+errTxt.slice(0,60),'err');
+          }
+        });
+      }
     }
   }catch(e){ console.warn('[BNBBattle] restore failed:',e); }
   if(!bnbbsIsReady){
@@ -3138,8 +3161,7 @@ async function bnbbsMarkReady(){
     document.getElementById('bnbbs-status').textContent='⏳ Locked! Waiting for opponent...';
     showToast('✓ Ships locked!','ok');
     bnbbsAddLog('✓ Board saved. Waiting for opponent...');
-    // Скидаємо 5-хвилинний таймер на контракті, щоб час розстановки не рахувався
-    bnbbsOracle({action:'resetTimer',gameId:bnbbsGameId});
+    // v4: таймер AFK живе в базі, oracle більше не смикаємо
     // Підтягнути свіжий стан (можливо суперник вже готовий)
     var fresh=await bnbbsGameQuery().maybeSingle();
     if(fresh&&fresh.data) bnbbsHandleUpdate(fresh.data);
@@ -3220,13 +3242,9 @@ async function bnbbsFire(idx){
         bnbbsAddLog('⚠ Oracle: '+JSON.stringify(orRes||{}).slice(0,140));
       }
       var tb=document.getElementById('bnbbs-timeout-btn'); if(tb) tb.style.display='none';
-    } else {
-      // FIXED: після влучання хід залишається у стрілка (раніше помилково
-      // передавався супернику на контракті). Виклик також скидає 5-хв таймер.
-      var myNum=isP1?1:2;
-      var oppNum=isP1?2:1;
-      bnbbsOracle({action:'updateTurn',gameId:bnbbsGameId,turn:hit?myNum:oppNum});
     }
+    // v4: жодних oracle-викликів на кожен хід — таймер AFK живе в базі
+    // (last_move_at оновлює тригер автоматично при кожному записі)
   }catch(e){showToast('Error: '+(e.message||'').slice(0,40),'err');}
 }
 
@@ -4454,6 +4472,7 @@ function subscribeToMyGameInvites(){
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'battleship_games',filter:'player1_wallet=eq.'+userAddr},function(payload){
       const g=payload.new;
       if(!g) return;
+      if(!g.bet_token) return; // BNB-гра — її обробляє власний код, не тестнет
       // Someone just joined my waiting game
       if(g.status==='playing'&&g.player2_wallet&&currentBsGame!==g.id){
         showOpponentJoinedBanner(g);
@@ -4505,17 +4524,19 @@ async function loadBattleLobby(){
   subscribeToBattleLobby();
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
-    // Auto-cancel abandoned playing games older than 2 hours
+    // Auto-cancel abandoned playing games older than 2 hours (лише тестнет)
     const abandonedTime=new Date(Date.now()-2*60*60*1000).toISOString();
     await sb.from('battleship_games')
       .update({status:'cancelled'})
       .eq('status','playing')
+      .not('bet_token','is',null)
       .lt('created_at',abandonedTime);
 
-    // My active game?
+    // My active game? (лише тестнет — BNB-ігри має власна вкладка)
     if(userAddr){
       const {data:activeGames}=await sb.from('battleship_games')
         .select('*').eq('status','playing')
+        .not('bet_token','is',null)
         .or('player1_wallet.eq.'+userAddr+',player2_wallet.eq.'+userAddr)
         .order('created_at',{ascending:false}).limit(1);
       if(activeGames&&activeGames.length>0&&!currentBsGame){
