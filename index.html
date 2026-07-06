@@ -3059,18 +3059,18 @@ function bnbbsClearShips(){
   bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;bnbbsRenderBoards();bnbbsBuildShipBtns();
 }
 
-// ── Random placement ──
+// ── Random placement (гарантовано ВСІ 10 кораблів або чиста дошка) ──
 function bnbbsRandomPlaceShips(){
   if(bnbbsIsReady) return;
   var success=false;
-  for(var attempt=0;attempt<50&&!success;attempt++){
+  for(var attempt=0;attempt<300&&!success;attempt++){
     bnbbsMyShips=[];bnbbsPlaced=[];
     success=true;
     var sizes=BS_SHIP_SIZES.slice().sort(function(a,b){return b-a;});
     for(var si=0;si<sizes.length;si++){
       var size=sizes[si];
       var placed=false;
-      for(var tries=0;tries<2000&&!placed;tries++){
+      for(var tries=0;tries<3000&&!placed;tries++){
         var h=Math.random()>.5;
         var r=Math.floor(Math.random()*(h?10:11-size));
         var c2=Math.floor(Math.random()*(h?11-size:10));
@@ -3083,8 +3083,16 @@ function bnbbsRandomPlaceShips(){
       }
       if(!placed){success=false;break;}
     }
+    // Страховка: рівно 20 клітинок, інакше спроба не зарахована
+    if(success&&bnbbsMyShips.length!==20) success=false;
   }
-  if(!success){showToast('Retry random placement','err');return;}
+  if(!success){
+    // Не вийшло (практично неможливо за 300 спроб) — чиста дошка, без "половини флоту"
+    bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;
+    bnbbsRenderBoards();bnbbsBuildShipBtns();
+    showToast('Try Random again','err');
+    return;
+  }
   bnbbsRenderBoards();
   bnbbsBuildShipBtns();
   showToast('Ships placed!','ok');
