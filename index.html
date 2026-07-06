@@ -2446,6 +2446,7 @@ var bnbbsMyShots={}, bnbbsEnemyShots={};
 var bnbbsMyTurn=false, bnbbsIsReady=false, bnbbsIsP1=null, bnbbsGameFinished=false;
 var bnbbsRealtimeChannel=null, bnbbsRoomsInterval=null, bnbbsPollTimer=null;
 var bnbbsChainGD=null; // кеш даних гри з контракту (щоб не смикати RPC зайвий раз)
+var bnbbsLastStateTs=0; // сторож: застарілі оновлення стану ігноруються
 
 // Кілька публічних RPC BNB Chain — якщо один "затикається", беремо наступний
 var BNB_RPCS=[
@@ -2875,6 +2876,7 @@ async function bnbbsEnterGame(stakeInfo){
   bnbbsMyShips=[];bnbbsPlaced=[];bnbbsSelectedSize=0;
   bnbbsMyShots={};bnbbsEnemyShots={};
   bnbbsMyTurn=false;bnbbsIsReady=false;bnbbsIsP1=null;bnbbsGameFinished=false;
+  bnbbsLastStateTs=0;
   bnbbsBuildBoardDOM();
   bnbbsBuildShipBtns();
   bnbbsEnsureTimeoutBtn();
@@ -2904,7 +2906,7 @@ async function bnbbsEnterGame(stakeInfo){
       var pr=await bnbbsGameQuery().maybeSingle();
       if(pr&&pr.data) bnbbsHandleUpdate(pr.data);
     }catch(e){}
-  },4000);
+  },3000);
   // Restore from chain + DB
   try{
     var c=bnbbsContractRead();
@@ -2966,7 +2968,7 @@ async function bnbbsEnterGame(stakeInfo){
 }
 
 function leaveBNBGame(){
-  bnbbsChainGD=null;
+  bnbbsChainGD=null;bnbbsLastStateTs=0;
   if(bnbbsPollTimer){clearInterval(bnbbsPollTimer);bnbbsPollTimer=null;}
   if(bnbbsRealtimeChannel){sb.removeChannel(bnbbsRealtimeChannel);bnbbsRealtimeChannel=null;}
   bnbbsGameId=null;bnbbsMyShips=[];bnbbsMyShots={};bnbbsEnemyShots={};
@@ -3015,7 +3017,8 @@ function bnbbsRenderBoards(){
   for(var j=0;j<100;j++){
     var ec=document.getElementById('bnbbs-en-'+j);
     if(!ec) continue;
-    if(bnbbsMyShots[j]==='hit'){ec.style.background='rgba(255,77,77,0.8)';ec.style.border='2px solid #ff4d4d';ec.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
+    if(bnbbsMyShots[j]==='pending'){ec.style.background='rgba(245,200,66,0.25)';ec.style.border='1px solid var(--gold)';ec.innerHTML='<b style="color:var(--gold);font-size:10px;">⏳</b>';}
+    else if(bnbbsMyShots[j]==='hit'){ec.style.background='rgba(255,77,77,0.8)';ec.style.border='2px solid #ff4d4d';ec.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
     else if(bnbbsMyShots[j]==='miss'){ec.style.background='rgba(90,100,120,0.4)';ec.style.border='1px solid var(--muted)';ec.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
     else{ec.style.background='var(--bg3)';ec.style.border='1px solid var(--border)';ec.innerHTML='';}
     ec.style.cursor=canFire&&bnbbsMyShots[j]===undefined?'crosshair':'not-allowed';
@@ -3206,6 +3209,8 @@ async function bnbbsFire(idx){
   if(!bnbbsGameId) return;
   if(bnbbsMyShots[idx]!==undefined){showToast('Already fired here','err');return;}
   bnbbsMyTurn=false; // блок від дабл-кліку, поки сервер рахує постріл
+  document.getElementById('bnbbs-status').textContent='🎯 Firing '+bnbbsCoord(idx)+'...';
+  bnbbsMyShots[idx]='pending';
   bnbbsRenderBoards();
   try{
     var res=await ogTimeout(bnbbsEdge('fire',{cell:idx}),25000);
@@ -3231,6 +3236,7 @@ async function bnbbsFire(idx){
     }
   }catch(e){
     var m=(e.message||'');
+    if(bnbbsMyShots[idx]==='pending') delete bnbbsMyShots[idx];
     if(m.indexOf('Not your turn')<0&&m.indexOf('Already fired')<0) bnbbsMyTurn=true;
     bnbbsRenderBoards();
     showToast('Shot failed: '+m.slice(0,50),'err');
@@ -3243,7 +3249,11 @@ function bnbbsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/1
 // ── Realtime game update (FIXED: відновлення стану, кнопка таймауту) ──
 function bnbbsHandleUpdate(game){
   if(!game||!bnbbsGameId) return;
-  if(game.bet_token) return; // тестнет-рядок з таким самим id — ігноруємо
+  if(game.bet_token) return;
+  // Сторож свіжості: запізніле опитування не може перетерти новіший стан
+  var _ts=game.last_move_at?new Date(game.last_move_at).getTime():0;
+  if(_ts&&_ts<bnbbsLastStateTs) return;
+  if(_ts) bnbbsLastStateTs=_ts; // тестнет-рядок з таким самим id — ігноруємо
   if(game.status==='finished'){
     bnbbsGameFinished=true;bnbbsMyTurn=false;
     var won=(game.winner_wallet||'').toLowerCase()===userAddr.toLowerCase();
@@ -3264,7 +3274,8 @@ function bnbbsHandleUpdate(game){
     // Синхронізація моїх пострілів
     try{
       var mine=JSON.parse((isP1?game.player1_shots:game.player2_shots)||'{}')||{};
-      bnbbsMyShots=Object.assign({},mine,bnbbsMyShots);
+      var pend={};Object.keys(bnbbsMyShots).forEach(function(k){if(bnbbsMyShots[k]==='pending')pend[k]='pending';});
+      bnbbsMyShots=Object.assign({},bnbbsMyShots,mine,pend);
     }catch(e){}
     // Постріли суперника + лог нових
     var oldEn=bnbbsEnemyShots||{};
