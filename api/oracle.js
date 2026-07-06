@@ -121,9 +121,19 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Database players do not match on-chain players' });
       }
 
-      // Головна перевірка: всі клітинки переможеного влучені
+      // Головна перевірка: всі клітинки переможеного влучені.
+      // Дошки тепер живуть у закритій таблиці battleship_boards (анти-чит);
+      // для старих ігор — fallback на колонки головного рядка.
       const winnerIsP1  = w === p1;
-      const loserBoard  = parseJSON(winnerIsP1 ? game.player2_board : game.player1_board, null);
+      let boardsRow = null;
+      try {
+        const br = await supabase.from('battleship_boards').select('*').eq('game_row_id', game.id).maybeSingle();
+        boardsRow = br.data || null;
+      } catch (e) { /* ignore */ }
+      const loserRaw = boardsRow
+        ? (winnerIsP1 ? boardsRow.p2_board : boardsRow.p1_board)
+        : (winnerIsP1 ? game.player2_board : game.player1_board);
+      const loserBoard  = parseJSON(loserRaw, null);
       const winnerShots = parseJSON(winnerIsP1 ? game.player1_shots : game.player2_shots, {});
       if (!Array.isArray(loserBoard) || loserBoard.length !== SHIP_CELLS) {
         return res.status(400).json({ error: 'Invalid loser board — win not verified' });
