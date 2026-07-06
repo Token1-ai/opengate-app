@@ -3013,6 +3013,8 @@ function bnbbsGetCells(idx,size,horiz){
 function bnbbsIsValid(cells){
   for(var i=0;i<cells.length;i++){
     var cell=cells[i],row=Math.floor(cell/10),col=cell%10;
+    // FIXED: пряме накладання на існуючий корабель заборонено
+    if(bnbbsMyShips.includes(cell)) return false;
     for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){
       var nr=row+dr,nc=col+dc;
       if(nr>=0&&nr<10&&nc>=0&&nc<10&&bnbbsMyShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc)) return false;
@@ -3083,8 +3085,11 @@ function bnbbsRandomPlaceShips(){
       }
       if(!placed){success=false;break;}
     }
-    // Страховка: рівно 20 клітинок, інакше спроба не зарахована
-    if(success&&bnbbsMyShips.length!==20) success=false;
+    // Страховка: рівно 20 УНІКАЛЬНИХ клітинок, інакше спроба не зарахована
+    if(success){
+      var uniq={};bnbbsMyShips.forEach(function(x){uniq[x]=1;});
+      if(Object.keys(uniq).length!==20) success=false;
+    }
   }
   if(!success){
     // Не вийшло (практично неможливо за 300 спроб) — чиста дошка, без "половини флоту"
@@ -3116,6 +3121,12 @@ function bnbbsLockBoard(){
 async function bnbbsMarkReady(){
   if(bnbbsIsReady) return;
   if(bnbbsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all '+BS_SHIP_SIZES.length+' ships first!','err');return;}
+  // Дошка має містити рівно 20 унікальних клітинок — інакше база відхилить
+  var uq={};bnbbsMyShips.forEach(function(x){uq[x]=1;});
+  if(Object.keys(uq).length!==20){
+    showToast('Board error — press Clear and place ships again','err');
+    return;
+  }
   if(!bnbbsGameId){showToast('No active game','err');return;}
   var btn=document.getElementById('bnbbs-ready-btn'); if(btn) btn.disabled=true;
   try{
