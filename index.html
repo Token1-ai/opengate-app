@@ -2855,7 +2855,8 @@ async function bnbbsEnterGame(stakeInfo){
   bnbbsEnsureTimeoutBtn();
   var tb0=document.getElementById('bnbbs-timeout-btn'); if(tb0) tb0.style.display='none';
   document.getElementById('bnbbs-ships-panel').style.display='block';
-  document.getElementById('bnbbs-ready-btn').style.display='none';
+  var rdyBtn=document.getElementById('bnbbs-ready-btn');
+  if(rdyBtn){rdyBtn.style.display='none';rdyBtn.disabled=false;} // FIX: кнопка могла лишитись заблокованою з минулої гри
   var randomBtn2=document.getElementById('bnbbs-random-btn');
   if(randomBtn2) randomBtn2.style.display='inline-block';
   var setupBtns2=document.getElementById('bnbbs-setup-btns');
@@ -3018,7 +3019,10 @@ function bnbbsBuildShipBtns(){
   var sl=document.getElementById('bnbbs-ships-left');
   var readyBtn=document.getElementById('bnbbs-ready-btn');
   if(sl) sl.textContent=left>0?(left+' ships left'):'All placed! Click Ready ✓';
-  if(readyBtn) readyBtn.style.display=left===0?'inline-block':'none';
+  if(readyBtn){
+    readyBtn.style.display=left===0?'inline-block':'none';
+    if(left===0&&!bnbbsIsReady) readyBtn.disabled=false; // FIX: завжди активна для нової дошки
+  }
 }
 
 // ── Ship geometry ──
