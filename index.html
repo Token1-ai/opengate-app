@@ -3204,13 +3204,14 @@ async function bnbbsMarkReady(){
 
 // ── Fire (FIXED: синхронізація з сервером, правильний хід після влучання) ──
 async function bnbbsFire(idx){
-  if(bnbbsFiring) return; // попередній постріл ще летить — ігноруємо клік
+  if(bnbbsFiring){showToast('Shot in flight — wait','err');return;}
   if(bnbbsGameFinished) return;
   if(!bnbbsIsReady){showToast('Click Ready first!','err');return;}
   if(!bnbbsMyTurn){showToast('Not your turn','err');return;}
   if(!bnbbsGameId) return;
   if(bnbbsMyShots[idx]!==undefined){showToast('Already fired here','err');return;}
   bnbbsFiring=true;
+  setTimeout(function(){bnbbsFiring=false;},20000); // сторож: замок не зависає
   bnbbsMyTurn=false; // блок від дабл-кліку, поки сервер рахує постріл
   document.getElementById('bnbbs-status').textContent='🎯 Firing '+bnbbsCoord(idx)+'...';
   bnbbsMyShots[idx]='pending';
@@ -3280,7 +3281,7 @@ function bnbbsHandleUpdate(game){
     try{
       var mine=JSON.parse((isP1?game.player1_shots:game.player2_shots)||'{}')||{};
       var pend={};Object.keys(bnbbsMyShots).forEach(function(k){if(bnbbsMyShots[k]==='pending')pend[k]='pending';});
-      bnbbsMyShots=Object.assign({},bnbbsMyShots,mine,pend);
+      bnbbsMyShots=Object.assign({},mine,pend); // правда сервера + постріл у польоті
     }catch(e){}
     // Постріли суперника + лог нових
     var oldEn=bnbbsEnemyShots||{};
