@@ -1116,6 +1116,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-8</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2418,6 +2419,8 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
+var OG_BS_BUILD='BS-8';
+console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
 var ORACLE_HDR='opengate-oracle-2026';
@@ -2478,6 +2481,15 @@ async function bnbbsContractWrite(){
   var p=new ethers.BrowserProvider(window.ethereum);
   var s=await p.getSigner();
   return new ethers.Contract(BNB_BATTLE_ADDR,BNB_BATTLE_ABI,s);
+}
+function bnbbsCleanShots(o){
+  var r={};
+  if(o&&typeof o==='object'){
+    Object.keys(o).forEach(function(k){
+      if(o[k]==='hit'||o[k]==='miss'||o[k]==='pending') r[k]=o[k];
+    });
+  }
+  return r;
 }
 async function bnbbsOracle(body){
   try{
@@ -2955,8 +2967,8 @@ async function bnbbsEnterGame(stakeInfo){
         bnbbsLockBoard();
         bnbbsAddLog('↩ Your board restored (server-protected)');
       }
-      try{ bnbbsMyShots=JSON.parse((bnbbsIsP1?g.player1_shots:g.player2_shots)||'{}')||{}; }catch(e){bnbbsMyShots={};}
-      try{ bnbbsEnemyShots=JSON.parse((bnbbsIsP1?g.player2_shots:g.player1_shots)||'{}')||{}; }catch(e){bnbbsEnemyShots={};}
+      try{ bnbbsMyShots=bnbbsCleanShots(JSON.parse((bnbbsIsP1?g.player1_shots:g.player2_shots)||'{}')); }catch(e){bnbbsMyShots={};}
+      try{ bnbbsEnemyShots=bnbbsCleanShots(JSON.parse((bnbbsIsP1?g.player2_shots:g.player1_shots)||'{}')); }catch(e){bnbbsEnemyShots={};}
       bnbbsRenderBoards();
       bnbbsHandleUpdate(g);
       // АВТО-ПОВТОР ВИПЛАТИ: якщо я виграв, але oracle не виплатив
@@ -3317,12 +3329,12 @@ function bnbbsHandleUpdate(game){
     try{
       var mine=JSON.parse((isP1?game.player1_shots:game.player2_shots)||'{}')||{};
       var pend={};Object.keys(bnbbsMyShots).forEach(function(k){if(bnbbsMyShots[k]==='pending')pend[k]='pending';});
-      bnbbsMyShots=Object.assign({},mine,pend); // правда сервера + постріл у польоті
+      bnbbsMyShots=bnbbsCleanShots(Object.assign({},mine,pend)); // правда сервера + постріл у польоті, сміття викидається
     }catch(e){}
     // Постріли суперника + лог нових
     var oldEn=bnbbsEnemyShots||{};
     var newEn={};
-    try{newEn=JSON.parse((isP1?game.player2_shots:game.player1_shots)||'{}')||{};}catch(e){}
+    try{newEn=bnbbsCleanShots(JSON.parse((isP1?game.player2_shots:game.player1_shots)||'{}'));}catch(e){}
     Object.keys(newEn).forEach(function(k){
       if(oldEn[k]===undefined){
         bnbbsAddLog(newEn[k]==='hit'?('💥 Enemy hit '+bnbbsCoord(Number(k))+'!'):('💧 Enemy missed '+bnbbsCoord(Number(k))));
