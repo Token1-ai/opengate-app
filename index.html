@@ -1116,7 +1116,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-8</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-10</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1155,6 +1155,136 @@ async function smartConnectWallet(){
 
             <!-- Battle log -->
             <div id="bnbbs-log" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="view-goldbattle" style="display:none;">
+        <div class="feed-hdr">⚜️ Gold Battleship</div>
+
+        <!-- Pass check -->
+        <div id="gbs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
+          <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Pass Required</div>
+          <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">Gold Battleship is a VIP table — available for Gold Pass holders only.</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <button onclick="document.getElementById('page-app').classList.remove('active');document.getElementById('page-landing').classList.add('active');setTimeout(function(){var el=document.getElementById('passes');if(el)el.scrollIntoView({behavior:'smooth'});},100);" style="padding:12px 24px;background:var(--gold);color:#08090C;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">🥇 Get Gold Pass — $9</button>
+          </div>
+        </div>
+
+        <!-- Not connected -->
+        <div id="gbs-noconn" style="display:none;text-align:center;padding:40px 20px;">
+          <div style="font-size:48px;margin-bottom:12px;">👛</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Connect Wallet</div>
+          <button onclick="handleConnectClick()" style="padding:12px 24px;background:var(--gold);color:#08090C;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Connect Wallet</button>
+        </div>
+
+        <!-- Main UI -->
+        <div id="gbs-main" style="display:none;">
+
+          <!-- LOBBY -->
+          <div id="gbs-lobby">
+            <div style="padding:16px 20px;max-width:600px;margin:0 auto;">
+
+              <!-- Create/Find -->
+              <div style="background:linear-gradient(145deg,rgba(245,200,66,0.07),rgba(245,200,66,0.02));border:1px solid rgba(245,200,66,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+                <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
+
+                <!-- Token -->
+                <div style="margin-bottom:12px;">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token</div>
+                  <div style="display:flex;gap:8px;">
+                    <button id="gbs-tok-usdt" onclick="gbsSetToken('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
+                    <button id="gbs-tok-usdc" onclick="gbsSetToken('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
+                  </div>
+                </div>
+
+                <!-- Stake -->
+                <div style="margin-bottom:10px;">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Stake Amount</div>
+                  <div style="position:relative;">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);">$</span>
+                    <input id="gbs-amount" type="number" min="0.1" step="0.1" placeholder="0.00" style="width:100%;padding:10px 12px 10px 28px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;outline:none;"/>
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px;">Min: $0.10 · No maximum limit</div>
+                </div>
+
+                <!-- Quick amounts -->
+                <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+                  <button onclick="document.getElementById('gbs-amount').value='0.10'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$0.10</button>
+                  <button onclick="document.getElementById('gbs-amount').value='1'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$1</button>
+                  <button onclick="document.getElementById('gbs-amount').value='5'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$5</button>
+                  <button onclick="document.getElementById('gbs-amount').value='10'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$10</button>
+                  <button onclick="document.getElementById('gbs-amount').value='50'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$50</button>
+                  <button onclick="document.getElementById('gbs-amount').value='100'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$100</button>
+                  <button onclick="document.getElementById('gbs-amount').value='500'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$500</button>
+                </div>
+
+                <!-- Buttons -->
+                <div style="display:flex;gap:8px;">
+                  <button onclick="gbsMatchmake()" style="flex:1;padding:12px;border-radius:10px;background:var(--gold);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;">🔍 Find Game</button>
+                  <button onclick="gbsCreate()" style="flex:1;padding:12px;border-radius:10px;background:var(--green);color:#08090C;border:none;font-size:14px;font-weight:700;cursor:pointer;">⚔️ Create Game</button>
+                </div>
+                <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Find Game — joins existing room with same stake, or creates new one</div>
+              </div>
+
+              <!-- Open rooms -->
+              <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+                <span>🔍 Open Rooms</span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span id="gbs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <button onclick="gbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
+                </div>
+              </div>
+              <div id="gbs-rooms"><div class="app-loader">Loading...</div></div>
+            </div>
+          </div>
+
+          <!-- GAME (same layout as testnet — boards side by side) -->
+          <div id="gbs-gameboard" style="display:none;">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <span style="font-size:14px;font-weight:700;" id="gbs-status">Placing ships...</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-2</span>
+                <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="gbs-stake-display"></span>
+              </div>
+              <button onclick="leaveGoldGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
+            </div>
+
+            <!-- Boards side by side — SAME as testnet battleGame layout -->
+            <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+
+              <!-- MY board (left) -->
+              <div style="flex:1;min-width:280px;">
+                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
+                <div id="gbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+                <div style="text-align:center;margin-top:10px;" id="gbs-setup-btns">
+                  <button id="gbs-random-btn" onclick="gbsRandomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
+                  <button id="gbs-ready-btn" onclick="gbsMarkReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
+                </div>
+              </div>
+
+              <!-- ENEMY board (right) -->
+              <div style="flex:1;min-width:280px;">
+                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;" id="gbs-enemy-label">Enemy Fleet</div>
+                <div id="gbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+              </div>
+            </div>
+
+            <!-- Ships panel — same as testnet -->
+            <div id="gbs-ships-panel" style="padding:0 16px 16px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center;">Ships: <span id="gbs-ships-left" style="font-weight:700;color:var(--text);"></span></div>
+              <div id="gbs-ship-selector" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px;"></div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;">
+                <button id="gbs-orient-btn" onclick="gbsToggleOrientation()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">↔ Horizontal</button>
+                <button onclick="gbsClearShips()" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.4);color:var(--red);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">🗑 Clear</button>
+              </div>
+              <div style="font-size:11px;color:var(--muted);text-align:center;">Select a ship then click on your board to place it</div>
+            </div>
+
+            <!-- Battle log -->
+            <div id="gbs-log" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;"></div>
           </div>
 
         </div>
@@ -1318,6 +1448,14 @@ async function smartConnectWallet(){
             <div style="font-size:15px;font-weight:700;">BNB Battleship</div>
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">PvP · Real money · $0.10–$50</div>
             <div style="font-size:11px;color:#3B82F6;margin-top:6px;">USDT or USDC · 90% to winner</div>
+          </div>
+          <!-- Gold Battleship — VIP -->
+          <div onclick="showTab('goldbattle')" style="background:linear-gradient(135deg,rgba(245,200,66,0.08),rgba(245,200,66,0.02));border:1px solid rgba(245,200,66,0.4);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,200,66,0.4)'">
+            <div style="position:absolute;top:8px;right:8px;background:var(--gold);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">⚜️ VIP</div>
+            <div style="font-size:36px;margin-bottom:8px;">⚜️</div>
+            <div style="font-size:15px;font-weight:700;">Gold Battleship</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">Gold Pass only · $0.10 – no limit</div>
+            <div style="font-size:11px;color:var(--gold);margin-top:6px;">USDT or USDC · 90% to winner</div>
           </div>
         </div>
       </div>
@@ -2419,7 +2557,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-8';
+var OG_BS_BUILD='BS-10';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -3366,6 +3504,933 @@ function bnbbsHandleUpdate(game){
 }
 
 
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ⚜️ GOLD BATTLESHIP — окрема VIP-гра (тільки Gold Pass, без ліміту ставки)
+// Окремий контракт, окремий oracle-ендпоінт, окрема Edge Function.
+// Дані в спільній таблиці розділені зсувом id (GOLD_OFFSET) — звичайна гра не чіпається.
+// ═══════════════════════════════════════════════════════════════════════════
+var GOLD_BATTLE_ADDR='0x79c8d1cE862f51a98f3caCfee43Cc2454839D2F8'; // BattleshipGoldBNB
+var GOLD_OFFSET=2000000000; // зсув id золотих ігор у БД (щоб не конфліктувати зі звичайними)
+var OG_GBS_BUILD='GBS-1';
+function gbsDbId(){ return GOLD_OFFSET + Number(gbsGameId); }
+
+// State
+var gbsToken='USDT', gbsGameId=null, gbsOrientation='h';
+var gbsMyShips=[], gbsPlaced=[], gbsSelectedSize=0;
+var gbsMyShots={}, gbsEnemyShots={};
+var gbsMyTurn=false, gbsIsReady=false, gbsIsP1=null, gbsGameFinished=false;
+var gbsRealtimeChannel=null, gbsRoomsInterval=null, gbsPollTimer=null;
+var gbsChainGD=null, gbsLastStateTs=0, gbsFiring=false;
+var _gbsNotifiedActive=0;
+
+// Проста зміна мережі на BNB без reload/pending (золота гра не використовує resume-механізм)
+async function _gbsSwitchToBNB(){
+  if(!window.ethereum) return;
+  try{ var cid=await window.ethereum.request({method:'eth_chainId'}); if(cid==='0x38') return; }catch(e){}
+  try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]}); }
+  catch(e){
+    if(e.code===4902){
+      await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x38',chainName:'BNB Smart Chain',rpcUrls:['https://bsc-dataseed.binance.org/'],nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},blockExplorerUrls:['https://bscscan.com']}]});
+      await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]});
+    } else if(e.code!==4001){ throw e; }
+  }
+}
+
+function gbsContractRead(){
+  return new ethers.Contract(GOLD_BATTLE_ADDR,BNB_BATTLE_ABI,getBNBBattleProvider());
+}
+async function gbsContractWrite(){
+  await _gbsSwitchToBNB();
+  var p=new ethers.BrowserProvider(window.ethereum);
+  var s=await p.getSigner();
+  return new ethers.Contract(GOLD_BATTLE_ADDR,BNB_BATTLE_ABI,s);
+}
+function gbsCleanShots(o){
+  var r={};
+  if(o&&typeof o==='object'){
+    Object.keys(o).forEach(function(k){
+      if(o[k]==='hit'||o[k]==='miss'||o[k]==='pending') r[k]=o[k];
+    });
+  }
+  return r;
+}
+async function gbsOracle(body){
+  try{
+    var r=await fetch('/api/oracle-gold',{method:'POST',headers:{'Content-Type':'application/json','x-oracle-secret':ORACLE_HDR},body:JSON.stringify(body)});
+    var j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok) console.warn('[Oracle]',r.status,j);
+    return j||{};
+  }catch(e){ console.warn('[Oracle] fetch failed:',e.message); return {error:e.message}; }
+}
+// ── EDGE FUNCTION: захищена гра (анти-чит) ──
+var EDGE_BS_URL=SUPABASE_URL+'/functions/v1/battleship-gold';
+async function gbsGetSig(){
+  var key='ogbs_sig_'+gbsGameId+'_'+(userAddr||'').toLowerCase();
+  var s=sessionStorage.getItem(key);
+  if(s) return s;
+  var p=new ethers.BrowserProvider(window.ethereum);
+  var signer=await p.getSigner();
+  showToast('Sign once to secure this game (free, no gas)','ok');
+  s=await signer.signMessage('OpenGate Gold Battleship game '+gbsGameId);
+  sessionStorage.setItem(key,s);
+  return s;
+}
+async function gbsEdge(action,extra){
+  var sig=await gbsGetSig();
+  var body=Object.assign({action:action,gameId:gbsGameId,wallet:userAddr,signature:sig},extra||{});
+  var r=await fetch(EDGE_BS_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},body:JSON.stringify(body)});
+  var j=null;try{j=await r.json();}catch(e){}
+  if(!r.ok||(j&&j.error)) throw new Error((j&&j.error)||('HTTP '+r.status));
+  return j||{};
+}
+
+// ВАЖЛИВО: тестнет-ігри лежать у тій самій таблиці і їхні contract_game_id
+// можуть збігатися з BNB-іграми. Всі запити BNB-гри фільтрують bet_token IS NULL.
+function gbsGameQuery(){
+  return sb.from('battleship_games').select('*').eq('contract_game_id',gbsDbId()).is('bet_token',null);
+}
+function gbsAddLog(msg){
+  var el=document.getElementById('gbs-log'); if(!el) return;
+  var d=document.createElement('div');
+  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);';
+  d.textContent=new Date().toLocaleTimeString()+' — '+msg;
+  el.insertBefore(d,el.firstChild);
+}
+
+// ── Init ──
+async function initGoldBattle(){
+  if(!userAddr){
+    document.getElementById('gbs-noconn').style.display='block';
+    document.getElementById('gbs-nopass').style.display='none';
+    document.getElementById('gbs-main').style.display='none';
+    return;
+  }
+  // Тестери, яким показуємо UI без пропуску (owner + 2-й ноут).
+  // УВАГА: щоб реально грати on-chain, гаманець ВСЕ ОДНО має тримати Gold Pass —
+  // контракт onlyGoldPass відхилить create/join без NFT. Це лише про видимість UI.
+  var GBS_TESTERS=['0xc85b148f3ebd09e9072706166b4cd99cf7ed3108','0x410964fbe0158285db66deff21ea74faf42d13d9'];
+  var isOwner=GBS_TESTERS.indexOf(userAddr.toLowerCase())>=0;
+  var pass=currentUser&&currentUser.pass_type;
+  // GOLD-ONLY: silver не допускається у VIP-гру
+  var hasGold = (pass==='gold');
+  if(!isOwner&&!hasGold){
+    try{
+      var bnbP=getBNBBattleProvider();
+      var nftAbi=['function balanceOf(address) view returns(uint256)'];
+      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
+      var gbal=await gC.balanceOf(userAddr).catch(function(){return 0n;});
+      if(gbal>0n) hasGold=true;
+    }catch(e){}
+  }
+  if(!isOwner&&!hasGold){
+    document.getElementById('gbs-noconn').style.display='none';
+    document.getElementById('gbs-nopass').style.display='block';
+    document.getElementById('gbs-main').style.display='none';
+    return;
+  }
+  document.getElementById('gbs-noconn').style.display='none';
+  document.getElementById('gbs-nopass').style.display='none';
+  document.getElementById('gbs-main').style.display='block';
+  if(gbsRoomsInterval) clearInterval(gbsRoomsInterval);
+  await gbsLoadRooms();
+  gbsRoomsInterval=setInterval(gbsLoadRooms,8000);
+}
+
+// ── Token selector ──
+function gbsSetToken(tok){
+  gbsToken=tok;
+  var u=document.getElementById('gbs-tok-usdt');
+  var c=document.getElementById('gbs-tok-usdc');
+  if(u){u.style.background=tok==='USDT'?'rgba(59,130,246,0.2)':'var(--bg3)';u.style.borderColor=tok==='USDT'?'#3B82F6':'var(--border)';u.style.color=tok==='USDT'?'#3B82F6':'var(--muted)';}
+  if(c){c.style.background=tok==='USDC'?'rgba(59,130,246,0.2)':'var(--bg3)';c.style.borderColor=tok==='USDC'?'#3B82F6':'var(--border)';c.style.color=tok==='USDC'?'#3B82F6':'var(--muted)';}
+}
+
+// ── Активна гра: банер + нотифікація (працює для творця кімнати теж) ──
+async function gbsCheckActiveGame(){
+  if(!userAddr) return;
+  try{
+    var c=gbsContractRead();
+    var gid=Number(await ogTimeout(c.getMyActiveGame(userAddr),8000));
+    if(!gid){
+      document.querySelectorAll('.gbs-resume-banner').forEach(function(b){b.remove();});
+      return;
+    }
+    var g=await c.getGame(gid);
+    if(Number(g.status)!==1) return; // цікавлять лише Playing
+    gbsGameId=gid;
+    if(document.querySelector('.gbs-resume-banner')) return;
+    document.querySelectorAll('.wait-banner').forEach(function(b){b.remove();});
+    var banner=document.createElement('div');
+    banner.className='gbs-resume-banner';
+    banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+    banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ Active game — opponent is waiting!</div>';
+    var rb=document.createElement('button');
+    rb.textContent='⚔️ Enter Game';
+    rb.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;';
+    rb.onclick=function(){gbsEnterGame();};
+    banner.appendChild(rb);
+    var rooms=document.getElementById('gbs-rooms');
+    if(rooms) rooms.parentNode.insertBefore(banner,rooms);
+    if(_gbsNotifiedActive!==gid){
+      _gbsNotifiedActive=gid;
+      showToast('⚓ Opponent joined your BNB Battleship game!','ok');
+    }
+  }catch(e){}
+}
+
+// ── Load lobby ──
+async function gbsLoadRooms(){
+  var el=document.getElementById('gbs-rooms'); if(!el) return;
+  // Не опитуємо лобі, коли ми всередині гри
+  var gb=document.getElementById('gbs-gameboard');
+  if(gb&&gb.style.display!=='none') return;
+  // Якщо вкладку закрито — зупиняємо інтервал
+  var view=document.getElementById('view-bnbbattle');
+  if(!view||view.style.display==='none'){
+    if(gbsRoomsInterval){clearInterval(gbsRoomsInterval);gbsRoomsInterval=null;}
+    return;
+  }
+  try{
+    var c=gbsContractRead();
+    var ids=await ogTimeout(c.getOpenGames(),10000);
+    // Balance
+    try{
+      var uC=new ethers.Contract(USDT_BNB_ADDR,ERC20_SIMPLE_ABI,getBNBBattleProvider());
+      var bal=await uC.balanceOf(userAddr);
+      var balEl=document.getElementById('gbs-balance');
+      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2)+' USDT';
+    }catch(e){}
+    if(!ids||ids.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
+      gbsCheckActiveGame();
+      return;
+    }
+    var now=Math.floor(Date.now()/1000);
+    var minBet=ethers.parseUnits('0.1',18);
+    var maxBet=ethers.parseUnits('50',18);
+    var rooms=await ogTimeout(Promise.all(ids.map(function(id){return c.getGame(id).then(function(g){return {id:Number(id),g:g};});})),12000);
+    // Фільтруємо сміттєві кімнати зі ставкою менше $0.10 (створені напряму через контракт)
+    rooms=rooms.filter(function(r){return r.g.betAmount>=minBet&&r.g.betAmount<=maxBet;});
+    if(rooms.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
+      gbsCheckActiveGame();
+      return;
+    }
+    var wallets=[...new Set(rooms.map(function(r){return r.g.player1.toLowerCase();}))];
+    var profiles=[];
+    try{var pr=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);profiles=pr.data||[];}catch(e){}
+    var profileMap={};profiles.forEach(function(p){profileMap[p.wallet]=p;});
+    el.innerHTML=rooms.map(function(item){
+      var p1=item.g.player1.toLowerCase();
+      var prof=profileMap[p1]||{};
+      var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
+      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var amount=parseFloat(ethers.formatUnits(item.g.betAmount,18)).toFixed(2);
+      var tok=Number(item.g.token)===0?'USDT':'USDC';
+      var isMe=p1===(userAddr||'').toLowerCase();
+      var createdAt=Number(item.g.createdAt);
+      var expired=createdAt>0&&(now-createdAt)>24*3600;
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(expired?'rgba(255,77,77,0.3)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:12px;">'
+        +'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+av+'</div>'
+        +'<div><div style="font-size:14px;font-weight:700;">'+esc(name)+'</div>'
+        +'<div style="font-size:13px;color:var(--gold);margin-top:2px;">💰 $'+amount+' '+tok+(expired?' <span style="color:var(--red);font-size:11px;">(expired)</span>':'')+'</div></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px;">'
+        +(isMe&&expired?'<button onclick="gbsClaimRefund('+item.id+',event)" style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,.4);color:var(--gold);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">💰 Refund</button>':'')
+        +(isMe&&!expired?'<button onclick="gbsCancelGame('+item.id+',event)" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;">✕ Cancel</button>':'')
+        +(!isMe&&!expired?'<button onclick="openDMWith(\''+p1+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;">💬 DM</button>':'')
+        +(!isMe&&!expired?'<button onclick="gbsJoin('+item.id+')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button>':'')
+        +'</div></div>';
+    }).join('');
+    gbsCheckActiveGame();
+  }catch(e){
+    console.error('[BNBBattle] loadRooms:',e);
+    el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">Error loading rooms</div>';
+  }
+}
+
+// ── Matchmake ──
+async function gbsMatchmake(){
+  var amount=parseFloat(document.getElementById('gbs-amount').value);
+  if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
+  try{
+    showToast('Searching...','ok');
+    var c=gbsContractRead();
+    var ids=await ogTimeout(c.getOpenGames(),10000);
+    var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
+    var tokenIdx=gbsToken==='USDT'?0:1;
+    for(var i=0;i<ids.length;i++){
+      var g=await c.getGame(ids[i]);
+      if(g.player1.toLowerCase()===(userAddr||'').toLowerCase()) continue;
+      if(Number(g.token)===tokenIdx&&g.betAmount===amountRaw){
+        showToast('Match found! Joining...','ok');
+        await gbsJoin(Number(ids[i])); return;
+      }
+    }
+    showToast('No match found. Creating room...','ok');
+    await gbsCreate();
+  }catch(e){showToast('Error: '+(e.message||'').slice(0,40),'err');}
+}
+
+// ── Create game ──
+async function gbsCreate(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  var amount=parseFloat(document.getElementById('gbs-amount').value);
+  if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
+  sessionStorage.setItem('og_pending_gold_action',JSON.stringify({action:'create',amount:String(amount),token:gbsToken,tab:'goldbattle'}));
+  try{
+    await _gbsSwitchToBNB();
+    sessionStorage.removeItem('og_pending_gold_action');
+    var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
+    var tokenAddr=gbsToken==='USDT'?USDT_BNB_ADDR:USDC_BNB_ADDR;
+    var tokenIdx=gbsToken==='USDT'?0:1;
+    var bnbProv=new ethers.BrowserProvider(window.ethereum);
+    var bnbSigner=await bnbProv.getSigner();
+    var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
+    var bal=await tok.balanceOf(userAddr);
+    if(bal<amountRaw){showToast('Insufficient '+gbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
+    showToast('Approving '+gbsToken+'...','ok');
+    var allowance=await tok.allowance(userAddr,GOLD_BATTLE_ADDR);
+    if(allowance<amountRaw){
+      var appTx=await tok.approve(GOLD_BATTLE_ADDR,amountRaw);
+      await appTx.wait();
+    }
+    showToast('Creating game...','ok');
+    var contract=new ethers.Contract(GOLD_BATTLE_ADDR,BNB_BATTLE_ABI,bnbSigner);
+    var tx=await contract.createGame(amountRaw,tokenIdx);
+    var receipt=await tx.wait();
+    // FIXED: беремо id гри з події GameCreated (gameCount мав race condition)
+    var newId=0;
+    try{
+      for(var li=0;li<receipt.logs.length;li++){
+        try{
+          var pl=contract.interface.parseLog(receipt.logs[li]);
+          if(pl&&pl.name==='GameCreated'&&pl.args.player1.toLowerCase()===userAddr.toLowerCase()){
+            newId=Number(pl.args.id); break;
+          }
+        }catch(e2){}
+      }
+    }catch(e3){}
+    if(!newId){
+      try{ newId=Number(await contract.getMyActiveGame(userAddr)); }catch(e4){}
+    }
+    gbsGameId=newId||null;
+    showToast('Room created! Waiting for opponent...','ok');
+    await gbsLoadRooms();
+    gbsShowWaitBanner();
+  }catch(e){
+    sessionStorage.removeItem('og_pending_gold_action');
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+}
+
+function gbsShowWaitBanner(){
+  var banner=document.createElement('div');
+  banner.className='wait-banner';
+  banner.style.cssText='padding:12px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin:0 0 12px;display:flex;align-items:center;gap:12px;';
+  banner.innerHTML='<div style="font-size:22px;">⏳</div><div style="flex:1;font-size:13px;">Your room is live! You\'ll be notified when someone joins.</div>';
+  var rooms=document.getElementById('gbs-rooms');
+  if(rooms){var ex=rooms.parentNode.querySelector('.wait-banner');if(ex)ex.remove();rooms.parentNode.insertBefore(banner,rooms);}
+}
+
+// ── Claim refund (24h lobby timeout) ──
+async function gbsClaimRefund(gameId,ev){
+  var btn=ev&&ev.target;if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    var c=await gbsContractWrite();
+    showToast('Claiming refund...','ok');
+    var tx=await c.claimLobbyTimeout(gameId);
+    await tx.wait();
+    showToast('✅ Refund received!','ok');
+    await gbsLoadRooms();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='💰 Refund';}
+    showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+}
+
+// ── Cancel game ──
+async function gbsCancelGame(gameId,ev){
+  var btn=ev&&ev.target;if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    var c=await gbsContractWrite();
+    sessionStorage.removeItem('og_pending_gold_action');
+    var tx=await c.cancelGame(gameId);
+    await tx.wait();
+    showToast('Cancelled. Funds refunded.','ok');
+    gbsGameId=null;
+    await gbsLoadRooms();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='✕ Cancel';}
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,40),'err');
+  }
+}
+
+// ── Join game ──
+async function gbsJoin(gameId){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  sessionStorage.setItem('og_pending_gold_action',JSON.stringify({action:'join',gameId:gameId,tab:'goldbattle'}));
+  try{
+    var c=await gbsContractWrite();
+    sessionStorage.removeItem('og_pending_gold_action');
+    var g=await c.getGame(gameId);
+    var amountRaw=g.betAmount;
+    var tokenAddr=Number(g.token)===0?USDT_BNB_ADDR:USDC_BNB_ADDR;
+    var tokenName=Number(g.token)===0?'USDT':'USDC';
+    var bnbProv=new ethers.BrowserProvider(window.ethereum);
+    var bnbSigner=await bnbProv.getSigner();
+    var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
+    var bal=await tok.balanceOf(userAddr);
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
+    showToast('Approving...','ok');
+    var allowance=await tok.allowance(userAddr,GOLD_BATTLE_ADDR);
+    if(allowance<amountRaw){
+      var appTx=await tok.approve(GOLD_BATTLE_ADDR,amountRaw);
+      await appTx.wait();
+    }
+    showToast('Joining...','ok');
+    var tx=await c.joinGame(gameId);
+    await tx.wait();
+    gbsGameId=gameId;
+    var amount=parseFloat(ethers.formatUnits(g.betAmount,18)).toFixed(2);
+    showToast('Joined! Place your ships.','ok');
+    gbsEnterGame('$'+amount+' '+tokenName);
+  }catch(e){
+    sessionStorage.removeItem('og_pending_gold_action');
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+}
+
+// ── Кнопка "опонент AFK" (claimMoveTimeout) ──
+function gbsResync(){
+  if(!gbsGameId) return;
+  showToast('Resyncing with server...','ok');
+  gbsMyShots={};gbsEnemyShots={};gbsLastStateTs=0;gbsFiring=false;
+  gbsGameQuery().maybeSingle().then(function(pr){
+    if(pr&&pr.data){gbsHandleUpdate(pr.data);showToast('✓ Synced','ok');}
+  });
+}
+function gbsEnsureTimeoutBtn(){
+  if(!document.getElementById('gbs-resync-btn')){
+    var hdrR=document.querySelector('#gbs-gameboard > div:first-child');
+    if(hdrR){
+      var rb2=document.createElement('button');
+      rb2.id='gbs-resync-btn';
+      rb2.textContent='🔄';
+      rb2.title='Resync game state with server';
+      rb2.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;margin-right:8px;';
+      rb2.onclick=gbsResync;
+      hdrR.insertBefore(rb2,hdrR.lastElementChild);
+    }
+  }
+  if(document.getElementById('gbs-timeout-btn')) return;
+  var hdr=document.querySelector('#gbs-gameboard > div:first-child');
+  if(!hdr) return;
+  var b=document.createElement('button');
+  b.id='gbs-timeout-btn';
+  b.textContent='⏱ Claim win';
+  b.title='If opponent is inactive for 5+ minutes, you win the pot';
+  b.style.cssText='display:none;background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,.4);color:var(--gold);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-right:8px;';
+  b.onclick=gbsClaimMoveTimeout;
+  hdr.insertBefore(b,hdr.lastElementChild);
+}
+async function gbsClaimMoveTimeout(){
+  if(!gbsGameId||!userAddr) return;
+  var tb=document.getElementById('gbs-timeout-btn');
+  if(tb){tb.disabled=true;tb.textContent='⏳ Checking...';}
+  try{
+    showToast('Checking opponent timeout...','ok');
+    // v4: таймаут вирішує oracle по базі — гравцю не потрібна транзакція і газ
+    var orr=await gbsOracle({action:'claimTimeout',gameId:gbsGameId,claimer:userAddr});
+    if(orr&&orr.success){
+      gbsGameFinished=true;gbsMyTurn=false;
+      document.getElementById('gbs-status').textContent='🎉 YOU WIN (opponent timed out)!';
+      showToast('🏆 Opponent timed out — prize sent to your wallet!','ok');
+      gbsAddLog('🏆 Timeout payout TX: '+(orr.tx||''));
+      if(tb) tb.style.display='none';
+    } else {
+      var m=(orr&&(orr.error||''))+(orr&&orr.detail?(' ('+orr.detail+')'):'');
+      if(m.indexOf('still has time')>=0) showToast('Opponent still has time — '+(orr.detail||'wait a bit'),'err');
+      else if(m.indexOf('your move')>=0) showToast('It is your move — you cannot claim','err');
+      else showToast('Claim failed: '+m.slice(0,60),'err');
+      gbsAddLog('⚠ Timeout claim: '+m.slice(0,120));
+    }
+  }catch(e){
+    showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+  if(tb){tb.disabled=false;tb.textContent='⏱ Claim win';}
+}
+
+// ── Enter game (FIXED: відновлює дошку і постріли після refresh) ──
+async function gbsEnterGame(stakeInfo){
+  document.getElementById('gbs-lobby').style.display='none';
+  document.getElementById('gbs-gameboard').style.display='block';
+  document.querySelectorAll('.gbs-resume-banner,.wait-banner').forEach(function(b){b.remove();});
+  // Reset state
+  gbsMyShips=[];gbsPlaced=[];gbsSelectedSize=0;
+  gbsMyShots={};gbsEnemyShots={};
+  gbsMyTurn=false;gbsIsReady=false;gbsIsP1=null;gbsGameFinished=false;
+  gbsLastStateTs=0;gbsFiring=false;
+  gbsBuildBoardDOM();
+  gbsBuildShipBtns();
+  gbsEnsureTimeoutBtn();
+  var tb0=document.getElementById('gbs-timeout-btn'); if(tb0) tb0.style.display='none';
+  document.getElementById('gbs-ships-panel').style.display='block';
+  var rdyBtn=document.getElementById('gbs-ready-btn');
+  if(rdyBtn){rdyBtn.style.display='none';rdyBtn.disabled=false;} // FIX: кнопка могла лишитись заблокованою з минулої гри
+  var randomBtn2=document.getElementById('gbs-random-btn');
+  if(randomBtn2) randomBtn2.style.display='inline-block';
+  var setupBtns2=document.getElementById('gbs-setup-btns');
+  if(setupBtns2) setupBtns2.style.display='block';
+  var myBoard2=document.getElementById('gbs-myboard');
+  if(myBoard2){myBoard2.style.pointerEvents='';myBoard2.style.cursor='';}
+  document.getElementById('gbs-log').innerHTML='';
+  document.getElementById('gbs-status').textContent='Loading game...';
+  // Realtime (ігноруємо тестнет-рядки з таким самим id)
+  if(gbsRealtimeChannel){sb.removeChannel(gbsRealtimeChannel);gbsRealtimeChannel=null;}
+  gbsRealtimeChannel=sb.channel('gbs-'+gbsGameId+'-'+Date.now())
+    .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+gbsDbId()},function(payload){
+      if(payload.new&&!payload.new.bet_token) gbsHandleUpdate(payload.new);
+    }).subscribe();
+  // Резервне опитування кожні 4с — гра синхронізується навіть якщо Realtime мовчить
+  if(gbsPollTimer) clearInterval(gbsPollTimer);
+  gbsPollTimer=setInterval(async function(){
+    if(!gbsGameId||gbsGameFinished){clearInterval(gbsPollTimer);gbsPollTimer=null;return;}
+    try{
+      var pr=await gbsGameQuery().maybeSingle();
+      if(pr&&pr.data) gbsHandleUpdate(pr.data);
+    }catch(e){}
+  },3000);
+  // Restore from chain + DB
+  try{
+    var c=gbsContractRead();
+    var gd=await ogTimeout(c.getGame(gbsGameId),10000);
+    gbsChainGD=gd;
+    gbsIsP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
+    if(!stakeInfo){
+      var amt=parseFloat(ethers.formatUnits(gd.betAmount,18)).toFixed(2);
+      stakeInfo='$'+amt+' '+(Number(gd.token)===0?'USDT':'USDC');
+    }
+    document.getElementById('gbs-stake-display').textContent=stakeInfo;
+    // Гра активна на контракті → кнопка Claim win доступна одразу
+    // (контракт сам відхилить, якщо таймаут не настав або зараз твій хід)
+    if(Number(gd.status)===1){
+      var tbA=document.getElementById('gbs-timeout-btn');
+      if(tbA) tbA.style.display='inline-block';
+    }
+    var st=null;
+    try{ st=await ogTimeout(gbsEdge('getState'),25000); }
+    catch(eS){ gbsAddLog('⚠ State load: '+(eS.message||'').slice(0,80)); }
+    if(st&&st.state){
+      var g=st.state;
+      if(st.myBoard&&st.myBoard.length===20){
+        gbsMyShips=st.myBoard;
+        gbsLockBoard();
+        gbsAddLog('↩ Your board restored (server-protected)');
+      }
+      try{ gbsMyShots=gbsCleanShots(JSON.parse((gbsIsP1?g.player1_shots:g.player2_shots)||'{}')); }catch(e){gbsMyShots={};}
+      try{ gbsEnemyShots=gbsCleanShots(JSON.parse((gbsIsP1?g.player2_shots:g.player1_shots)||'{}')); }catch(e){gbsEnemyShots={};}
+      gbsRenderBoards();
+      gbsHandleUpdate(g);
+      // АВТО-ПОВТОР ВИПЛАТИ: якщо я виграв, але oracle не виплатив
+      // (наприклад, закінчився газ) — пробуємо ще раз при вході в гру
+      if(g.status==='finished'
+         && (g.winner_wallet||'').toLowerCase()===userAddr.toLowerCase()
+         && !g.oracle_confirmed){
+        document.getElementById('gbs-status').textContent='🎉 YOU WIN! Retrying payout...';
+        showToast('Retrying prize payout...','ok');
+        gbsOracle({action:'declareWinner',gameId:gbsGameId,winner:userAddr}).then(function(orr){
+          if(orr&&orr.success){
+            document.getElementById('gbs-status').textContent='🏆 Prize paid!';
+            showToast('🏆 Prize sent to your wallet!','ok');
+            gbsAddLog('🏆 Payout TX: '+(orr.tx||''));
+          } else {
+            document.getElementById('gbs-status').textContent='🎉 YOU WIN — payout pending';
+            var errTxt=orr?(orr.error||'')+(orr.detail?(' / '+orr.detail):''):'no response';
+            gbsAddLog('⚠ Oracle error: '+errTxt.slice(0,200));
+            showToast('Payout failed: '+errTxt.slice(0,60),'err');
+          }
+        });
+      }
+    }
+  }catch(e){ console.warn('[BNBBattle] restore failed:',e); }
+  if(!gbsIsReady){
+    document.getElementById('gbs-status').textContent='Place ships then click ✓ Ready';
+    gbsAddLog('⚓ Place ships on the LEFT board, then click Ready.');
+    gbsRenderBoards();
+  }
+}
+
+function leaveGoldGame(){
+  gbsChainGD=null;gbsLastStateTs=0;gbsFiring=false;
+  if(gbsPollTimer){clearInterval(gbsPollTimer);gbsPollTimer=null;}
+  if(gbsRealtimeChannel){sb.removeChannel(gbsRealtimeChannel);gbsRealtimeChannel=null;}
+  gbsGameId=null;gbsMyShips=[];gbsMyShots={};gbsEnemyShots={};
+  gbsMyTurn=false;gbsIsReady=false;gbsIsP1=null;gbsGameFinished=false;
+  var tb=document.getElementById('gbs-timeout-btn'); if(tb) tb.style.display='none';
+  document.getElementById('gbs-lobby').style.display='block';
+  document.getElementById('gbs-gameboard').style.display='none';
+  gbsLoadRooms();
+}
+
+// ── Board DOM (built once) ──
+function gbsBuildBoardDOM(){
+  var myEl=document.getElementById('gbs-myboard');
+  var enEl=document.getElementById('gbs-enemyboard');
+  if(!myEl||!enEl) return;
+  myEl.innerHTML='';enEl.innerHTML='';
+  for(var i=0;i<100;i++){
+    (function(idx){
+      var mc=document.createElement('div');
+      mc.id='gbs-my-'+idx;
+      mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
+      mc.onclick=function(){if(!gbsIsReady)gbsPlaceShip(idx);};
+      mc.onmouseover=function(){if(!gbsIsReady)gbsHover(idx,true);};
+      mc.onmouseout=function(){if(!gbsIsReady)gbsHover(idx,false);};
+      myEl.appendChild(mc);
+      var ec=document.createElement('div');
+      ec.id='gbs-en-'+idx;
+      ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:not-allowed;';
+      ec.onclick=function(){gbsFire(idx);};
+      enEl.appendChild(ec);
+    })(i);
+  }
+}
+
+// ── Render boards (FIXED: continue замість return) ──
+function gbsRenderBoards(){
+  for(var i=0;i<100;i++){
+    var mc=document.getElementById('gbs-my-'+i);
+    if(!mc) continue;
+    if(gbsEnemyShots[i]==='hit'){mc.style.background='rgba(255,77,77,0.8)';mc.style.border='2px solid #ff4d4d';mc.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
+    else if(gbsEnemyShots[i]==='miss'){mc.style.background='rgba(90,100,120,0.4)';mc.style.border='1px solid var(--muted)';mc.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
+    else if(gbsMyShips.includes(i)){mc.style.background=gbsIsReady?'rgba(38,217,138,0.6)':'rgba(38,217,138,0.35)';mc.style.border='1px solid var(--green)';mc.innerHTML='';}
+    else{mc.style.background='var(--bg3)';mc.style.border='1px solid var(--border)';mc.innerHTML='';}
+  }
+  var canFire=gbsMyTurn&&gbsIsReady&&!gbsGameFinished;
+  for(var j=0;j<100;j++){
+    var ec=document.getElementById('gbs-en-'+j);
+    if(!ec) continue;
+    if(gbsMyShots[j]==='pending'){ec.style.background='rgba(245,200,66,0.25)';ec.style.border='1px solid var(--gold)';ec.innerHTML='<b style="color:var(--gold);font-size:10px;">⏳</b>';}
+    else if(gbsMyShots[j]==='hit'){ec.style.background='rgba(255,77,77,0.8)';ec.style.border='2px solid #ff4d4d';ec.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
+    else if(gbsMyShots[j]==='miss'){ec.style.background='rgba(90,100,120,0.4)';ec.style.border='1px solid var(--muted)';ec.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
+    else{ec.style.background='var(--bg3)';ec.style.border='1px solid var(--border)';ec.innerHTML='';}
+    ec.style.cursor=canFire&&gbsMyShots[j]===undefined?'crosshair':'not-allowed';
+  }
+}
+
+// ── Ship buttons ──
+function gbsBuildShipBtns(){
+  var el=document.getElementById('gbs-ship-selector'); if(!el) return;
+  var rem={};
+  BS_SHIP_SIZES.forEach(function(s){rem[s]=(rem[s]||0)+1;});
+  gbsPlaced.forEach(function(p){rem[p.size]--;});
+  el.innerHTML='';
+  var seen={};
+  BS_SHIP_SIZES.forEach(function(s){
+    if(seen[s]||(rem[s]||0)<=0){seen[s]=true;return;}
+    seen[s]=true;
+    var b=document.createElement('button');
+    var active=s===gbsSelectedSize;
+    b.style.cssText='padding:8px 10px;border-radius:8px;border:1px solid '+(active?'#3B82F6':'var(--border)')+';background:'+(active?'rgba(59,130,246,0.15)':'var(--bg3)')+';color:'+(active?'#3B82F6':'var(--muted)')+';font-size:12px;font-weight:600;cursor:pointer;font-family:monospace;';
+    b.innerHTML='▪'.repeat(s)+' <span style="font-size:10px;">×'+rem[s]+'</span>';
+    (function(sz){b.onclick=function(){gbsSelectedSize=sz;gbsBuildShipBtns();};})(s);
+    el.appendChild(b);
+  });
+  var left=BS_SHIP_SIZES.length-gbsPlaced.length;
+  var sl=document.getElementById('gbs-ships-left');
+  var readyBtn=document.getElementById('gbs-ready-btn');
+  if(sl) sl.textContent=left>0?(left+' ships left'):'All placed! Click Ready ✓';
+  if(readyBtn){
+    readyBtn.style.display=left===0?'inline-block':'none';
+    if(left===0&&!gbsIsReady) readyBtn.disabled=false; // FIX: завжди активна для нової дошки
+  }
+}
+
+// ── Ship geometry ──
+function gbsGetCells(idx,size,horiz){
+  var row=Math.floor(idx/10),col=idx%10;
+  if(horiz&&col+size>10) return null;
+  if(!horiz&&row+size>10) return null;
+  var cells=[];
+  for(var i=0;i<size;i++) cells.push(horiz?(row*10+col+i):((row+i)*10+col));
+  return cells;
+}
+function gbsIsValid(cells){
+  for(var i=0;i<cells.length;i++){
+    var cell=cells[i],row=Math.floor(cell/10),col=cell%10;
+    // FIXED: пряме накладання на існуючий корабель заборонено
+    if(gbsMyShips.includes(cell)) return false;
+    for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){
+      var nr=row+dr,nc=col+dc;
+      if(nr>=0&&nr<10&&nc>=0&&nc<10&&gbsMyShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc)) return false;
+    }
+  }
+  return true;
+}
+function gbsPlaceShip(idx){
+  if(gbsIsReady) return;
+  if(!gbsSelectedSize){showToast('Select a ship size first','err');return;}
+  var cells=gbsGetCells(idx,gbsSelectedSize,gbsOrientation==='h');
+  if(!cells){showToast('Does not fit','err');return;}
+  if(!gbsIsValid(cells)){showToast('Too close to another ship','err');return;}
+  var already=gbsPlaced.filter(function(p){return p.size===gbsSelectedSize;}).length;
+  var max=BS_SHIP_SIZES.filter(function(s){return s===gbsSelectedSize;}).length;
+  if(already>=max){showToast('All of this size placed','err');return;}
+  gbsPlaced.push({cells:cells,size:gbsSelectedSize});
+  cells.forEach(function(c){gbsMyShips.push(c);});
+  gbsSelectedSize=0;
+  gbsRenderBoards();gbsBuildShipBtns();
+}
+function gbsHover(idx,enter){
+  if(gbsIsReady||!gbsSelectedSize) return;
+  for(var i=0;i<100;i++){
+    var c=document.getElementById('gbs-my-'+i);
+    if(c&&!gbsMyShips.includes(i)){c.style.background='var(--bg3)';c.style.border='1px solid var(--border)';}
+  }
+  if(!enter) return;
+  var cells=gbsGetCells(idx,gbsSelectedSize,gbsOrientation==='h');
+  if(!cells) return;
+  var ok=gbsIsValid(cells);
+  cells.forEach(function(ci){
+    var c=document.getElementById('gbs-my-'+ci);
+    if(c&&!gbsMyShips.includes(ci)) c.style.background=ok?'rgba(38,217,138,0.4)':'rgba(255,77,77,0.4)';
+  });
+}
+function gbsToggleOrientation(){
+  gbsOrientation=gbsOrientation==='h'?'v':'h';
+  var btn=document.getElementById('gbs-orient-btn');
+  if(btn) btn.textContent=gbsOrientation==='h'?'↔ Horizontal':'↕ Vertical';
+}
+function gbsClearShips(){
+  if(gbsIsReady) return;
+  gbsMyShips=[];gbsPlaced=[];gbsSelectedSize=0;gbsRenderBoards();gbsBuildShipBtns();
+}
+
+// ── Random placement (гарантовано ВСІ 10 кораблів або чиста дошка) ──
+function gbsRandomPlaceShips(){
+  if(gbsIsReady) return;
+  var success=false;
+  for(var attempt=0;attempt<300&&!success;attempt++){
+    gbsMyShips=[];gbsPlaced=[];
+    success=true;
+    var sizes=BS_SHIP_SIZES.slice().sort(function(a,b){return b-a;});
+    for(var si=0;si<sizes.length;si++){
+      var size=sizes[si];
+      var placed=false;
+      for(var tries=0;tries<3000&&!placed;tries++){
+        var h=Math.random()>.5;
+        var r=Math.floor(Math.random()*(h?10:11-size));
+        var c2=Math.floor(Math.random()*(h?11-size:10));
+        var cells=gbsGetCells(r*10+c2,size,h);
+        if(cells&&gbsIsValid(cells)){
+          gbsPlaced.push({cells:cells,size:size});
+          cells.forEach(function(x){gbsMyShips.push(x);});
+          placed=true;
+        }
+      }
+      if(!placed){success=false;break;}
+    }
+    // Страховка: рівно 20 УНІКАЛЬНИХ клітинок, інакше спроба не зарахована
+    if(success){
+      var uniq={};gbsMyShips.forEach(function(x){uniq[x]=1;});
+      if(Object.keys(uniq).length!==20) success=false;
+    }
+  }
+  if(!success){
+    // Не вийшло (практично неможливо за 300 спроб) — чиста дошка, без "половини флоту"
+    gbsMyShips=[];gbsPlaced=[];gbsSelectedSize=0;
+    gbsRenderBoards();gbsBuildShipBtns();
+    showToast('Try Random again','err');
+    return;
+  }
+  gbsRenderBoards();
+  gbsBuildShipBtns();
+  showToast('Ships placed!','ok');
+}
+
+// ── Lock board UI (спільне для Ready і restore) ──
+function gbsLockBoard(){
+  gbsIsReady=true;
+  var myBoard=document.getElementById('gbs-myboard');
+  if(myBoard){myBoard.style.pointerEvents='none';myBoard.style.cursor='default';}
+  document.getElementById('gbs-ships-panel').style.display='none';
+  document.getElementById('gbs-ready-btn').style.display='none';
+  var randomBtn=document.getElementById('gbs-random-btn');
+  if(randomBtn) randomBtn.style.display='none';
+  var setupBtns=document.getElementById('gbs-setup-btns');
+  if(setupBtns) setupBtns.style.display='none';
+  gbsRenderBoards();
+}
+
+// ── Ready (FIXED: не перезаписує вже збережену дошку, скидає таймер) ──
+async function gbsMarkReady(){
+  if(gbsIsReady){showToast('Board already locked','err');return;}
+  if(gbsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all '+BS_SHIP_SIZES.length+' ships first!','err');return;}
+  var uq={};gbsMyShips.forEach(function(x){uq[x]=1;});
+  if(Object.keys(uq).length!==20){
+    showToast('Board error — press Clear and place ships again','err');
+    return;
+  }
+  if(!gbsGameId){showToast('No active game','err');return;}
+  var btn=document.getElementById('gbs-ready-btn'); if(btn) btn.disabled=true;
+  gbsAddLog('Saving board (protected)...');
+  try{
+    var res=await ogTimeout(gbsEdge('saveBoard',{board:gbsMyShips}),25000);
+    if(res.alreadySaved&&res.myBoard){
+      gbsMyShips=res.myBoard;
+      showToast('Your board was already saved — restored it','ok');
+    } else {
+      showToast('✓ Ships locked!','ok');
+    }
+    gbsLockBoard();
+    document.getElementById('gbs-status').textContent='⏳ Locked! Waiting for opponent...';
+    gbsAddLog('✓ Board saved on secure server. Waiting for opponent...');
+    if(res.state) gbsHandleUpdate(res.state);
+  }catch(e){
+    showToast('Save failed: '+(e.message||'').slice(0,60),'err');
+    gbsAddLog('⚠ Save failed: '+(e.message||'').slice(0,120));
+  }finally{
+    if(btn&&!gbsIsReady) btn.disabled=false;
+  }
+}
+
+// ── Fire (FIXED: синхронізація з сервером, правильний хід після влучання) ──
+async function gbsFire(idx){
+  if(gbsFiring){showToast('Shot in flight — wait','err');return;}
+  if(gbsGameFinished) return;
+  if(!gbsIsReady){showToast('Click Ready first!','err');return;}
+  if(!gbsMyTurn){showToast('Not your turn','err');return;}
+  if(!gbsGameId) return;
+  if(gbsMyShots[idx]!==undefined){
+    showToast('Already fired here','err');
+    // Самолікування: якщо на сервері цього пострілу НЕМА — фантом чиститься
+    gbsGameQuery().maybeSingle().then(function(pr){
+      if(pr&&pr.data){
+        try{
+          var srv=JSON.parse((gbsIsP1?pr.data.player1_shots:pr.data.player2_shots)||'{}')||{};
+          if(srv[String(idx)]===undefined){
+            delete gbsMyShots[idx];
+            gbsRenderBoards();
+            showToast('Cell unlocked — fire again','ok');
+          }
+        }catch(e){}
+      }
+    });
+    return;
+  }
+  gbsFiring=true;
+  setTimeout(function(){gbsFiring=false;},20000); // сторож: замок не зависає
+  gbsMyTurn=false; // блок від дабл-кліку, поки сервер рахує постріл
+  document.getElementById('gbs-status').textContent='🎯 Firing '+gbsCoord(idx)+'...';
+  gbsMyShots[idx]='pending';
+  gbsRenderBoards();
+  try{
+    var res=await ogTimeout(gbsEdge('fire',{cell:idx}),25000);
+    gbsMyShots[idx]=res.result;
+    gbsAddLog(res.result==='hit'?('💥 Hit! '+gbsCoord(idx)):('💧 Miss '+gbsCoord(idx)));
+    if(res.state) gbsHandleUpdate(res.state);
+    if(res.won){
+      gbsGameFinished=true;gbsMyTurn=false;
+      gbsRenderBoards();
+      document.getElementById('gbs-status').textContent='🎉 YOU WIN! Sending prize...';
+      showToast('🎉 YOU WIN! Paying out...','ok');
+      var orRes=await gbsOracle({action:'declareWinner',gameId:gbsGameId,winner:userAddr});
+      if(orRes&&orRes.success){
+        showToast('🏆 Prize sent to your wallet!','ok');
+        gbsAddLog('🏆 Payout TX: '+(orRes.tx||''));
+      } else {
+        showToast('Win saved. Payout pending — re-enter game to retry.','err');
+        gbsAddLog('⚠ Oracle: '+JSON.stringify(orRes||{}).slice(0,140));
+      }
+      var tbW=document.getElementById('gbs-timeout-btn'); if(tbW) tbW.style.display='none';
+    } else if(res.result==='hit'){
+      document.getElementById('gbs-status').textContent='💥 HIT! Shoot again!';
+    }
+  }catch(e){
+    var m=(e.message||'');
+    if(gbsMyShots[idx]==='pending') delete gbsMyShots[idx];
+    if(m.indexOf('Not your turn')<0&&m.indexOf('Already fired')<0) gbsMyTurn=true;
+    gbsRenderBoards();
+    showToast('Shot failed: '+m.slice(0,50),'err');
+    gbsAddLog('⚠ Shot failed: '+m.slice(0,120));
+  }finally{
+    gbsFiring=false;
+  }
+}
+
+function gbsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/10)+1);}
+
+// ── Realtime game update (FIXED: відновлення стану, кнопка таймауту) ──
+function gbsHandleUpdate(game){
+  if(!game||!gbsGameId) return;
+  if(game.bet_token) return;
+  // Сторож свіжості: запізніле опитування не може перетерти новіший стан
+  var _ts=game.last_move_at?new Date(game.last_move_at).getTime():0;
+  if(_ts&&_ts<gbsLastStateTs) return;
+  if(_ts) gbsLastStateTs=_ts; // тестнет-рядок з таким самим id — ігноруємо
+  if(game.status==='finished'){
+    gbsGameFinished=true;gbsMyTurn=false;
+    var won=(game.winner_wallet||'').toLowerCase()===userAddr.toLowerCase();
+    document.getElementById('gbs-status').textContent=won?'🎉 YOU WIN!':'💀 You lost!';
+    if(!won&&game.winner_wallet) showToast('💀 You lost!','err');
+    var tbF=document.getElementById('gbs-timeout-btn'); if(tbF) tbF.style.display='none';
+    gbsRenderBoards();
+    return;
+  }
+  var apply=function(isP1){
+    gbsIsP1=isP1;
+    // Відновити мою дошку, якщо локальний стан загубився
+    if(!gbsIsReady){
+      var myB=[];
+      try{myB=JSON.parse((isP1?game.player1_board:game.player2_board)||'[]')||[];}catch(e){}
+      if(myB.length>0){ gbsMyShips=myB; gbsLockBoard(); }
+    }
+    // Синхронізація моїх пострілів
+    try{
+      var mine=JSON.parse((isP1?game.player1_shots:game.player2_shots)||'{}')||{};
+      var pend={};Object.keys(gbsMyShots).forEach(function(k){if(gbsMyShots[k]==='pending')pend[k]='pending';});
+      gbsMyShots=gbsCleanShots(Object.assign({},mine,pend)); // правда сервера + постріл у польоті, сміття викидається
+    }catch(e){}
+    // Постріли суперника + лог нових
+    var oldEn=gbsEnemyShots||{};
+    var newEn={};
+    try{newEn=gbsCleanShots(JSON.parse((isP1?game.player2_shots:game.player1_shots)||'{}'));}catch(e){}
+    Object.keys(newEn).forEach(function(k){
+      if(oldEn[k]===undefined){
+        gbsAddLog(newEn[k]==='hit'?('💥 Enemy hit '+gbsCoord(Number(k))+'!'):('💧 Enemy missed '+gbsCoord(Number(k))));
+      }
+    });
+    gbsEnemyShots=newEn;
+    var myTurn=(game.current_turn||'').toLowerCase()===userAddr.toLowerCase();
+    var bothReady=!!(game.player1_board&&game.player2_board);
+    var tb=document.getElementById('gbs-timeout-btn');
+    if(bothReady&&gbsIsReady){
+      gbsMyTurn=myTurn;
+      document.getElementById('gbs-status').textContent=myTurn?'⚔️ YOUR TURN — fire!':"⏳ Opponent's turn...";
+      var enLabel=document.getElementById('gbs-enemy-label');
+      if(enLabel) enLabel.textContent=myTurn?'ENEMY FLEET — CLICK TO FIRE!':'Enemy Fleet';
+      if(tb) tb.style.display=myTurn?'none':'inline-block';
+    } else if(!bothReady&&gbsIsReady){
+      document.getElementById('gbs-status').textContent='⏳ Waiting for opponent to place ships...';
+    } else if(bothReady&&!gbsIsReady){
+      document.getElementById('gbs-status').textContent='⏳ Opponent ready! Place your ships and click Ready.';
+    }
+    gbsRenderBoards();
+  };
+  if(gbsIsP1!==null){ apply(gbsIsP1); }
+  else {
+    gbsContractRead().getGame(gbsGameId).then(function(gd){
+      apply(gd.player1.toLowerCase()===userAddr.toLowerCase());
+    }).catch(function(){});
+  }
+}
+
 async function _switchToBNBChain(){
   if(!window.ethereum) return;
   // Check if already on BNB Chain
@@ -3501,6 +4566,8 @@ function showTab(tab){
   document.getElementById('view-bnblottery').style.display=tab==='bnblottery'?'block':'none';
   document.getElementById('view-bnbbattle').style.display=tab==='bnbbattle'?'block':'none';
   if(tab==='bnbbattle') initBNBBattle();
+  document.getElementById('view-goldbattle').style.display=tab==='goldbattle'?'block':'none';
+  if(tab==='goldbattle') initGoldBattle();
   // Scroll to top on mobile when switching tabs
   window.scrollTo({top:0,behavior:'smooth'});
   // Desktop sidebar
