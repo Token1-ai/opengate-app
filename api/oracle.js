@@ -1,14 +1,18 @@
 /**
- * OpenGate Battleship Oracle — v3 (МАСШТАБОВАНИЙ)
+ * OpenGate Battleship Oracle — v4 (SECURITY FIX)
  * File: api/oracle.js
  *
- * Ключова зміна: oracle робить лише 1 транзакцію на гру.
- *  - declareWinner — виплата переможцю (всі кораблі потоплені, перевіряється)
- *  - claimTimeout  — суперник AFK 5+ хвилин → переможець отримує банк
- *    (перевірка AFK по базі, без жодних щоходових транзакцій)
- *
- * updateTurn / resetTimer залишені для сумісності зі старим контрактом v3,
- * але новий фронтенд їх більше не викликає.
+ * Зміни проти v3:
+ *  1. 🔴 ФІКС КРАДІЖКИ: claimTimeout без рядка в БД більше НЕ платить.
+ *     (Стара логіка рахувала 5 хв від створення КІМНАТИ on-chain — творець
+ *      кімнати, що провисіла в лобі 5+ хв, міг забрати ставку суперника
+ *      в ту ж секунду після приєднання. Тепер: спочатку розстав кораблі —
+ *      це створює рядок у БД, і таймер іде від серверного created_at.)
+ *  2. 🟠 Ідемпотентний повтор виплати: якщо транзакція вже пройшла on-chain,
+ *     а база не оновилась (обрив/таймаут) — повторний виклик синхронізує БД
+ *     і повертає success замість вічного "Game not in playing status".
+ *  3. 🟡 Ротація 4 BSC RPC (як у фронтенді) + maxDuration 60с для Vercel.
+ *  4. 🟡 Виплата по таймауту тепер пише winner_wallet у БД.
  *
  * Env vars у Vercel:
  *   ORACLE_PRIVATE_KEY, BATTLESHIP_CONTRACT (адреса v4!), ORACLE_SECRET,
@@ -29,8 +33,15 @@ const ABI_V3_GAME = [
   'function games(uint256) external view returns (address player1, address player2, uint256 betAmount, uint8 token, uint8 status, address winner, uint256 createdAt, uint256 lastMoveAt, uint8 currentTurn)',
 ];
 
-const RPC = 'https://bsc-dataseed.binance.org/';
-const STATUS_PLAYING = 1;
+// Ротація публічних RPC — якщо один лагає, наступний виклик піде на інший
+const RPCS = [
+  'https://bsc-dataseed.binance.org/',
+  'https://bsc-dataseed1.defibit.io/',
+  'https://bsc-dataseed1.ninicoin.io/',
+  'https://bsc-dataseed2.binance.org/',
+];
+const STATUS_PLAYING  = 1;
+const STATUS_FINISHED = 2;
 const SHIP_CELLS = 20;
 const AFK_MS = 5 * 60 * 1000; // 5 хвилин
 
@@ -55,7 +66,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const provider = new ethers.JsonRpcProvider(RPC);
+    const rpc      = RPCS[Math.floor(Math.random() * RPCS.length)];
+    const provider = new ethers.JsonRpcProvider(rpc);
     const wallet   = new ethers.Wallet(process.env.ORACLE_PRIVATE_KEY, provider);
     const contract = new ethers.Contract(process.env.BATTLESHIP_CONTRACT, ABI, wallet);
 
@@ -73,11 +85,31 @@ module.exports = async function handler(req, res) {
     }
     const p1 = onChain.player1.toLowerCase();
     const p2 = onChain.player2.toLowerCase();
+    const onChainWinner = (onChain.winner || ethers.ZeroAddress).toLowerCase();
 
     // Залізний ліміт ставки: ігри понад $50 не обслуговуються
     const MAX_BET = 50n * 10n ** 18n;
     if (BigInt(onChain.betAmount) > MAX_BET) {
       return res.status(400).json({ error: 'Max stake is $50 — game not served' });
+    }
+
+    // ІДЕМПОТЕНТНІСТЬ: транзакція вже пройшла on-chain, а база могла не
+    // оновитись (обрив мережі / таймаут Vercel). Синхронізуємо і кажемо success.
+    async function syncIfAlreadyPaid(addr) {
+      if (Number(onChain.status) !== STATUS_FINISHED) return null;
+      if (onChainWinner !== addr) return null;
+      await supabase
+        .from('battleship_games')
+        .update({
+          status: 'finished',
+          winner_wallet: addr,
+          oracle_confirmed: true,
+          payout_at: new Date().toISOString()
+        })
+        .eq('contract_game_id', gameId)
+        .is('bet_token', null);
+      console.log(`[Oracle] Game ${gameId} — already paid on-chain to ${addr}, DB synced`);
+      return { success: true, alreadyPaid: true };
     }
 
     // Виплата + оновлення бази
@@ -115,6 +147,11 @@ module.exports = async function handler(req, res) {
       if (error || !game) {
         return res.status(400).json({ error: 'Game result not found in database', detail: error ? error.message : undefined });
       }
+
+      // Повторний запит після успішної виплати → синхронізуємо БД
+      const synced = await syncIfAlreadyPaid(w);
+      if (synced) return res.status(200).json(synced);
+
       if (Number(onChain.status) !== STATUS_PLAYING) {
         return res.status(400).json({ error: 'Game not in playing status on-chain' });
       }
@@ -128,7 +165,7 @@ module.exports = async function handler(req, res) {
       }
 
       // Головна перевірка: всі клітинки переможеного влучені.
-      // Дошки тепер живуть у закритій таблиці battleship_boards (анти-чит);
+      // Дошки живуть у закритій таблиці battleship_boards (анти-чит);
       // для старих ігор — fallback на колонки головного рядка.
       const winnerIsP1  = w === p1;
       let boardsRow = null;
@@ -164,11 +201,16 @@ module.exports = async function handler(req, res) {
       }
       const c = claimer.toLowerCase();
 
-      if (Number(onChain.status) !== STATUS_PLAYING) {
-        return res.status(400).json({ error: 'Game not in playing status on-chain' });
-      }
       if (c !== p1 && c !== p2) {
         return res.status(400).json({ error: 'Claimer is not a player in this game' });
+      }
+
+      // Повторний запит після успішної виплати → синхронізуємо БД
+      const synced = await syncIfAlreadyPaid(c);
+      if (synced) return res.status(200).json(synced);
+
+      if (Number(onChain.status) !== STATUS_PLAYING) {
+        return res.status(400).json({ error: 'Game not in playing status on-chain' });
       }
 
       const { data: game, error } = await supabase
@@ -183,21 +225,17 @@ module.exports = async function handler(req, res) {
       }
 
       if (!game) {
-        // Рядка ще нема — ніхто не розставив кораблі. 5 хв від створення on-chain.
-        const createdMs = Number(onChain.createdAt) * 1000;
-        if (Date.now() - createdMs < AFK_MS) {
-          return res.status(400).json({ error: 'Opponent still has time' });
-        }
-        // Без рядка не знаємо, хто реально грав — платимо claimer'у
-        // (обидва бездіяли; перший, хто прийшов, забирає)
-        const tx = await contract.declareWinner(gameId, claimer, { gasLimit: 250_000 });
-        await tx.wait();
-        console.log(`[Oracle] Game ${gameId} — timeout (no db row) — winner ${claimer} — tx ${tx.hash}`);
-        return res.status(200).json({ success: true, tx: tx.hash });
+        // 🔴 SECURITY FIX (v4): раніше тут була виплата "першому, хто прийшов"
+        // з таймером від створення КІМНАТИ on-chain. Кімната, що провисіла
+        // в лобі 5+ хвилин, дозволяла творцю вкрасти ставку суперника одразу
+        // після приєднання. Тепер: без рядка в БД виплат НЕМАЄ.
+        // Розстав кораблі — це створить рядок, і чесний 5-хвилинний таймер
+        // піде від серверного created_at (гарантовано ПІСЛЯ приєднання).
+        return res.status(400).json({ error: 'Place your ships first — this starts the AFK timer' });
       }
 
       if (!game.player1_board || !game.player2_board) {
-        // Суперник не розставив кораблі → 5 хв від створення гри
+        // Суперник не розставив кораблі → 5 хв від створення рядка гри
         const created = new Date(game.created_at || 0).getTime();
         if (Date.now() - created < AFK_MS) {
           return res.status(400).json({ error: 'Opponent still has time to place ships' });
@@ -220,7 +258,7 @@ module.exports = async function handler(req, res) {
         }
       }
 
-      const hash = await payout(claimer, game.id, { status: 'finished' });
+      const hash = await payout(claimer, game.id, { status: 'finished', winner_wallet: c });
       return res.status(200).json({ success: true, tx: hash });
     }
 
@@ -241,3 +279,6 @@ module.exports = async function handler(req, res) {
     return res.status(500).json({ error: 'Oracle error', detail: err.message });
   }
 };
+
+// Vercel: даємо функції до 60с — tx.wait() на BSC інколи довший за дефолтні 10с
+module.exports.config = { maxDuration: 60 };
