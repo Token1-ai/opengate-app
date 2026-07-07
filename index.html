@@ -2829,7 +2829,27 @@ async function bnbbsJoin(gameId){
 }
 
 // ── Кнопка "опонент AFK" (claimMoveTimeout) ──
+function bnbbsResync(){
+  if(!bnbbsGameId) return;
+  showToast('Resyncing with server...','ok');
+  bnbbsMyShots={};bnbbsEnemyShots={};bnbbsLastStateTs=0;bnbbsFiring=false;
+  bnbbsGameQuery().maybeSingle().then(function(pr){
+    if(pr&&pr.data){bnbbsHandleUpdate(pr.data);showToast('✓ Synced','ok');}
+  });
+}
 function bnbbsEnsureTimeoutBtn(){
+  if(!document.getElementById('bnbbs-resync-btn')){
+    var hdrR=document.querySelector('#bnbbs-gameboard > div:first-child');
+    if(hdrR){
+      var rb2=document.createElement('button');
+      rb2.id='bnbbs-resync-btn';
+      rb2.textContent='🔄';
+      rb2.title='Resync game state with server';
+      rb2.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;margin-right:8px;';
+      rb2.onclick=bnbbsResync;
+      hdrR.insertBefore(rb2,hdrR.lastElementChild);
+    }
+  }
   if(document.getElementById('bnbbs-timeout-btn')) return;
   var hdr=document.querySelector('#bnbbs-gameboard > div:first-child');
   if(!hdr) return;
@@ -3209,7 +3229,23 @@ async function bnbbsFire(idx){
   if(!bnbbsIsReady){showToast('Click Ready first!','err');return;}
   if(!bnbbsMyTurn){showToast('Not your turn','err');return;}
   if(!bnbbsGameId) return;
-  if(bnbbsMyShots[idx]!==undefined){showToast('Already fired here','err');return;}
+  if(bnbbsMyShots[idx]!==undefined){
+    showToast('Already fired here','err');
+    // Самолікування: якщо на сервері цього пострілу НЕМА — фантом чиститься
+    bnbbsGameQuery().maybeSingle().then(function(pr){
+      if(pr&&pr.data){
+        try{
+          var srv=JSON.parse((bnbbsIsP1?pr.data.player1_shots:pr.data.player2_shots)||'{}')||{};
+          if(srv[String(idx)]===undefined){
+            delete bnbbsMyShots[idx];
+            bnbbsRenderBoards();
+            showToast('Cell unlocked — fire again','ok');
+          }
+        }catch(e){}
+      }
+    });
+    return;
+  }
   bnbbsFiring=true;
   setTimeout(function(){bnbbsFiring=false;},20000); // сторож: замок не зависає
   bnbbsMyTurn=false; // блок від дабл-кліку, поки сервер рахує постріл
