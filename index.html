@@ -1116,7 +1116,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-11</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-12</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1246,7 +1246,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-3</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-4</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="gbs-stake-display"></span>
               </div>
               <button onclick="leaveGoldGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2557,7 +2557,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-11';
+var OG_BS_BUILD='BS-12';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -3564,7 +3564,7 @@ async function gbsOracle(body){
   }catch(e){ console.warn('[Oracle] fetch failed:',e.message); return {error:e.message}; }
 }
 // ── EDGE FUNCTION: захищена гра (анти-чит) ──
-var EDGE_BS_URL=SUPABASE_URL+'/functions/v1/battleship-gold';
+var EDGE_GBS_URL=SUPABASE_URL+'/functions/v1/battleship-gold';
 async function gbsGetSig(){
   var key='ogbs_sig_'+gbsGameId+'_'+(userAddr||'').toLowerCase();
   var s=sessionStorage.getItem(key);
@@ -3579,7 +3579,7 @@ async function gbsGetSig(){
 async function gbsEdge(action,extra){
   var sig=await gbsGetSig();
   var body=Object.assign({action:action,gameId:gbsGameId,wallet:userAddr,signature:sig},extra||{});
-  var r=await fetch(EDGE_BS_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},body:JSON.stringify(body)});
+  var r=await fetch(EDGE_GBS_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},body:JSON.stringify(body)});
   var j=null;try{j=await r.json();}catch(e){}
   if(!r.ok||(j&&j.error)) throw new Error((j&&j.error)||('HTTP '+r.status));
   return j||{};
