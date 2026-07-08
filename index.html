@@ -1116,7 +1116,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-14</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-15</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1246,7 +1246,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-6</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-7</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="gbs-stake-display"></span>
               </div>
               <button onclick="leaveGoldGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2557,7 +2557,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-14';
+var OG_BS_BUILD='BS-15';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -3259,20 +3259,27 @@ function bnbbsPlaceShip(idx){
   bnbbsSelectedSize=0;
   bnbbsRenderBoards();bnbbsBuildShipBtns();
 }
+var bnbbsHoverCells=[];
 function bnbbsHover(idx,enter){
   if(bnbbsIsReady||!bnbbsSelectedSize) return;
-  for(var i=0;i<100;i++){
-    var c=document.getElementById('bnbbs-my-'+i);
-    if(c&&!bnbbsMyShips.includes(i)){c.style.background='var(--bg3)';c.style.border='1px solid var(--border)';}
+  // Швидко: чистимо лише раніше підсвічені клітинки, а не всі 100
+  for(var h=0;h<bnbbsHoverCells.length;h++){
+    var pi=bnbbsHoverCells[h];
+    if(bnbbsMyShips.includes(pi)) continue;
+    var pc=document.getElementById('bnbbs-my-'+pi);
+    if(pc){pc.style.background='var(--bg3)';pc.style.border='1px solid var(--border)';}
   }
+  bnbbsHoverCells=[];
   if(!enter) return;
   var cells=bnbbsGetCells(idx,bnbbsSelectedSize,bnbbsOrientation==='h');
   if(!cells) return;
   var ok=bnbbsIsValid(cells);
   cells.forEach(function(ci){
+    if(bnbbsMyShips.includes(ci)) return;
     var c=document.getElementById('bnbbs-my-'+ci);
-    if(c&&!bnbbsMyShips.includes(ci)) c.style.background=ok?'rgba(38,217,138,0.4)':'rgba(255,77,77,0.4)';
+    if(c) c.style.background=ok?'rgba(38,217,138,0.4)':'rgba(255,77,77,0.4)';
   });
+  bnbbsHoverCells=cells.slice();
 }
 function bnbbsToggleOrientation(){
   bnbbsOrientation=bnbbsOrientation==='h'?'v':'h';
@@ -3457,11 +3464,12 @@ function bnbbsHandleUpdate(game){
   }
   var apply=function(isP1){
     bnbbsIsP1=isP1;
+    var didRestore=false;
     // Відновити мою дошку, якщо локальний стан загубився
     if(!bnbbsIsReady){
       var myB=[];
       try{myB=JSON.parse((isP1?game.player1_board:game.player2_board)||'[]')||[];}catch(e){}
-      if(myB.length>0){ bnbbsMyShips=myB; bnbbsLockBoard(); }
+      if(myB.length>0){ bnbbsMyShips=myB; bnbbsLockBoard(); didRestore=true; }
     }
     // Синхронізація моїх пострілів
     try{
@@ -3493,7 +3501,9 @@ function bnbbsHandleUpdate(game){
     } else if(bothReady&&!bnbbsIsReady){
       document.getElementById('bnbbs-status').textContent='⏳ Opponent ready! Place your ships and click Ready.';
     }
-    bnbbsRenderBoards();
+    // Під час розкладки (ще не Ready) НЕ перемальовуємо з опитування —
+    // прибирає блимання корабля при кліку.
+    if(bnbbsIsReady||didRestore) bnbbsRenderBoards();
   };
   if(bnbbsIsP1!==null){ apply(bnbbsIsP1); }
   else {
