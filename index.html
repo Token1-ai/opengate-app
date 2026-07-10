@@ -599,17 +599,17 @@ textarea.form-inp{resize:vertical;min-height:80px;}
     <div id="walletMobile" style="display:none;">
       <div style="text-align:center;margin-bottom:24px;">
         <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Підключити гаманець</div>
-        <div style="font-size:14px;color:var(--muted);line-height:1.6;">Рекомендовано: WalletConnect — гаманець підпише транзакцію, і ти лишишся тут, у застосунку (без перекидання назовсім).</div>
+        <div style="font-size:14px;color:var(--muted);line-height:1.6;">Рекомендовано: відкрити сайт усередині застосунку гаманця — швидше і без переходів туди-сюди.</div>
       </div>
-      <button onclick="document.getElementById('walletModal').classList.remove('open');connectViaWalletConnect();" style="width:100%;padding:18px;border-radius:14px;background:var(--gold);color:#08090C;font-size:17px;font-weight:700;border:none;cursor:pointer;margin-bottom:14px;-webkit-tap-highlight-color:transparent;">
-        🔗 Підключити через WalletConnect
-      </button>
-      <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;">або відкрити сайт усередині застосунку гаманця:</div>
-      <button onclick="window.location.href='https://metamask.app.link/dapp/opengate.bond'" style="width:100%;padding:15px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:10px;-webkit-tap-highlight-color:transparent;">
+      <button onclick="window.location.href='https://metamask.app.link/dapp/opengate.bond'" style="width:100%;padding:18px;border-radius:14px;background:var(--gold);color:#08090C;font-size:17px;font-weight:700;border:none;cursor:pointer;margin-bottom:12px;-webkit-tap-highlight-color:transparent;">
         🦊 Відкрити в MetaMask
       </button>
-      <button onclick="window.location.href='https://link.trustwallet.com/open_url?coin_id=60&url=https://opengate.bond'" style="width:100%;padding:15px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+      <button onclick="window.location.href='https://link.trustwallet.com/open_url?coin_id=60&url=https://opengate.bond'" style="width:100%;padding:15px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:15px;font-weight:600;cursor:pointer;margin-bottom:14px;-webkit-tap-highlight-color:transparent;">
         🛡 Відкрити в Trust Wallet
+      </button>
+      <div style="text-align:center;font-size:12px;color:var(--muted);margin-bottom:12px;">або лишитись у цьому браузері (повільніше, потребує підтвердження в іншому застосунку):</div>
+      <button onclick="document.getElementById('walletModal').classList.remove('open');connectViaWalletConnect();" style="width:100%;padding:14px;border-radius:14px;background:none;border:1px dashed var(--border);color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">
+        🔗 WalletConnect
       </button>
     </div>
   </div>
@@ -1138,7 +1138,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-26</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-27</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1268,7 +1268,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-18</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-19</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="gbs-stake-display"></span>
               </div>
               <button onclick="leaveGoldGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2626,7 +2626,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-26';
+var OG_BS_BUILD='BS-27';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
