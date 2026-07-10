@@ -1,4 +1,4 @@
-const CACHE_NAME = 'opengate-v6';
+const CACHE_NAME = 'opengate-v7';
 
 // Cache ONLY icons and manifest — NOT index.html!
 // index.html must always be fetched fresh from the network so users
@@ -55,6 +55,14 @@ self.addEventListener('fetch', e => {
   // Skip external APIs — always fresh
   if (BYPASS_HOSTS.some(h => url.host.includes(h))) return;
   if (!url.protocol.startsWith('http')) return;
+
+  // WalletConnect library — Network First (велика й критична; не тримаємо стару копію)
+  if (url.pathname === '/wc.js') {
+    e.respondWith(
+      fetch(e.request).catch(() => caches.match(e.request))
+    );
+    return;
+  }
 
   // index.html and / — Network First (always fresh from Vercel)
   // Falls back to cache only if offline
