@@ -522,6 +522,9 @@ textarea.form-inp{resize:vertical;min-height:80px;}
   .btn-gold,.btn-outline{width:100%;max-width:320px;text-align:center;}
 }
 
+.post-av{position:relative;}
+.og-dot{position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:transparent;border:2px solid var(--bg2);box-sizing:border-box;pointer-events:none;transition:background .2s;z-index:2;}
+.og-dot.is-online{background:var(--green);}
 </style>
 </head>
 <body>
@@ -532,7 +535,7 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 <div class="modal-overlay" id="mintModal">
   <div class="modal">
     <button class="modal-close-btn" onclick="closeMintModal()">✕</button>
-    <div class="modal-title" id="mintTitle">Mint Gold Pass</div>
+    <div class="modal-title" id="mintTitle">Buy Gold Pass</div>
     <div class="modal-sub" id="mintSub">One-time purchase. Yours forever on BNB Chain.</div>
     <div class="modal-price-row"><div class="modal-price-label">Fixed price (USD)</div><div class="modal-price-val" id="mintUsd">$9.00</div></div>
     <div class="modal-price-row"><div class="modal-price-label">You pay in BNB</div><div class="modal-price-val" id="mintBnb">Loading...</div></div>
@@ -795,7 +798,7 @@ async function smartConnectWallet(){
             <li><span class="feat-icon">✓</span>+30% GATE rewards</li>
             <li><span class="feat-icon">✓</span>Early access to features</li>
           </ul>
-          <button class="pass-mint-btn" onclick="openMintModal('silver')">Mint Silver Pass</button>
+          <button class="pass-mint-btn" onclick="openMintModal('silver')">Buy Silver Pass</button>
         </div>
         <div class="pass-card gold fade">
           <div class="pass-top"><div class="pass-tier">🥇 Gold</div><div class="pass-best">Best value</div></div>
@@ -809,7 +812,7 @@ async function smartConnectWallet(){
             <li><span class="feat-icon">✓</span>All new features FREE forever</li>
             <li><span class="feat-icon">✓</span>Free token creation on mainnet</li>
           </ul>
-          <button class="pass-mint-btn" onclick="openMintModal('gold')">Mint Gold Pass</button>
+          <button class="pass-mint-btn" onclick="openMintModal('gold')">Buy Gold Pass</button>
         </div>
       </div>
     </div>
@@ -1138,7 +1141,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-28</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-30</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2333,6 +2336,32 @@ const STAKING_ABI = [
 const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNmY5ZWM5OC0wNmMyLTRiYjYtOWE0OS1hYzkyZmRiY2YwMzIiLCJlbWFpbCI6ImJ0Y2ZpbHNzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI3YTE4OTZlZjgyNDAwYzA2NTI4NyIsInNjb3BlZEtleVNlY3JldCI6IjM5MjMzNWVmYmQyYzJiYzZlNDk5NDIzYzk1YzMxZWM5NDA3NzgxMjhkYmZiNTE1NzQyODkzMmU4OWFkY2Y1YzciLCJleHAiOjE4MTI1NjgzMzF9.WkiIwhZqxvx3hz_xymtuv2257hVdRg-Bxo_1Vee3fl0';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* ── ONLINE PRESENCE — Facebook-style green dot, ZERO DB load (Supabase Realtime Presence) ── */
+let onlineWallets = new Set();
+let ogPresenceChannel = null;
+let _ogDotsTimer = null;
+function applyOnlineDots(){
+  document.querySelectorAll('[data-og-online]').forEach(function(el){
+    var w=(el.getAttribute('data-og-online')||'').toLowerCase();
+    if(w && onlineWallets.has(w)) el.classList.add('is-online');
+    else el.classList.remove('is-online');
+  });
+}
+function scheduleOnlineDots(){ clearTimeout(_ogDotsTimer); _ogDotsTimer=setTimeout(applyOnlineDots,120); }
+function startPresence(){
+  if(!userAddr || ogPresenceChannel) return;
+  ogPresenceChannel = sb.channel('online-users',{config:{presence:{key:userAddr}}});
+  ogPresenceChannel.on('presence',{event:'sync'},function(){
+    var st=ogPresenceChannel.presenceState();
+    onlineWallets=new Set(Object.keys(st).map(function(k){return k.toLowerCase();}));
+    applyOnlineDots();
+  }).subscribe(function(status){
+    if(status==='SUBSCRIBED') ogPresenceChannel.track({at:Date.now()});
+  });
+  try{ new MutationObserver(scheduleOnlineDots).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+  window.addEventListener('beforeunload',function(){ try{ogPresenceChannel.untrack();}catch(e){} });
+  console.log('%c[OpenGate] Presence online-status v1','color:#26D98A;font-weight:bold');
+}
 let provider, signer, userAddr, currentUser, mintPrice, mintType;
 
 // ── RPC PROVIDER ──
@@ -2626,7 +2655,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-28';
+var OG_BS_BUILD='BS-30';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -4585,6 +4614,7 @@ async function ensureUser(){
   const {data} = await sb.from('users').select('*').eq('wallet',userAddr).single();
   if(!data){ const {data:u} = await sb.from('users').insert({wallet:userAddr}).select().single(); currentUser=u; }
   else currentUser=data;
+  startPresence();
   updateCompAv();
   // Auto-detect pass type from BNB Chain
   checkPassType();
@@ -4949,7 +4979,7 @@ function renderPost(post,liked){
   const name=u.username||sAddr(post.author_wallet);
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
-  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${av}</div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${linkify(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
+  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;position:relative;">${av}<span class="og-dot" data-og-online="${(post.author_wallet||'').toLowerCase()}"></span></div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${linkify(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
           <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
           ${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')\" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}
           ${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}
@@ -5389,11 +5419,11 @@ async function saveProfile(){
 async function openMintModal(type){
   mintType=type;
   const isGold=type==='gold';
-  document.getElementById('mintTitle').textContent=isGold?'Mint Gold Pass 🥇':'Mint Silver Pass 🥈';
+  document.getElementById('mintTitle').textContent=isGold?'Buy Gold Pass 🥇':'Buy Silver Pass 🥈';
   document.getElementById('mintSub').textContent=isGold?'Lifetime VIP. Unlimited posts. 2× GATE rewards.':'20 posts/day. +30% GATE rewards. Early access.';
   document.getElementById('mintUsd').textContent=isGold?'$9.00':'$0.90';
   document.getElementById('mintExecBtn').className=`modal-exec-btn ${isGold?'gold':'silver'}-btn`;
-  document.getElementById('mintExecBtn').textContent=userAddr?'Mint Now':'Connect Wallet First';
+  document.getElementById('mintExecBtn').textContent=userAddr?'Buy Now':'Connect Wallet First';
   document.getElementById('mintBnb').textContent='Loading...';
   document.getElementById('mintModal').classList.add('open');
   try{
@@ -5416,13 +5446,13 @@ async function executeMint(){
     btn.textContent='Confirm in MetaMask...';btn.disabled=true;
     const val=mintPrice*101n/100n;
     const tx=await c.mint(1,{value:val});
-    btn.textContent='Minting...';
+    btn.textContent='Buying...';
     showToast('Transaction sent...','ok');
     await tx.wait();
     showToast(`${mintType==='gold'?'Gold':'Silver'} Pass minted! 🎉`,'ok');
     closeMintModal();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
-  btn.textContent='Mint Now';btn.disabled=false;
+  btn.textContent='Buy Now';btn.disabled=false;
 }
 
 // ── FAUCET ──
@@ -7402,7 +7432,7 @@ async function loadConversations(){
       row.onmouseout=function(){this.style.background='';};
       row.onclick=(function(w){return function(){openDM(w);};})(i.wallet);
       const avD=document.createElement('div');avD.style.cssText='width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;';
-      if(i.user&&i.user.avatar_url){const img=document.createElement('img');img.src=i.user.avatar_url;img.style.cssText='width:100%;height:100%;object-fit:cover;';avD.appendChild(img);}else avD.textContent='🧑';
+      if(i.user&&i.user.avatar_url){const img=document.createElement('img');img.src=i.user.avatar_url;img.style.cssText='width:100%;height:100%;object-fit:cover;';avD.appendChild(img);}else avD.textContent='🧑';avD.style.position='relative';var _od=document.createElement('span');_od.className='og-dot';_od.setAttribute('data-og-online',(i.wallet||'').toLowerCase());avD.appendChild(_od);
       const info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
       info.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:14px;font-weight:700;">'+esc(i.user&&i.user.username?i.user.username:sAddr(i.wallet))+'</span><span style="font-size:11px;color:var(--muted);">'+tAgo(i.last&&i.last.created_at?i.last.created_at:'')+'</span></div><div style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(i.last&&i.last.content?i.last.content:'')+'</div>';
       row.appendChild(avD);row.appendChild(info);
