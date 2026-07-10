@@ -522,9 +522,28 @@ textarea.form-inp{resize:vertical;min-height:80px;}
   .btn-gold,.btn-outline{width:100%;max-width:320px;text-align:center;}
 }
 
-.post-av{position:relative;}
-.og-dot{position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:transparent;border:2px solid var(--bg2);box-sizing:border-box;pointer-events:none;transition:background .2s;z-index:2;}
-.og-dot.is-online{background:var(--green);}
+.post-av{position:relative;overflow:visible;}
+.post-av img{border-radius:50%;}
+.og-dot{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:var(--green);border:2.5px solid var(--bg2);box-sizing:border-box;pointer-events:none;z-index:3;display:none;}
+.og-dot.is-online{display:block;}
+.lobby-offline{display:none;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;}
+[data-lobby-off="1"]{opacity:.5;}
+[data-lobby-off="1"] .lobby-join{display:none;}
+[data-lobby-off="1"] .lobby-offline{display:inline-flex;}
+.rc-overlay{position:fixed;inset:0;z-index:1200;background:rgba(0,0,0,.62);display:flex;align-items:center;justify-content:center;padding:20px;}
+.rc-box{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:26px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.5);}
+.rc-title{font-size:19px;font-weight:800;margin-bottom:6px;}
+.rc-sub{font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
+.rc-count{font-size:34px;font-weight:800;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:16px;}
+.rc-row{display:flex;gap:10px;}
+.rc-btn{flex:1;padding:13px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;border:none;}
+.rc-accept{background:var(--green);color:#08090C;}
+.rc-decline{background:rgba(255,77,77,.12);color:var(--red);border:1px solid rgba(255,77,77,.35);}
+.rc-cancel{background:var(--bg3);color:var(--muted);border:1px solid var(--border);width:100%;}
+.rc-spin{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;margin:0 auto 14px;animation:rcspin .8s linear infinite;}
+@keyframes rcspin{to{transform:rotate(360deg);}}
+.prof-dot{width:16px;height:16px;right:2px;bottom:2px;}
+.dm-dot{width:9px;height:9px;right:-11px;bottom:1px;border-width:2px;}
 </style>
 </head>
 <body>
@@ -1141,7 +1160,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-30</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-32</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2346,6 +2365,15 @@ function applyOnlineDots(){
     if(w && onlineWallets.has(w)) el.classList.add('is-online');
     else el.classList.remove('is-online');
   });
+  applyLobbyPresence();
+}
+function applyLobbyPresence(){
+  var ready=onlineWallets.size>0; // fail-open until presence syncs
+  document.querySelectorAll('[data-lobby-creator]').forEach(function(row){
+    var w=(row.getAttribute('data-lobby-creator')||'').toLowerCase();
+    var off=ready&&w&&!onlineWallets.has(w);
+    row.setAttribute('data-lobby-off',off?'1':'0');
+  });
 }
 function scheduleOnlineDots(){ clearTimeout(_ogDotsTimer); _ogDotsTimer=setTimeout(applyOnlineDots,120); }
 function startPresence(){
@@ -2359,9 +2387,91 @@ function startPresence(){
     if(status==='SUBSCRIBED') ogPresenceChannel.track({at:Date.now()});
   });
   try{ new MutationObserver(scheduleOnlineDots).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+  startReadyInbox();
   window.addEventListener('beforeunload',function(){ try{ogPresenceChannel.untrack();}catch(e){} });
   console.log('%c[OpenGate] Presence online-status v1','color:#26D98A;font-weight:bold');
 }
+/* ── READY-CHECK — live handshake before joining a paid game (ephemeral broadcast, ZERO DB) ── */
+let rcInbox=null, rcOutgoing=null, rcIncoming=null;
+function startReadyInbox(){
+  if(!userAddr||rcInbox) return;
+  rcInbox=sb.channel('rc-'+userAddr.toLowerCase(),{config:{broadcast:{self:false}}});
+  rcInbox.on('broadcast',{event:'rc_req'},function(m){rcOnRequest(m.payload);})
+         .on('broadcast',{event:'rc_ack'},function(m){rcOnAck(m.payload);})
+         .on('broadcast',{event:'rc_cancel'},function(m){rcOnCancel(m.payload);})
+         .subscribe();
+}
+function rcBeep(){try{var ac=new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator();var g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=0.07;o.start();setTimeout(function(){o.stop();ac.close();},260);}catch(e){}}
+function rcSend(target,event,payload){
+  try{
+    var ch=sb.channel('rc-'+String(target).toLowerCase(),{config:{broadcast:{self:false}}});
+    ch.subscribe(function(st){ if(st==='SUBSCRIBED'){ ch.send({type:'broadcast',event:event,payload:payload}); setTimeout(function(){try{sb.removeChannel(ch);}catch(e){}},1500); } });
+  }catch(e){}
+}
+function rcTick(id){ var n=30; var iv=setInterval(function(){n--;var e=document.getElementById(id);if(!e){clearInterval(iv);return;}e.textContent=n;if(n<=0)clearInterval(iv);},1000); }
+function rcCloseModals(){ ['rcWaitModal','rcAskModal'].forEach(function(id){var e=document.getElementById(id);if(e)e.remove();}); }
+// ---- initiator (B) ----
+function rcRequestJoin(gameId,creator,amount,mode){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  creator=String(creator||'').toLowerCase();
+  if(creator===userAddr.toLowerCase())return;
+  if(onlineWallets.size>0 && !onlineWallets.has(creator)){showToast('Opponent is offline right now','err');return;}
+  if(rcOutgoing){showToast('Already waiting for an opponent…','err');return;}
+  var myName=(currentUser&&currentUser.username)||sAddr(userAddr);
+  rcOutgoing={game:gameId,mode:mode,creator:creator};
+  rcSend(creator,'rc_req',{from:userAddr.toLowerCase(),fromName:myName,game:gameId,mode:mode,amount:amount});
+  rcCloseModals();
+  var o=document.createElement('div');o.id='rcWaitModal';o.className='rc-overlay';
+  o.innerHTML='<div class="rc-box"><div class="rc-spin"></div><div class="rc-title">Waiting for opponent…</div><div class="rc-sub">Stake $'+esc(String(amount))+' · they have 30s to accept</div><div class="rc-count" id="rcWaitCount">30</div><button class="rc-btn rc-cancel" onclick="rcCancelOutgoing(false)">Cancel</button></div>';
+  document.body.appendChild(o); rcTick('rcWaitCount');
+  rcOutgoing.timer=setTimeout(function(){rcCancelOutgoing(true);},30000);
+}
+function rcCancelOutgoing(timedOut){
+  if(!rcOutgoing)return;
+  clearTimeout(rcOutgoing.timer);
+  rcSend(rcOutgoing.creator,'rc_cancel',{from:userAddr.toLowerCase(),game:rcOutgoing.game});
+  rcOutgoing=null; rcCloseModals();
+  showToast(timedOut?'No response — try again':'Cancelled','err');
+}
+function rcOnAck(p){
+  if(!rcOutgoing||!p||p.game!=rcOutgoing.game)return;
+  clearTimeout(rcOutgoing.timer);
+  var mode=rcOutgoing.mode, game=rcOutgoing.game;
+  rcOutgoing=null; rcCloseModals();
+  if(p.accepted){ showToast('Opponent ready — joining…','ok'); if(mode==='gold')gbsJoin(game); else bnbbsJoin(game); }
+  else showToast('Opponent declined','err');
+}
+// ---- creator (A) ----
+function rcOnRequest(p){
+  if(!p||!p.from)return;
+  if(rcIncoming)return;
+  rcIncoming={from:p.from,game:p.game,mode:p.mode};
+  rcBeep(); rcCloseModals();
+  var o=document.createElement('div');o.id='rcAskModal';o.className='rc-overlay';
+  o.innerHTML='<div class="rc-box"><div class="rc-title">⚔️ Opponent found!</div><div class="rc-sub"><b>'+esc(p.fromName||sAddr(p.from))+'</b> wants to play · Stake $'+esc(String(p.amount||''))+'</div><div class="rc-count" id="rcAskCount">30</div><div class="rc-row"><button class="rc-btn rc-accept" onclick="rcAccept()">✓ Accept</button><button class="rc-btn rc-decline" onclick="rcDecline(false)">✕ Decline</button></div></div>';
+  document.body.appendChild(o); rcTick('rcAskCount');
+  rcIncoming.timer=setTimeout(function(){rcDecline(true);},30000);
+}
+function rcAccept(){
+  if(!rcIncoming)return;
+  clearTimeout(rcIncoming.timer);
+  rcSend(rcIncoming.from,'rc_ack',{from:userAddr.toLowerCase(),game:rcIncoming.game,accepted:true});
+  rcIncoming=null; rcCloseModals();
+  showToast('Get ready — opponent is joining!','ok'); showTab('battle');
+}
+function rcDecline(timedOut){
+  if(!rcIncoming)return;
+  clearTimeout(rcIncoming.timer);
+  rcSend(rcIncoming.from,'rc_ack',{from:userAddr.toLowerCase(),game:rcIncoming.game,accepted:false});
+  rcIncoming=null; rcCloseModals();
+  if(timedOut)showToast('Missed a challenge','err');
+}
+function rcOnCancel(p){
+  if(rcIncoming&&(!p||!p.game||p.game==rcIncoming.game)){ clearTimeout(rcIncoming.timer); rcIncoming=null; rcCloseModals(); showToast('Opponent cancelled','err'); }
+}
+// per-game wrappers (explicit isolation)
+function bnbbsRequestJoin(gameId,creator,amount){ rcRequestJoin(gameId,creator,amount,'bnb'); }
+function gbsRequestJoin(gameId,creator,amount){ rcRequestJoin(gameId,creator,amount,'gold'); }
 let provider, signer, userAddr, currentUser, mintPrice, mintType;
 
 // ── RPC PROVIDER ──
@@ -2655,7 +2765,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-30';
+var OG_BS_BUILD='BS-32';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -2899,7 +3009,7 @@ async function bnbbsLoadRooms(){
       var isMe=p1===(userAddr||'').toLowerCase();
       var createdAt=Number(item.g.createdAt);
       var expired=createdAt>0&&(now-createdAt)>24*3600;
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(expired?'rgba(255,77,77,0.3)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;">'
+      return '<div '+(!isMe?('data-lobby-creator="'+p1+'" '):'')+'style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(expired?'rgba(255,77,77,0.3)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;gap:12px;">'
         +'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+av+'</div>'
         +'<div><div style="font-size:14px;font-weight:700;">'+esc(name)+'</div>'
@@ -2909,7 +3019,7 @@ async function bnbbsLoadRooms(){
         +(isMe&&expired?'<button onclick="bnbbsClaimRefund('+item.id+',event)" style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,.4);color:var(--gold);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">💰 Refund</button>':'')
         +(isMe&&!expired?'<button onclick="bnbbsCancelGame('+item.id+',event)" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;">✕ Cancel</button>':'')
         +(!isMe&&!expired?'<button onclick="openDMWith(\''+p1+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;">💬 DM</button>':'')
-        +(!isMe&&!expired?'<button onclick="bnbbsJoin('+item.id+')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button>':'')
+        +(!isMe&&!expired?'<button class="lobby-join" onclick="bnbbsRequestJoin('+item.id+',\''+p1+'\',\''+amount+'\')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button><span class="lobby-offline">⚫ offline</span>':'')
         +'</div></div>';
     }).join('');
     bnbbsCheckActiveGame();
@@ -2930,13 +3040,18 @@ async function bnbbsMatchmake(){
     var ids=await ogTimeout(c.getOpenGames(),10000);
     var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
     var tokenIdx=bnbbsToken==='USDT'?0:1;
+    var candidates=[];
     for(var i=0;i<ids.length;i++){
       var g=await c.getGame(ids[i]);
-      if(g.player1.toLowerCase()===(userAddr||'').toLowerCase()) continue;
-      if(Number(g.token)===tokenIdx&&g.betAmount===amountRaw){
-        showToast('Match found! Joining...','ok');
-        await bnbbsJoin(Number(ids[i])); return;
-      }
+      var p1=g.player1.toLowerCase();
+      if(p1===(userAddr||'').toLowerCase()) continue;
+      if(Number(g.token)===tokenIdx&&g.betAmount===amountRaw) candidates.push({id:Number(ids[i]),creator:p1});
+    }
+    var pick=candidates.find(function(x){return onlineWallets.size===0||onlineWallets.has(x.creator);})||candidates[0];
+    if(pick){
+      showToast('Match found — asking them to confirm…','ok');
+      rcRequestJoin(pick.id,pick.creator,amount.toFixed(2),'bnb');
+      return;
     }
     showToast('No match found. Creating room...','ok');
     await bnbbsCreate();
@@ -3840,7 +3955,7 @@ async function gbsLoadRooms(){
       var isMe=p1===(userAddr||'').toLowerCase();
       var createdAt=Number(item.g.createdAt);
       var expired=createdAt>0&&(now-createdAt)>24*3600;
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(expired?'rgba(255,77,77,0.3)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;">'
+      return '<div '+(!isMe?('data-lobby-creator="'+p1+'" '):'')+'style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid '+(expired?'rgba(255,77,77,0.3)':'var(--border)')+';border-radius:var(--r);margin-bottom:10px;">'
         +'<div style="display:flex;align-items:center;gap:12px;">'
         +'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+av+'</div>'
         +'<div><div style="font-size:14px;font-weight:700;">'+esc(name)+'</div>'
@@ -3850,7 +3965,7 @@ async function gbsLoadRooms(){
         +(isMe&&expired?'<button onclick="gbsClaimRefund('+item.id+',event)" style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,.4);color:var(--gold);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;">💰 Refund</button>':'')
         +(isMe&&!expired?'<button onclick="gbsCancelGame('+item.id+',event)" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;">✕ Cancel</button>':'')
         +(!isMe&&!expired?'<button onclick="openDMWith(\''+p1+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;">💬 DM</button>':'')
-        +(!isMe&&!expired?'<button onclick="gbsJoin('+item.id+')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button>':'')
+        +(!isMe&&!expired?'<button class="lobby-join" onclick="gbsRequestJoin('+item.id+',\''+p1+'\',\''+amount+'\')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button><span class="lobby-offline">⚫ offline</span>':'')
         +'</div></div>';
     }).join('');
     gbsCheckActiveGame();
@@ -3870,13 +3985,18 @@ async function gbsMatchmake(){
     var ids=await ogTimeout(c.getOpenGames(),10000);
     var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
     var tokenIdx=gbsToken==='USDT'?0:1;
+    var candidates=[];
     for(var i=0;i<ids.length;i++){
       var g=await c.getGame(ids[i]);
-      if(g.player1.toLowerCase()===(userAddr||'').toLowerCase()) continue;
-      if(Number(g.token)===tokenIdx&&g.betAmount===amountRaw){
-        showToast('Match found! Joining...','ok');
-        await gbsJoin(Number(ids[i])); return;
-      }
+      var p1=g.player1.toLowerCase();
+      if(p1===(userAddr||'').toLowerCase()) continue;
+      if(Number(g.token)===tokenIdx&&g.betAmount===amountRaw) candidates.push({id:Number(ids[i]),creator:p1});
+    }
+    var pick=candidates.find(function(x){return onlineWallets.size===0||onlineWallets.has(x.creator);})||candidates[0];
+    if(pick){
+      showToast('Match found — asking them to confirm…','ok');
+      rcRequestJoin(pick.id,pick.creator,amount.toFixed(2),'gold');
+      return;
     }
     showToast('No match found. Creating room...','ok');
     await gbsCreate();
@@ -5101,7 +5221,7 @@ async function loadProfile(wallet){
   if(u.twitter) links.push(`<a href="https://twitter.com/${u.twitter.replace('@','')}" target="_blank" style="color:var(--muted);font-size:13px;display:flex;align-items:center;gap:4px;transition:color .2s;" onmouseover="this.style.color='#1d9bf0'" onmouseout="this.style.color='var(--muted)'">𝕏 ${esc(u.twitter)}</a>`);
   el.innerHTML=`
     <div class="prof-cover" style="${coverStyle}"></div>
-    <div class="prof-av-wrap"><div class="prof-av">${av}</div></div>
+    <div class="prof-av-wrap"><div class="prof-av" style="position:relative;overflow:visible;">${av}<span class="og-dot prof-dot" data-og-online="${target}"></span></div></div>
     <div class="prof-info">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
         <div>
@@ -5129,6 +5249,7 @@ async function loadProfile(wallet){
     </div>
     <div id="profPosts"><div class="app-loader">Loading...</div></div>`;
   // Update bell button state after render
+  scheduleOnlineDots();
   const bellBtn=document.getElementById('bell-'+target);
   if(bellBtn&&isBellOn(target)){
     bellBtn.style.background='rgba(245,200,66,0.1)';
@@ -7432,7 +7553,7 @@ async function loadConversations(){
       row.onmouseout=function(){this.style.background='';};
       row.onclick=(function(w){return function(){openDM(w);};})(i.wallet);
       const avD=document.createElement('div');avD.style.cssText='width:40px;height:40px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;overflow:hidden;';
-      if(i.user&&i.user.avatar_url){const img=document.createElement('img');img.src=i.user.avatar_url;img.style.cssText='width:100%;height:100%;object-fit:cover;';avD.appendChild(img);}else avD.textContent='🧑';avD.style.position='relative';var _od=document.createElement('span');_od.className='og-dot';_od.setAttribute('data-og-online',(i.wallet||'').toLowerCase());avD.appendChild(_od);
+      if(i.user&&i.user.avatar_url){const img=document.createElement('img');img.src=i.user.avatar_url;img.style.cssText='width:100%;height:100%;object-fit:cover;';avD.appendChild(img);}else avD.textContent='🧑';avD.style.position='relative';var _od=document.createElement('span');_od.className='og-dot';_od.setAttribute('data-og-online',(i.wallet||'').toLowerCase());avD.appendChild(_od);avD.style.overflow='visible';var _im=avD.querySelector('img');if(_im)_im.style.borderRadius='50%';
       const info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';
       info.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:14px;font-weight:700;">'+esc(i.user&&i.user.username?i.user.username:sAddr(i.wallet))+'</span><span style="font-size:11px;color:var(--muted);">'+tAgo(i.last&&i.last.created_at?i.last.created_at:'')+'</span></div><div style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(i.last&&i.last.content?i.last.content:'')+'</div>';
       row.appendChild(avD);row.appendChild(info);
@@ -7450,7 +7571,8 @@ async function openDM(wallet){
   document.getElementById('convView').style.display='flex';
   document.getElementById('dmBackBtn').style.display='block';
   const {data:user}=await sb.from('users').select('username').eq('wallet',wallet).single();
-  document.getElementById('dmTitle').textContent='💬 '+(user?.username||sAddr(wallet));
+  document.getElementById('dmTitle').innerHTML='💬 <span style="position:relative;display:inline-block;">'+esc(user?.username||sAddr(wallet))+'<span class="og-dot dm-dot" data-og-online="'+wallet.toLowerCase()+'"></span></span>';
+  scheduleOnlineDots();
   loadMessages();
   await sb.from('messages').update({read:true}).eq('from_wallet',wallet).eq('to_wallet',userAddr);
   // Realtime for messages
