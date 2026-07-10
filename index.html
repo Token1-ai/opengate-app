@@ -1138,7 +1138,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-27</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-28</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1268,7 +1268,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-19</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-20</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="gbs-stake-display"></span>
               </div>
               <button onclick="leaveGoldGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1280,7 +1280,7 @@ async function smartConnectWallet(){
               <!-- MY board (left) -->
               <div style="flex:1;min-width:280px;">
                 <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
-                <div id="gbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+                <div id="gbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;width:100%;margin:0 auto;overflow:hidden;"></div>
                 <div style="text-align:center;margin-top:10px;" id="gbs-setup-btns">
                   <button id="gbs-random-btn" onclick="gbsRandomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
                   <button id="gbs-ready-btn" onclick="gbsMarkReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
@@ -1290,7 +1290,7 @@ async function smartConnectWallet(){
               <!-- ENEMY board (right) -->
               <div style="flex:1;min-width:280px;">
                 <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;" id="gbs-enemy-label">Enemy Fleet</div>
-                <div id="gbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+                <div id="gbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;width:100%;margin:0 auto;overflow:hidden;"></div>
               </div>
             </div>
 
@@ -2626,7 +2626,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-27';
+var OG_BS_BUILD='BS-28';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -4168,14 +4168,16 @@ function gbsBuildBoardDOM(){
     (function(idx){
       var mc=document.createElement('div');
       mc.id='gbs-my-'+idx;
-      mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
+      // min-width/min-height:0 — інакше вміст клітинки (✕/• після пострілів)
+      // може силоміць розтягнути всю грід-колонку і зламати макет дошки.
+      mc.style.cssText='aspect-ratio:1;min-width:0;min-height:0;overflow:hidden;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;display:flex;align-items:center;justify-content:center;';
       mc.onclick=function(){if(!gbsIsReady)gbsPlaceShip(idx);};
       mc.onmouseover=function(){if(!gbsIsReady)gbsHover(idx,true);};
       mc.onmouseout=function(){if(!gbsIsReady)gbsHover(idx,false);};
       myEl.appendChild(mc);
       var ec=document.createElement('div');
       ec.id='gbs-en-'+idx;
-      ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:not-allowed;';
+      ec.style.cssText='aspect-ratio:1;min-width:0;min-height:0;overflow:hidden;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:not-allowed;display:flex;align-items:center;justify-content:center;';
       ec.onclick=function(){gbsFire(idx);};
       enEl.appendChild(ec);
     })(i);
