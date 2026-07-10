@@ -1120,7 +1120,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-20</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-21</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1250,7 +1250,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-12</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GBS-13</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="gbs-stake-display"></span>
               </div>
               <button onclick="leaveGoldGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2468,6 +2468,9 @@ function ensureWalletConnectLoaded(){
     return false;
   }
   if(tryBridge()) return Promise.resolve(true);
+  // Кешуємо проміс лише ПОКИ він виконується — щоб паралельні кліки не
+  // плодили запити. Але якщо спроба провалилась, кеш ОБОВʼЯЗКОВО скидаємо,
+  // інакше наступний клік назавжди отримував би той самий старий провал.
   if(window._wcLoadPromise) return window._wcLoadPromise;
 
   window._wcLoadPromise=(async function(){
@@ -2484,11 +2487,15 @@ function ensureWalletConnectLoaded(){
         throw new Error('executed but bridge not found');
       }catch(e){
         console.warn('[WalletConnect] load attempt '+attempt+' failed:',e.message);
+        window._wcLastError=e.message;
         if(attempt<3) await new Promise(function(r){setTimeout(r,600*attempt);});
       }
     }
     return false;
   })();
+  window._wcLoadPromise.then(function(ok){
+    if(!ok) window._wcLoadPromise=null; // провал — дозволяємо наступному кліку спробувати наново
+  });
   return window._wcLoadPromise;
 }
 
@@ -2498,8 +2505,8 @@ async function connectViaWalletConnect(triedIds){
     showToast('Завантажуємо WalletConnect...','ok');
     var _loaded=await ensureWalletConnectLoaded();
     if(!_loaded||typeof window.EthereumProvider==='undefined'){
-      showToast('WalletConnect не завантажився. Онови сторінку (або відкрий сайт у браузері MetaMask)','err');
-      console.error('[WalletConnect] library missing: /wc.js not loaded');
+      showToast('WalletConnect: '+(window._wcLastError||'не вдалося завантажити')+'. Спробуй ще раз','err');
+      console.error('[WalletConnect] library missing: /wc.js not loaded. Last error:',window._wcLastError);
       return;
     }
     const pid=pickWalletConnectProjectId(triedIds);
@@ -2600,7 +2607,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-20';
+var OG_BS_BUILD='BS-21';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
