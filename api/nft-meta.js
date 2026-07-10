@@ -50,6 +50,11 @@ module.exports = function handler(req, res) {
 
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 'public, max-age=3600');
+  // Деякі гаманці (особливо мобільні) запитують метадату з браузерного
+  // контексту — без CORS-заголовка запит може мовчки провалитись без
+  // жодної помилки, просто без картинки.
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.status(200).json({
     name: `${t.name} #${id}`,
     description: t.description,
