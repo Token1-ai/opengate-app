@@ -1160,7 +1160,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-40</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-41</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2874,7 +2874,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-40';
+var OG_BS_BUILD='BS-41';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -2919,6 +2919,18 @@ var _bnbRpcIdx=Math.floor(Math.random()*BNB_RPCS.length);
 function getBNBBattleProvider(){
   _bnbRpcIdx=(_bnbRpcIdx+1)%BNB_RPCS.length;
   return new ethers.JsonRpcProvider(BNB_RPCS[_bnbRpcIdx]);
+}
+// Retry a read across DIFFERENT nodes in the pool before giving up —
+// a single flaky/overloaded RPC node should never silently produce a
+// wrong "0" or empty result for money-relevant reads.
+async function bnbReadRetry(fn, attempts){
+  attempts = attempts || BNB_RPCS.length;
+  let lastErr;
+  for(let i=0;i<attempts;i++){
+    try{ return await fn(getBNBBattleProvider()); }
+    catch(e){ lastErr=e; }
+  }
+  throw lastErr;
 }
 // Таймаут для мережевих викликів: замість вічного зависання — чесна помилка
 function ogTimeout(promise,ms){
@@ -7418,10 +7430,9 @@ function mktSwitchChain(chain){
 
 async function loadMarketplaceBNB(){
   try{
-    const p=getBNBBattleProvider();
-    const market=new ethers.Contract(NFT_MARKET_BNB,NFT_MARKET_BNB_ABI,p);
     let active=[];
-    const result=await market.getActiveListings();
+    const result=await bnbReadRetry(rp=>new ethers.Contract(NFT_MARKET_BNB,NFT_MARKET_BNB_ABI,rp).getActiveListings());
+    const p=getBNBBattleProvider();
     const ids=result[0];
     const listings=result[1];
     for(let i=0;i<listings.length;i++){
@@ -7444,8 +7455,7 @@ async function loadMarketplaceBNB(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        const nft=new ethers.Contract(l.nftContract,ERC721_ABI,p);
-        let uri=await nft.tokenURI(l.tokenId);
+        let uri=await bnbReadRetry(rp=>new ethers.Contract(l.nftContract,ERC721_ABI,rp).tokenURI(l.tokenId));
         const meta=await fetchNFTMeta(uri);
         if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
         name=meta.name||name;
@@ -8186,15 +8196,12 @@ function tAgo(ts){const d=(Date.now()-new Date(ts))/1000;if(d<60)return'now';if(
 // ── SUPPLY COUNTS ──
 async function loadPassSupply(){
   try{
-    const p=getBNBProvider();
     const abi=['function totalSupply() view returns(uint256)','function MAX_SUPPLY() view returns(uint256)'];
-    const gold=new ethers.Contract(GOLD_PASS,abi,p);
-    const silver=new ethers.Contract(SILVER_PASS,abi,p);
     const [gMinted,gMax,sMinted,sMax]=await Promise.all([
-      gold.totalSupply().catch(e=>{console.warn('[Supply] Gold totalSupply() failed:',e.message);return 0n;}),
-      gold.MAX_SUPPLY().catch(e=>{console.warn('[Supply] Gold MAX_SUPPLY() failed:',e.message);return 3000n;}),
-      silver.totalSupply().catch(e=>{console.warn('[Supply] Silver totalSupply() failed:',e.message);return 0n;}),
-      silver.MAX_SUPPLY().catch(e=>{console.warn('[Supply] Silver MAX_SUPPLY() failed:',e.message);return 5000n;}),
+      bnbReadRetry(p=>new ethers.Contract(GOLD_PASS,abi,p).totalSupply()).catch(e=>{console.warn('[Supply] Gold totalSupply() failed:',e.message);return 0n;}),
+      bnbReadRetry(p=>new ethers.Contract(GOLD_PASS,abi,p).MAX_SUPPLY()).catch(e=>{console.warn('[Supply] Gold MAX_SUPPLY() failed:',e.message);return 3000n;}),
+      bnbReadRetry(p=>new ethers.Contract(SILVER_PASS,abi,p).totalSupply()).catch(e=>{console.warn('[Supply] Silver totalSupply() failed:',e.message);return 0n;}),
+      bnbReadRetry(p=>new ethers.Contract(SILVER_PASS,abi,p).MAX_SUPPLY()).catch(e=>{console.warn('[Supply] Silver MAX_SUPPLY() failed:',e.message);return 5000n;}),
     ]);
     console.log('[Supply] Gold minted:',gMinted.toString(),'/ max:',gMax.toString());
     console.log('[Supply] Silver minted:',sMinted.toString(),'/ max:',sMax.toString());
