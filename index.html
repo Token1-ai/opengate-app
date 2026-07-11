@@ -1160,7 +1160,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-42</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-43</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2874,7 +2874,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-42';
+var OG_BS_BUILD='BS-43';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -7271,6 +7271,21 @@ async function fetchNFTMeta(uri){
       const data=await res.json();
       _nftMetaCache[uri]={data,t:Date.now()};
       return data;
+    }catch(e){ lastErr=e; }
+  }
+  // Last resort: some arbitrary third-party NFT's own server may not set
+  // CORS headers at all, so the browser blocks every direct attempt above
+  // even though the data is perfectly fine. Route through our own
+  // server-side proxy — servers aren't subject to CORS, so this works
+  // for ANY NFT regardless of how its metadata host is configured.
+  if(!hash){
+    try{
+      const res=await fetch('/api/nft-proxy?url='+encodeURIComponent(uri),{signal:AbortSignal.timeout(9000)});
+      if(res.ok){
+        const data=await res.json();
+        _nftMetaCache[uri]={data,t:Date.now()};
+        return data;
+      }
     }catch(e){ lastErr=e; }
   }
   throw lastErr||new Error('Metadata fetch failed');
