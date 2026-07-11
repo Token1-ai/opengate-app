@@ -1160,19 +1160,19 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-32</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-34</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
             </div>
 
             <!-- Boards side by side — SAME as testnet battleGame layout -->
-            <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+            <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:100%;overflow-x:hidden;">
 
               <!-- MY board (left) -->
               <div style="flex:1;min-width:280px;">
                 <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
-                <div id="bnbbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+                <div id="bnbbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
                 <div style="text-align:center;margin-top:10px;" id="bnbbs-setup-btns">
                   <button id="bnbbs-random-btn" onclick="bnbbsRandomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
                   <button id="bnbbs-ready-btn" onclick="bnbbsMarkReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
@@ -1182,7 +1182,7 @@ async function smartConnectWallet(){
               <!-- ENEMY board (right) -->
               <div style="flex:1;min-width:280px;">
                 <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;" id="bnbbs-enemy-label">Enemy Fleet</div>
-                <div id="bnbbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+                <div id="bnbbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
               </div>
             </div>
 
@@ -1198,7 +1198,7 @@ async function smartConnectWallet(){
             </div>
 
             <!-- Battle log -->
-            <div id="bnbbs-log" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;"></div>
+            <div id="bnbbs-log" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;overflow-x:hidden;"></div>
           </div>
 
         </div>
@@ -1297,12 +1297,12 @@ async function smartConnectWallet(){
             </div>
 
             <!-- Boards side by side — SAME as testnet battleGame layout -->
-            <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+            <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:100%;overflow-x:hidden;">
 
               <!-- MY board (left) -->
               <div style="flex:1;min-width:280px;">
                 <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
-                <div id="gbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;width:100%;margin:0 auto;overflow:hidden;"></div>
+                <div id="gbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
                 <div style="text-align:center;margin-top:10px;" id="gbs-setup-btns">
                   <button id="gbs-random-btn" onclick="gbsRandomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
                   <button id="gbs-ready-btn" onclick="gbsMarkReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
@@ -1312,7 +1312,7 @@ async function smartConnectWallet(){
               <!-- ENEMY board (right) -->
               <div style="flex:1;min-width:280px;">
                 <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;" id="gbs-enemy-label">Enemy Fleet</div>
-                <div id="gbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;width:100%;margin:0 auto;overflow:hidden;"></div>
+                <div id="gbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
               </div>
             </div>
 
@@ -1328,7 +1328,7 @@ async function smartConnectWallet(){
             </div>
 
             <!-- Battle log -->
-            <div id="gbs-log" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;"></div>
+            <div id="gbs-log" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;overflow-x:hidden;"></div>
           </div>
 
         </div>
@@ -1569,11 +1569,11 @@ async function smartConnectWallet(){
             <button onclick="leaveBattleGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
           </div>
 
-          <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+          <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:100%;overflow-x:hidden;">
             <!-- My board -->
             <div style="flex:1;min-width:280px;">
               <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
-              <div id="myBoard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+              <div id="myBoard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
               <div style="text-align:center;margin-top:10px;">
                 <button id="placeShipsBtn" onclick="randomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
                 <button id="readyBtn" onclick="setReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
@@ -1583,7 +1583,7 @@ async function smartConnectWallet(){
             <!-- Enemy board -->
             <div style="flex:1;min-width:280px;">
               <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;" id="enemyBoardLabel">Enemy Fleet</div>
-              <div id="enemyBoard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:300px;margin:0 auto;"></div>
+              <div id="enemyBoard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
             </div>
           </div>
 
@@ -1600,7 +1600,7 @@ async function smartConnectWallet(){
             <div style="font-size:11px;color:var(--muted);text-align:center;">Click a ship below, then click on your board to place it</div>
           </div>
 
-          <div id="battleLog" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;"></div>
+          <div id="battleLog" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;overflow-x:hidden;"></div>
         </div>
       </div>
 
@@ -2765,7 +2765,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-32';
+var OG_BS_BUILD='BS-34';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -2875,7 +2875,7 @@ function bnbbsGameQuery(){
 function bnbbsAddLog(msg){
   var el=document.getElementById('bnbbs-log'); if(!el) return;
   var d=document.createElement('div');
-  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);';
+  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);word-break:break-all;overflow-wrap:anywhere;';
   d.textContent=new Date().toLocaleTimeString()+' — '+msg;
   el.insertBefore(d,el.firstChild);
 }
@@ -3817,7 +3817,7 @@ function gbsGameQuery(){
 function gbsAddLog(msg){
   var el=document.getElementById('gbs-log'); if(!el) return;
   var d=document.createElement('div');
-  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);';
+  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);word-break:break-all;overflow-wrap:anywhere;';
   d.textContent=new Date().toLocaleTimeString()+' — '+msg;
   el.insertBefore(d,el.firstChild);
 }
@@ -6714,7 +6714,7 @@ function bsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/10)+
 function addBattleLog(msg){
   var el=document.getElementById('battleLog');if(!el)return;
   var d=document.createElement('div');
-  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);';
+  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);word-break:break-all;overflow-wrap:anywhere;';
   d.textContent=new Date().toLocaleTimeString()+' — '+msg;
   el.insertBefore(d,el.firstChild);
 }
