@@ -1,5 +1,4 @@
-const CACHE_NAME = 'opengate-v7';
-
+const CACHE_NAME = 'opengate-v8';
 // Cache ONLY icons and manifest — NOT index.html!
 // index.html must always be fetched fresh from the network so users
 // always get the latest version after Vercel deployments.
@@ -8,7 +7,6 @@ const ASSETS = [
   '/icon-192.png',
   '/icon-512.png'
 ];
-
 // Never cache these domains
 const BYPASS_HOSTS = [
   'supabase.co',
@@ -28,14 +26,12 @@ const BYPASS_HOSTS = [
   'walletconnect.com',
   'reown.net'
 ];
-
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
-
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -46,16 +42,20 @@ self.addEventListener('activate', e => {
   );
   self.clients.claim();
 });
-
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-
   const url = new URL(e.request.url);
-
   // Skip external APIs — always fresh
   if (BYPASS_HOSTS.some(h => url.host.includes(h))) return;
   if (!url.protocol.startsWith('http')) return;
-
+  // Our own serverless API routes (oracle, nft-meta, etc.) — always
+  // network-only, never intercepted or cached. This is same-origin so
+  // BYPASS_HOSTS (external domains) doesn't catch it; without this,
+  // GET requests here fall into the generic "Cache First" branch below,
+  // which can resolve to null on a network hiccup and crash with
+  // "Failed to convert value to 'Response'" — never cache dynamic,
+  // per-request API data like this.
+  if (url.pathname.startsWith('/api/')) return;
   // WalletConnect library — Network First (велика й критична; не тримаємо стару копію)
   if (url.pathname === '/wc.js') {
     e.respondWith(
@@ -63,7 +63,6 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-
   // index.html and / — Network First (always fresh from Vercel)
   // Falls back to cache only if offline
   if (url.pathname === '/' || url.pathname === '/index.html') {
@@ -79,7 +78,6 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-
   // Icons and manifest — Cache First (rarely change)
   e.respondWith(
     caches.open(CACHE_NAME).then(cache =>
@@ -93,7 +91,6 @@ self.addEventListener('fetch', e => {
     )
   );
 });
-
 // Push notifications support (for future use with Firebase/Supabase)
 self.addEventListener('push', e => {
   if (!e.data) return;
@@ -111,7 +108,6 @@ self.addEventListener('push', e => {
     console.log('[SW] Push error:', err);
   }
 });
-
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   e.waitUntil(
