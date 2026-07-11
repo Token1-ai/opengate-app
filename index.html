@@ -1160,7 +1160,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-38</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-39</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1786,11 +1786,17 @@ async function smartConnectWallet(){
       <div id="view-market" style="display:none;">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span>🛒 NFT Marketplace</span>
-          <button onclick="openListModal()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:6px 14px;font-size:13px;font-weight:700;">+ List NFT</button>
+          <button id="mktListBtn" onclick="openListModal()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:6px 14px;font-size:13px;font-weight:700;">+ List NFT</button>
         </div>
 
-        <!-- Stats -->
-        <div style="display:flex;gap:0;border-bottom:1px solid var(--border);">
+        <!-- Chain switcher -->
+        <div style="display:flex;gap:8px;padding:12px 16px 0;">
+          <button id="mktChainLitvm" onclick="mktSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="mktChainBnb" onclick="mktSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
+        </div>
+
+        <!-- Stats (zkLitVM) -->
+        <div id="mktStatsLitvm" style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-top:8px;">
           <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
             <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--gold);" id="mktVolume">—</div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px;">Total Volume</div>
@@ -1801,6 +1807,18 @@ async function smartConnectWallet(){
           </div>
           <div style="flex:1;padding:12px 20px;text-align:center;">
             <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--green);">2.5%</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Platform Fee</div>
+          </div>
+        </div>
+
+        <!-- Stats (BNB) -->
+        <div id="mktStatsBnb" style="display:none;gap:0;border-bottom:1px solid var(--border);margin-top:8px;">
+          <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;" id="mktListingsBnb">—</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Active Listings</div>
+          </div>
+          <div style="flex:1;padding:12px 20px;text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--green);">5%</div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px;">Platform Fee</div>
           </div>
         </div>
@@ -1829,9 +1847,17 @@ async function smartConnectWallet(){
           </div>
         </div>
 
-        <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale</div>
-        <div id="marketListings" style="padding:12px;">
-          <div class="app-loader">Loading listings...</div>
+        <div id="mktLitvmSection">
+          <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale — zkLitVM</div>
+          <div id="marketListings" style="padding:12px;">
+            <div class="app-loader">Loading listings...</div>
+          </div>
+        </div>
+        <div id="mktBnbSection" style="display:none;">
+          <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale — BNB Chain (BNB / USDT / USDC)</div>
+          <div id="marketListingsBnb" style="padding:12px;">
+            <div class="app-loader">Loading listings...</div>
+          </div>
         </div>
       </div>
 
@@ -1858,6 +1884,36 @@ async function smartConnectWallet(){
             <div style="font-size:11px;color:var(--muted);margin-top:4px;">2.5% platform fee deducted from sale</div>
           </div>
           <button onclick="submitListing()" id="submitListBtn" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;">List for Sale</button>
+        </div>
+      </div>
+
+      <!-- List NFT Modal — BNB Chain -->
+      <div class="modal-overlay" id="listNFTModalBnb">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;position:relative;">
+          <button class="modal-close-btn" onclick="document.getElementById('listNFTModalBnb').classList.remove('open')">✕</button>
+          <div style="font-size:20px;font-weight:700;margin-bottom:20px;">List NFT for Sale — BNB Chain</div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">NFT Contract Address *</div>
+            <input id="listContractBnb" placeholder="0x... (e.g. your Gold/Silver Pass or any NFT)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token ID *</div>
+            <input id="listTokenIdBnb" type="number" placeholder="1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Currency *</div>
+            <select id="listCurrencyBnb" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;">
+              <option value="BNB">BNB (native)</option>
+              <option value="USDT">USDT</option>
+              <option value="USDC">USDC</option>
+            </select>
+          </div>
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Price *</div>
+            <input id="listPriceBnb" type="number" step="0.0001" placeholder="e.g. 25" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">5% platform fee deducted from sale</div>
+          </div>
+          <button onclick="bnbmktSubmitListing()" id="submitListBtnBnb" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;">List for Sale</button>
         </div>
       </div>
 
@@ -2325,6 +2381,31 @@ const ERC721_ABI = [
   'function ownerOf(uint256) view returns(address)',
   'function name() view returns(string)',
 ];
+const NFT_MARKET_BNB = '0x3C5438AC05D2ab5C5CBFbdDd9AD7B9843AA5Bc6C';
+const NFT_MARKET_BNB_ABI = [
+  'function listNFT(address,uint256,uint256,address) returns(uint256)',
+  'function buyNFT(uint256) payable',
+  'function buyNFTWithToken(uint256)',
+  'function cancelListing(uint256)',
+  'function getListing(uint256) view returns(tuple(address seller,address nftContract,uint256 tokenId,uint256 price,address paymentToken,bool active))',
+  'function getListings(uint256,uint256) view returns(tuple(address seller,address nftContract,uint256 tokenId,uint256 price,address paymentToken,bool active)[])',
+  'function getActiveListings() view returns(uint256[],tuple(address seller,address nftContract,uint256 tokenId,uint256 price,address paymentToken,bool active)[])',
+  'function listingCount() view returns(uint256)',
+  'function FEE_BPS() view returns(uint256)',
+];
+const ERC20_MIN_ABI = [
+  'function approve(address,uint256) returns(bool)',
+  'function allowance(address,address) view returns(uint256)',
+  'function balanceOf(address) view returns(uint256)',
+];
+// symbol -> {address, decimals}; address(0) means native BNB
+// (literal addresses used here on purpose — this const block runs before
+// USDT_BNB_ADDR/USDC_BNB_ADDR are assigned further down the script)
+const BNB_MKT_CURRENCIES = {
+  BNB:  {addr:'0x0000000000000000000000000000000000000000', decimals:18},
+  USDT: {addr:'0x55d398326f99059fF775485246999027B3197955', decimals:18},
+  USDC: {addr:'0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', decimals:18},
+};
 const GOLD_NFT_ADDR = '0x95D3e857793C1B1EbfA509d1DF3232448f619b27';
 const FACTORY_ABI   = [
   'function createToken(string,string,uint8,uint256,bool,bool,bool) payable returns(address)',
@@ -2793,7 +2874,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-38';
+var OG_BS_BUILD='BS-39';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -7266,7 +7347,11 @@ async function loadMarketplace(){
     }));
   }catch(e){document.getElementById('marketListings').innerHTML='<div class="app-empty">Failed to load</div>';}
 }
-function openListModal(){if(!userAddr){showToast('Connect wallet first','err');return;}document.getElementById('listNFTModal').classList.add('open');}
+function openListModal(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(mktActiveChain==='bnb'){ document.getElementById('listNFTModalBnb').classList.add('open'); return; }
+  document.getElementById('listNFTModal').classList.add('open');
+}
 async function loadNFTPreview(){}
 async function submitListing(){if(!userAddr){showToast('Connect wallet first','err');return;}const contract=document.getElementById('listContract').value.trim();const tokenId=document.getElementById('listTokenId').value.trim();const price=document.getElementById('listPrice').value.trim();if(!contract||!tokenId||!price){showToast('Fill all fields','err');return;}try{await switchToLitVM();const nft=new ethers.Contract(contract,ERC721_ABI,signer);if(!await nft.isApprovedForAll(userAddr,NFT_MARKET))await(await nft.setApprovalForAll(NFT_MARKET,true)).wait();const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);await(await market.listNFT(contract,tokenId,ethers.parseEther(price))).wait();showToast('NFT listed! 🎉','ok');document.getElementById('listNFTModal').classList.remove('open');loadMarketplace();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 async function buyNFT(listingId,price){
@@ -7296,6 +7381,180 @@ async function cancelNFTListing(id){
     await tx.wait();
     showToast('Listing cancelled ✓','ok');
     loadMarketplace();
+  }catch(e){
+    const raw=e.reason||e.data?.message||e.message||'Failed';
+    showToast(raw.slice(0,80),'err');
+  }
+}
+
+// ══════════════════ BNB CHAIN NFT MARKETPLACE ══════════════════
+let mktActiveChain='litvm';
+function mktSwitchChain(chain){
+  mktActiveChain=chain;
+  const isBnb=chain==='bnb';
+  document.getElementById('mktChainLitvm').style.background=isBnb?'var(--bg3)':'var(--gold)';
+  document.getElementById('mktChainLitvm').style.color=isBnb?'var(--text)':'#08090C';
+  document.getElementById('mktChainBnb').style.background=isBnb?'var(--gold)':'var(--bg3)';
+  document.getElementById('mktChainBnb').style.color=isBnb?'#08090C':'var(--text)';
+  document.getElementById('mktStatsLitvm').style.display=isBnb?'none':'flex';
+  document.getElementById('mktStatsBnb').style.display=isBnb?'flex':'none';
+  document.getElementById('mktLitvmSection').style.display=isBnb?'none':'block';
+  document.getElementById('mktBnbSection').style.display=isBnb?'block':'none';
+  if(isBnb) loadMarketplaceBNB();
+}
+
+async function loadMarketplaceBNB(){
+  try{
+    const p=getBNBBattleProvider();
+    const market=new ethers.Contract(NFT_MARKET_BNB,NFT_MARKET_BNB_ABI,p);
+    let active=[];
+    const result=await market.getActiveListings();
+    const ids=result[0];
+    const listings=result[1];
+    for(let i=0;i<listings.length;i++){
+      const raw=listings[i];
+      active.push({
+        seller: String(raw[0]??raw.seller??''),
+        nftContract: String(raw[1]??raw.nftContract??''),
+        tokenId: raw[2]??raw.tokenId,
+        price: raw[3]??raw.price,
+        paymentToken: String(raw[4]??raw.paymentToken??''),
+        _id: Number(ids[i])
+      });
+    }
+    document.getElementById('mktListingsBnb').textContent=active.length;
+    const grid=document.createElement('div');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,45vw),1fr));gap:10px;';
+    document.getElementById('marketListingsBnb').innerHTML='';
+    document.getElementById('marketListingsBnb').appendChild(grid);
+
+    await Promise.all(active.map(async(l)=>{
+      let img='',name='NFT #'+l.tokenId.toString();
+      try{
+        const nft=new ethers.Contract(l.nftContract,ERC721_ABI,p);
+        let uri=await nft.tokenURI(l.tokenId);
+        const meta=await fetchNFTMeta(uri);
+        if(meta.image) img=await resolveIPFSWithFallback(meta.image);
+        name=meta.name||name;
+      }catch(err){}
+      const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
+      const isNative=l.paymentToken==='0x0000000000000000000000000000000000000000';
+      const sym=isNative?'BNB':(l.paymentToken.toLowerCase()===BNB_MKT_CURRENCIES.USDT.addr.toLowerCase()?'USDT':'USDC');
+      const priceFmt=parseFloat(ethers.formatUnits(l.price,18)).toFixed(isNative?4:2);
+
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .15s;cursor:pointer;';
+      card.onmouseover=function(){this.style.transform='translateY(-2px)';};
+      card.onmouseout=function(){this.style.transform='none';};
+      const imgDiv=document.createElement('div');
+      imgDiv.style.cssText='aspect-ratio:1;background:var(--bg3);overflow:hidden;position:relative;';
+      if(img){
+        const im=document.createElement('img');
+        im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
+        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _gateways=_hash?getIPFSGateways(_hash):[img];
+        let _gwIdx=0;im.src=_gateways[_gwIdx];
+        im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
+        imgDiv.appendChild(im);
+      } else {
+        imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
+      }
+      const info=document.createElement('div');
+      info.style.cssText='padding:8px 10px 10px;';
+      info.innerHTML=
+        '<div style="font-size:12px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(name)+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">'+sAddr(l.seller)+'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">'
+        +'<div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--gold);">'+priceFmt+'<span style="font-size:10px;color:var(--muted);"> '+sym+'</span></div>'
+        +'</div>';
+      const btnWrap=info.querySelector('div:last-child');
+      const btn=document.createElement('button');
+      if(isOwn){
+        btn.textContent='✕ Cancel';
+        btn.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:6px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;';
+        btn.onclick=(function(idx){return function(e){e.stopPropagation();bnbmktCancel(idx);};})(l._id);
+      } else {
+        btn.textContent='Buy';
+        btn.style.cssText='background:var(--gold);color:#08090C;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;';
+        btn.onclick=(function(idx,price,token){return function(e){e.stopPropagation();bnbmktBuy(idx,price,token);};})(l._id,l.price,l.paymentToken);
+      }
+      btnWrap.appendChild(btn);
+      card.appendChild(imgDiv);card.appendChild(info);
+      grid.appendChild(card);
+    }));
+  }catch(e){document.getElementById('marketListingsBnb').innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+async function bnbmktSubmitListing(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const contract=document.getElementById('listContractBnb').value.trim();
+  const tokenId=document.getElementById('listTokenIdBnb').value.trim();
+  const currencySym=document.getElementById('listCurrencyBnb').value;
+  const priceStr=document.getElementById('listPriceBnb').value.trim();
+  if(!contract||!tokenId||!priceStr){showToast('Fill all fields','err');return;}
+  try{
+    await switchToBNB();
+    const freshSigner=await provider.getSigner();
+    const cur=BNB_MKT_CURRENCIES[currencySym];
+    const priceWei=ethers.parseUnits(priceStr,cur.decimals);
+    const nft=new ethers.Contract(contract,ERC721_ABI,freshSigner);
+    showToast('Checking approval...','ok');
+    if(!await nft.isApprovedForAll(userAddr,NFT_MARKET_BNB)){
+      showToast('Approve marketplace in MetaMask...','ok');
+      await(await nft.setApprovalForAll(NFT_MARKET_BNB,true)).wait();
+    }
+    const market=new ethers.Contract(NFT_MARKET_BNB,NFT_MARKET_BNB_ABI,freshSigner);
+    showToast('Listing NFT...','ok');
+    await(await market.listNFT(contract,tokenId,priceWei,cur.addr)).wait();
+    showToast('NFT listed! 🎉','ok');
+    document.getElementById('listNFTModalBnb').classList.remove('open');
+    loadMarketplaceBNB();
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,60),'err');
+  }
+}
+
+async function bnbmktBuy(listingId,price,paymentToken){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToBNB();
+    const freshSigner=await provider.getSigner();
+    const market=new ethers.Contract(NFT_MARKET_BNB,NFT_MARKET_BNB_ABI,freshSigner);
+    const isNative=paymentToken==='0x0000000000000000000000000000000000000000';
+    if(isNative){
+      showToast('Confirm in MetaMask...','ok');
+      const tx=await market.buyNFT(listingId,{value:price});
+      await tx.wait();
+    } else {
+      const token=new ethers.Contract(paymentToken,ERC20_MIN_ABI,freshSigner);
+      const allowance=await token.allowance(userAddr,NFT_MARKET_BNB);
+      if(allowance<price){
+        showToast('Approve token spend in MetaMask...','ok');
+        await(await token.approve(NFT_MARKET_BNB,price)).wait();
+      }
+      showToast('Confirm purchase in MetaMask...','ok');
+      const tx=await market.buyNFTWithToken(listingId);
+      await tx.wait();
+    }
+    showToast('NFT purchased! 🎉','ok');
+    loadMarketplaceBNB();
+  }catch(e){
+    const raw=e.reason||e.data?.message||e.message||'Failed';
+    showToast(raw.slice(0,80),'err');
+  }
+}
+
+async function bnbmktCancel(id){
+  if(!userAddr)return;
+  try{
+    await switchToBNB();
+    const freshSigner=await provider.getSigner();
+    const market=new ethers.Contract(NFT_MARKET_BNB,NFT_MARKET_BNB_ABI,freshSigner);
+    showToast('Cancelling listing #'+id+'...','ok');
+    const tx=await market.cancelListing(id);
+    await tx.wait();
+    showToast('Listing cancelled ✓','ok');
+    loadMarketplaceBNB();
   }catch(e){
     const raw=e.reason||e.data?.message||e.message||'Failed';
     showToast(raw.slice(0,80),'err');
