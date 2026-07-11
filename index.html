@@ -1160,7 +1160,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-34</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-38</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2401,7 +2401,33 @@ function startReadyInbox(){
          .on('broadcast',{event:'rc_cancel'},function(m){rcOnCancel(m.payload);})
          .subscribe();
 }
-function rcBeep(){try{var ac=new (window.AudioContext||window.webkitAudioContext)();var o=ac.createOscillator();var g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.value=0.07;o.start();setTimeout(function(){o.stop();ac.close();},260);}catch(e){}}
+let _rcAudioCtx=null;
+function _rcUnlockAudio(){
+  if(_rcAudioCtx) return;
+  try{
+    _rcAudioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    // silent primer tick — unlocks audio on iOS/Android within a real user gesture
+    var o=_rcAudioCtx.createOscillator();var g=_rcAudioCtx.createGain();g.gain.value=0.0001;o.connect(g);g.connect(_rcAudioCtx.destination);o.start();o.stop(_rcAudioCtx.currentTime+0.05);
+  }catch(e){}
+}
+['click','touchstart','pointerdown'].forEach(function(ev){document.addEventListener(ev,_rcUnlockAudio,{once:true,passive:true});});
+function rcBeep(){
+  try{ if(navigator.vibrate) navigator.vibrate([160,80,160]); }catch(e){}
+  try{
+    var ac=_rcAudioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended') ac.resume();
+    [ [880,0],[1180,0.16] ].forEach(function(t){
+      var o=ac.createOscillator();var g=ac.createGain();
+      o.type='sine';o.frequency.value=t[0];
+      o.connect(g);g.connect(ac.destination);
+      var start=ac.currentTime+t[1];
+      g.gain.setValueAtTime(0.0001,start);
+      g.gain.exponentialRampToValueAtTime(0.35,start+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,start+0.22);
+      o.start(start);o.stop(start+0.24);
+    });
+  }catch(e){}
+}
 function rcSend(target,event,payload){
   try{
     var ch=sb.channel('rc-'+String(target).toLowerCase(),{config:{broadcast:{self:false}}});
@@ -2455,9 +2481,11 @@ function rcOnRequest(p){
 function rcAccept(){
   if(!rcIncoming)return;
   clearTimeout(rcIncoming.timer);
+  var _mode=rcIncoming.mode;
   rcSend(rcIncoming.from,'rc_ack',{from:userAddr.toLowerCase(),game:rcIncoming.game,accepted:true});
   rcIncoming=null; rcCloseModals();
-  showToast('Get ready — opponent is joining!','ok'); showTab('battle');
+  showToast('Get ready — opponent is joining!','ok');
+  showTab(_mode==='gold'?'goldbattle':'bnbbattle');
 }
 function rcDecline(timedOut){
   if(!rcIncoming)return;
@@ -2491,8 +2519,8 @@ function getReadProvider(){
   return new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
 }
 function getBNBProvider(){
-  // BNB reads always use public RPC (not LitVM)
-  return new ethers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+  // BNB reads always use public RPC (not LitVM) — shares the same rotating pool as Battleship
+  return getBNBBattleProvider();
 }
 
 // ── CACHE ──
@@ -2765,7 +2793,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-34';
+var OG_BS_BUILD='BS-38';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -2803,7 +2831,8 @@ var BNB_RPCS=[
   'https://bsc-dataseed.binance.org/',
   'https://bsc-dataseed1.defibit.io/',
   'https://bsc-dataseed1.ninicoin.io/',
-  'https://bsc-dataseed2.binance.org/'
+  'https://bsc-dataseed2.binance.org/',
+  'https://binance.ankr.com/'   // Ankr's free public BSC RPC — extra capacity, no API key needed
 ];
 var _bnbRpcIdx=Math.floor(Math.random()*BNB_RPCS.length);
 function getBNBBattleProvider(){
@@ -3040,19 +3069,22 @@ async function bnbbsMatchmake(){
     var ids=await ogTimeout(c.getOpenGames(),10000);
     var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
     var tokenIdx=bnbbsToken==='USDT'?0:1;
+    // Fetch all rooms IN PARALLEL (scales to hundreds of open games — a sequential loop here would be far too slow)
+    var rows=await ogTimeout(Promise.all(ids.map(function(id){return c.getGame(id).then(function(g){return {id:Number(id),g:g};});})),15000);
     var candidates=[];
-    for(var i=0;i<ids.length;i++){
-      var g=await c.getGame(ids[i]);
-      var p1=g.player1.toLowerCase();
-      if(p1===(userAddr||'').toLowerCase()) continue;
-      if(Number(g.token)===tokenIdx&&g.betAmount===amountRaw) candidates.push({id:Number(ids[i]),creator:p1});
-    }
-    var pick=candidates.find(function(x){return onlineWallets.size===0||onlineWallets.has(x.creator);})||candidates[0];
+    rows.forEach(function(r){
+      var p1=r.g.player1.toLowerCase();
+      if(p1===(userAddr||'').toLowerCase()) return;
+      if(Number(r.g.token)===tokenIdx&&r.g.betAmount===amountRaw) candidates.push({id:r.id,creator:p1});
+    });
+    // Prefer a creator who is online right now; fall back to any match if presence hasn't synced or none are online
+    var pick=candidates.find(function(x){return onlineWallets.has(x.creator);})||(onlineWallets.size===0?candidates[0]:null);
     if(pick){
       showToast('Match found — asking them to confirm…','ok');
       rcRequestJoin(pick.id,pick.creator,amount.toFixed(2),'bnb');
       return;
     }
+    if(candidates.length>0){showToast('Matches exist but all offline. Try again shortly.','err');return;}
     showToast('No match found. Creating room...','ok');
     await bnbbsCreate();
   }catch(e){showToast('Error: '+(e.message||'').slice(0,40),'err');}
@@ -3985,19 +4017,20 @@ async function gbsMatchmake(){
     var ids=await ogTimeout(c.getOpenGames(),10000);
     var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),18);
     var tokenIdx=gbsToken==='USDT'?0:1;
+    var rows=await ogTimeout(Promise.all(ids.map(function(id){return c.getGame(id).then(function(g){return {id:Number(id),g:g};});})),15000);
     var candidates=[];
-    for(var i=0;i<ids.length;i++){
-      var g=await c.getGame(ids[i]);
-      var p1=g.player1.toLowerCase();
-      if(p1===(userAddr||'').toLowerCase()) continue;
-      if(Number(g.token)===tokenIdx&&g.betAmount===amountRaw) candidates.push({id:Number(ids[i]),creator:p1});
-    }
-    var pick=candidates.find(function(x){return onlineWallets.size===0||onlineWallets.has(x.creator);})||candidates[0];
+    rows.forEach(function(r){
+      var p1=r.g.player1.toLowerCase();
+      if(p1===(userAddr||'').toLowerCase()) return;
+      if(Number(r.g.token)===tokenIdx&&r.g.betAmount===amountRaw) candidates.push({id:r.id,creator:p1});
+    });
+    var pick=candidates.find(function(x){return onlineWallets.has(x.creator);})||(onlineWallets.size===0?candidates[0]:null);
     if(pick){
       showToast('Match found — asking them to confirm…','ok');
       rcRequestJoin(pick.id,pick.creator,amount.toFixed(2),'gold');
       return;
     }
+    if(candidates.length>0){showToast('Matches exist but all offline. Try again shortly.','err');return;}
     showToast('No match found. Creating room...','ok');
     await gbsCreate();
   }catch(e){showToast('Error: '+(e.message||'').slice(0,40),'err');}
@@ -4971,8 +5004,8 @@ async function handleImages(input){
     if(remaining<=0){showToast('Silver limit: 3 images per day. Upgrade to Gold!','err');input.value='';return;}
     if(files.length>remaining){showToast('Silver: only '+remaining+' image(s) left today','err');input.value='';return;}
   }
-  if(isGold&&pendingImages.length+files.length>20){
-    showToast('Max 20 images per post','err');input.value='';return;
+  if(isGold&&pendingImages.length+files.length>3){
+    showToast('Max 3 images per post','err');input.value='';return;
   }
   document.getElementById('uploadingTxt').style.display='inline';
   document.getElementById('postBtn').disabled=true;
