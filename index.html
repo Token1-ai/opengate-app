@@ -1161,7 +1161,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-48</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-51</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1934,6 +1934,85 @@ async function smartConnectWallet(){
         <div class="feed-hdr">🎨 NFT Studio</div>
 
         <div style="display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;">
+          <button id="studioChainLitvm" onclick="nftStudioSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="studioChainBnb" onclick="nftStudioSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
+        </div>
+
+        <!-- ══════════ zkLitVM PANEL ══════════ -->
+        <div id="studioLitvmSection">
+        <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
+          <div style="background:var(--bg2);border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);">
+            <div style="font-weight:700;margin-bottom:6px;">⚡ How it works on zkLitVM</div>
+            <div style="color:var(--muted);">
+              Upload your own photo → it becomes a real NFT you fully own, on your own contract. No pass needed, open to everyone.<br><br>
+              <b style="color:var(--text);">Price: 0.02 zkLTC per NFT</b> — same flat price whether you make one NFT or a whole collection (up to 1000). Paid once, straight to the platform wallet, right when you create it.
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;">
+          <button id="studioModeSingleL" onclick="nftStudioSwitchModeL('single')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">🖼️ Single NFT</button>
+          <button id="studioModeCollectionL" onclick="nftStudioSwitchModeL('collection')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">📦 Collection</button>
+        </div>
+
+        <div id="studioSinglePanelL" style="padding:20px 16px;max-width:520px;margin:0 auto;">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <input type="file" id="studioSingleFileL" accept="image/*" onchange="nftStudioPreview('studioSingleFileL','studioSinglePreviewL')" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;color:var(--text);font-size:13px;margin-bottom:12px;"/>
+            <div id="studioSinglePreviewL" style="display:none;width:100%;aspect-ratio:1;max-width:200px;margin:0 auto 14px;border-radius:10px;overflow:hidden;background:var(--bg3);"></div>
+
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Name *</div>
+            <input id="studioSingleNameL" placeholder="e.g. My Sunset Photo" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px;font-family:'Space Grotesk',sans-serif;"/>
+
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Description</div>
+            <textarea id="studioSingleDescL" placeholder="Optional — tell people about it" rows="2" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;resize:vertical;"></textarea>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:13px;">
+              <span style="color:var(--muted);">Price for this NFT</span>
+              <span style="font-weight:700;">0.02 zkLTC</span>
+            </div>
+
+            <button onclick="nftStudioCreateSingleLitVM()" id="studioSingleBtnL" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;cursor:pointer;border:none;">✨ Create My NFT</button>
+          </div>
+        </div>
+
+        <div id="studioCollectionPanelL" style="display:none;padding:20px 16px;max-width:520px;margin:0 auto;">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photos * <span style="opacity:.7;">(select multiple — up to 1000)</span></div>
+            <input type="file" id="studioCollFilesL" accept="image/*" multiple onchange="nftStudioUpdateCollectionPriceL()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;color:var(--text);font-size:13px;margin-bottom:6px;"/>
+            <div id="studioCollCountL" style="font-size:12px;color:var(--muted);margin-bottom:12px;">No photos selected yet</div>
+
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Collection name *</div>
+            <input id="studioCollNameL" placeholder="e.g. My Summer Collection" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;"/>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:13px;">
+              <span style="color:var(--muted);">Total price</span>
+              <span id="studioCollPriceL" style="font-weight:700;">—</span>
+            </div>
+
+            <button onclick="nftStudioCreateCollectionLitVM()" id="studioCollBtnL" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;cursor:pointer;border:none;">✨ Create Collection</button>
+          </div>
+        </div>
+        </div>
+
+        <!-- ══════════ BNB PANEL (existing) ══════════ -->
+        <div id="studioBnbSection" style="display:none;">
+        <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
+          <div style="background:var(--bg2);border:1px solid rgba(59,130,246,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);">
+            <div style="font-weight:700;margin-bottom:6px;">🟡 How it works on BNB Chain</div>
+            <div style="color:var(--muted);">
+              Upload your own photo → it becomes a real NFT you fully own, on your own contract. Works everywhere — MetaMask, our marketplace, and other NFT sites.<br><br>
+              <b style="color:var(--text);">🖼️ Single NFT:</b><br>
+              • No pass: <b style="color:var(--text);">1 free try, ever</b> — then $0.10 each<br>
+              • 🥈 Silver Pass: <b style="color:var(--text);">3 free per day</b> — then $0.10 each that day<br>
+              • 🥇 Gold Pass: <b style="color:var(--text);">6 free per day</b><br><br>
+              <b style="color:var(--text);">📦 Collection</b> (Gold Pass only, up to 1000 NFTs at once):<br>
+              • First <b style="color:var(--text);">50 NFTs free</b>, then <b style="color:var(--text);">$0.05</b> per extra NFT<br>
+              • Without Gold Pass: <b style="color:var(--text);">$0.10</b> per NFT, no free ones<br><br>
+              Paid in USDT/USDC, straight to the platform wallet, right when you create it. The price shown always matches exactly what the blockchain will charge — no surprises.
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;">
           <button id="studioModeSingle" onclick="nftStudioSwitchMode('single')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">🖼️ Single NFT</button>
           <button id="studioModeCollection" onclick="nftStudioSwitchMode('collection')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">📦 Collection <span style="opacity:.6;">(Gold)</span></button>
         </div>
@@ -1985,6 +2064,7 @@ async function smartConnectWallet(){
               <button onclick="nftStudioCreateCollection()" id="studioCollBtn" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;cursor:pointer;border:none;">✨ Create Collection</button>
             </div>
           </div>
+        </div>
         </div>
       </div>
 
@@ -2480,6 +2560,14 @@ const BNB_MKT_CURRENCIES = {
 };
 const NFT_FACTORY_BNB = '0x381Ba71CccF8BbA5bCdc3f1BeED89C65c9608b35';
 const OWNER_WALLET_LC = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+const NFT_FACTORY_LITVM = '0x823f0028943971cBD6dD40A98776e1CDE0DcaFaa';
+const NFT_FACTORY_LITVM_ABI = [
+  'function PRICE_PER_TOKEN() view returns(uint256)',
+  'function quotePrice(uint256) view returns(uint256)',
+  'function mintSingle(string,string,string) payable returns(address)',
+  'function createCollection(string,string,uint256,string[]) payable returns(address)',
+  'function getCollectionsByCreator(address) view returns(tuple(address collection,address creator,string name,string symbol,uint256 maxSupply,uint256 createdAt)[])',
+];
 const NFT_FACTORY_ABI = [
   'function quoteSinglePrice(address) view returns(uint256)',
   'function quotePrice(uint256,address) view returns(uint256)',
@@ -2957,7 +3045,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-48';
+var OG_BS_BUILD='BS-51';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5131,12 +5219,113 @@ async function pinJSONToIPFS(obj){
 }
 
 // ══════════════════ NFT STUDIO ══════════════════
+let nftStudioChain='litvm';
 let nftStudioMode='single';
+let nftStudioModeL='single';
 let _goldSinglesToday=0; // soft, session-only counter for Gold's 6/day perk (same pattern as the existing Silver image-per-day counter)
 
 function nftStudioSymbolFrom(name){
   const s=(name||'OGNFT').replace(/[^a-zA-Z0-9]/g,'').toUpperCase().slice(0,6);
   return s||'OGNFT';
+}
+
+function nftStudioSwitchChain(chain){
+  nftStudioChain=chain;
+  const isBnb=chain==='bnb';
+  document.getElementById('studioChainLitvm').style.background=isBnb?'var(--bg3)':'var(--gold)';
+  document.getElementById('studioChainLitvm').style.color=isBnb?'var(--text)':'#08090C';
+  document.getElementById('studioChainBnb').style.background=isBnb?'var(--gold)':'var(--bg3)';
+  document.getElementById('studioChainBnb').style.color=isBnb?'#08090C':'var(--text)';
+  document.getElementById('studioLitvmSection').style.display=isBnb?'none':'block';
+  document.getElementById('studioBnbSection').style.display=isBnb?'block':'none';
+  if(isBnb) nftStudioSwitchMode(nftStudioMode);
+  else nftStudioSwitchModeL(nftStudioModeL);
+}
+
+function nftStudioSwitchModeL(mode){
+  nftStudioModeL=mode;
+  const isColl=mode==='collection';
+  document.getElementById('studioModeSingleL').style.background=isColl?'var(--bg3)':'var(--gold)';
+  document.getElementById('studioModeSingleL').style.color=isColl?'var(--text)':'#08090C';
+  document.getElementById('studioModeCollectionL').style.background=isColl?'var(--gold)':'var(--bg3)';
+  document.getElementById('studioModeCollectionL').style.color=isColl?'#08090C':'var(--text)';
+  document.getElementById('studioSinglePanelL').style.display=isColl?'none':'block';
+  document.getElementById('studioCollectionPanelL').style.display=isColl?'block':'none';
+}
+
+async function nftStudioUpdateCollectionPriceL(){
+  const files=document.getElementById('studioCollFilesL').files;
+  const count=files.length;
+  document.getElementById('studioCollCountL').textContent=count>0?(count+' photo'+(count===1?'':'s')+' selected'):'No photos selected yet';
+  const priceEl=document.getElementById('studioCollPriceL');
+  if(count===0){ priceEl.textContent='—'; return; }
+  if(count>1000){ priceEl.textContent='Max 1000 photos'; priceEl.style.color='var(--red)'; return; }
+  priceEl.textContent=(count*0.02).toFixed(2)+' zkLTC';
+  priceEl.style.color='var(--text)';
+}
+
+async function nftStudioCreateSingleLitVM(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const file=document.getElementById('studioSingleFileL').files[0];
+  const name=document.getElementById('studioSingleNameL').value.trim();
+  const desc=document.getElementById('studioSingleDescL').value.trim();
+  if(!file){showToast('Choose a photo first','err');return;}
+  if(!name){showToast('Give it a name','err');return;}
+  const btn=document.getElementById('studioSingleBtnL');
+  btn.disabled=true; const origText=btn.textContent; btn.textContent='Working...';
+  try{
+    const tokenURI=await nftStudioUploadAndPin(file,name,desc);
+    await switchToLitVM();
+    const freshSigner=await provider.getSigner();
+    const factory=new ethers.Contract(NFT_FACTORY_LITVM,NFT_FACTORY_LITVM_ABI,freshSigner);
+    showToast('Creating your NFT — confirm in MetaMask (0.02 zkLTC)...','ok');
+    const tx=await factory.mintSingle(name,nftStudioSymbolFrom(name),tokenURI,{value:ethers.parseEther('0.02')});
+    await tx.wait();
+    showToast('🎉 Your NFT is live! List it on the marketplace anytime.','ok');
+    document.getElementById('studioSingleFileL').value='';
+    document.getElementById('studioSingleNameL').value='';
+    document.getElementById('studioSingleDescL').value='';
+    document.getElementById('studioSinglePreviewL').style.display='none';
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,80),'err');
+  }finally{
+    btn.disabled=false; btn.textContent=origText;
+  }
+}
+
+async function nftStudioCreateCollectionLitVM(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const files=Array.from(document.getElementById('studioCollFilesL').files);
+  const name=document.getElementById('studioCollNameL').value.trim();
+  if(files.length===0){showToast('Choose your photos first','err');return;}
+  if(files.length>1000){showToast('Max 1000 photos per collection','err');return;}
+  if(!name){showToast('Give your collection a name','err');return;}
+  const btn=document.getElementById('studioCollBtnL');
+  btn.disabled=true; const origText=btn.textContent;
+  try{
+    btn.textContent='Uploading photos... (0/'+files.length+')';
+    let done=0;
+    const tokenURIs=await Promise.all(files.map(async(file,i)=>{
+      const uri=await nftStudioUploadAndPin(file,name+' #'+(i+1),'');
+      done++; btn.textContent='Uploading photos... ('+done+'/'+files.length+')';
+      return uri;
+    }));
+    await switchToLitVM();
+    const freshSigner=await provider.getSigner();
+    const factory=new ethers.Contract(NFT_FACTORY_LITVM,NFT_FACTORY_LITVM_ABI,freshSigner);
+    const totalPrice=ethers.parseEther((files.length*0.02).toFixed(18));
+    btn.textContent='Creating collection — confirm in MetaMask...';
+    const tx=await factory.createCollection(name,nftStudioSymbolFrom(name),files.length,tokenURIs,{value:totalPrice});
+    await tx.wait();
+    showToast('🎉 Collection created — '+files.length+' NFTs are live!','ok');
+    document.getElementById('studioCollFilesL').value='';
+    document.getElementById('studioCollNameL').value='';
+    nftStudioUpdateCollectionPriceL();
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,80),'err');
+  }finally{
+    btn.disabled=false; btn.textContent=origText;
+  }
 }
 
 function nftStudioSwitchMode(mode){
@@ -5168,6 +5357,7 @@ function nftStudioPreview(inputId,previewId){
 }
 
 async function initNFTStudio(){
+  nftStudioSwitchChain(nftStudioChain);
   nftStudioSwitchMode(nftStudioMode);
   nftStudioUpdateSinglePrice();
 }
