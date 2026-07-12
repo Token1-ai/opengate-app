@@ -1161,7 +1161,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-54</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-55</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1949,10 +1949,6 @@ async function smartConnectWallet(){
             </div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;">
-          <button id="studioModeSingleL" onclick="nftStudioSwitchModeL('single')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">🖼️ Single NFT</button>
-          <button id="studioModeCollectionL" onclick="nftStudioSwitchModeL('collection')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">📦 Collection</button>
-        </div>
 
         <div id="studioSinglePanelL" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
@@ -1979,24 +1975,6 @@ async function smartConnectWallet(){
           </div>
         </div>
 
-        <div id="studioCollectionPanelL" style="display:none;padding:20px 16px;max-width:520px;margin:0 auto;">
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photos * <span style="opacity:.7;">(select multiple — up to 1000)</span></div>
-            <label for="studioCollFilesL" style="display:inline-block;background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:6px;">Choose Photos</label>
-              <input type="file" id="studioCollFilesL" accept="image/*" multiple onchange="nftStudioUpdateCollectionPriceL()" style="display:none;"/>
-            <div id="studioCollCountL" style="font-size:12px;color:var(--muted);margin-bottom:12px;">No photos selected yet</div>
-
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Collection name *</div>
-            <input id="studioCollNameL" placeholder="e.g. My Summer Collection" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;"/>
-
-            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:13px;">
-              <span style="color:var(--muted);">Total price</span>
-              <span id="studioCollPriceL" style="font-weight:700;">—</span>
-            </div>
-
-            <button onclick="nftStudioCreateCollectionLitVM()" id="studioCollBtnL" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;cursor:pointer;border:none;">✨ Create Collection</button>
-          </div>
-        </div>
         </div>
 
         <!-- ══════════ BNB PANEL (existing) ══════════ -->
@@ -3056,7 +3034,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-54';
+var OG_BS_BUILD='BS-55';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5250,7 +5228,6 @@ function nftStudioSwitchChain(chain){
   document.getElementById('studioLitvmSection').style.display=isBnb?'none':'block';
   document.getElementById('studioBnbSection').style.display=isBnb?'block':'none';
   if(isBnb) nftStudioSwitchMode(nftStudioMode);
-  else nftStudioSwitchModeL(nftStudioModeL);
 }
 
 function nftStudioSwitchModeL(mode){
