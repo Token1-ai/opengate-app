@@ -1161,7 +1161,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-51</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-52</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2605,6 +2605,7 @@ const STAKING_ABI = [
   'function totalStaked() view returns(uint256)',
 ];
 const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNmY5ZWM5OC0wNmMyLTRiYjYtOWE0OS1hYzkyZmRiY2YwMzIiLCJlbWFpbCI6ImJ0Y2ZpbHNzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI3YTE4OTZlZjgyNDAwYzA2NTI4NyIsInNjb3BlZEtleVNlY3JldCI6IjM5MjMzNWVmYmQyYzJiYzZlNDk5NDIzYzk1YzMxZWM5NDA3NzgxMjhkYmZiNTE1NzQyODkzMmU4OWFkY2Y1YzciLCJleHAiOjE4MTI1NjgzMzF9.WkiIwhZqxvx3hz_xymtuv2257hVdRg-Bxo_1Vee3fl0';
+const PINATA_JWT_LITVM = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIwNzBjNDJlMi1iMGQ5LTQyNTEtYmJmYi1mZGQ3ZDc2OTFiMWEiLCJlbWFpbCI6ImdvcGVuZ2F0ZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiNDMzMmVjNDQzNTA3MTllYTI2MjgiLCJzY29wZWRLZXlTZWNyZXQiOiI2NGYyNTViZTlmMmI5NzE4ZjYwMmQ3ZTFiMGY1ZWY3ODkyMTBiZGJmNmJkZDAzNzUwMjMzNTM0YmMxODg1MzM3IiwiZXhwIjoxODE1NDExOTAzfQ.JFLKk6TFqSM6WGXskkXuPHkk01QfbPD0GION3VmSP7A';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ── ONLINE PRESENCE — Facebook-style green dot, ZERO DB load (Supabase Realtime Presence) ── */
@@ -3045,7 +3046,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-51';
+var OG_BS_BUILD='BS-52';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5193,13 +5194,13 @@ async function uploadToSupabase(file){
   return sb.storage.from('media').getPublicUrl(path).data.publicUrl;
 }
 
-async function uploadToPinataOnly(file){
+async function uploadToPinataOnly(file,jwt){
   const formData=new FormData();
   formData.append('file',file);
   formData.append('pinataMetadata',JSON.stringify({name:'og-'+Date.now()}));
   const res=await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS',{
     method:'POST',
-    headers:{Authorization:'Bearer '+PINATA_JWT},
+    headers:{Authorization:'Bearer '+(jwt||PINATA_JWT)},
     body:formData
   });
   if(!res.ok) throw new Error('Pinata upload failed: '+res.status);
@@ -5207,10 +5208,10 @@ async function uploadToPinataOnly(file){
   return 'https://gateway.pinata.cloud/ipfs/'+json.IpfsHash;
 }
 
-async function pinJSONToIPFS(obj){
+async function pinJSONToIPFS(obj,jwt){
   const res=await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS',{
     method:'POST',
-    headers:{'Content-Type':'application/json',Authorization:'Bearer '+PINATA_JWT},
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+(jwt||PINATA_JWT)},
     body:JSON.stringify({pinataMetadata:{name:'og-meta-'+Date.now()},pinataContent:obj})
   });
   if(!res.ok) throw new Error('Pinata metadata pin failed: '+res.status);
@@ -5274,7 +5275,7 @@ async function nftStudioCreateSingleLitVM(){
   const btn=document.getElementById('studioSingleBtnL');
   btn.disabled=true; const origText=btn.textContent; btn.textContent='Working...';
   try{
-    const tokenURI=await nftStudioUploadAndPin(file,name,desc);
+    const tokenURI=await nftStudioUploadAndPin(file,name,desc,PINATA_JWT_LITVM);
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
     const factory=new ethers.Contract(NFT_FACTORY_LITVM,NFT_FACTORY_LITVM_ABI,freshSigner);
@@ -5306,7 +5307,7 @@ async function nftStudioCreateCollectionLitVM(){
     btn.textContent='Uploading photos... (0/'+files.length+')';
     let done=0;
     const tokenURIs=await Promise.all(files.map(async(file,i)=>{
-      const uri=await nftStudioUploadAndPin(file,name+' #'+(i+1),'');
+      const uri=await nftStudioUploadAndPin(file,name+' #'+(i+1),'',PINATA_JWT_LITVM);
       done++; btn.textContent='Uploading photos... ('+done+'/'+files.length+')';
       return uri;
     }));
@@ -5395,16 +5396,16 @@ async function nftStudioUpdateCollectionPrice(){
   }catch(e){ priceEl.textContent='—'; }
 }
 
-async function nftStudioUploadAndPin(file,name,description){
+async function nftStudioUploadAndPin(file,name,description,jwt){
   showToast('Uploading photo...','ok');
-  const imageUrl=await uploadToPinataOnly(file);
+  const imageUrl=await uploadToPinataOnly(file,jwt);
   const metaUrl=await pinJSONToIPFS({
     name: name,
     description: description||'',
     image: imageUrl,
     external_url: 'https://opengate.bond',
     attributes: [{trait_type:'Platform',value:'OpenGate'}]
-  });
+  },jwt);
   return metaUrl;
 }
 
