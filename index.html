@@ -1161,7 +1161,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-53</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-54</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1957,7 +1957,11 @@ async function smartConnectWallet(){
         <div id="studioSinglePanelL" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
-            <input type="file" id="studioSingleFileL" accept="image/*" onchange="nftStudioPreview('studioSingleFileL','studioSinglePreviewL')" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;color:var(--text);font-size:13px;margin-bottom:12px;"/>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+              <label for="studioSingleFileL" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
+              <span id="studioSingleFileNameL" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
+            </div>
+            <input type="file" id="studioSingleFileL" accept="image/*" onchange="nftStudioPreview('studioSingleFileL','studioSinglePreviewL');nftStudioFileNameUpdate('studioSingleFileL','studioSingleFileNameL')" style="display:none;"/>
             <div id="studioSinglePreviewL" style="display:none;width:100%;aspect-ratio:1;max-width:200px;margin:0 auto 14px;border-radius:10px;overflow:hidden;background:var(--bg3);"></div>
 
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Name *</div>
@@ -1978,7 +1982,8 @@ async function smartConnectWallet(){
         <div id="studioCollectionPanelL" style="display:none;padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photos * <span style="opacity:.7;">(select multiple — up to 1000)</span></div>
-            <input type="file" id="studioCollFilesL" accept="image/*" multiple onchange="nftStudioUpdateCollectionPriceL()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;color:var(--text);font-size:13px;margin-bottom:6px;"/>
+            <label for="studioCollFilesL" style="display:inline-block;background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:6px;">Choose Photos</label>
+              <input type="file" id="studioCollFilesL" accept="image/*" multiple onchange="nftStudioUpdateCollectionPriceL()" style="display:none;"/>
             <div id="studioCollCountL" style="font-size:12px;color:var(--muted);margin-bottom:12px;">No photos selected yet</div>
 
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Collection name *</div>
@@ -2021,7 +2026,11 @@ async function smartConnectWallet(){
         <div id="studioSinglePanel" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
-            <input type="file" id="studioSingleFile" accept="image/*" onchange="nftStudioPreview('studioSingleFile','studioSinglePreview')" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;color:var(--text);font-size:13px;margin-bottom:12px;"/>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+              <label for="studioSingleFile" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
+              <span id="studioSingleFileName" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
+            </div>
+            <input type="file" id="studioSingleFile" accept="image/*" onchange="nftStudioPreview('studioSingleFile','studioSinglePreview');nftStudioFileNameUpdate('studioSingleFile','studioSingleFileName')" style="display:none;"/>
             <div id="studioSinglePreview" style="display:none;width:100%;aspect-ratio:1;max-width:200px;margin:0 auto 14px;border-radius:10px;overflow:hidden;background:var(--bg3);"></div>
 
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Name *</div>
@@ -2049,7 +2058,8 @@ async function smartConnectWallet(){
             </div>
             <div id="studioCollectionForm">
               <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photos * <span style="opacity:.7;">(select multiple — up to 1000)</span></div>
-              <input type="file" id="studioCollFiles" accept="image/*" multiple onchange="nftStudioUpdateCollectionPrice()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;color:var(--text);font-size:13px;margin-bottom:6px;"/>
+              <label for="studioCollFiles" style="display:inline-block;background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:6px;">Choose Photos</label>
+              <input type="file" id="studioCollFiles" accept="image/*" multiple onchange="nftStudioUpdateCollectionPrice()" style="display:none;"/>
               <div id="studioCollCount" style="font-size:12px;color:var(--muted);margin-bottom:12px;">No photos selected yet</div>
 
               <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Collection name *</div>
@@ -3046,7 +3056,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-53';
+var OG_BS_BUILD='BS-54';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5345,6 +5355,13 @@ function nftStudioCheckGoldGate(){
   const isGold=(currentUser?.pass_type==='gold')||(userAddr&&userAddr.toLowerCase()===OWNER_WALLET_LC);
   document.getElementById('studioCollectionGate').style.display=isGold?'none':'block';
   document.getElementById('studioCollectionForm').style.display=isGold?'block':'none';
+}
+
+function nftStudioFileNameUpdate(inputId,nameDisplayId){
+  const input=document.getElementById(inputId);
+  const nameEl=document.getElementById(nameDisplayId);
+  const file=input.files[0];
+  nameEl.textContent=file?file.name:'No file chosen';
 }
 
 function nftStudioPreview(inputId,previewId){
