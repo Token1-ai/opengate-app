@@ -61,6 +61,11 @@ window.addEventListener('error',function(e){
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+.help-toggle-btn{background:var(--gold);border:none;color:#08090C;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;animation:helpPulse 1.8s ease-in-out infinite;}
+@keyframes helpPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(245,200,66,0.55);}
+  50%{box-shadow:0 0 0 8px rgba(245,200,66,0);}
+}
 a{text-decoration:none;color:inherit;}
 button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline:none;}
 ::-webkit-scrollbar{width:4px;}
@@ -1007,7 +1012,7 @@ async function smartConnectWallet(){
             <div style="font-size:13px;font-weight:700;color:var(--gold);">🔔 Stay tuned for the launch!</div>
           </div>
 
-          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:16px;">❔ How will this work?</button>
+          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" class="help-toggle-btn" style="margin-bottom:16px;">❔ How will this work?</button>
           <div id="lottohelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:20px;">
             <div style="color:var(--muted);">
               <b style="color:var(--text);">1.</b> Buy one or more tickets with BNB or USDT — <b style="color:var(--text);">$0.90 each</b>.<br>
@@ -1119,7 +1124,7 @@ async function smartConnectWallet(){
               <div style="background:linear-gradient(145deg,rgba(59,130,246,0.07),rgba(59,130,246,0.02));border:1px solid rgba(59,130,246,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
                 <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
 
-                <button id="bshelp-regular-btn" onclick="toggleHelpBox('bshelp-regular')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:12px;">❔ How does this work?</button>
+                <button id="bshelp-regular-btn" onclick="toggleHelpBox('bshelp-regular')" class="help-toggle-btn" style="margin-bottom:12px;">❔ How does this work?</button>
                 <div id="bshelp-regular" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
                   <div style="color:var(--muted);">
                     <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — buy one under "Buy GATE" if you don't have one yet.<br>
@@ -1184,7 +1189,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-57</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-58</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1259,7 +1264,7 @@ async function smartConnectWallet(){
               <div style="background:linear-gradient(145deg,rgba(245,200,66,0.07),rgba(245,200,66,0.02));border:1px solid rgba(245,200,66,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
                 <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
 
-                <button id="bshelp-gold-btn" onclick="toggleHelpBox('bshelp-gold')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:12px;">❔ How does this work?</button>
+                <button id="bshelp-gold-btn" onclick="toggleHelpBox('bshelp-gold')" class="help-toggle-btn" style="margin-bottom:12px;">❔ How does this work?</button>
                 <div id="bshelp-gold" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
                   <div style="color:var(--muted);">
                     <b style="color:var(--text);">1.</b> This VIP room needs a <b style="color:var(--text);">Gold Pass</b> — Silver Pass alone won't work here.<br>
@@ -1860,7 +1865,7 @@ async function smartConnectWallet(){
         </div>
 
         <div id="mkthelp-litvm-wrap" style="padding:12px 16px 0;">
-          <button id="mkthelp-litvm-btn" onclick="toggleHelpBox('mkthelp-litvm')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">❔ How does this work?</button>
+          <button id="mkthelp-litvm-btn" onclick="toggleHelpBox('mkthelp-litvm')" class="help-toggle-btn">❔ How does this work?</button>
           <div id="mkthelp-litvm" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy" and confirm in your wallet — you pay in zkLTC, and it's instantly transferred to your wallet.<br><br>
@@ -1883,7 +1888,7 @@ async function smartConnectWallet(){
         </div>
 
         <div id="mkthelp-bnb-wrap" style="display:none;padding:12px 16px 0;">
-          <button id="mkthelp-bnb-btn" onclick="toggleHelpBox('mkthelp-bnb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">❔ How does this work?</button>
+          <button id="mkthelp-bnb-btn" onclick="toggleHelpBox('mkthelp-bnb')" class="help-toggle-btn">❔ How does this work?</button>
           <div id="mkthelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy". If it's priced in BNB, one confirmation in your wallet and you're done. If it's priced in USDT/USDC, you'll be asked to "Approve" the payment first (a one-time permission), then confirm the purchase — two steps for stablecoins, that's normal.<br><br>
@@ -1998,7 +2003,7 @@ async function smartConnectWallet(){
         <!-- ══════════ zkLitVM PANEL ══════════ -->
         <div id="studioLitvmSection">
         <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
-          <button id="studiohelp-litvm-btn" onclick="toggleHelpBox('studiohelp-litvm')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">❔ How does this work?</button>
+          <button id="studiohelp-litvm-btn" onclick="toggleHelpBox('studiohelp-litvm')" class="help-toggle-btn">❔ How does this work?</button>
           <div id="studiohelp-litvm" style="display:none;background:var(--bg2);border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               <b style="color:var(--text);">1.</b> Choose a photo from your device.<br>
@@ -2039,7 +2044,7 @@ async function smartConnectWallet(){
         <!-- ══════════ BNB PANEL (existing) ══════════ -->
         <div id="studioBnbSection" style="display:none;">
         <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
-          <button id="studiohelp-bnb-btn" onclick="toggleHelpBox('studiohelp-bnb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">❔ How does this work?</button>
+          <button id="studiohelp-bnb-btn" onclick="toggleHelpBox('studiohelp-bnb')" class="help-toggle-btn">❔ How does this work?</button>
           <div id="studiohelp-bnb" style="display:none;background:var(--bg2);border:1px solid rgba(59,130,246,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               Upload your own photo → it becomes a real NFT you fully own, on your own contract. Works everywhere — MetaMask, our marketplace, and other NFT sites.<br><br>
@@ -3093,7 +3098,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-57';
+var OG_BS_BUILD='BS-58';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5139,7 +5144,16 @@ function toggleHelpBox(id){
   const isOpen=el.style.display==='block';
   el.style.display=isOpen?'none':'block';
   const btn=document.getElementById(id+'-btn');
-  if(btn) btn.textContent=isOpen?'❔ How does this work?':'✕ Hide';
+  if(btn){
+    if(!isOpen){
+      if(!btn.dataset.origText) btn.dataset.origText=btn.textContent;
+      btn.textContent='✕ Hide';
+      btn.style.animation='none';
+    } else {
+      btn.textContent=btn.dataset.origText||'❔ How does this work?';
+      btn.style.animation='';
+    }
+  }
 }
 
 function showTab(tab){
