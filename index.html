@@ -1007,6 +1007,17 @@ async function smartConnectWallet(){
             <div style="font-size:13px;font-weight:700;color:var(--gold);">🔔 Stay tuned for the launch!</div>
           </div>
 
+          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:16px;">❔ How will this work?</button>
+          <div id="lottohelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:20px;">
+            <div style="color:var(--muted);">
+              <b style="color:var(--text);">1.</b> Buy one or more tickets with BNB or USDT — <b style="color:var(--text);">$0.90 each</b>.<br>
+              <b style="color:var(--text);">2.</b> When the round ends, <b style="color:var(--text);">10 winners</b> are picked at random.<br>
+              <b style="color:var(--text);">3.</b> The draw uses <b style="color:var(--text);">Chainlink VRF</b> — a verifiable, tamper-proof random number source, so nobody (including us) can rig who wins.<br>
+              <b style="color:var(--text);">4.</b> Winnings are paid automatically to the winners' wallets — no claiming needed.<br><br>
+              Not live yet — this is a preview of how it will work once the round opens.
+            </div>
+          </div>
+
           <!-- Features grid -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
             <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
@@ -1108,6 +1119,18 @@ async function smartConnectWallet(){
               <div style="background:linear-gradient(145deg,rgba(59,130,246,0.07),rgba(59,130,246,0.02));border:1px solid rgba(59,130,246,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
                 <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
 
+                <button id="bshelp-regular-btn" onclick="toggleHelpBox('bshelp-regular')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:12px;">❔ How does this work?</button>
+                <div id="bshelp-regular" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
+                  <div style="color:var(--muted);">
+                    <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — buy one under "Buy GATE" if you don't have one yet.<br>
+                    <b style="color:var(--text);">2.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
+                    <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
+                    <b style="color:var(--text);">4.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
+                    <b style="color:var(--text);">5.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
+                    <b style="color:var(--text);">6.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.
+                  </div>
+                </div>
+
                 <!-- Token -->
                 <div style="margin-bottom:12px;">
                   <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token</div>
@@ -1124,7 +1147,7 @@ async function smartConnectWallet(){
                     <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);">$</span>
                     <input id="bnbbs-amount" type="number" min="0.1" step="0.1" placeholder="0.00" style="width:100%;padding:10px 12px 10px 28px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;outline:none;"/>
                   </div>
-                  <div style="font-size:11px;color:var(--muted);margin-top:4px;">Min: $0.10 · No maximum limit</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px;">Min: $0.10 · Max: $50</div>
                 </div>
 
                 <!-- Quick amounts -->
@@ -1161,7 +1184,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-55</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-57</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -1235,6 +1258,18 @@ async function smartConnectWallet(){
               <!-- Create/Find -->
               <div style="background:linear-gradient(145deg,rgba(245,200,66,0.07),rgba(245,200,66,0.02));border:1px solid rgba(245,200,66,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
                 <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
+
+                <button id="bshelp-gold-btn" onclick="toggleHelpBox('bshelp-gold')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;margin-bottom:12px;">❔ How does this work?</button>
+                <div id="bshelp-gold" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
+                  <div style="color:var(--muted);">
+                    <b style="color:var(--text);">1.</b> This VIP room needs a <b style="color:var(--text);">Gold Pass</b> — Silver Pass alone won't work here.<br>
+                    <b style="color:var(--text);">2.</b> Pick a currency (USDT or USDC) and how much you want to stake — <b style="color:var(--text);">minimum $0.10, no upper limit</b>.<br>
+                    <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
+                    <b style="color:var(--text);">4.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
+                    <b style="color:var(--text);">5.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
+                    <b style="color:var(--text);">6.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.
+                  </div>
+                </div>
 
                 <!-- Token -->
                 <div style="margin-bottom:12px;">
@@ -1824,6 +1859,17 @@ async function smartConnectWallet(){
           </div>
         </div>
 
+        <div id="mkthelp-litvm-wrap" style="padding:12px 16px 0;">
+          <button id="mkthelp-litvm-btn" onclick="toggleHelpBox('mkthelp-litvm')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">❔ How does this work?</button>
+          <div id="mkthelp-litvm" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
+            <div style="color:var(--muted);">
+              <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy" and confirm in your wallet — you pay in zkLTC, and it's instantly transferred to your wallet.<br><br>
+              <b style="color:var(--text);">To sell:</b> hit "+ List NFT" at the top, enter the NFT's contract address and Token ID, set a price in zkLTC, and confirm. It'll show up here for everyone to buy.<br><br>
+              <b style="color:var(--text);">Fee:</b> when your NFT sells, <b style="color:var(--text);">2.5%</b> goes to the platform and you keep the rest — automatically, no extra steps.
+            </div>
+          </div>
+        </div>
+
         <!-- Stats (BNB) -->
         <div id="mktStatsBnb" style="display:none;gap:0;border-bottom:1px solid var(--border);margin-top:8px;">
           <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
@@ -1833,6 +1879,17 @@ async function smartConnectWallet(){
           <div style="flex:1;padding:12px 20px;text-align:center;">
             <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--green);">5%</div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px;">Platform Fee</div>
+          </div>
+        </div>
+
+        <div id="mkthelp-bnb-wrap" style="display:none;padding:12px 16px 0;">
+          <button id="mkthelp-bnb-btn" onclick="toggleHelpBox('mkthelp-bnb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">❔ How does this work?</button>
+          <div id="mkthelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
+            <div style="color:var(--muted);">
+              <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy". If it's priced in BNB, one confirmation in your wallet and you're done. If it's priced in USDT/USDC, you'll be asked to "Approve" the payment first (a one-time permission), then confirm the purchase — two steps for stablecoins, that's normal.<br><br>
+              <b style="color:var(--text);">To sell:</b> hit "+ List NFT" at the top, enter the NFT's contract address and Token ID, choose your currency (BNB, USDT or USDC) and price, then confirm. It'll show up here for everyone to buy — this works for <b style="color:var(--text);">any</b> NFT, including your own Gold/Silver Pass.<br><br>
+              <b style="color:var(--text);">Fee:</b> when your NFT sells, <b style="color:var(--text);">5%</b> goes to the platform and you keep the rest — automatically, no extra steps.
+            </div>
           </div>
         </div>
 
@@ -1941,11 +1998,13 @@ async function smartConnectWallet(){
         <!-- ══════════ zkLitVM PANEL ══════════ -->
         <div id="studioLitvmSection">
         <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
-          <div style="background:var(--bg2);border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);">
-            <div style="font-weight:700;margin-bottom:6px;">⚡ How it works on zkLitVM</div>
+          <button id="studiohelp-litvm-btn" onclick="toggleHelpBox('studiohelp-litvm')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">❔ How does this work?</button>
+          <div id="studiohelp-litvm" style="display:none;background:var(--bg2);border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
-              Upload your own photo → it becomes a real NFT you fully own, on your own contract. No pass needed, open to everyone.<br><br>
-              <b style="color:var(--text);">Price: 0.02 zkLTC per NFT</b> — same flat price whether you make one NFT or a whole collection (up to 1000). Paid once, straight to the platform wallet, right when you create it.
+              <b style="color:var(--text);">1.</b> Choose a photo from your device.<br>
+              <b style="color:var(--text);">2.</b> Give it a name (description is optional).<br>
+              <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create My NFT"</b> and confirm the payment in your wallet.<br><br>
+              <b style="color:var(--text);">Price: 0.02 zkLTC per NFT</b> — flat price, no pass needed, open to everyone. Paid once, straight to the platform wallet, right when you create it. Your new NFT is instantly yours — you can view it in your wallet or list it for sale on the NFT Marketplace.
             </div>
           </div>
         </div>
@@ -1980,8 +2039,8 @@ async function smartConnectWallet(){
         <!-- ══════════ BNB PANEL (existing) ══════════ -->
         <div id="studioBnbSection" style="display:none;">
         <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
-          <div style="background:var(--bg2);border:1px solid rgba(59,130,246,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);">
-            <div style="font-weight:700;margin-bottom:6px;">🟡 How it works on BNB Chain</div>
+          <button id="studiohelp-bnb-btn" onclick="toggleHelpBox('studiohelp-bnb')" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;">❔ How does this work?</button>
+          <div id="studiohelp-bnb" style="display:none;background:var(--bg2);border:1px solid rgba(59,130,246,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               Upload your own photo → it becomes a real NFT you fully own, on your own contract. Works everywhere — MetaMask, our marketplace, and other NFT sites.<br><br>
               <b style="color:var(--text);">🖼️ Single NFT:</b><br>
@@ -3034,7 +3093,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-55';
+var OG_BS_BUILD='BS-57';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5075,6 +5134,14 @@ async function loadGateBal(force=false){
 }
 
 // ── APP TABS ──
+function toggleHelpBox(id){
+  const el=document.getElementById(id);
+  const isOpen=el.style.display==='block';
+  el.style.display=isOpen?'none':'block';
+  const btn=document.getElementById(id+'-btn');
+  if(btn) btn.textContent=isOpen?'❔ How does this work?':'✕ Hide';
+}
+
 function showTab(tab){
   localStorage.setItem('og_active_tab', tab);
   document.getElementById('view-feed').style.display=tab==='feed'?'block':'none';
@@ -7900,6 +7967,8 @@ function mktSwitchChain(chain){
   document.getElementById('mktStatsBnb').style.display=isBnb?'flex':'none';
   document.getElementById('mktLitvmSection').style.display=isBnb?'none':'block';
   document.getElementById('mktBnbSection').style.display=isBnb?'block':'none';
+  document.getElementById('mkthelp-litvm-wrap').style.display=isBnb?'none':'block';
+  document.getElementById('mkthelp-bnb-wrap').style.display=isBnb?'block':'none';
   if(isBnb) loadMarketplaceBNB();
 }
 
