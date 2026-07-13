@@ -954,7 +954,7 @@ async function smartConnectWallet(){
         <button class="side-btn" id="tab-nftstudio" onclick="showTab('nftstudio')"><span class="side-ico">🎨</span>NFT Studio</button>
         <button class="side-btn" id="tab-explore" onclick="showTab('explore')"><span class="side-ico">🔍</span>Explore</button>
         <button class="side-btn" id="tab-notifs" onclick="showTab('notifs')"><span class="side-ico">🔔</span>Notifications<span id="notifBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
-        <button class="side-btn" id="tab-launchpad" onclick="showTab('launchpad')"><span class="side-ico">🪙</span>Launchpad</button>
+        <button class="side-btn" id="tab-launchpad" onclick="showTab('launchpad')"><span class="side-ico">🪙</span>Create Token</button>
         <button class="side-btn" id="tab-presale" onclick="showTab('presale')"><span class="side-ico">🚀</span>Presale</button>
         <button class="side-btn" id="tab-messages" onclick="showTab('messages')"><span class="side-ico">💬</span>Messages<span id="unreadBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
       </div>
@@ -1189,7 +1189,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-58</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-62</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2153,11 +2153,30 @@ async function smartConnectWallet(){
         <div id="notifsList"><div class="app-loader">Loading...</div></div>
       </div>
       <div id="view-launchpad" style="display:none;">
-        <div class="feed-hdr">🪙 Token Launchpad</div>
-        <div style="padding:20px;max-width:560px;margin:0 auto;">
+        <div class="feed-hdr">🪙 Create Token</div>
+
+        <!-- Chain switcher -->
+        <div style="display:flex;gap:8px;padding:12px 16px 0;max-width:560px;margin:0 auto;">
+          <button id="launchChainLitvm" onclick="launchSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="launchChainBnb" onclick="launchSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
+        </div>
+
+        <!-- ══════════ zkLitVM PANEL ══════════ -->
+        <div id="launchLitvmSection">
+        <div style="padding:20px 20px 0;max-width:560px;margin:0 auto;">
+          <button id="launchhelp-litvm-btn" class="help-toggle-btn" onclick="toggleHelpBox('launchhelp-litvm')">❔ How does this work?</button>
+          <div id="launchhelp-litvm" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
+            <div style="color:var(--muted);">
+              <b style="color:var(--text);">1.</b> Fill in your token's name, symbol (short ticker like "MAT"), decimals (18 is standard), and total supply.<br>
+              <b style="color:var(--text);">2.</b> Optionally turn on <b style="color:var(--text);">Mintable</b> (you can create more tokens later), <b style="color:var(--text);">Burnable</b> (holders can destroy tokens they own) or <b style="color:var(--text);">Pausable</b> (you can freeze all transfers in an emergency).<br>
+              <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Launch Your Token"</b> and confirm in your wallet — a real, independent ERC-20 contract gets deployed, fully owned by you.<br><br>
+              <b style="color:var(--text);">Cost:</b> <b style="color:var(--text);">0.003 zkLTC</b> to deploy — completely <b style="color:var(--text);">free</b> if you hold a Gold Pass.
+            </div>
+          </div>
+        </div>
 
           <!-- VIP badge -->
-          <div id="launchVipBadge" style="display:none;background:linear-gradient(135deg,rgba(245,200,66,0.1),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+          <div id="launchVipBadge" style="display:none;background:linear-gradient(135deg,rgba(245,200,66,0.1),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;max-width:560px;margin-left:auto;margin-right:auto;margin-top:16px;">
             <span style="font-size:24px;">🥇</span>
             <div>
               <div style="font-size:14px;font-weight:700;color:var(--gold);">Gold Pass Holder — FREE deployment</div>
@@ -2166,6 +2185,7 @@ async function smartConnectWallet(){
           </div>
 
           <!-- Create token form -->
+          <div style="padding:0 20px;max-width:560px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;margin-bottom:16px;">
             <div style="font-size:16px;font-weight:700;margin-bottom:20px;">🚀 Launch Your Token</div>
 
@@ -2173,6 +2193,7 @@ async function smartConnectWallet(){
               <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token Name *</div>
               <input id="ltName" placeholder="e.g. My Awesome Token" maxlength="50"
                 style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
@@ -2232,6 +2253,107 @@ async function smartConnectWallet(){
             <div class="w-row"><span class="w-lbl">Gold Pass fee</span><span class="w-val" style="color:var(--green);">FREE</span></div>
             <div class="w-row"><span class="w-lbl">Standard fee</span><span class="w-val">0.003 zkLTC</span></div>
           </div>
+        </div>
+        </div>
+
+        <!-- ══════════ BNB PANEL ══════════ -->
+        <div id="launchBnbSection" style="display:none;">
+        <div style="padding:20px 20px 0;max-width:560px;margin:0 auto;">
+          <button id="launchhelp-bnb-btn" class="help-toggle-btn" onclick="toggleHelpBox('launchhelp-bnb')">❔ How does this work?</button>
+          <div id="launchhelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;font-size:13px;line-height:1.8;color:var(--text);margin-top:10px;">
+            <div style="color:var(--muted);">
+              <b style="color:var(--text);">Never made a token before? Here's exactly what happens:</b><br><br>
+              <b style="color:var(--text);">1. Logo (optional)</b> — upload any picture. It automatically gets cropped to a square and resized, so you don't need to prepare it yourself.<br><br>
+              <b style="color:var(--text);">2. Name</b> — the full name of your token, e.g. "My Awesome Token".<br><br>
+              <b style="color:var(--text);">3. Symbol</b> — a short ticker, usually 3–5 letters, e.g. "MAT". This is what shows up next to the amount in wallets.<br><br>
+              <b style="color:var(--text);">4. Decimals</b> — how finely your token can be divided. <b style="color:var(--text);">18 is the standard</b> almost everyone uses (same as BNB itself) — leave it unless you have a specific reason to change it.<br><br>
+              <b style="color:var(--text);">5. Total Supply</b> — how many tokens exist in total, right from the start. E.g. 1,000,000. All of them go straight to your wallet when the token is created.<br><br>
+              <b style="color:var(--text);">6. Optional features</b> — toggle any of these on:<br>
+              • <b style="color:var(--text);">Mintable</b> — you can create more tokens later, whenever you want.<br>
+              • <b style="color:var(--text);">Burnable</b> — anyone holding the token can permanently destroy their own tokens (often used to reduce supply over time).<br>
+              • <b style="color:var(--text);">Pausable</b> — you can freeze all transfers instantly in an emergency (e.g. if something goes wrong), and unfreeze later.<br>
+              • <b style="color:var(--text);">Tax</b> — a small % of every transfer is automatically redirected to your wallet (common for project funding). You choose the %.<br>
+              • <b style="color:var(--text);">Anti-Whale</b> — blocks any single transfer larger than a % you set of the total supply, to slow down bots dumping right after launch.<br><br>
+              <b style="color:var(--text);">7. Currency</b> — pick BNB, USDT or USDC to pay the creation fee.<br><br>
+              <b style="color:var(--text);">8. Hit "Create Token"</b> and confirm in your wallet. Your token is a real, independent contract — fully yours, works in any wallet, and you're free to list it on any exchange or DEX (like PancakeSwap) yourself, add liquidity, and share it with the world.
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:20px;max-width:560px;margin:0 auto;">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;">
+            <div style="font-size:16px;font-weight:700;margin-bottom:20px;">🚀 Create Your Token</div>
+
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional)</span></div>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <div id="tokLogoPreview" style="width:56px;height:56px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);">🪙</div>
+                <label for="tokLogoFile" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
+                <span id="tokLogoFileName" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;">No file chosen</span>
+              </div>
+              <input type="file" id="tokLogoFile" accept="image/*" onchange="tokStudioLogoPreview()" style="display:none;"/>
+            </div>
+
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token Name *</div>
+              <input id="tokName" placeholder="e.g. My Awesome Token" maxlength="50" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+              <div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Symbol *</div>
+                <input id="tokSymbol" placeholder="e.g. MAT" maxlength="10" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+              </div>
+              <div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Decimals</div>
+                <input id="tokDecimals" type="number" value="18" min="0" max="18" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+              </div>
+            </div>
+
+            <div style="margin-bottom:18px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Total Supply *</div>
+              <input id="tokSupply" type="number" placeholder="e.g. 1000000" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+            </div>
+
+            <div style="margin-bottom:18px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;">Features</div>
+              <div style="display:flex;gap:8px;margin-bottom:10px;">
+                <button id="tokMint" onclick="toggleTokOpt('tokMint')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🔨 Mintable</button>
+                <button id="tokBurn" onclick="toggleTokOpt('tokBurn')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🔥 Burnable</button>
+                <button id="tokPause" onclick="toggleTokOpt('tokPause')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">⏸ Pausable</button>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                <button id="tokTax" onclick="toggleTokOpt('tokTax')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">💰 Tax</button>
+                <input id="tokTaxPct" type="number" placeholder="%" min="0" max="25" step="0.1" disabled style="width:70px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;color:var(--text);font-size:13px;outline:none;text-align:center;opacity:.5;"/>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <button id="tokWhale" onclick="toggleTokOpt('tokWhale')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🐋 Anti-Whale</button>
+                <input id="tokWhalePct" type="number" placeholder="%" min="0.5" max="100" step="0.1" disabled style="width:70px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;color:var(--text);font-size:13px;outline:none;text-align:center;opacity:.5;"/>
+              </div>
+            </div>
+
+            <div style="margin-bottom:8px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Pay with</div>
+              <div style="display:flex;gap:8px;">
+                <button id="tok-cur-bnb" onclick="tokSelectCurrency('BNB')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:var(--gold);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;">BNB</button>
+                <button id="tok-cur-usdt" onclick="tokSelectCurrency('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
+                <button id="tok-cur-usdc" onclick="tokSelectCurrency('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+              <span style="font-size:13px;color:var(--muted);">Price</span>
+              <span style="font-family:'Space Mono',monospace;font-weight:700;color:var(--gold);" id="tokPriceDisplay">Loading...</span>
+            </div>
+
+            <button onclick="tokCreateToken()" id="tokCreateBtn" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#e9d5ff;font-size:15px;font-weight:700;border:none;cursor:pointer;">🚀 Create Token</button>
+          </div>
+
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">My BNB Tokens</div>
+            <div id="myBnbTokensList"><div style="font-size:13px;color:var(--muted);">Connect wallet to see your tokens</div></div>
+          </div>
+        </div>
         </div>
       </div>
       <div id="view-presale" style="display:none;">
@@ -2421,7 +2543,7 @@ async function smartConnectWallet(){
       <div class="drawer-lbl">More</div>
       <button class="drawer-btn" id="drawer-market" onclick="closeDrawer();showTab('market')"><span class="drawer-ico">🛒</span>NFT Market</button>
       <button class="drawer-btn" id="drawer-nftstudio" onclick="closeDrawer();showTab('nftstudio')"><span class="drawer-ico">🎨</span>NFT Studio</button>
-      <button class="drawer-btn" id="drawer-launchpad" onclick="closeDrawer();showTab('launchpad')"><span class="drawer-ico">🪙</span>Launchpad</button>
+      <button class="drawer-btn" id="drawer-launchpad" onclick="closeDrawer();showTab('launchpad')"><span class="drawer-ico">🪙</span>Create Token</button>
       <button class="drawer-btn" id="drawer-faucet" onclick="closeDrawer();showTab('faucet')"><span class="drawer-ico">🚰</span>Faucet</button>
 
       <div style="padding:16px 12px 8px;">
@@ -2613,6 +2735,15 @@ const BNB_MKT_CURRENCIES = {
 const NFT_FACTORY_BNB = '0x381Ba71CccF8BbA5bCdc3f1BeED89C65c9608b35';
 const OWNER_WALLET_LC = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
 const NFT_FACTORY_LITVM = '0x25375207779012f869E267fb4A657185AEd959C0';
+const TOKEN_FACTORY_BNB = '0x472eE271fDbDa4498835FD1b2AEC11489438995B';
+const TOKEN_FACTORY_BNB_ABI = [
+  'function quoteUsdCents(address) view returns(uint256)',
+  'function quotePrice(address,address) view returns(uint256)',
+  'function createToken((string,string,uint8,uint256,address,bool,bool,bool,string,bool,uint16,bool,uint16),address) payable returns(address)',
+  'function getTokensByCreator(address) view returns(tuple(address token,address creator,string name,string symbol,uint256 createdAt)[])',
+  'function priceUsdCents() view returns(uint256)',
+  'function goldDiscountBps() view returns(uint256)',
+];
 const NFT_FACTORY_LITVM_ABI = [
   'function PRICE_PER_TOKEN() view returns(uint256)',
   'function quotePrice(uint256) view returns(uint256)',
@@ -2658,6 +2789,7 @@ const STAKING_ABI = [
 ];
 const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNmY5ZWM5OC0wNmMyLTRiYjYtOWE0OS1hYzkyZmRiY2YwMzIiLCJlbWFpbCI6ImJ0Y2ZpbHNzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI3YTE4OTZlZjgyNDAwYzA2NTI4NyIsInNjb3BlZEtleVNlY3JldCI6IjM5MjMzNWVmYmQyYzJiYzZlNDk5NDIzYzk1YzMxZWM5NDA3NzgxMjhkYmZiNTE1NzQyODkzMmU4OWFkY2Y1YzciLCJleHAiOjE4MTI1NjgzMzF9.WkiIwhZqxvx3hz_xymtuv2257hVdRg-Bxo_1Vee3fl0';
 const PINATA_JWT_LITVM = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIwNzBjNDJlMi1iMGQ5LTQyNTEtYmJmYi1mZGQ3ZDc2OTFiMWEiLCJlbWFpbCI6ImdvcGVuZ2F0ZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiNDMzMmVjNDQzNTA3MTllYTI2MjgiLCJzY29wZWRLZXlTZWNyZXQiOiI2NGYyNTViZTlmMmI5NzE4ZjYwMmQ3ZTFiMGY1ZWY3ODkyMTBiZGJmNmJkZDAzNzUwMjMzNTM0YmMxODg1MzM3IiwiZXhwIjoxODE1NDExOTAzfQ.JFLKk6TFqSM6WGXskkXuPHkk01QfbPD0GION3VmSP7A';
+const PINATA_JWT_TOKENS = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI0YzQzYzBjOS05MGNmLTQwZGMtODBkYy02YzM1YTRkNDM3MjUiLCJlbWFpbCI6Im5mdGluMjRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjQ4YWViMzI4MmEzMDMzMTVmNTBhIiwic2NvcGVkS2V5U2VjcmV0IjoiZGU3YmFlNmUxODA0YmFjYzYwZTA2YzNjMmIwNTQ3ZTY1NDJlZDljYzhlZGY3YmM0YThjN2UyZGZjNDljMWZhYSIsImV4cCI6MTgxNTQ4ODYyN30.hqNh-wmwbX2qJE8UETfkLknem9Un8KE-1xkjzRzFZwg';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ── ONLINE PRESENCE — Facebook-style green dot, ZERO DB load (Supabase Realtime Presence) ── */
@@ -3098,7 +3230,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-58';
+var OG_BS_BUILD='BS-62';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5277,6 +5409,37 @@ async function uploadToPinataOnly(file,jwt){
   return 'https://gateway.pinata.cloud/ipfs/'+json.IpfsHash;
 }
 
+// Server-side Filebase upload (via api/filebase-upload.js) — used only as
+// an automatic fallback when Pinata is unavailable (e.g. quota reached).
+async function uploadToFilebase(file,bucket){
+  const dataBase64=await new Promise(function(resolve,reject){
+    const reader=new FileReader();
+    reader.onload=function(){ resolve(reader.result.split(',')[1]); };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+  const res=await fetch('/api/filebase-upload',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({bucket:bucket,filename:file.name,contentType:file.type,dataBase64:dataBase64})
+  });
+  if(!res.ok) throw new Error('Filebase upload failed: '+res.status);
+  const json=await res.json();
+  return json.url;
+}
+
+// Upload with automatic fallback: try Pinata first (fast, proven), and
+// if it fails for ANY reason (quota reached, network hiccup, etc.), fall
+// back to Filebase automatically — the user never sees the difference.
+async function uploadImageWithFallback(file,pinataJwt,filebaseBucket){
+  try{
+    return await uploadToPinataOnly(file,pinataJwt);
+  }catch(e){
+    console.warn('[Upload] Pinata failed, falling back to Filebase:',e.message);
+    return await uploadToFilebase(file,filebaseBucket);
+  }
+}
+
 async function pinJSONToIPFS(obj,jwt){
   const res=await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS',{
     method:'POST',
@@ -5473,7 +5636,7 @@ async function nftStudioUpdateCollectionPrice(){
 
 async function nftStudioUploadAndPin(file,name,description,jwt){
   showToast('Uploading photo...','ok');
-  const imageUrl=await uploadToPinataOnly(file,jwt);
+  const imageUrl=await uploadImageWithFallback(file,jwt,'opengate-nft');
   const metaUrl=await pinJSONToIPFS({
     name: name,
     description: description||'',
@@ -7996,6 +8159,17 @@ function gamesSwitchChain(chain){
   document.getElementById('gamesBnbSection').style.display=isBnb?'grid':'none';
 }
 
+function launchSwitchChain(chain){
+  const isBnb=chain==='bnb';
+  document.getElementById('launchChainLitvm').style.background=isBnb?'var(--bg3)':'var(--gold)';
+  document.getElementById('launchChainLitvm').style.color=isBnb?'var(--text)':'#08090C';
+  document.getElementById('launchChainBnb').style.background=isBnb?'var(--gold)':'var(--bg3)';
+  document.getElementById('launchChainBnb').style.color=isBnb?'#08090C':'var(--text)';
+  document.getElementById('launchLitvmSection').style.display=isBnb?'none':'block';
+  document.getElementById('launchBnbSection').style.display=isBnb?'block':'none';
+  if(isBnb){ tokUpdatePrice(); tokLoadMyTokens(); }
+}
+
 async function loadMarketplaceBNB(){
   try{
     let active=[];
@@ -8330,6 +8504,159 @@ async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===t
 // ── LAUNCHPAD ──
 let ltOpts={ltMint:false,ltBurn:false,ltPause:false};
 function toggleLtOpt(id){ltOpts[id]=!ltOpts[id];const btn=document.getElementById(id);if(ltOpts[id]){btn.style.borderColor='#7c3aed';btn.style.background='#2d1a4a';btn.style.color='#c4b5fd';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}}
+
+// ══════════════════ BNB TOKEN CREATOR ══════════════════
+let tokOpts={tokMint:false,tokBurn:false,tokPause:false,tokTax:false,tokWhale:false};
+let tokCurrency='BNB';
+let tokLogoDataUrl='';
+
+function toggleTokOpt(id){
+  tokOpts[id]=!tokOpts[id];
+  const btn=document.getElementById(id);
+  if(tokOpts[id]){btn.style.borderColor='#7c3aed';btn.style.background='#2d1a4a';btn.style.color='#c4b5fd';}
+  else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
+  if(id==='tokTax'){const inp=document.getElementById('tokTaxPct');inp.disabled=!tokOpts.tokTax;inp.style.opacity=tokOpts.tokTax?'1':'.5';}
+  if(id==='tokWhale'){const inp=document.getElementById('tokWhalePct');inp.disabled=!tokOpts.tokWhale;inp.style.opacity=tokOpts.tokWhale?'1':'.5';}
+}
+
+function tokSelectCurrency(sym){
+  tokCurrency=sym;
+  ['bnb','usdt','usdc'].forEach(function(s){
+    const btn=document.getElementById('tok-cur-'+s);
+    const active=s===sym.toLowerCase();
+    btn.style.background=active?'var(--gold)':'var(--bg3)';
+    btn.style.color=active?'#08090C':'var(--text)';
+    btn.style.borderColor=active?'var(--gold)':'var(--border)';
+  });
+  tokUpdatePrice();
+}
+
+// Resize/crop any uploaded image to a clean square logo (e.g. 400x400)
+// so users never have to prepare the image themselves.
+function tokResizeImage(file,size){
+  return new Promise(function(resolve,reject){
+    const img=new Image();
+    const reader=new FileReader();
+    reader.onload=function(e){ img.src=e.target.result; };
+    reader.onerror=reject;
+    img.onload=function(){
+      const canvas=document.createElement('canvas');
+      canvas.width=size; canvas.height=size;
+      const ctx=canvas.getContext('2d');
+      const minSide=Math.min(img.width,img.height);
+      const sx=(img.width-minSide)/2, sy=(img.height-minSide)/2;
+      ctx.drawImage(img,sx,sy,minSide,minSide,0,0,size,size);
+      canvas.toBlob(function(blob){
+        resolve(new File([blob],'logo.png',{type:'image/png'}));
+      },'image/png',0.92);
+    };
+    img.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function tokStudioLogoPreview(){
+  const input=document.getElementById('tokLogoFile');
+  const file=input.files[0];
+  document.getElementById('tokLogoFileName').textContent=file?file.name:'No file chosen';
+  if(!file) return;
+  const resized=await tokResizeImage(file,400);
+  input._resizedFile=resized;
+  const url=URL.createObjectURL(resized);
+  document.getElementById('tokLogoPreview').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+}
+
+async function tokUpdatePrice(){
+  const el=document.getElementById('tokPriceDisplay');
+  if(!userAddr){ el.textContent='Connect wallet'; return; }
+  try{
+    const paymentAddr=tokCurrency==='BNB'?ethers.ZeroAddress:BNB_MKT_CURRENCIES[tokCurrency].addr;
+    const price=await bnbReadRetry(function(rp){return new ethers.Contract(TOKEN_FACTORY_BNB,TOKEN_FACTORY_BNB_ABI,rp).quotePrice(userAddr,paymentAddr);});
+    if(price===0n){ el.textContent='Free 🎉'; el.style.color='var(--green)'; return; }
+    el.style.color='var(--gold)';
+    el.textContent=tokCurrency==='BNB' ? (parseFloat(ethers.formatEther(price)).toFixed(5)+' BNB') : (parseFloat(ethers.formatUnits(price,18)).toFixed(2)+' '+tokCurrency);
+  }catch(e){ el.textContent='—'; }
+}
+
+async function tokCreateToken(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const name=document.getElementById('tokName').value.trim();
+  const symbol=document.getElementById('tokSymbol').value.trim();
+  const decimals=parseInt(document.getElementById('tokDecimals').value)||18;
+  const supplyStr=document.getElementById('tokSupply').value.trim();
+  if(!name||!symbol||!supplyStr){showToast('Fill all required fields','err');return;}
+  const taxPct=tokOpts.tokTax?parseFloat(document.getElementById('tokTaxPct').value)||0:0;
+  const whalePct=tokOpts.tokWhale?parseFloat(document.getElementById('tokWhalePct').value)||0:0;
+  if(tokOpts.tokTax&&(taxPct<=0||taxPct>25)){showToast('Tax must be between 0.1% and 25%','err');return;}
+  if(tokOpts.tokWhale&&(whalePct<0.5||whalePct>100)){showToast('Anti-Whale limit must be at least 0.5%','err');return;}
+
+  const btn=document.getElementById('tokCreateBtn');
+  btn.disabled=true; const origText=btn.textContent;
+  try{
+    let logoURI='';
+    const logoInput=document.getElementById('tokLogoFile');
+    if(logoInput._resizedFile){
+      btn.textContent='Uploading logo...';
+      logoURI=await uploadImageWithFallback(logoInput._resizedFile,PINATA_JWT_TOKENS,'opengate-tokens');
+    }
+
+    await switchToBNB();
+    const freshSigner=await provider.getSigner();
+    const paymentAddr=tokCurrency==='BNB'?ethers.ZeroAddress:BNB_MKT_CURRENCIES[tokCurrency].addr;
+    const factoryRead=new ethers.Contract(TOKEN_FACTORY_BNB,TOKEN_FACTORY_BNB_ABI,getBNBBattleProvider());
+    const price=await bnbReadRetry(function(rp){return new ethers.Contract(TOKEN_FACTORY_BNB,TOKEN_FACTORY_BNB_ABI,rp).quotePrice(userAddr,paymentAddr);});
+
+    if(price>0n && tokCurrency!=='BNB'){
+      const token=new ethers.Contract(paymentAddr,ERC20_MIN_ABI,freshSigner);
+      const allowance=await token.allowance(userAddr,TOKEN_FACTORY_BNB);
+      if(allowance<price){
+        showToast('Approve '+tokCurrency+' payment in MetaMask...','ok');
+        await(await token.approve(TOKEN_FACTORY_BNB,price)).wait();
+      }
+    }
+
+    const params=[
+      name, symbol, decimals, ethers.parseUnits(supplyStr,decimals), userAddr,
+      tokOpts.tokMint, tokOpts.tokBurn, tokOpts.tokPause, logoURI,
+      tokOpts.tokTax, Math.round(taxPct*100), tokOpts.tokWhale, Math.round(whalePct*100)
+    ];
+
+    const factory=new ethers.Contract(TOKEN_FACTORY_BNB,TOKEN_FACTORY_BNB_ABI,freshSigner);
+    btn.textContent='Creating token — confirm in MetaMask...';
+    const txValue=(tokCurrency==='BNB')?price:0n;
+    const tx=await factory.createToken(params,paymentAddr,{value:txValue});
+    await tx.wait();
+
+    showToast('🎉 Your token '+symbol+' is live!','ok');
+    document.getElementById('tokName').value='';
+    document.getElementById('tokSymbol').value='';
+    document.getElementById('tokSupply').value='';
+    document.getElementById('tokLogoFileName').textContent='No file chosen';
+    document.getElementById('tokLogoPreview').innerHTML='🪙';
+    logoInput.value=''; logoInput._resizedFile=null;
+    tokUpdatePrice();
+    tokLoadMyTokens();
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,80),'err');
+  }finally{
+    btn.disabled=false; btn.textContent=origText;
+  }
+}
+
+async function tokLoadMyTokens(){
+  const el=document.getElementById('myBnbTokensList');
+  if(!userAddr){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Connect wallet to see your tokens</div>'; return; }
+  try{
+    const list=await bnbReadRetry(function(rp){return new ethers.Contract(TOKEN_FACTORY_BNB,TOKEN_FACTORY_BNB_ABI,rp).getTokensByCreator(userAddr);});
+    if(list.length===0){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">You haven\'t created any tokens yet</div>'; return; }
+    el.innerHTML=list.map(function(t){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
+        +'<div><div style="font-size:13px;font-weight:700;">'+esc(t.name)+' ('+esc(t.symbol)+')</div>'
+        +'<div style="font-size:11px;color:var(--muted);font-family:monospace;">'+t.token+'</div></div>'
+        +'</div>';
+    }).join('');
+  }catch(e){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>'; }
+}
 async function loadLaunchpad(){try{const p=getReadProvider();const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,p);const fee=await factory.creationFee();const total=await factory.totalTokensCreated();document.getElementById('totalTokensCreated').textContent=total.toString();document.getElementById('ltFeeDisplay').textContent=parseFloat(ethers.formatEther(fee)).toFixed(4)+' zkLTC';}catch(e){}}
 async function launchToken(){if(!userAddr){showToast('Connect wallet first','err');return;}const name=document.getElementById('ltName').value.trim();const symbol=document.getElementById('ltSymbol').value.trim();const decimals=parseInt(document.getElementById('ltDecimals').value)||18;const supply=document.getElementById('ltSupply').value.trim();if(!name||!symbol||!supply){showToast('Fill all required fields','err');return;}try{await switchToLitVM();const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,signer);const fee=await factory.creationFee();const tx=await factory.createToken(name,symbol,decimals,supply,ltOpts.ltMint,ltOpts.ltBurn,ltOpts.ltPause,{value:fee});await tx.wait();showToast('🎉 Token '+symbol+' deployed!','ok');loadLaunchpad();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 
@@ -8899,7 +9226,7 @@ const LANGS = {
     home:'Home', allPosts:'All Posts', following:'Following',
     connectWallet:'Connect Wallet', explore:'Explore', messages:'Messages',
     staking:'Staking', lending:'Lending', presale:'Presale', games:'Games',
-    lottery:'Lottery', market:'NFT Market', launchpad:'Launchpad', faucet:'Faucet',
+    lottery:'Lottery', market:'NFT Market', launchpad:'Create Token', faucet:'Faucet',
     buyGate:'Buy GATE', landingPage:'← Landing Page',
     whatsOnMind:"What's on your mind?", pullToRefresh:'Pull to refresh',
     releaseToRefresh:'Release to refresh!', refreshing:'Refreshing...',
