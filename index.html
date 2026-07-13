@@ -954,7 +954,7 @@ async function smartConnectWallet(){
         <button class="side-btn" id="tab-nftstudio" onclick="showTab('nftstudio')"><span class="side-ico">🎨</span>NFT Studio</button>
         <button class="side-btn" id="tab-explore" onclick="showTab('explore')"><span class="side-ico">🔍</span>Explore</button>
         <button class="side-btn" id="tab-notifs" onclick="showTab('notifs')"><span class="side-ico">🔔</span>Notifications<span id="notifBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
-        <button class="side-btn" id="tab-launchpad" onclick="showTab('launchpad')"><span class="side-ico">🪙</span>Create Token</button>
+        <button class="side-btn" id="tab-launchpad" onclick="showTab('launchpad')"><span class="side-ico">🚀</span>Create Token</button>
         <button class="side-btn" id="tab-presale" onclick="showTab('presale')"><span class="side-ico">🚀</span>Presale</button>
         <button class="side-btn" id="tab-messages" onclick="showTab('messages')"><span class="side-ico">💬</span>Messages<span id="unreadBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
       </div>
@@ -1189,7 +1189,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-62</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-64</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -2153,7 +2153,7 @@ async function smartConnectWallet(){
         <div id="notifsList"><div class="app-loader">Loading...</div></div>
       </div>
       <div id="view-launchpad" style="display:none;">
-        <div class="feed-hdr">🪙 Create Token</div>
+        <div class="feed-hdr">🚀 Create Token</div>
 
         <!-- Chain switcher -->
         <div style="display:flex;gap:8px;padding:12px 16px 0;max-width:560px;margin:0 auto;">
@@ -2275,7 +2275,8 @@ async function smartConnectWallet(){
               • <b style="color:var(--text);">Tax</b> — a small % of every transfer is automatically redirected to your wallet (common for project funding). You choose the %.<br>
               • <b style="color:var(--text);">Anti-Whale</b> — blocks any single transfer larger than a % you set of the total supply, to slow down bots dumping right after launch.<br><br>
               <b style="color:var(--text);">7. Currency</b> — pick BNB, USDT or USDC to pay the creation fee.<br><br>
-              <b style="color:var(--text);">8. Hit "Create Token"</b> and confirm in your wallet. Your token is a real, independent contract — fully yours, works in any wallet, and you're free to list it on any exchange or DEX (like PancakeSwap) yourself, add liquidity, and share it with the world.
+              <b style="color:var(--text);">8. Hit "Create Token"</b> and confirm in your wallet. Your token is a real, independent contract — fully yours, works in any wallet, and you're free to list it on any exchange or DEX (like PancakeSwap) yourself, add liquidity, and share it with the world.<br><br>
+              <b style="color:var(--text);">✅ Verified on BscScan automatically</b> — every token created here shows up on BscScan with its source code already verified (the green checkmark), so anyone can see exactly how it works. You don't need to do anything for this — it happens on its own.
             </div>
           </div>
         </div>
@@ -2543,7 +2544,7 @@ async function smartConnectWallet(){
       <div class="drawer-lbl">More</div>
       <button class="drawer-btn" id="drawer-market" onclick="closeDrawer();showTab('market')"><span class="drawer-ico">🛒</span>NFT Market</button>
       <button class="drawer-btn" id="drawer-nftstudio" onclick="closeDrawer();showTab('nftstudio')"><span class="drawer-ico">🎨</span>NFT Studio</button>
-      <button class="drawer-btn" id="drawer-launchpad" onclick="closeDrawer();showTab('launchpad')"><span class="drawer-ico">🪙</span>Create Token</button>
+      <button class="drawer-btn" id="drawer-launchpad" onclick="closeDrawer();showTab('launchpad')"><span class="drawer-ico">🚀</span>Create Token</button>
       <button class="drawer-btn" id="drawer-faucet" onclick="closeDrawer();showTab('faucet')"><span class="drawer-ico">🚰</span>Faucet</button>
 
       <div style="padding:16px 12px 8px;">
@@ -3230,7 +3231,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-62';
+var OG_BS_BUILD='BS-64';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
