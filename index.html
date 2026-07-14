@@ -895,8 +895,8 @@ async function smartConnectWallet(){
         <div class="rm-item active fade"><div class="rm-phase">Phase 1 — Now</div><div class="rm-title">Foundation</div><ul class="rm-features"><li class="done">GATE token on LitVM</li><li class="done">Gold Pass NFT</li><li class="done">Silver Pass NFT</li><li class="done">Social feed app</li><li class="done">GATE Faucet</li></ul><span class="rm-badge">Live</span></div>
         <div class="rm-item active fade"><div class="rm-phase">Phase 2</div><div class="rm-title">Social Layer</div><ul class="rm-features"><li class="done">User profiles</li><li class="done">Post feed + images</li><li class="done">Likes → GATE</li><li class="done">Direct messages</li></ul><span class="rm-badge">Live</span></div>
         <div class="rm-item active fade"><div class="rm-phase">Phase 3</div><div class="rm-title">DeFi Layer</div><ul class="rm-features"><li class="done">GATE staking</li><li class="done">GATE presale</li><li class="done">Easy Swap DEX</li><li class="done">Reward multipliers</li><li class="done">Lending protocol</li></ul><span class="rm-badge">Live</span></div>
-        <div class="rm-item active fade"><div class="rm-phase">Phase 4</div><div class="rm-title">Ecosystem</div><ul class="rm-features"><li class="done">NFT marketplace</li><li class="done">Token launchpad</li><li class="done">Play-to-earn games</li><li class="building">DAO voting</li></ul><span class="rm-badge">Live</span></div>
-        <div class="rm-item fade"><div class="rm-phase">Phase 5</div><div class="rm-title">What's Next</div><ul class="rm-features"><li class="soon">NFT creation studio</li><li class="soon">More tokens for bets &amp; likes</li><li class="soon">New games</li><li class="soon">Mobile app</li></ul><span class="rm-badge">Coming soon</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 4</div><div class="rm-title">Ecosystem</div><ul class="rm-features"><li class="done">NFT marketplace (zkLitVM + BNB)</li><li class="done">NFT creation studio</li><li class="done">Token launchpad (zkLitVM)</li><li class="done">Professional token creator (BNB)</li><li class="done">Play-to-earn games</li><li class="building">DAO voting</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item fade"><div class="rm-phase">Phase 5</div><div class="rm-title">What's Next</div><ul class="rm-features"><li class="soon">Solana marketplace &amp; games</li><li class="soon">More tokens for bets &amp; likes</li><li class="soon">New games</li><li class="soon">Mobile app</li></ul><span class="rm-badge">Coming soon</span></div>
       </div>
     </div>
   </section>
@@ -1190,7 +1190,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-67</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-69</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -3224,7 +3224,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-67';
+var OG_BS_BUILD='BS-69';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5362,9 +5362,22 @@ function switchFeedTab(tab,el){
 
 // ── POSTS ──
 function updateComposer(){
-  const v=document.getElementById('postText').value;
-  document.getElementById('charCnt').textContent=v.length+'/500';
-  document.getElementById('postBtn').disabled=v.trim().length===0;
+  const el=document.getElementById('postText');
+  const v=el.value;
+  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
+  const isGold=isOwner||currentUser?.pass_type==='gold';
+  el.maxLength=isGold?8000:500;
+  if(isGold){
+    const words=v.trim().length?v.trim().split(/\s+/):[];
+    document.getElementById('charCnt').textContent=words.length+'/1000 words';
+    document.getElementById('charCnt').style.color=words.length>1000?'var(--red)':'var(--muted)';
+    document.getElementById('postBtn').disabled=v.trim().length===0||words.length>1000;
+  } else {
+    document.getElementById('charCnt').textContent=v.length+'/500';
+    document.getElementById('charCnt').style.color='var(--muted)';
+    document.getElementById('postBtn').disabled=v.trim().length===0;
+  }
 }
 function focusComposer(){ document.getElementById('postText').focus(); }
 let pendingImages = [];
@@ -5842,6 +5855,14 @@ async function createPost(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const content=document.getElementById('postText').value.trim();
   if(!content) return;
+  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
+  const isGold=isOwner||currentUser?.pass_type==='gold';
+  if(isGold){
+    if(content.split(/\s+/).length>1000){showToast('Max 1000 words','err');return;}
+  } else if(content.length>500){
+    showToast('Max 500 characters','err');return;
+  }
   const btn=document.getElementById('postBtn');
   btn.disabled=true; btn.textContent='Posting...';
   try{
@@ -5932,7 +5953,7 @@ function renderPost(post,liked){
   const name=u.username||sAddr(post.author_wallet);
   const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
-  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;position:relative;">${av}<span class="og-dot" data-og-online="${(post.author_wallet||'').toLowerCase()}"></span></div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div><div class="post-txt">${linkify(post.content)}</div>${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
+  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;position:relative;">${av}<span class="og-dot" data-og-online="${(post.author_wallet||'').toLowerCase()}"></span></div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div>${renderPostText(post.content,post.id)}${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
           <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
           ${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')\" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}
           ${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}
@@ -9088,6 +9109,33 @@ function linkify(s){
     var tail=u.slice(clean.length);
     return '<a href="'+clean+'" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:underline;word-break:break-all;">'+clean+'</a>'+tail;
   });
+}
+
+// Long posts (Gold Pass, up to 1000 words) are shown collapsed in the
+// feed with a "Show more" toggle — keeps the feed's rhythm intact
+// instead of one giant post pushing everything else off-screen.
+const POST_PREVIEW_CHARS=300;
+function renderPostText(content,postId){
+  if(content.length<=POST_PREVIEW_CHARS){
+    return '<div class="post-txt">'+linkify(content)+'</div>';
+  }
+  let cut=content.slice(0,POST_PREVIEW_CHARS);
+  const lastSpace=cut.lastIndexOf(' ');
+  if(lastSpace>50) cut=cut.slice(0,lastSpace);
+  return '<div class="post-txt" id="posttxt-'+postId+'">'
+    +'<span class="post-txt-preview">'+linkify(cut)+'… </span>'
+    +'<span class="post-txt-full" style="display:none;">'+linkify(content)+'</span> '
+    +'<button class="post-readmore-btn" onclick="togglePostText(\''+postId+'\',this)" style="background:none;border:none;color:var(--gold);font-weight:700;font-size:13px;cursor:pointer;padding:0;">Show more</button>'
+    +'</div>';
+}
+function togglePostText(postId,btn){
+  const wrap=document.getElementById('posttxt-'+postId);
+  const preview=wrap.querySelector('.post-txt-preview');
+  const full=wrap.querySelector('.post-txt-full');
+  const isCollapsed=full.style.display==='none';
+  preview.style.display=isCollapsed?'none':'inline';
+  full.style.display=isCollapsed?'inline':'none';
+  btn.textContent=isCollapsed?'Show less':'Show more';
 }
 function tAgo(ts){const d=(Date.now()-new Date(ts))/1000;if(d<60)return'now';if(d<3600)return Math.floor(d/60)+'m';if(d<86400)return Math.floor(d/3600)+'h';return Math.floor(d/86400)+'d';}
 
