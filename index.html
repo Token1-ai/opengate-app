@@ -981,8 +981,7 @@ async function smartConnectWallet(){
             <div id="imgPreviews" class="img-previews"></div>
             <div class="comp-footer">
               <div style="display:flex;align-items:center;gap:8px;">
-                <button class="upload-btn" onclick="checkImgUpload()" title="Add photo — max 1.2 MB per image">🖼️</button>
-                <span style="font-size:11px;color:var(--muted);">Max 1.2 MB/image</span>
+                <button class="upload-btn" onclick="checkImgUpload()" title="Add photo">🖼️</button>
                 <span class="char-cnt" id="charCnt">0/500</span>
                 <span class="uploading-indicator" id="uploadingTxt" style="display:none;">Uploading...</span>
               </div>
@@ -1190,7 +1189,7 @@ async function smartConnectWallet(){
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
-                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-70</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">BS-71</span>
                 <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="bnbbs-stake-display"></span>
               </div>
               <button onclick="leaveBNBGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
@@ -3224,7 +3223,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-70';
+var OG_BS_BUILD='BS-71';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -5793,6 +5792,45 @@ function checkImgUpload(){
   document.getElementById('imgInput').click();
 }
 
+// Automatically compresses any oversized photo right in the browser
+// (resize + re-encode as JPEG, same idea as TinyPNG/Squoosh) — nobody
+// has to use an outside tool or think about file size at all.
+function compressImageIfNeeded(file,maxBytes){
+  return new Promise(function(resolve,reject){
+    if(file.size<=maxBytes){ resolve(file); return; }
+    const img=new Image();
+    const reader=new FileReader();
+    reader.onload=function(e){ img.src=e.target.result; };
+    reader.onerror=reject;
+    img.onload=function(){
+      const canvas=document.createElement('canvas');
+      const ctx=canvas.getContext('2d');
+      let scale=1, quality=0.85, attempts=0;
+      function attempt(){
+        attempts++;
+        canvas.width=Math.max(1,Math.round(img.width*scale));
+        canvas.height=Math.max(1,Math.round(img.height*scale));
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        canvas.toBlob(function(blob){
+          if(!blob){ reject(new Error('Compression failed')); return; }
+          if(blob.size<=maxBytes||attempts>=10){
+            const newName=file.name.replace(/\.[^.]+$/,'')+'.jpg';
+            resolve(new File([blob],newName,{type:'image/jpeg'}));
+          } else if(quality>0.45){
+            quality-=0.12; attempt();
+          } else {
+            scale*=0.8; quality=0.7; attempt();
+          }
+        },'image/jpeg',quality);
+      }
+      attempt();
+    };
+    img.onerror=function(){ reject(new Error('Could not read image')); };
+    reader.readAsDataURL(file);
+  });
+}
+
 async function handleImages(input){
   const files=Array.from(input.files);
   if(files.length===0) return;
@@ -5814,17 +5852,12 @@ async function handleImages(input){
   if(isGold&&pendingImages.length+files.length>3){
     showToast('Max 3 images per post','err');input.value='';return;
   }
-  const MAX_IMG_BYTES=1.2*1024*1024;
-  const tooBig=files.filter(f=>f.size>MAX_IMG_BYTES);
-  if(tooBig.length>0){
-    showToast(tooBig.length===1?('"'+tooBig[0].name+'" is too big — max 1.2 MB per image'):(tooBig.length+' images are over 1.2 MB — please resize them first'),'err');
-    input.value='';return;
-  }
   document.getElementById('uploadingTxt').style.display='inline';
   document.getElementById('postBtn').disabled=true;
   let uploaded=0;
-  for(const file of files){
+  for(let file of files){
     try{
+      file=await compressImageIfNeeded(file,1.2*1024*1024);
       const url=await uploadToPinata(file);
       pendingImages.push(url);
       _todayImgCount++;
