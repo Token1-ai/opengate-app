@@ -1127,7 +1127,7 @@ async function smartConnectWallet(){
                 <button id="bshelp-regular-btn" onclick="toggleHelpBox('bshelp-regular')" class="help-toggle-btn" style="margin-bottom:12px;">❔ How does this work?</button>
                 <div id="bshelp-regular" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
                   <div style="color:var(--muted);">
-                    <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — buy one under "Buy GATE" if you don't have one yet.<br>
+                    <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — get one from the <b style="color:var(--text);">Passes</b> section on the landing page if you don't have one yet.<br>
                     <b style="color:var(--text);">2.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
                     <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
                     <b style="color:var(--text);">4.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
@@ -1839,7 +1839,7 @@ async function smartConnectWallet(){
       <div id="view-market" style="display:none;">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span>🛒 NFT Marketplace</span>
-          <button id="mktListBtn" onclick="openListModal()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:6px 14px;font-size:13px;font-weight:700;">+ List NFT</button>
+          <button id="mktListBtn" onclick="openListModal()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:6px 14px;font-size:13px;font-weight:700;">+ Add NFT</button>
         </div>
 
         <!-- Chain switcher -->
@@ -1870,7 +1870,7 @@ async function smartConnectWallet(){
           <div id="mkthelp-litvm" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy" and confirm in your wallet — you pay in zkLTC, and it's instantly transferred to your wallet.<br><br>
-              <b style="color:var(--text);">To sell:</b> hit "+ List NFT" at the top, enter the NFT's contract address and Token ID, set a price in zkLTC, and confirm. It'll show up here for everyone to buy.<br><br>
+              <b style="color:var(--text);">To sell:</b> hit "+ Add NFT" at the top, enter the NFT's contract address and Token ID, set a price in zkLTC, and confirm. It'll show up here for everyone to buy.<br><br>
               <b style="color:var(--text);">Fee:</b> when your NFT sells, <b style="color:var(--text);">2.5%</b> goes to the platform and you keep the rest — automatically, no extra steps.
             </div>
           </div>
@@ -1893,7 +1893,7 @@ async function smartConnectWallet(){
           <div id="mkthelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy". If it's priced in BNB, one confirmation in your wallet and you're done. If it's priced in USDT/USDC, you'll be asked to "Approve" the payment first (a one-time permission), then confirm the purchase — two steps for stablecoins, that's normal.<br><br>
-              <b style="color:var(--text);">To sell:</b> hit "+ List NFT" at the top, enter the NFT's contract address and Token ID, choose your currency (BNB, USDT or USDC) and price, then confirm. It'll show up here for everyone to buy — this works for <b style="color:var(--text);">any</b> NFT, including your own Gold/Silver Pass.<br><br>
+              <b style="color:var(--text);">To sell:</b> hit "+ Add NFT" at the top, enter the NFT's contract address and Token ID, choose your currency (BNB, USDT or USDC) and price, then confirm. It'll show up here for everyone to buy — this works for <b style="color:var(--text);">any</b> NFT, including your own Gold/Silver Pass.<br><br>
               <b style="color:var(--text);">Fee:</b> when your NFT sells, <b style="color:var(--text);">5%</b> goes to the platform and you keep the rest — automatically, no extra steps.
             </div>
           </div>
@@ -1916,7 +1916,7 @@ async function smartConnectWallet(){
           <div id="mkthelp-polygon" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy". If it's priced in POL, one confirmation in your wallet and you're done. If it's priced in USDT/USDC, you'll be asked to "Approve" the payment first (a one-time permission), then confirm the purchase.<br><br>
-              <b style="color:var(--text);">To sell:</b> hit "+ List NFT" at the top, enter the NFT's contract address and Token ID, choose your currency (POL, USDT or USDC) and price, then confirm — anyone can list any NFT they own here, including tokens created via NFT Studio's Polygon tab.<br><br>
+              <b style="color:var(--text);">To sell:</b> hit "+ Add NFT" at the top, enter the NFT's contract address and Token ID, choose your currency (POL, USDT or USDC) and price, then confirm — anyone can list any NFT they own here, including tokens created via NFT Studio's Polygon tab.<br><br>
               <b style="color:var(--text);">Fee:</b> when your NFT sells, <b style="color:var(--text);">5%</b> goes to the platform and you keep the rest — automatically, no extra steps.
             </div>
           </div>
@@ -2803,7 +2803,7 @@ const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const POLYGON_ID = '0x89';
-const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-rpc.com','https://polygon.llamarpc.com','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
+const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
 const NFT_FACTORY_POLYGON = '0xee9957fbc8Dc7280e42853c76508dD71f42dA10D';
 const NFT_FACTORY_POLYGON_ABI = [
   'function quoteSinglePrice(address,(uint8,uint256,bytes)) view returns(uint256)',
@@ -3497,9 +3497,15 @@ var _bnbRpcIdx=Math.floor(Math.random()*BNB_RPCS.length);
 // RPC (like polygon-rpc.com alone) can start returning 401/rate-limit
 // under load, which would otherwise silently break every Polygon read
 // (NFT Studio pricing, Token Creator pricing, Marketplace listings, etc.)
+// NOTE (verified live): 'polygon-rpc.com' has deprecated free public
+// access (now requires sign-in) — every call returns 401. 'polygon.
+// llamarpc.com' failed to resolve entirely (ERR_NAME_NOT_RESOLVED) in a
+// real user's browser. Both replaced below with confirmed no-signup
+// public endpoints (PublicNode, dRPC) alongside the two that were
+// already working (Ankr, 1RPC).
 var POLYGON_RPCS=[
-  'https://polygon-rpc.com',
-  'https://polygon.llamarpc.com',
+  'https://polygon-bor-rpc.publicnode.com',
+  'https://polygon.drpc.org',
   'https://rpc.ankr.com/polygon',
   'https://1rpc.io/matic'
 ];
@@ -8330,6 +8336,34 @@ function getIPFSGateways(hash){
   ];
 }
 
+// Races all IPFS gateways in parallel (via HEAD requests) instead of
+// trying them one-by-one on <img> onerror — whichever gateway responds
+// first wins. This is both faster (no waiting through slow/dead
+// gateways before reaching a working one) and more resilient (a single
+// congested gateway no longer blocks the whole chain). Falls back to
+// the plain sequential list if every race attempt fails outright.
+async function raceIPFSGateways(hash, timeoutMs){
+  timeoutMs = timeoutMs || 4000;
+  const gateways=getIPFSGateways(hash);
+  const attempts=gateways.map(function(url){
+    return new Promise(function(resolve,reject){
+      const ctrl=new AbortController();
+      const timer=setTimeout(function(){ctrl.abort();reject(new Error('timeout'));},timeoutMs);
+      fetch(url,{method:'HEAD',signal:ctrl.signal}).then(function(res){
+        clearTimeout(timer);
+        if(res.ok) resolve(url); else reject(new Error('bad status'));
+      }).catch(function(err){clearTimeout(timer);reject(err);});
+    });
+  });
+  try{
+    return await Promise.any(attempts);
+  }catch(e){
+    return gateways[0]; // all raced attempts failed — hand back the
+                         // primary URL so the existing <img> onerror
+                         // fallback chain still gets a chance to try.
+  }
+}
+
 async function resolveIPFSWithFallback(uri){
   if(!uri) return '';
   if(uri.startsWith('data:')) return uri;
@@ -8339,9 +8373,9 @@ async function resolveIPFSWithFallback(uri){
     :uri.includes('/ipfs/')?uri.split('/ipfs/').pop()
     :null;
   if(hash){
-    const primary='https://gateway.pinata.cloud/ipfs/'+hash;
-    setCachedNFTImg(uri,primary);
-    return primary;
+    const fastest=await raceIPFSGateways(hash);
+    setCachedNFTImg(uri,fastest);
+    return fastest;
   }
   setCachedNFTImg(uri,uri);
   return uri;
