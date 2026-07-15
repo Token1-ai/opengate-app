@@ -2743,7 +2743,7 @@ const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const POLYGON_ID = '0x89';
-const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-rpc.com'],blockExplorerUrls:['https://polygonscan.com']};
+const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-rpc.com','https://polygon.llamarpc.com','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
 const NFT_FACTORY_POLYGON = '0xee9957fbc8Dc7280e42853c76508dD71f42dA10D';
 const NFT_FACTORY_POLYGON_ABI = [
   'function quoteSinglePrice(address,(uint8,uint256,bytes)) view returns(uint256)',
@@ -3418,6 +3418,31 @@ var _bnbRpcIdx=Math.floor(Math.random()*BNB_RPCS.length);
 function getBNBBattleProvider(){
   _bnbRpcIdx=(_bnbRpcIdx+1)%BNB_RPCS.length;
   return new ethers.JsonRpcProvider(BNB_RPCS[_bnbRpcIdx]);
+}
+
+// Same rotating-pool pattern as BNB_RPCS above — a single public Polygon
+// RPC (like polygon-rpc.com alone) can start returning 401/rate-limit
+// under load, which would otherwise silently break every Polygon read
+// (NFT Studio pricing, Token Creator pricing, "My Tokens" lists, etc.)
+var POLYGON_RPCS=[
+  'https://polygon-rpc.com',
+  'https://polygon.llamarpc.com',
+  'https://rpc.ankr.com/polygon',
+  'https://1rpc.io/matic'
+];
+var _polygonRpcIdx=Math.floor(Math.random()*POLYGON_RPCS.length);
+function getPolygonReadProvider(){
+  _polygonRpcIdx=(_polygonRpcIdx+1)%POLYGON_RPCS.length;
+  return new ethers.JsonRpcProvider(POLYGON_RPCS[_polygonRpcIdx]);
+}
+async function polygonReadRetry(fn, attempts){
+  attempts = attempts || POLYGON_RPCS.length;
+  let lastErr;
+  for(let i=0;i<attempts;i++){
+    try{ return await fn(getPolygonReadProvider()); }
+    catch(e){ lastErr=e; }
+  }
+  throw lastErr;
 }
 // Retry a read across DIFFERENT nodes in the pool before giving up —
 // a single flaky/overloaded RPC node should never silently produce a
@@ -5850,9 +5875,9 @@ async function nftStudioUpdatePricePolygon(){
   try{
     const voucher=await fetchPassVoucher(NFT_FACTORY_POLYGON);
     const price=await new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,getReadProvider()).quoteSinglePrice(userAddr,voucher).catch(async()=>{
-      // Polygon needs its own RPC read, not the LitVM one — fall back cleanly
-      const p=new ethers.JsonRpcProvider('https://polygon-rpc.com');
-      return new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,p).quoteSinglePrice(userAddr,voucher);
+      // Polygon needs its own RPC read, not the LitVM one — fall back
+      // across a pool of public nodes (one alone can 401 under load).
+      return polygonReadRetry(function(p){return new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,p).quoteSinglePrice(userAddr,voucher);});
     });
     el.textContent=price===0n?'Free 🎉':(parseFloat(ethers.formatUnits(price,18)).toFixed(2)+' USDT');
     el.style.color=price===0n?'var(--green)':'var(--gold)';
@@ -5874,8 +5899,7 @@ async function nftStudioCreateSinglePolygon(){
     const voucher=await fetchPassVoucher(NFT_FACTORY_POLYGON);
     await switchToPolygon();
     const freshSigner=await provider.getSigner();
-    const polygonProvider=new ethers.JsonRpcProvider('https://polygon-rpc.com');
-    const fee=await new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,polygonProvider).quoteSinglePrice(userAddr,voucher);
+    const fee=await polygonReadRetry(function(p){return new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,p).quoteSinglePrice(userAddr,voucher);});
     let paymentToken=ethers.ZeroAddress;
     if(fee>0n){
       paymentToken=USDT_POLYGON;
@@ -8969,8 +8993,6 @@ async function tokLoadMyTokens(){
 let tokOptsPolygon={tokMintPolygon:false,tokBurnPolygon:false,tokPausePolygon:false,tokTaxPolygon:false,tokWhalePolygon:false};
 let tokCurrencyPolygon='POL';
 
-function getPolygonReadProvider(){ return new ethers.JsonRpcProvider('https://polygon-rpc.com'); }
-
 function toggleTokOptPolygon(id){
   tokOptsPolygon[id]=!tokOptsPolygon[id];
   const btn=document.getElementById(id);
@@ -9019,7 +9041,6 @@ async function tokUpdatePricePolygon(){
   if(!userAddr){ el.textContent='Connect wallet'; return; }
   try{
     const paymentAddr=tokPolygonCurrencyAddr();
-    const p=getPolygonReadProvider();
     // Quick, cheap probe first with an empty voucher — if the user turns
     // out to hold a pass, fetchPassVoucher (server) will be used at
     // creation time; here we only need a live price estimate.
@@ -9027,7 +9048,7 @@ async function tokUpdatePricePolygon(){
     if(currentUser && (currentUser.pass_type==='gold'||currentUser.pass_type==='silver')){
       voucher=await fetchPassVoucher(TOKEN_FACTORY_POLYGON).catch(function(){return EMPTY_VOUCHER;});
     }
-    const price=await new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,p).quotePrice(userAddr,paymentAddr,voucher);
+    const price=await polygonReadRetry(function(p){return new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,p).quotePrice(userAddr,paymentAddr,voucher);});
     if(price===0n){ el.textContent='Free 🎉'; el.style.color='var(--green)'; return; }
     el.style.color='var(--gold)';
     el.textContent=tokCurrencyPolygon==='POL' ? (parseFloat(ethers.formatEther(price)).toFixed(4)+' POL') : (parseFloat(ethers.formatUnits(price,6)).toFixed(2)+' '+tokCurrencyPolygon);
@@ -9065,8 +9086,7 @@ async function tokCreateTokenPolygon(){
     await switchToPolygon();
     const freshSigner=await provider.getSigner();
     const paymentAddr=tokPolygonCurrencyAddr();
-    const polygonProvider=getPolygonReadProvider();
-    const price=await new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,polygonProvider).quotePrice(userAddr,paymentAddr,voucher);
+    const price=await polygonReadRetry(function(p){return new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,p).quotePrice(userAddr,paymentAddr,voucher);});
 
     if(price>0n && tokCurrencyPolygon!=='POL'){
       const token=new ethers.Contract(paymentAddr,ERC20_MIN_ABI,freshSigner);
@@ -9109,8 +9129,7 @@ async function tokLoadMyTokensPolygon(){
   const el=document.getElementById('myPolygonTokensList');
   if(!userAddr){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Connect wallet to see your tokens</div>'; return; }
   try{
-    const p=getPolygonReadProvider();
-    const list=await new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,p).getTokensByCreator(userAddr);
+    const list=await polygonReadRetry(function(p){return new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,p).getTokensByCreator(userAddr);});
     if(list.length===0){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">You haven\'t created any tokens yet</div>'; return; }
     el.innerHTML=list.map(function(t){
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
