@@ -1846,6 +1846,7 @@ async function smartConnectWallet(){
         <div style="display:flex;gap:8px;padding:12px 16px 0;">
           <button id="mktChainLitvm" onclick="mktSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
           <button id="mktChainBnb" onclick="mktSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
+          <button id="mktChainPolygon" onclick="mktSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
         </div>
 
         <!-- Stats (zkLitVM) -->
@@ -1898,6 +1899,29 @@ async function smartConnectWallet(){
           </div>
         </div>
 
+        <!-- Stats (Polygon) -->
+        <div id="mktStatsPolygon" style="display:none;gap:0;border-bottom:1px solid var(--border);margin-top:8px;">
+          <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;" id="mktListingsPolygon">—</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Active Listings</div>
+          </div>
+          <div style="flex:1;padding:12px 20px;text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--green);">5%</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Platform Fee</div>
+          </div>
+        </div>
+
+        <div id="mkthelp-polygon-wrap" style="display:none;padding:12px 16px 0;">
+          <button id="mkthelp-polygon-btn" onclick="toggleHelpBox('mkthelp-polygon')" class="help-toggle-btn">❔ How does this work?</button>
+          <div id="mkthelp-polygon" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
+            <div style="color:var(--muted);">
+              <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy". If it's priced in POL, one confirmation in your wallet and you're done. If it's priced in USDT/USDC, you'll be asked to "Approve" the payment first (a one-time permission), then confirm the purchase.<br><br>
+              <b style="color:var(--text);">To sell:</b> hit "+ List NFT" at the top, enter the NFT's contract address and Token ID, choose your currency (POL, USDT or USDC) and price, then confirm — anyone can list any NFT they own here, including tokens created via NFT Studio's Polygon tab.<br><br>
+              <b style="color:var(--text);">Fee:</b> when your NFT sells, <b style="color:var(--text);">5%</b> goes to the platform and you keep the rest — automatically, no extra steps.
+            </div>
+          </div>
+        </div>
+
         <!-- Listings grid -->
         <!-- FREE MINT — featured banner -->
         <div id="freeMintSection" style="display:none;margin:14px;background:linear-gradient(145deg,rgba(124,58,237,0.14),rgba(245,200,66,0.07));border:1.5px solid rgba(245,200,66,0.4);border-radius:18px;overflow:hidden;">
@@ -1931,6 +1955,12 @@ async function smartConnectWallet(){
         <div id="mktBnbSection" style="display:none;">
           <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale — BNB Chain (BNB / USDT / USDC)</div>
           <div id="marketListingsBnb" style="padding:12px;">
+            <div class="app-loader">Loading listings...</div>
+          </div>
+        </div>
+        <div id="mktPolygonSection" style="display:none;">
+          <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale — Polygon (POL / USDT / USDC)</div>
+          <div id="marketListingsPolygon" style="padding:12px;">
             <div class="app-loader">Loading listings...</div>
           </div>
         </div>
@@ -1989,6 +2019,36 @@ async function smartConnectWallet(){
             <div style="font-size:11px;color:var(--muted);margin-top:4px;">5% platform fee deducted from sale</div>
           </div>
           <button onclick="bnbmktSubmitListing()" id="submitListBtnBnb" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;">List for Sale</button>
+        </div>
+      </div>
+
+      <!-- List NFT Modal — Polygon -->
+      <div class="modal-overlay" id="listNFTModalPolygon">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;position:relative;">
+          <button class="modal-close-btn" onclick="document.getElementById('listNFTModalPolygon').classList.remove('open')">✕</button>
+          <div style="font-size:20px;font-weight:700;margin-bottom:20px;">List NFT for Sale — Polygon</div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">NFT Contract Address *</div>
+            <input id="listContractPolygon" placeholder="0x... (any NFT you own on Polygon)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token ID *</div>
+            <input id="listTokenIdPolygon" type="number" placeholder="1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Currency *</div>
+            <select id="listCurrencyPolygon" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;">
+              <option value="POL">POL (native)</option>
+              <option value="USDT">USDT</option>
+              <option value="USDC">USDC</option>
+            </select>
+          </div>
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Price *</div>
+            <input id="listPricePolygon" type="number" step="0.0001" placeholder="e.g. 25" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">5% platform fee deducted from sale</div>
+          </div>
+          <button onclick="polymktSubmitListing()" id="submitListBtnPolygon" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;">List for Sale</button>
         </div>
       </div>
 
@@ -2194,7 +2254,6 @@ async function smartConnectWallet(){
         <div style="display:flex;gap:8px;padding:12px 16px 0;max-width:560px;margin:0 auto;">
           <button id="launchChainLitvm" onclick="launchSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
           <button id="launchChainBnb" onclick="launchSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
-          <button id="launchChainPolygon" onclick="launchSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
         </div>
 
         <!-- ══════════ zkLitVM PANEL ══════════ -->
@@ -2389,100 +2448,6 @@ async function smartConnectWallet(){
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">My BNB Tokens</div>
             <div id="myBnbTokensList"><div style="font-size:13px;color:var(--muted);">Connect wallet to see your tokens</div></div>
-          </div>
-        </div>
-        </div>
-
-        <!-- ══════════ POLYGON PANEL ══════════ -->
-        <div id="launchPolygonSection" style="display:none;">
-        <div style="padding:20px 20px 0;max-width:560px;margin:0 auto;">
-          <button id="launchhelp-polygon-btn" class="help-toggle-btn" onclick="toggleHelpBox('launchhelp-polygon')">❔ How does this work?</button>
-          <div id="launchhelp-polygon" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;font-size:13px;line-height:1.8;color:var(--text);margin-top:10px;">
-            <div style="color:var(--muted);">
-              <b style="color:var(--text);">Same token creator, now on Polygon.</b><br><br>
-              <b style="color:var(--text);">Logo</b> — upload any picture, it's auto-cropped to a clean square. <b style="color:var(--text);">Name / Symbol / Decimals / Supply</b> — same as everywhere.<br><br>
-              <b style="color:var(--text);">Optional features</b> — Mintable, Burnable, Pausable, Tax (%), Anti-Whale (%) — identical to BNB.<br><br>
-              <b style="color:var(--text);">Currency</b> — pay in <b style="color:var(--text);">POL</b> (price updates live from Chainlink's on-chain oracle), <b style="color:var(--text);">USDT</b>, or <b style="color:var(--text);">USDC</b>.<br><br>
-              <b style="color:var(--text);">Passes:</b><br>
-              • <b style="color:var(--text);">Silver Pass</b> — your first token ever is free (gas only). After that, full price like everyone else.<br>
-              • <b style="color:var(--text);">Gold Pass</b> — one free token every 30 days, plus 20% off any additional token in that period.<br><br>
-              <b style="color:var(--text);">✅ Verified automatically</b> — every token is a clone of an already-verified contract, so its source code shows up verified on Polygonscan with no extra step.
-            </div>
-          </div>
-        </div>
-
-        <div style="padding:20px;max-width:560px;margin:0 auto;">
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;">
-            <div style="font-size:16px;font-weight:700;margin-bottom:20px;">🚀 Create Your Token</div>
-
-            <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional)</span></div>
-              <div style="display:flex;gap:12px;align-items:center;">
-                <div id="tokLogoPreviewPolygon" style="width:56px;height:56px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);">🪙</div>
-                <label for="tokLogoFilePolygon" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
-                <span id="tokLogoFileNamePolygon" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;">No file chosen</span>
-              </div>
-              <input type="file" id="tokLogoFilePolygon" accept="image/*" onchange="tokStudioLogoPreviewPolygon()" style="display:none;"/>
-            </div>
-
-            <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token Name *</div>
-              <input id="tokNamePolygon" placeholder="e.g. My Awesome Token" maxlength="50" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
-            </div>
-
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
-              <div>
-                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Symbol *</div>
-                <input id="tokSymbolPolygon" placeholder="e.g. MAT" maxlength="10" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
-              </div>
-              <div>
-                <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Decimals</div>
-                <input id="tokDecimalsPolygon" type="number" value="18" min="0" max="18" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
-              </div>
-            </div>
-
-            <div style="margin-bottom:18px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Total Supply *</div>
-              <input id="tokSupplyPolygon" type="number" placeholder="e.g. 1000000" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
-            </div>
-
-            <div style="margin-bottom:18px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:10px;font-weight:600;">Features</div>
-              <div style="display:flex;gap:8px;margin-bottom:10px;">
-                <button id="tokMintPolygon" onclick="toggleTokOptPolygon('tokMintPolygon')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🔨 Mintable</button>
-                <button id="tokBurnPolygon" onclick="toggleTokOptPolygon('tokBurnPolygon')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🔥 Burnable</button>
-                <button id="tokPausePolygon" onclick="toggleTokOptPolygon('tokPausePolygon')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">⏸ Pausable</button>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                <button id="tokTaxPolygon" onclick="toggleTokOptPolygon('tokTaxPolygon')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">💰 Tax</button>
-                <input id="tokTaxPctPolygon" type="number" placeholder="%" min="0" max="25" step="0.1" disabled style="width:70px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;color:var(--text);font-size:13px;outline:none;text-align:center;opacity:.5;"/>
-              </div>
-              <div style="display:flex;gap:8px;align-items:center;">
-                <button id="tokWhalePolygon" onclick="toggleTokOptPolygon('tokWhalePolygon')" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;">🐋 Anti-Whale</button>
-                <input id="tokWhalePctPolygon" type="number" placeholder="%" min="0.5" max="100" step="0.1" disabled style="width:70px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:8px;color:var(--text);font-size:13px;outline:none;text-align:center;opacity:.5;"/>
-              </div>
-            </div>
-
-            <div style="margin-bottom:8px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Pay with</div>
-              <div style="display:flex;gap:8px;">
-                <button id="tok-cur-pol" onclick="tokSelectCurrencyPolygon('POL')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:var(--gold);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;">POL</button>
-                <button id="tok-cur-pusdt" onclick="tokSelectCurrencyPolygon('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
-                <button id="tok-cur-pusdc" onclick="tokSelectCurrencyPolygon('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
-              </div>
-            </div>
-
-            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
-              <span style="font-size:13px;color:var(--muted);">Price</span>
-              <span style="font-family:'Space Mono',monospace;font-weight:700;color:var(--gold);" id="tokPriceDisplayPolygon">Loading...</span>
-            </div>
-
-            <button onclick="tokCreateTokenPolygon()" id="tokCreateBtnPolygon" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#5b21b6);color:#e9d5ff;font-size:15px;font-weight:700;border:none;cursor:pointer;">🚀 Create Token</button>
-          </div>
-
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:16px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">My Polygon Tokens</div>
-            <div id="myPolygonTokensList"><div style="font-size:13px;color:var(--muted);">Connect wallet to see your tokens</div></div>
           </div>
         </div>
         </div>
@@ -2743,7 +2708,7 @@ const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const POLYGON_ID = '0x89';
-const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-rpc.com','https://polygon.llamarpc.com','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
+const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-rpc.com'],blockExplorerUrls:['https://polygonscan.com']};
 const NFT_FACTORY_POLYGON = '0xee9957fbc8Dc7280e42853c76508dD71f42dA10D';
 const NFT_FACTORY_POLYGON_ABI = [
   'function quoteSinglePrice(address,(uint8,uint256,bytes)) view returns(uint256)',
@@ -2847,6 +2812,23 @@ const ERC721_ABI = [
   'function ownerOf(uint256) view returns(address)',
   'function name() view returns(string)',
 ];
+const NFT_MARKET_POLYGON = '0x73b149defe4164484d3da166cAFB75d2CB40d997';
+const NFT_MARKET_POLYGON_ABI = [
+  'function listNFT(address,uint256,uint256,address) returns(uint256)',
+  'function buyNFT(uint256) payable',
+  'function buyNFTWithToken(uint256)',
+  'function cancelListing(uint256)',
+  'function getListing(uint256) view returns(tuple(address seller,address nftContract,uint256 tokenId,uint256 price,address paymentToken,bool active))',
+  'function getListings(uint256,uint256) view returns(tuple(address seller,address nftContract,uint256 tokenId,uint256 price,address paymentToken,bool active)[])',
+  'function getActiveListings() view returns(uint256[],tuple(address seller,address nftContract,uint256 tokenId,uint256 price,address paymentToken,bool active)[])',
+  'function listingCount() view returns(uint256)',
+  'function FEE_BPS() view returns(uint256)',
+];
+const POLYGON_MKT_CURRENCIES = {
+  POL:  {addr:'0x0000000000000000000000000000000000000000', decimals:18},
+  USDT: {addr:'0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals:6},
+  USDC: {addr:'0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', decimals:6},
+};
 const NFT_MARKET_BNB = '0x3C5438AC05D2ab5C5CBFbdDd9AD7B9843AA5Bc6C';
 const NFT_MARKET_BNB_ABI = [
   'function listNFT(address,uint256,uint256,address) returns(uint256)',
@@ -3418,31 +3400,6 @@ var _bnbRpcIdx=Math.floor(Math.random()*BNB_RPCS.length);
 function getBNBBattleProvider(){
   _bnbRpcIdx=(_bnbRpcIdx+1)%BNB_RPCS.length;
   return new ethers.JsonRpcProvider(BNB_RPCS[_bnbRpcIdx]);
-}
-
-// Same rotating-pool pattern as BNB_RPCS above — a single public Polygon
-// RPC (like polygon-rpc.com alone) can start returning 401/rate-limit
-// under load, which would otherwise silently break every Polygon read
-// (NFT Studio pricing, Token Creator pricing, "My Tokens" lists, etc.)
-var POLYGON_RPCS=[
-  'https://polygon-rpc.com',
-  'https://polygon.llamarpc.com',
-  'https://rpc.ankr.com/polygon',
-  'https://1rpc.io/matic'
-];
-var _polygonRpcIdx=Math.floor(Math.random()*POLYGON_RPCS.length);
-function getPolygonReadProvider(){
-  _polygonRpcIdx=(_polygonRpcIdx+1)%POLYGON_RPCS.length;
-  return new ethers.JsonRpcProvider(POLYGON_RPCS[_polygonRpcIdx]);
-}
-async function polygonReadRetry(fn, attempts){
-  attempts = attempts || POLYGON_RPCS.length;
-  let lastErr;
-  for(let i=0;i<attempts;i++){
-    try{ return await fn(getPolygonReadProvider()); }
-    catch(e){ lastErr=e; }
-  }
-  throw lastErr;
 }
 // Retry a read across DIFFERENT nodes in the pool before giving up —
 // a single flaky/overloaded RPC node should never silently produce a
@@ -5856,18 +5813,6 @@ async function nftStudioUploadAndPin(file,name,description,jwt){
 }
 
 const USDT_POLYGON = '0xc2132D05D31c914a87C6611C10748AEb04B58e8F';
-const USDCe_POLYGON = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'; // bridged USDC.e
-const USDC_POLYGON  = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'; // native USDC (Circle)
-const TOKEN_FACTORY_POLYGON = '0x3E345EF72d29D9e46E1E713b3d4f7AEf8b02E453';
-const TOKEN_FACTORY_POLYGON_ABI = [
-  'function quotePrice(address,address,(uint8,uint256,bytes)) view returns(uint256)',
-  'function createToken((string,string,uint8,uint256,address,bool,bool,bool,string,bool,uint16,bool,uint16),address,(uint8,uint256,bytes)) payable returns(address)',
-  'function getTokensByCreator(address) view returns(tuple(address token,address creator,string name,string symbol,uint256 createdAt)[])',
-  'function priceUsdCents() view returns(uint256)',
-  'function goldNextFreeTime(address) view returns(uint256)',
-  'function silverFreeUsed(address) view returns(uint256)',
-  'function silverFreeAllowance() view returns(uint256)',
-];
 
 async function nftStudioUpdatePricePolygon(){
   const el=document.getElementById('studioSinglePricePolygon');
@@ -5875,9 +5820,9 @@ async function nftStudioUpdatePricePolygon(){
   try{
     const voucher=await fetchPassVoucher(NFT_FACTORY_POLYGON);
     const price=await new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,getReadProvider()).quoteSinglePrice(userAddr,voucher).catch(async()=>{
-      // Polygon needs its own RPC read, not the LitVM one — fall back
-      // across a pool of public nodes (one alone can 401 under load).
-      return polygonReadRetry(function(p){return new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,p).quoteSinglePrice(userAddr,voucher);});
+      // Polygon needs its own RPC read, not the LitVM one — fall back cleanly
+      const p=new ethers.JsonRpcProvider('https://polygon-rpc.com');
+      return new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,p).quoteSinglePrice(userAddr,voucher);
     });
     el.textContent=price===0n?'Free 🎉':(parseFloat(ethers.formatUnits(price,18)).toFixed(2)+' USDT');
     el.style.color=price===0n?'var(--green)':'var(--gold)';
@@ -5899,7 +5844,8 @@ async function nftStudioCreateSinglePolygon(){
     const voucher=await fetchPassVoucher(NFT_FACTORY_POLYGON);
     await switchToPolygon();
     const freshSigner=await provider.getSigner();
-    const fee=await polygonReadRetry(function(p){return new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,p).quoteSinglePrice(userAddr,voucher);});
+    const polygonProvider=new ethers.JsonRpcProvider('https://polygon-rpc.com');
+    const fee=await new ethers.Contract(NFT_FACTORY_POLYGON,NFT_FACTORY_POLYGON_ABI,polygonProvider).quoteSinglePrice(userAddr,voucher);
     let paymentToken=ethers.ZeroAddress;
     if(fee>0n){
       paymentToken=USDT_POLYGON;
@@ -8422,6 +8368,7 @@ async function loadMarketplace(){
 function openListModal(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   if(mktActiveChain==='bnb'){ document.getElementById('listNFTModalBnb').classList.add('open'); return; }
+  if(mktActiveChain==='polygon'){ document.getElementById('listNFTModalPolygon').classList.add('open'); return; }
   document.getElementById('listNFTModal').classList.add('open');
 }
 async function loadNFTPreview(){}
@@ -8463,18 +8410,21 @@ async function cancelNFTListing(id){
 let mktActiveChain='litvm';
 function mktSwitchChain(chain){
   mktActiveChain=chain;
-  const isBnb=chain==='bnb';
-  document.getElementById('mktChainLitvm').style.background=isBnb?'var(--bg3)':'var(--gold)';
-  document.getElementById('mktChainLitvm').style.color=isBnb?'var(--text)':'#08090C';
-  document.getElementById('mktChainBnb').style.background=isBnb?'var(--gold)':'var(--bg3)';
-  document.getElementById('mktChainBnb').style.color=isBnb?'#08090C':'var(--text)';
-  document.getElementById('mktStatsLitvm').style.display=isBnb?'none':'flex';
-  document.getElementById('mktStatsBnb').style.display=isBnb?'flex':'none';
-  document.getElementById('mktLitvmSection').style.display=isBnb?'none':'block';
-  document.getElementById('mktBnbSection').style.display=isBnb?'block':'none';
-  document.getElementById('mkthelp-litvm-wrap').style.display=isBnb?'none':'block';
-  document.getElementById('mkthelp-bnb-wrap').style.display=isBnb?'block':'none';
-  if(isBnb) loadMarketplaceBNB();
+  const buttons={litvm:'mktChainLitvm',bnb:'mktChainBnb',polygon:'mktChainPolygon'};
+  const stats={litvm:'mktStatsLitvm',bnb:'mktStatsBnb',polygon:'mktStatsPolygon'};
+  const sections={litvm:'mktLitvmSection',bnb:'mktBnbSection',polygon:'mktPolygonSection'};
+  const helpWraps={litvm:'mkthelp-litvm-wrap',bnb:'mkthelp-bnb-wrap',polygon:'mkthelp-polygon-wrap'};
+  Object.keys(buttons).forEach(function(key){
+    const active=key===chain;
+    const btn=document.getElementById(buttons[key]);
+    btn.style.background=active?'var(--gold)':'var(--bg3)';
+    btn.style.color=active?'#08090C':'var(--text)';
+    document.getElementById(stats[key]).style.display=active?'flex':'none';
+    document.getElementById(sections[key]).style.display=active?'block':'none';
+    document.getElementById(helpWraps[key]).style.display=active?'block':'none';
+  });
+  if(chain==='bnb') loadMarketplaceBNB();
+  if(chain==='polygon') loadMarketplacePolygon();
 }
 
 function gamesSwitchChain(chain){
@@ -8488,17 +8438,14 @@ function gamesSwitchChain(chain){
 }
 
 function launchSwitchChain(chain){
-  const buttons={litvm:'launchChainLitvm',bnb:'launchChainBnb',polygon:'launchChainPolygon'};
-  const sections={litvm:'launchLitvmSection',bnb:'launchBnbSection',polygon:'launchPolygonSection'};
-  Object.keys(buttons).forEach(function(key){
-    const active=key===chain;
-    const btn=document.getElementById(buttons[key]);
-    btn.style.background=active?'var(--gold)':'var(--bg3)';
-    btn.style.color=active?'#08090C':'var(--text)';
-    document.getElementById(sections[key]).style.display=active?'block':'none';
-  });
-  if(chain==='bnb'){ tokUpdatePrice(); tokLoadMyTokens(); }
-  if(chain==='polygon'){ tokUpdatePricePolygon(); tokLoadMyTokensPolygon(); }
+  const isBnb=chain==='bnb';
+  document.getElementById('launchChainLitvm').style.background=isBnb?'var(--bg3)':'var(--gold)';
+  document.getElementById('launchChainLitvm').style.color=isBnb?'var(--text)':'#08090C';
+  document.getElementById('launchChainBnb').style.background=isBnb?'var(--gold)':'var(--bg3)';
+  document.getElementById('launchChainBnb').style.color=isBnb?'#08090C':'var(--text)';
+  document.getElementById('launchLitvmSection').style.display=isBnb?'none':'block';
+  document.getElementById('launchBnbSection').style.display=isBnb?'block':'none';
+  if(isBnb){ tokUpdatePrice(); tokLoadMyTokens(); }
 }
 
 async function loadMarketplaceBNB(){
@@ -8651,6 +8598,162 @@ async function bnbmktCancel(id){
     await tx.wait();
     showToast('Listing cancelled ✓','ok');
     loadMarketplaceBNB();
+  }catch(e){
+    const raw=e.reason||e.data?.message||e.message||'Failed';
+    showToast(raw.slice(0,80),'err');
+  }
+}
+
+// ══════════════════ POLYGON MARKETPLACE ══════════════════
+async function loadMarketplacePolygon(){
+  try{
+    let active=[];
+    const result=await polygonReadRetry(function(p){return new ethers.Contract(NFT_MARKET_POLYGON,NFT_MARKET_POLYGON_ABI,p).getActiveListings();});
+    const ids=result[0];
+    const listings=result[1];
+    for(let i=0;i<listings.length;i++){
+      const raw=listings[i];
+      active.push({
+        seller: String(raw[0]??raw.seller??''),
+        nftContract: String(raw[1]??raw.nftContract??''),
+        tokenId: raw[2]??raw.tokenId,
+        price: raw[3]??raw.price,
+        paymentToken: String(raw[4]??raw.paymentToken??''),
+        _id: Number(ids[i])
+      });
+    }
+    document.getElementById('mktListingsPolygon').textContent=active.length;
+    const grid=document.createElement('div');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,45vw),1fr));gap:10px;';
+    document.getElementById('marketListingsPolygon').innerHTML='';
+    document.getElementById('marketListingsPolygon').appendChild(grid);
+
+    await Promise.all(active.map(async(l)=>{
+      let img='',name='NFT #'+l.tokenId.toString();
+      try{
+        let uri=await polygonReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);});
+        const meta=await fetchNFTMeta(uri);
+        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        name=meta.name||name;
+      }catch(err){}
+      const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
+      const isNative=l.paymentToken==='0x0000000000000000000000000000000000000000';
+      const sym=isNative?'POL':(l.paymentToken.toLowerCase()===POLYGON_MKT_CURRENCIES.USDT.addr.toLowerCase()?'USDT':'USDC');
+      const priceFmt=parseFloat(ethers.formatUnits(l.price,isNative?18:6)).toFixed(isNative?4:2);
+
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .15s;cursor:pointer;';
+      card.onmouseover=function(){this.style.transform='translateY(-2px)';};
+      card.onmouseout=function(){this.style.transform='none';};
+      const imgDiv=document.createElement('div');
+      imgDiv.style.cssText='aspect-ratio:1;background:var(--bg3);overflow:hidden;position:relative;';
+      if(img){
+        const im=document.createElement('img');
+        im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
+        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _gateways=_hash?getIPFSGateways(_hash):[img];
+        let _gwIdx=0;im.src=_gateways[_gwIdx];
+        im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
+        imgDiv.appendChild(im);
+      } else {
+        imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
+      }
+      const info=document.createElement('div');
+      info.style.cssText='padding:8px 10px 10px;';
+      info.innerHTML=
+        '<div style="font-size:12px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(name)+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">'+sAddr(l.seller)+'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">'
+        +'<div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--gold);">'+priceFmt+'<span style="font-size:10px;color:var(--muted);"> '+sym+'</span></div>'
+        +'</div>';
+      const btnWrap=info.querySelector('div:last-child');
+      const btn=document.createElement('button');
+      if(isOwn){
+        btn.textContent='✕ Cancel';
+        btn.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:6px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;';
+        btn.onclick=(function(idx){return function(e){e.stopPropagation();polymktCancel(idx);};})(l._id);
+      } else {
+        btn.textContent='Buy';
+        btn.style.cssText='background:var(--gold);color:#08090C;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;';
+        btn.onclick=(function(idx,price,token){return function(e){e.stopPropagation();polymktBuy(idx,price,token);};})(l._id,l.price,l.paymentToken);
+      }
+      btnWrap.appendChild(btn);
+      card.appendChild(imgDiv);card.appendChild(info);
+      grid.appendChild(card);
+    }));
+  }catch(e){document.getElementById('marketListingsPolygon').innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+async function polymktSubmitListing(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const contract=document.getElementById('listContractPolygon').value.trim();
+  const tokenId=document.getElementById('listTokenIdPolygon').value.trim();
+  const currencySym=document.getElementById('listCurrencyPolygon').value;
+  const priceStr=document.getElementById('listPricePolygon').value.trim();
+  if(!contract||!tokenId||!priceStr){showToast('Fill all fields','err');return;}
+  try{
+    await switchToPolygon();
+    const freshSigner=await provider.getSigner();
+    const cur=POLYGON_MKT_CURRENCIES[currencySym];
+    const priceWei=ethers.parseUnits(priceStr,cur.decimals);
+    const nft=new ethers.Contract(contract,ERC721_ABI,freshSigner);
+    showToast('Checking approval...','ok');
+    if(!await nft.isApprovedForAll(userAddr,NFT_MARKET_POLYGON)){
+      showToast('Approve marketplace in MetaMask...','ok');
+      await(await nft.setApprovalForAll(NFT_MARKET_POLYGON,true)).wait();
+    }
+    const market=new ethers.Contract(NFT_MARKET_POLYGON,NFT_MARKET_POLYGON_ABI,freshSigner);
+    showToast('Listing NFT...','ok');
+    await(await market.listNFT(contract,tokenId,priceWei,cur.addr)).wait();
+    showToast('NFT listed! 🎉','ok');
+    document.getElementById('listNFTModalPolygon').classList.remove('open');
+    loadMarketplacePolygon();
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,60),'err');
+  }
+}
+
+async function polymktBuy(listingId,price,paymentToken){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToPolygon();
+    const freshSigner=await provider.getSigner();
+    const market=new ethers.Contract(NFT_MARKET_POLYGON,NFT_MARKET_POLYGON_ABI,freshSigner);
+    const isNative=paymentToken==='0x0000000000000000000000000000000000000000';
+    if(isNative){
+      showToast('Confirm in MetaMask...','ok');
+      const tx=await market.buyNFT(listingId,{value:price});
+      await tx.wait();
+    } else {
+      const token=new ethers.Contract(paymentToken,ERC20_MIN_ABI,freshSigner);
+      const allowance=await token.allowance(userAddr,NFT_MARKET_POLYGON);
+      if(allowance<price){
+        showToast('Approve token spend in MetaMask...','ok');
+        await(await token.approve(NFT_MARKET_POLYGON,price)).wait();
+      }
+      showToast('Confirm purchase in MetaMask...','ok');
+      const tx=await market.buyNFTWithToken(listingId);
+      await tx.wait();
+    }
+    showToast('NFT purchased! 🎉','ok');
+    loadMarketplacePolygon();
+  }catch(e){
+    const raw=e.reason||e.data?.message||e.message||'Failed';
+    showToast(raw.slice(0,80),'err');
+  }
+}
+
+async function polymktCancel(id){
+  if(!userAddr)return;
+  try{
+    await switchToPolygon();
+    const freshSigner=await provider.getSigner();
+    const market=new ethers.Contract(NFT_MARKET_POLYGON,NFT_MARKET_POLYGON_ABI,freshSigner);
+    showToast('Cancelling listing #'+id+'...','ok');
+    const tx=await market.cancelListing(id);
+    await tx.wait();
+    showToast('Listing cancelled ✓','ok');
+    loadMarketplacePolygon();
   }catch(e){
     const raw=e.reason||e.data?.message||e.message||'Failed';
     showToast(raw.slice(0,80),'err');
@@ -8988,158 +9091,6 @@ async function tokLoadMyTokens(){
     }).join('');
   }catch(e){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>'; }
 }
-
-// ══════════════════ POLYGON TOKEN CREATOR ══════════════════
-let tokOptsPolygon={tokMintPolygon:false,tokBurnPolygon:false,tokPausePolygon:false,tokTaxPolygon:false,tokWhalePolygon:false};
-let tokCurrencyPolygon='POL';
-
-function toggleTokOptPolygon(id){
-  tokOptsPolygon[id]=!tokOptsPolygon[id];
-  const btn=document.getElementById(id);
-  if(tokOptsPolygon[id]){btn.style.borderColor='#7c3aed';btn.style.background='#2d1a4a';btn.style.color='#c4b5fd';}
-  else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}
-  if(id==='tokTaxPolygon'){const inp=document.getElementById('tokTaxPctPolygon');inp.disabled=!tokOptsPolygon.tokTaxPolygon;inp.style.opacity=tokOptsPolygon.tokTaxPolygon?'1':'.5';}
-  if(id==='tokWhalePolygon'){const inp=document.getElementById('tokWhalePctPolygon');inp.disabled=!tokOptsPolygon.tokWhalePolygon;inp.style.opacity=tokOptsPolygon.tokWhalePolygon?'1':'.5';}
-}
-
-function tokSelectCurrencyPolygon(sym){
-  tokCurrencyPolygon=sym;
-  ['pol','pusdt','pusdc'].forEach(function(s){
-    const btn=document.getElementById('tok-cur-'+s);
-    const active=(s==='pol'&&sym==='POL')||(s==='pusdt'&&sym==='USDT')||(s==='pusdc'&&sym==='USDC');
-    btn.style.background=active?'var(--gold)':'var(--bg3)';
-    btn.style.color=active?'#08090C':'var(--text)';
-    btn.style.borderColor=active?'var(--gold)':'var(--border)';
-  });
-  tokUpdatePricePolygon();
-}
-
-async function tokStudioLogoPreviewPolygon(){
-  const input=document.getElementById('tokLogoFilePolygon');
-  const file=input.files[0];
-  document.getElementById('tokLogoFileNamePolygon').textContent=file?file.name:'No file chosen';
-  if(!file) return;
-  const resized=await tokResizeImage(file,400);
-  input._resizedFile=resized;
-  const url=URL.createObjectURL(resized);
-  document.getElementById('tokLogoPreviewPolygon').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
-}
-
-function tokPolygonCurrencyAddr(){
-  if(tokCurrencyPolygon==='POL') return ethers.ZeroAddress;
-  if(tokCurrencyPolygon==='USDT') return USDT_POLYGON;
-  return USDC_POLYGON; // native USDC (Circle)
-}
-
-// Empty (tier 0) voucher — used for the FREE quote path so we don't hit
-// the backend when the user has no pass; the contract treats tier 0 as
-// "no pass, full price" without needing a real signature.
-const EMPTY_VOUCHER=[0,0,'0x'];
-
-async function tokUpdatePricePolygon(){
-  const el=document.getElementById('tokPriceDisplayPolygon');
-  if(!userAddr){ el.textContent='Connect wallet'; return; }
-  try{
-    const paymentAddr=tokPolygonCurrencyAddr();
-    // Quick, cheap probe first with an empty voucher — if the user turns
-    // out to hold a pass, fetchPassVoucher (server) will be used at
-    // creation time; here we only need a live price estimate.
-    let voucher=EMPTY_VOUCHER;
-    if(currentUser && (currentUser.pass_type==='gold'||currentUser.pass_type==='silver')){
-      voucher=await fetchPassVoucher(TOKEN_FACTORY_POLYGON).catch(function(){return EMPTY_VOUCHER;});
-    }
-    const price=await polygonReadRetry(function(p){return new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,p).quotePrice(userAddr,paymentAddr,voucher);});
-    if(price===0n){ el.textContent='Free 🎉'; el.style.color='var(--green)'; return; }
-    el.style.color='var(--gold)';
-    el.textContent=tokCurrencyPolygon==='POL' ? (parseFloat(ethers.formatEther(price)).toFixed(4)+' POL') : (parseFloat(ethers.formatUnits(price,6)).toFixed(2)+' '+tokCurrencyPolygon);
-  }catch(e){ el.textContent='—'; }
-}
-
-async function tokCreateTokenPolygon(){
-  if(!userAddr){showToast('Connect wallet first','err');return;}
-  const name=document.getElementById('tokNamePolygon').value.trim();
-  const symbol=document.getElementById('tokSymbolPolygon').value.trim();
-  const decimals=parseInt(document.getElementById('tokDecimalsPolygon').value)||18;
-  const supplyStr=document.getElementById('tokSupplyPolygon').value.trim();
-  if(!name||!symbol||!supplyStr){showToast('Fill all required fields','err');return;}
-  const taxPct=tokOptsPolygon.tokTaxPolygon?parseFloat(document.getElementById('tokTaxPctPolygon').value)||0:0;
-  const whalePct=tokOptsPolygon.tokWhalePolygon?parseFloat(document.getElementById('tokWhalePctPolygon').value)||0:0;
-  if(tokOptsPolygon.tokTaxPolygon&&(taxPct<=0||taxPct>25)){showToast('Tax must be between 0.1% and 25%','err');return;}
-  if(tokOptsPolygon.tokWhalePolygon&&(whalePct<0.5||whalePct>100)){showToast('Anti-Whale limit must be at least 0.5%','err');return;}
-
-  const btn=document.getElementById('tokCreateBtnPolygon');
-  btn.disabled=true; const origText=btn.textContent;
-  try{
-    let logoURI='';
-    const logoInput=document.getElementById('tokLogoFilePolygon');
-    if(logoInput._resizedFile){
-      btn.textContent='Uploading logo...';
-      logoURI=await uploadImageWithFallback(logoInput._resizedFile,PINATA_JWT_TOKENS,'opengate-tokens');
-    }
-
-    btn.textContent='Checking your pass status...';
-    // Always fetch a real voucher at creation time — the backend checks
-    // BNB Chain fresh and signs a 10-minute voucher bound to this wallet
-    // and this exact factory address (matches api/pass-voucher.js).
-    const voucher=await fetchPassVoucher(TOKEN_FACTORY_POLYGON);
-
-    await switchToPolygon();
-    const freshSigner=await provider.getSigner();
-    const paymentAddr=tokPolygonCurrencyAddr();
-    const price=await polygonReadRetry(function(p){return new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,p).quotePrice(userAddr,paymentAddr,voucher);});
-
-    if(price>0n && tokCurrencyPolygon!=='POL'){
-      const token=new ethers.Contract(paymentAddr,ERC20_MIN_ABI,freshSigner);
-      const allowance=await token.allowance(userAddr,TOKEN_FACTORY_POLYGON);
-      if(allowance<price){
-        showToast('Approve '+tokCurrencyPolygon+' in MetaMask...','ok');
-        await(await token.approve(TOKEN_FACTORY_POLYGON,price)).wait();
-      }
-    }
-
-    const params=[
-      name, symbol, decimals, ethers.parseUnits(supplyStr,decimals), userAddr,
-      tokOptsPolygon.tokMintPolygon, tokOptsPolygon.tokBurnPolygon, tokOptsPolygon.tokPausePolygon, logoURI,
-      tokOptsPolygon.tokTaxPolygon, Math.round(taxPct*100), tokOptsPolygon.tokWhalePolygon, Math.round(whalePct*100)
-    ];
-
-    const factory=new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,freshSigner);
-    btn.textContent='Creating token — confirm in MetaMask...';
-    const txValue=(tokCurrencyPolygon==='POL')?price:0n;
-    const tx=await factory.createToken(params,paymentAddr,voucher,{value:txValue});
-    await tx.wait();
-
-    showToast('🎉 Your token '+symbol+' is live on Polygon!','ok');
-    document.getElementById('tokNamePolygon').value='';
-    document.getElementById('tokSymbolPolygon').value='';
-    document.getElementById('tokSupplyPolygon').value='';
-    document.getElementById('tokLogoFileNamePolygon').textContent='No file chosen';
-    document.getElementById('tokLogoPreviewPolygon').innerHTML='🪙';
-    logoInput.value=''; logoInput._resizedFile=null;
-    tokUpdatePricePolygon();
-    tokLoadMyTokensPolygon();
-  }catch(e){
-    showToast((e.reason||e.message||'Failed').slice(0,80),'err');
-  }finally{
-    btn.disabled=false; btn.textContent=origText;
-  }
-}
-
-async function tokLoadMyTokensPolygon(){
-  const el=document.getElementById('myPolygonTokensList');
-  if(!userAddr){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Connect wallet to see your tokens</div>'; return; }
-  try{
-    const list=await polygonReadRetry(function(p){return new ethers.Contract(TOKEN_FACTORY_POLYGON,TOKEN_FACTORY_POLYGON_ABI,p).getTokensByCreator(userAddr);});
-    if(list.length===0){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">You haven\'t created any tokens yet</div>'; return; }
-    el.innerHTML=list.map(function(t){
-      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
-        +'<div><div style="font-size:13px;font-weight:700;">'+esc(t.name)+' ('+esc(t.symbol)+')</div>'
-        +'<div style="font-size:11px;color:var(--muted);font-family:monospace;">'+t.token+'</div></div>'
-        +'</div>';
-    }).join('');
-  }catch(e){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>'; }
-}
-
 async function loadLaunchpad(){try{const p=getReadProvider();const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,p);const fee=await factory.creationFee();const total=await factory.totalTokensCreated();document.getElementById('totalTokensCreated').textContent=total.toString();document.getElementById('ltFeeDisplay').textContent=parseFloat(ethers.formatEther(fee)).toFixed(4)+' zkLTC';}catch(e){}}
 async function launchToken(){if(!userAddr){showToast('Connect wallet first','err');return;}const name=document.getElementById('ltName').value.trim();const symbol=document.getElementById('ltSymbol').value.trim();const decimals=parseInt(document.getElementById('ltDecimals').value)||18;const supply=document.getElementById('ltSupply').value.trim();if(!name||!symbol||!supply){showToast('Fill all required fields','err');return;}try{await switchToLitVM();const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,signer);const fee=await factory.creationFee();const tx=await factory.createToken(name,symbol,decimals,supply,ltOpts.ltMint,ltOpts.ltBurn,ltOpts.ltPause,{value:fee});await tx.wait();showToast('🎉 Token '+symbol+' deployed!','ok');loadLaunchpad();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 
