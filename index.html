@@ -11647,9 +11647,25 @@ let _mtDecimals=18;
 // bnbReadRetry, Polygon uses polygonReadRetry. Missing this wrapper was
 // exactly why the panel used to fail outright the moment a single RPC
 // node hiccuped instead of quietly trying the next one.
-async function _mtRead(fn){
-  if(_mtChain==='bnb') return bnbReadRetry(function(rp){return fn(new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,rp));});
-  return polygonReadRetry(function(rp){return fn(new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,rp));});
+// Runs a whole batch of reads against ONE provider/contract instance at
+// a time, retried as a group across the chain's RPC pool. Firing 15
+// separate fields each through their OWN independent rotating retry
+// (as this used to do) meant 15 near-simultaneous requests landing on
+// different endpoints in an uncoordinated race — that's what was
+// producing "missing response for request" and similar batch mismatches.
+// One connection handling all the reads together is both lighter on
+// the RPC and avoids that race entirely.
+async function _mtReadAll(readsFn){
+  const pool = _mtChain==='bnb' ? BNB_RPCS : POLYGON_RPCS;
+  const getProvider = _mtChain==='bnb' ? getBNBBattleProvider : getPolygonReadProvider;
+  let lastErr;
+  for(let i=0;i<pool.length;i++){
+    try{
+      const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,getProvider());
+      return await ogTimeout(readsFn(c), 10000);
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr;
 }
 async function _mtWriteContract(){
   if(_mtChain==='bnb') await switchToBNB(); else await switchToPolygon();
@@ -11673,13 +11689,15 @@ async function tokManage(chain,tokenAddr){
   document.getElementById('mtPauseSection').style.display='none';
   document.getElementById('mtLogo').innerHTML='🪙';
   try{
-    const [name,symbol,decimals,totalSupply,balance,owner,mintable,burnable,pausable,paused,logoURI,taxEnabled,taxBps,antiWhaleEnabled,maxWalletBps]=await Promise.all([
-      _mtRead(c=>c.name()), _mtRead(c=>c.symbol()), _mtRead(c=>c.decimals()),
-      _mtRead(c=>c.totalSupply()), _mtRead(c=>c.balanceOf(userAddr)), _mtRead(c=>c.owner()),
-      _mtRead(c=>c.mintable()), _mtRead(c=>c.burnable()), _mtRead(c=>c.pausable()), _mtRead(c=>c.paused()),
-      _mtRead(c=>c.logoURI()), _mtRead(c=>c.taxEnabled()), _mtRead(c=>c.taxBps()),
-      _mtRead(c=>c.antiWhaleEnabled()), _mtRead(c=>c.maxWalletBps())
-    ]);
+    const [name,symbol,decimals,totalSupply,balance,owner,mintable,burnable,pausable,paused,logoURI,taxEnabled,taxBps,antiWhaleEnabled,maxWalletBps]=await _mtReadAll(function(c){
+      return Promise.all([
+        c.name(), c.symbol(), c.decimals(),
+        c.totalSupply(), c.balanceOf(userAddr), c.owner(),
+        c.mintable(), c.burnable(), c.pausable(), c.paused(),
+        c.logoURI(), c.taxEnabled(), c.taxBps(),
+        c.antiWhaleEnabled(), c.maxWalletBps()
+      ]);
+    });
     if(owner.toLowerCase()!==userAddr.toLowerCase()){
       document.getElementById('mtNameSym').textContent=name+' ('+symbol+')';
       document.getElementById('mtStatus').innerHTML='<span style="color:var(--red);">Not your token</span>';
