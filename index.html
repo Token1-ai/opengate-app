@@ -1578,7 +1578,7 @@ async function smartConnectWallet(){
                     <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);">$</span>
                     <input id="gpbs-amount" type="number" min="0.1" step="0.1" placeholder="0.00" style="width:100%;padding:10px 12px 10px 28px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;outline:none;"/>
                   </div>
-                  <div style="font-size:11px;color:var(--muted);margin-top:4px;">Min: $0.10 · Max: $50</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px;">Min: $0.10 · No maximum limit</div>
                 </div>
 
                 <!-- Quick amounts -->
@@ -1588,6 +1588,8 @@ async function smartConnectWallet(){
                   <button onclick="document.getElementById('gpbs-amount').value='5'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$5</button>
                   <button onclick="document.getElementById('gpbs-amount').value='10'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$10</button>
                   <button onclick="document.getElementById('gpbs-amount').value='50'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$50</button>
+                  <button onclick="document.getElementById('gpbs-amount').value='100'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$100</button>
+                  <button onclick="document.getElementById('gpbs-amount').value='500'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$500</button>
                 </div>
 
                 <!-- Buttons -->
@@ -3814,12 +3816,14 @@ var _bnbRpcIdx=Math.floor(Math.random()*BNB_RPCS.length);
 // llamarpc.com' failed to resolve entirely (ERR_NAME_NOT_RESOLVED) in a
 // real user's browser. Both replaced below with confirmed no-signup
 // public endpoints (PublicNode, dRPC) alongside the two that were
-// already working (Ankr, 1RPC).
+// already working (Ankr, OnFinality). NOTE (verified live): '1rpc.io/matic'
+// was removed — real browser console showed it blocked by CORS policy
+// AND returning 429 (Too Many Requests); it's not usable from a browser.
 var POLYGON_RPCS=[
   'https://polygon-bor-rpc.publicnode.com',
   'https://polygon.drpc.org',
   'https://rpc.ankr.com/polygon',
-  'https://1rpc.io/matic'
+  'https://polygon.api.onfinality.io/public'
 ];
 var _polygonRpcIdx=Math.floor(Math.random()*POLYGON_RPCS.length);
 function getPolygonReadProvider(){
@@ -5839,11 +5843,11 @@ async function gpbsLoadRooms(){
       gpbsCheckActiveGame();
       return;
     }
-    var minBet=100000n, maxBet=50000000n; // $0.10 / $50 at 6 decimals
+    var minBet=100000n; // $0.10 at 6 decimals — no max on the Gold table
     var rooms=await Promise.all(ids.map(function(id){
       return polygonReadRetry(function(p){return new ethers.Contract(POLYGON_GOLD_BATTLE_ADDR,POLYGON_GOLD_BATTLE_ABI,p).getGame(id);}).then(function(g){return {id:Number(id),g:g};});
     }));
-    rooms=rooms.filter(function(r){return r.g.betAmount>=minBet&&r.g.betAmount<=maxBet;});
+    rooms=rooms.filter(function(r){return r.g.betAmount>=minBet;});
     if(rooms.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
       gpbsCheckActiveGame();
@@ -5884,7 +5888,6 @@ async function gpbsLoadRooms(){
 async function gpbsMatchmake(){
   var amount=parseFloat(document.getElementById('gpbs-amount').value);
   if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
-  if(amount>50){showToast('Max stake $50','err');return;}
   try{
     showToast('Searching...','ok');
     var ids=await polygonReadRetry(function(p){return new ethers.Contract(POLYGON_GOLD_BATTLE_ADDR,POLYGON_GOLD_BATTLE_ABI,p).getOpenGames();});
@@ -5916,7 +5919,6 @@ async function gpbsCreate(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   var amount=parseFloat(document.getElementById('gpbs-amount').value);
   if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
-  if(amount>50){showToast('Max stake $50','err');return;}
   try{
     showToast('Checking your pass status...','ok');
     var voucher=await fetchPassVoucher(POLYGON_GOLD_BATTLE_ADDR);
