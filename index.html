@@ -8367,6 +8367,12 @@ async function loadPosts(){
     const posts=postsRes.data;
     if(postsRes.error) throw postsRes.error;
     if(!posts||posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
+    const banned=await getBannedWallets();
+    if(banned.size>0){
+      const filtered=posts.filter(p=>!banned.has((p.author_wallet||'').toLowerCase()));
+      posts.length=0; posts.push(...filtered);
+    }
+    if(posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
     // Load likes counts + user liked status in parallel
     const postIds=posts.map(p=>p.id);
     let ls=new Set();
@@ -8402,6 +8408,9 @@ function renderImages(urls){
   return `<div class="post-images ${cls}">${imgs}</div>`;
 }
 
+function isOwnerWallet(){
+  return !!userAddr && userAddr.toLowerCase()==='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+}
 function renderPost(post,liked){
   const u=post.users||{};
   const name=u.username||sAddr(post.author_wallet);
@@ -8411,6 +8420,7 @@ function renderPost(post,liked){
           <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
           ${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')\" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}
           ${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}
+          ${isOwnerWallet()&&post.author_wallet!==userAddr?`<button class="act-btn" onclick="adminDeletePost('${post.id}',this)" title="Admin: delete this post" style="color:var(--red);font-size:11px;"><span>🛡️🗑️</span></button><button class="act-btn" onclick="adminBanWallet('${post.author_wallet}',this)" title="Admin: ban this wallet" style="color:var(--red);font-size:11px;"><span>🚫</span></button>`:''}
           <button class="act-btn" onclick="toggleComments('${post.id}',this)" id="cmtbtn-${post.id}"><span>💬</span><span class="act-cnt" id="cmtcnt-${post.id}">0</span></button>
           </div>
           <div id="comments-${post.id}" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;"></div>
@@ -10532,6 +10542,12 @@ async function loadMarketplace(){
       const price   = raw[3]??raw.price;
       active.push({seller,nftContract:nftAddr,tokenId,price,active:true,_id:Number(ids[i])});
     }
+    const bannedLit=await getBannedWallets();
+    const hiddenLit=await getHiddenNFTs();
+    if(bannedLit.size>0||hiddenLit.size>0){
+      active=active.filter(l=>!bannedLit.has((l.seller||'').toLowerCase())
+        && !hiddenLit.has(('litvm:'+l.nftContract+':'+l.tokenId).toLowerCase()));
+    }
     document.getElementById('mktListings').textContent=active.length;
     const grid=document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,45vw),1fr));gap:10px;';
@@ -10607,6 +10623,14 @@ async function loadMarketplace(){
         btn.onclick=(function(idx,pw){return function(e){e.stopPropagation();buyNFT(idx,pw);};})(listingIdx,priceWei);
       }
       btnWrap.appendChild(btn);
+      if(isOwnerWallet()&&!isOwn){
+        const hideBtn=document.createElement('button');
+        hideBtn.textContent='🚫';
+        hideBtn.title='Admin: hide this listing';
+        hideBtn.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer;margin-left:4px;';
+        hideBtn.onclick=(function(idx,contract,tokenId){return function(e){e.stopPropagation();adminHideNFTListing('litvm',contract,tokenId,idx,this);};})(listingIdx,l.nftContract,l.tokenId);
+        btnWrap.appendChild(hideBtn);
+      }
       card.appendChild(imgDiv);card.appendChild(info);
       grid.appendChild(card);
     }));
@@ -10718,6 +10742,12 @@ async function loadMarketplaceBNB(){
         _id: Number(ids[i])
       });
     }
+    const bannedBnb=await getBannedWallets();
+    const hiddenBnb=await getHiddenNFTs();
+    if(bannedBnb.size>0||hiddenBnb.size>0){
+      active=active.filter(l=>!bannedBnb.has((l.seller||'').toLowerCase())
+        && !hiddenBnb.has(('bnb:'+l.nftContract+':'+l.tokenId).toLowerCase()));
+    }
     document.getElementById('mktListingsBnb').textContent=active.length;
     const grid=document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,45vw),1fr));gap:10px;';
@@ -10774,6 +10804,14 @@ async function loadMarketplaceBNB(){
         btn.onclick=(function(idx,price,token){return function(e){e.stopPropagation();bnbmktBuy(idx,price,token);};})(l._id,l.price,l.paymentToken);
       }
       btnWrap.appendChild(btn);
+      if(isOwnerWallet()&&!isOwn){
+        const hideBtn=document.createElement('button');
+        hideBtn.textContent='🚫';
+        hideBtn.title='Admin: hide this listing';
+        hideBtn.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer;margin-left:4px;';
+        hideBtn.onclick=(function(idx,contract,tokenId){return function(e){e.stopPropagation();adminHideNFTListing('bnb',contract,tokenId,idx,this);};})(l._id,l.nftContract,l.tokenId);
+        btnWrap.appendChild(hideBtn);
+      }
       card.appendChild(imgDiv);card.appendChild(info);
       grid.appendChild(card);
     }));
@@ -10874,6 +10912,12 @@ async function loadMarketplacePolygon(){
         _id: Number(ids[i])
       });
     }
+    const bannedPoly=await getBannedWallets();
+    const hiddenPoly=await getHiddenNFTs();
+    if(bannedPoly.size>0||hiddenPoly.size>0){
+      active=active.filter(l=>!bannedPoly.has((l.seller||'').toLowerCase())
+        && !hiddenPoly.has(('polygon:'+l.nftContract+':'+l.tokenId).toLowerCase()));
+    }
     document.getElementById('mktListingsPolygon').textContent=active.length;
     const grid=document.createElement('div');
     grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,45vw),1fr));gap:10px;';
@@ -10930,6 +10974,14 @@ async function loadMarketplacePolygon(){
         btn.onclick=(function(idx,price,token){return function(e){e.stopPropagation();polymktBuy(idx,price,token);};})(l._id,l.price,l.paymentToken);
       }
       btnWrap.appendChild(btn);
+      if(isOwnerWallet()&&!isOwn){
+        const hideBtn=document.createElement('button');
+        hideBtn.textContent='🚫';
+        hideBtn.title='Admin: hide this listing';
+        hideBtn.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer;margin-left:4px;';
+        hideBtn.onclick=(function(idx,contract,tokenId){return function(e){e.stopPropagation();adminHideNFTListing('polygon',contract,tokenId,idx,this);};})(l._id,l.nftContract,l.tokenId);
+        btnWrap.appendChild(hideBtn);
+      }
       card.appendChild(imgDiv);card.appendChild(info);
       grid.appendChild(card);
     }));
@@ -11770,6 +11822,122 @@ async function deletePost(postId,btn){
     btn.disabled=false;
   }
 }
+
+// ══════════════════ ADMIN MODERATION ══════════════════
+// Owner-only actions (delete other people's posts, ban a wallet, hide an
+// NFT listing). Since this platform has no Supabase Auth — everyone
+// shares the same public anon key — a plain "if(isOwner) allow" check on
+// the client can't be trusted by the database on its own (anyone could
+// call the same delete from devtools). So every admin action here is
+// backed by a wallet-SIGNED message, verified server-side in
+// api/admin-moderate.js before it's allowed to touch anything, exactly
+// like the Battleship oracle verifies moves before paying out.
+async function adminSign(action, target){
+  const ts = Date.now();
+  const msg = 'OpenGate Admin: '+action+' '+target+' at '+ts;
+  const p = new ethers.BrowserProvider(window.ethereum);
+  const signer = await p.getSigner();
+  const signature = await signer.signMessage(msg);
+  return { wallet: userAddr, signature, ts };
+}
+async function adminCall(action, extra){
+  const target = extra.postId || extra.targetWallet || extra.listingId || '';
+  const { wallet, signature, ts } = await adminSign(action, target);
+  const r = await fetch('/api/admin-moderate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ action, wallet, signature, ts }, extra))
+  });
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok || j.error) throw new Error(j.error || ('HTTP '+r.status));
+  return j;
+}
+
+async function adminDeletePost(postId, btn){
+  if(!isOwnerWallet()) return;
+  if(!confirm('Delete this post as admin?')) return;
+  try{
+    if(btn) btn.disabled=true;
+    await adminCall('deletePost', { postId });
+    showToast('Post deleted (admin) ✓','ok');
+    loadPosts();
+  }catch(e){
+    showToast('Failed: '+(e.message||'').slice(0,60),'err');
+    if(btn) btn.disabled=false;
+  }
+}
+
+async function adminBanWallet(targetWallet, btn){
+  if(!isOwnerWallet()) return;
+  if(!confirm('Ban '+sAddr(targetWallet)+'? This hides all their posts and NFT listings on the site.')) return;
+  try{
+    if(btn) btn.disabled=true;
+    await adminCall('banWallet', { targetWallet });
+    showToast('Wallet banned — their content is now hidden','ok');
+    loadPosts();
+  }catch(e){
+    showToast('Failed: '+(e.message||'').slice(0,60),'err');
+    if(btn) btn.disabled=false;
+  }
+}
+
+async function adminUnbanWallet(targetWallet, btn){
+  if(!isOwnerWallet()) return;
+  try{
+    if(btn) btn.disabled=true;
+    await adminCall('unbanWallet', { targetWallet });
+    showToast('Wallet unbanned','ok');
+  }catch(e){
+    showToast('Failed: '+(e.message||'').slice(0,60),'err');
+    if(btn) btn.disabled=false;
+  }
+}
+
+// NFT listings are 100% on-chain (Marketplace holds the escrow) — we
+// can't delete or unlock them from here, and we intentionally don't try
+// to (that would need a contract admin-cancel function and a redeploy
+// of an already-live contract holding other people's real listings).
+// What this DOES do: make the listing invisible in OpenGate's own
+// marketplace UI, immediately, on every chain, no redeploy needed —
+// exactly like banning a wallet hides their posts without touching the
+// blockchain itself.
+async function adminHideNFTListing(network, contractAddr, tokenId, listingId, btn){
+  if(!isOwnerWallet()) return;
+  if(!confirm('Hide this NFT listing from the marketplace?')) return;
+  try{
+    if(btn) btn.disabled=true;
+    await adminCall('hideNFTListing', { network, contractAddr, tokenId: String(tokenId), listingId: String(listingId) });
+    showToast('Listing hidden from marketplace','ok');
+    if(network==='bnb') loadMarketplaceBNB();
+    else if(network==='polygon') loadMarketplacePolygon();
+    else if(typeof loadMarketplace==='function') loadMarketplace();
+  }catch(e){
+    showToast('Failed: '+(e.message||'').slice(0,60),'err');
+    if(btn) btn.disabled=false;
+  }
+}
+
+// Cached for the current session so every post/listing render doesn't
+// need its own DB round-trip; refreshed once per page load.
+let _bannedWalletsCache = null;
+async function getBannedWallets(){
+  if(_bannedWalletsCache) return _bannedWalletsCache;
+  try{
+    const { data } = await sb.from('banned_wallets').select('wallet');
+    _bannedWalletsCache = new Set((data||[]).map(r=>r.wallet.toLowerCase()));
+  }catch(e){ _bannedWalletsCache = new Set(); }
+  return _bannedWalletsCache;
+}
+let _hiddenNFTsCache = null;
+async function getHiddenNFTs(){
+  if(_hiddenNFTsCache) return _hiddenNFTsCache;
+  try{
+    const { data } = await sb.from('hidden_nfts').select('network,contract_addr,token_id');
+    _hiddenNFTsCache = new Set((data||[]).map(r=>(r.network+':'+r.contract_addr+':'+r.token_id).toLowerCase()));
+  }catch(e){ _hiddenNFTsCache = new Set(); }
+  return _hiddenNFTsCache;
+}
+
 
 // ── REWARDS POOL ──
 async function loadRewardsPool(){try{const p=getReadProvider();const r=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,p);const bal=await r.poolBalance();const el=document.getElementById('rewardsPoolBal');if(el)el.textContent=parseFloat(ethers.formatEther(bal)).toFixed(0)+' GATE';}catch(e){}}
