@@ -41,8 +41,7 @@ const ABI = [
 const RPCS = [
   'https://polygon-bor-rpc.publicnode.com',
   'https://polygon.drpc.org',
-  'https://rpc.ankr.com/polygon',
-  'https://1rpc.io/matic',
+  'https://rpc.ankr.com/polygon'
 ];
 
 const STATUS_PLAYING  = 2; // Playing, per this contract's enum (NOT 1 — that's BNB's numbering)
@@ -57,12 +56,22 @@ function parseJSON(str, fallback) {
   catch (e) { return fallback; }
 }
 
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, rej) => setTimeout(() => rej(new Error('RPC timeout ' + ms + 'ms')), ms))
+  ]);
+}
+
 async function getWorkingProvider() {
-  // Try each RPC once; return the first that answers.
+  // Try each RPC once; return the first that answers. Each attempt is
+  // capped so a hanging/overloaded node can't stall the whole payout —
+  // this matters more here than anywhere else, since this is the path
+  // that actually pays out a winner's prize money.
   for (const rpc of RPCS.sort(() => Math.random() - 0.5)) {
     try {
       const p = new ethers.JsonRpcProvider(rpc);
-      await p.getBlockNumber();
+      await withTimeout(p.getBlockNumber(), 8000);
       return p;
     } catch (e) { /* try next */ }
   }
