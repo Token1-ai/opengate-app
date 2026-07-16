@@ -3813,17 +3813,17 @@ var _bnbRpcIdx=Math.floor(Math.random()*BNB_RPCS.length);
 // (NFT Studio pricing, Token Creator pricing, Marketplace listings, etc.)
 // NOTE (verified live): 'polygon-rpc.com' has deprecated free public
 // access (now requires sign-in) — every call returns 401. 'polygon.
-// llamarpc.com' failed to resolve entirely (ERR_NAME_NOT_RESOLVED) in a
-// real user's browser. Both replaced below with confirmed no-signup
-// public endpoints (PublicNode, dRPC) alongside the two that were
-// already working (Ankr, OnFinality). NOTE (verified live): '1rpc.io/matic'
-// was removed — real browser console showed it blocked by CORS policy
-// AND returning 429 (Too Many Requests); it's not usable from a browser.
+// llamarpc.com' failed to resolve entirely (ERR_NAME_NOT_RESOLVED),
+// '1rpc.io/matic' was CORS-blocked + 429'd, and 'polygon.api.onfinality.
+// io/public' ALSO flooded with 429 (Too Many Requests) on nearly every
+// call in real usage — confirmed live in a user's browser console.
+// After three failed guesses at a 4th public endpoint, sticking to just
+// these three well-established, consistently working ones (PublicNode,
+// dRPC, Ankr) rather than adding another unverified guess.
 var POLYGON_RPCS=[
   'https://polygon-bor-rpc.publicnode.com',
   'https://polygon.drpc.org',
-  'https://rpc.ankr.com/polygon',
-  'https://polygon.api.onfinality.io/public'
+  'https://rpc.ankr.com/polygon'
 ];
 var _polygonRpcIdx=Math.floor(Math.random()*POLYGON_RPCS.length);
 function getPolygonReadProvider(){
@@ -3834,7 +3834,7 @@ async function polygonReadRetry(fn, attempts){
   attempts = attempts || POLYGON_RPCS.length;
   let lastErr;
   for(let i=0;i<attempts;i++){
-    try{ return await fn(getPolygonReadProvider()); }
+    try{ return await ogTimeout(fn(getPolygonReadProvider()), 8000); }
     catch(e){ lastErr=e; }
   }
   throw lastErr;
