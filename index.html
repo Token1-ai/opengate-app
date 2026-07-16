@@ -11480,6 +11480,7 @@ async function tokLoadMyTokens(){
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
         +'<div><div style="font-size:13px;font-weight:700;">'+esc(t.name)+' ('+esc(t.symbol)+')</div>'
         +'<div style="font-size:11px;color:var(--muted);font-family:monospace;">'+t.token+'</div></div>'
+        +'<button onclick="tokManage(\'bnb\',\''+t.token+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">⚙️ Manage</button>'
         +'</div>';
     }).join('');
   }catch(e){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>'; }
@@ -11631,17 +11632,34 @@ async function tokLoadMyTokensPolygon(){
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
         +'<div><div style="font-size:13px;font-weight:700;">'+esc(t.name)+' ('+esc(t.symbol)+')</div>'
         +'<div style="font-size:11px;color:var(--muted);font-family:monospace;">'+t.token+'</div></div>'
-        +'<button onclick="tokManagePolygon(\''+t.token+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">⚙️ Manage</button>'
+        +'<button onclick="tokManage(\'polygon\',\''+t.token+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">⚙️ Manage</button>'
         +'</div>';
     }).join('');
   }catch(e){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>'; }
 }
 
-// ══════════════════ TOKEN MANAGEMENT PANEL (Polygon) ══════════════════
+// ══════════════════ TOKEN MANAGEMENT PANEL (BNB + Polygon) ══════════════════
 let _mtTokenAddr=null;
+let _mtChain='polygon';
+let _mtDecimals=18;
 
-async function tokManagePolygon(tokenAddr){
+// Wraps a read across the correct chain's rotating RPC pool — BNB uses
+// bnbReadRetry, Polygon uses polygonReadRetry. Missing this wrapper was
+// exactly why the panel used to fail outright the moment a single RPC
+// node hiccuped instead of quietly trying the next one.
+async function _mtRead(fn){
+  if(_mtChain==='bnb') return bnbReadRetry(function(rp){return fn(new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,rp));});
+  return polygonReadRetry(function(rp){return fn(new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,rp));});
+}
+async function _mtWriteContract(){
+  if(_mtChain==='bnb') await switchToBNB(); else await switchToPolygon();
+  const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+  return new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+}
+
+async function tokManage(chain,tokenAddr){
   if(!userAddr){showToast('Connect wallet first','err');return;}
+  _mtChain=chain;
   _mtTokenAddr=tokenAddr;
   document.getElementById('manageTokenModalPolygon').classList.add('open');
   document.getElementById('mtNameSym').textContent='Loading...';
@@ -11655,11 +11673,12 @@ async function tokManagePolygon(tokenAddr){
   document.getElementById('mtPauseSection').style.display='none';
   document.getElementById('mtLogo').innerHTML='🪙';
   try{
-    const c=new ethers.Contract(tokenAddr,OPENGATE_TOKEN_ABI,getPolygonReadProvider());
     const [name,symbol,decimals,totalSupply,balance,owner,mintable,burnable,pausable,paused,logoURI,taxEnabled,taxBps,antiWhaleEnabled,maxWalletBps]=await Promise.all([
-      c.name(),c.symbol(),c.decimals(),c.totalSupply(),c.balanceOf(userAddr),c.owner(),
-      c.mintable(),c.burnable(),c.pausable(),c.paused(),c.logoURI(),
-      c.taxEnabled(),c.taxBps(),c.antiWhaleEnabled(),c.maxWalletBps()
+      _mtRead(c=>c.name()), _mtRead(c=>c.symbol()), _mtRead(c=>c.decimals()),
+      _mtRead(c=>c.totalSupply()), _mtRead(c=>c.balanceOf(userAddr)), _mtRead(c=>c.owner()),
+      _mtRead(c=>c.mintable()), _mtRead(c=>c.burnable()), _mtRead(c=>c.pausable()), _mtRead(c=>c.paused()),
+      _mtRead(c=>c.logoURI()), _mtRead(c=>c.taxEnabled()), _mtRead(c=>c.taxBps()),
+      _mtRead(c=>c.antiWhaleEnabled()), _mtRead(c=>c.maxWalletBps())
     ]);
     if(owner.toLowerCase()!==userAddr.toLowerCase()){
       document.getElementById('mtNameSym').textContent=name+' ('+symbol+')';
@@ -11700,7 +11719,6 @@ async function tokManagePolygon(tokenAddr){
     showToast('Failed to load: '+(e.message||'').slice(0,50),'err');
   }
 }
-let _mtDecimals=18;
 
 async function tokMintPolygon(){
   const amt=document.getElementById('mtMintAmount').value.trim();
@@ -11708,16 +11726,14 @@ async function tokMintPolygon(){
   const btn=document.getElementById('mtMintBtn');
   try{
     btn.disabled=true;btn.textContent='...';
-    await switchToPolygon();
-    const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
-    const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+    const c=await _mtWriteContract();
     const tx=await c.mint(userAddr,ethers.parseUnits(amt,_mtDecimals));
     showToast('Minting — confirm in wallet...','ok');
     await tx.wait();
     showToast('✓ Minted!','ok');
     document.getElementById('mtMintAmount').value='';
-    tokManagePolygon(_mtTokenAddr);
-    tokLoadMyTokensPolygon();
+    tokManage(_mtChain,_mtTokenAddr);
+    if(_mtChain==='bnb') tokLoadMyTokens(); else tokLoadMyTokensPolygon();
   }catch(e){
     showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
   }finally{ btn.disabled=false;btn.textContent='Mint'; }
@@ -11730,15 +11746,13 @@ async function tokBurnPolygon(){
   const btn=document.getElementById('mtBurnBtn');
   try{
     btn.disabled=true;btn.textContent='...';
-    await switchToPolygon();
-    const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
-    const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+    const c=await _mtWriteContract();
     const tx=await c.burn(ethers.parseUnits(amt,_mtDecimals));
     showToast('Burning — confirm in wallet...','ok');
     await tx.wait();
     showToast('✓ Burned','ok');
     document.getElementById('mtBurnAmount').value='';
-    tokManagePolygon(_mtTokenAddr);
+    tokManage(_mtChain,_mtTokenAddr);
   }catch(e){
     showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
   }finally{ btn.disabled=false;btn.textContent='Burn'; }
@@ -11749,14 +11763,12 @@ async function tokTogglePausePolygon(){
   const wantsPause=btn.textContent.includes('Pause')&&!btn.textContent.includes('Unpause');
   try{
     btn.disabled=true;btn.textContent='...';
-    await switchToPolygon();
-    const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
-    const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+    const c=await _mtWriteContract();
     const tx=wantsPause?await c.pause():await c.unpause();
     showToast((wantsPause?'Pausing':'Unpausing')+' — confirm in wallet...','ok');
     await tx.wait();
     showToast(wantsPause?'⏸ Token paused':'▶ Token unpaused','ok');
-    tokManagePolygon(_mtTokenAddr);
+    tokManage(_mtChain,_mtTokenAddr);
   }catch(e){
     showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
     btn.disabled=false;
@@ -11769,15 +11781,13 @@ async function tokTransferOwnershipPolygon(){
   if(!confirm('Transfer ownership to '+addr+'?\n\nYou will PERMANENTLY lose the ability to mint, burn, or pause this token. This cannot be undone.')) return;
   if(!confirm('Are you absolutely sure? Type nothing here — just confirm once more to proceed.')) return;
   try{
-    await switchToPolygon();
-    const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
-    const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+    const c=await _mtWriteContract();
     const tx=await c.transferOwnership(addr);
     showToast('Transferring — confirm in wallet...','ok');
     await tx.wait();
     showToast('✓ Ownership transferred','ok');
     document.getElementById('manageTokenModalPolygon').classList.remove('open');
-    tokLoadMyTokensPolygon();
+    if(_mtChain==='bnb') tokLoadMyTokens(); else tokLoadMyTokensPolygon();
   }catch(e){
     showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
   }
