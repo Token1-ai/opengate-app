@@ -2359,6 +2359,70 @@ async function smartConnectWallet(){
         </div>
       </div>
 
+      <!-- Manage Token Modal — Polygon -->
+      <div class="modal-overlay" id="manageTokenModalPolygon">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:460px;position:relative;max-height:85vh;overflow-y:auto;">
+          <button class="modal-close-btn" onclick="document.getElementById('manageTokenModalPolygon').classList.remove('open')">✕</button>
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+            <div id="mtLogo" style="width:44px;height:44px;border-radius:50%;background:var(--bg3);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;">🪙</div>
+            <div>
+              <div id="mtNameSym" style="font-size:18px;font-weight:700;">Loading...</div>
+              <div id="mtAddr" style="font-size:11px;color:var(--muted);font-family:monospace;"></div>
+            </div>
+          </div>
+
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--muted);">Total Supply</span><span id="mtSupply" style="font-weight:700;">—</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;"><span style="color:var(--muted);">Your Balance</span><span id="mtBalance" style="font-weight:700;">—</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="color:var(--muted);">Status</span><span id="mtStatus" style="font-weight:700;">—</span></div>
+          </div>
+
+          <div id="mtFlagsRow" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;"></div>
+
+          <!-- Mint -->
+          <div id="mtMintSection" style="display:none;margin-bottom:16px;border-top:1px solid var(--border);padding-top:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;">🔨 Mint New Tokens</div>
+            <div style="display:flex;gap:8px;">
+              <input id="mtMintAmount" type="number" placeholder="Amount" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;"/>
+              <button onclick="tokMintPolygon()" id="mtMintBtn" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Mint</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Minted to your own wallet. Increases total supply.</div>
+          </div>
+
+          <!-- Burn -->
+          <div id="mtBurnSection" style="display:none;margin-bottom:16px;border-top:1px solid var(--border);padding-top:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;">🔥 Burn Your Tokens</div>
+            <div style="display:flex;gap:8px;">
+              <input id="mtBurnAmount" type="number" placeholder="Amount" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;"/>
+              <button onclick="tokBurnPolygon()" id="mtBurnBtn" style="background:rgba(255,77,77,0.15);border:1px solid rgba(255,77,77,.4);color:var(--red);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Burn</button>
+            </div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Permanently destroys tokens from your own balance. Cannot be undone.</div>
+          </div>
+
+          <!-- Pause -->
+          <div id="mtPauseSection" style="display:none;margin-bottom:16px;border-top:1px solid var(--border);padding-top:16px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <div style="font-size:13px;font-weight:700;">⏸ Pause Transfers</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px;">When paused, nobody (including you) can transfer this token.</div>
+              </div>
+              <button onclick="tokTogglePausePolygon()" id="mtPauseBtn" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">—</button>
+            </div>
+          </div>
+
+          <!-- Transfer ownership (danger zone) -->
+          <div style="margin-top:8px;border-top:1px solid rgba(255,77,77,.3);padding-top:16px;">
+            <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px;">⚠️ Transfer Ownership</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Gives up your mint/burn/pause control forever. This cannot be reversed.</div>
+            <div style="display:flex;gap:8px;">
+              <input id="mtNewOwner" type="text" placeholder="0x... new owner address" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:12px;outline:none;font-family:monospace;"/>
+              <button onclick="tokTransferOwnershipPolygon()" style="background:rgba(255,77,77,0.15);border:1px solid rgba(255,77,77,.4);color:var(--red);border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Transfer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div id="view-nftstudio" style="display:none;">
         <div class="feed-hdr">🎨 NFT Studio</div>
 
@@ -8019,6 +8083,31 @@ const TOKEN_FACTORY_POLYGON_ABI = [
   'function silverFreeAllowance() view returns(uint256)',
 ];
 
+// The token clone itself (not the factory) — used by the "Manage Token"
+// panel so creators can mint/burn/pause their own token after creation.
+const OPENGATE_TOKEN_ABI = [
+  'function name() view returns(string)',
+  'function symbol() view returns(string)',
+  'function decimals() view returns(uint8)',
+  'function totalSupply() view returns(uint256)',
+  'function balanceOf(address) view returns(uint256)',
+  'function owner() view returns(address)',
+  'function mintable() view returns(bool)',
+  'function burnable() view returns(bool)',
+  'function pausable() view returns(bool)',
+  'function paused() view returns(bool)',
+  'function logoURI() view returns(string)',
+  'function taxEnabled() view returns(bool)',
+  'function taxBps() view returns(uint16)',
+  'function antiWhaleEnabled() view returns(bool)',
+  'function maxWalletBps() view returns(uint16)',
+  'function mint(address to, uint256 value)',
+  'function burn(uint256 value)',
+  'function pause()',
+  'function unpause()',
+  'function transferOwnership(address newOwner)',
+];
+
 async function nftStudioUpdatePricePolygon(){
   const el=document.getElementById('studioSinglePricePolygon');
   if(!userAddr){ el.textContent='Connect wallet'; return; }
@@ -11542,9 +11631,156 @@ async function tokLoadMyTokensPolygon(){
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
         +'<div><div style="font-size:13px;font-weight:700;">'+esc(t.name)+' ('+esc(t.symbol)+')</div>'
         +'<div style="font-size:11px;color:var(--muted);font-family:monospace;">'+t.token+'</div></div>'
+        +'<button onclick="tokManagePolygon(\''+t.token+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">⚙️ Manage</button>'
         +'</div>';
     }).join('');
   }catch(e){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>'; }
+}
+
+// ══════════════════ TOKEN MANAGEMENT PANEL (Polygon) ══════════════════
+let _mtTokenAddr=null;
+
+async function tokManagePolygon(tokenAddr){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  _mtTokenAddr=tokenAddr;
+  document.getElementById('manageTokenModalPolygon').classList.add('open');
+  document.getElementById('mtNameSym').textContent='Loading...';
+  document.getElementById('mtAddr').textContent=tokenAddr;
+  document.getElementById('mtSupply').textContent='—';
+  document.getElementById('mtBalance').textContent='—';
+  document.getElementById('mtStatus').textContent='—';
+  document.getElementById('mtFlagsRow').innerHTML='';
+  document.getElementById('mtMintSection').style.display='none';
+  document.getElementById('mtBurnSection').style.display='none';
+  document.getElementById('mtPauseSection').style.display='none';
+  document.getElementById('mtLogo').innerHTML='🪙';
+  try{
+    const c=new ethers.Contract(tokenAddr,OPENGATE_TOKEN_ABI,getPolygonReadProvider());
+    const [name,symbol,decimals,totalSupply,balance,owner,mintable,burnable,pausable,paused,logoURI,taxEnabled,taxBps,antiWhaleEnabled,maxWalletBps]=await Promise.all([
+      c.name(),c.symbol(),c.decimals(),c.totalSupply(),c.balanceOf(userAddr),c.owner(),
+      c.mintable(),c.burnable(),c.pausable(),c.paused(),c.logoURI(),
+      c.taxEnabled(),c.taxBps(),c.antiWhaleEnabled(),c.maxWalletBps()
+    ]);
+    if(owner.toLowerCase()!==userAddr.toLowerCase()){
+      document.getElementById('mtNameSym').textContent=name+' ('+symbol+')';
+      document.getElementById('mtStatus').innerHTML='<span style="color:var(--red);">Not your token</span>';
+      showToast("You're not the owner of this token — view only","err");
+      return;
+    }
+    document.getElementById('mtNameSym').textContent=name+' ('+symbol+')';
+    if(logoURI){
+      const url=await resolveIPFSWithFallback(logoURI).catch(function(){return '';});
+      if(url) document.getElementById('mtLogo').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+    }
+    document.getElementById('mtSupply').textContent=parseFloat(ethers.formatUnits(totalSupply,decimals)).toLocaleString()+' '+symbol;
+    document.getElementById('mtBalance').textContent=parseFloat(ethers.formatUnits(balance,decimals)).toLocaleString()+' '+symbol;
+    document.getElementById('mtStatus').innerHTML=paused?'<span style="color:var(--red);">⏸ Paused</span>':'<span style="color:var(--green);">✓ Active</span>';
+
+    const flags=[];
+    if(mintable) flags.push('🔨 Mintable');
+    if(burnable) flags.push('🔥 Burnable');
+    if(pausable) flags.push('⏸ Pausable');
+    if(taxEnabled) flags.push('💰 Tax '+(Number(taxBps)/100)+'%');
+    if(antiWhaleEnabled) flags.push('🐋 Max wallet '+(Number(maxWalletBps)/100)+'%');
+    document.getElementById('mtFlagsRow').innerHTML=flags.map(function(f){
+      return '<span style="background:var(--bg3);border:1px solid var(--border);border-radius:100px;padding:3px 10px;font-size:11px;color:var(--muted);">'+f+'</span>';
+    }).join('')||'<span style="font-size:11px;color:var(--muted);">No special features enabled</span>';
+
+    document.getElementById('mtMintSection').style.display=mintable?'block':'none';
+    document.getElementById('mtBurnSection').style.display=burnable?'block':'none';
+    if(pausable){
+      document.getElementById('mtPauseSection').style.display='block';
+      const pb=document.getElementById('mtPauseBtn');
+      pb.textContent=paused?'▶ Unpause':'⏸ Pause';
+      pb.style.color=paused?'var(--green)':'var(--text)';
+    }
+    _mtDecimals=decimals;
+  }catch(e){
+    document.getElementById('mtNameSym').textContent='Error loading token';
+    showToast('Failed to load: '+(e.message||'').slice(0,50),'err');
+  }
+}
+let _mtDecimals=18;
+
+async function tokMintPolygon(){
+  const amt=document.getElementById('mtMintAmount').value.trim();
+  if(!amt||parseFloat(amt)<=0){showToast('Enter an amount','err');return;}
+  const btn=document.getElementById('mtMintBtn');
+  try{
+    btn.disabled=true;btn.textContent='...';
+    await switchToPolygon();
+    const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+    const tx=await c.mint(userAddr,ethers.parseUnits(amt,_mtDecimals));
+    showToast('Minting — confirm in wallet...','ok');
+    await tx.wait();
+    showToast('✓ Minted!','ok');
+    document.getElementById('mtMintAmount').value='';
+    tokManagePolygon(_mtTokenAddr);
+    tokLoadMyTokensPolygon();
+  }catch(e){
+    showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
+  }finally{ btn.disabled=false;btn.textContent='Mint'; }
+}
+
+async function tokBurnPolygon(){
+  const amt=document.getElementById('mtBurnAmount').value.trim();
+  if(!amt||parseFloat(amt)<=0){showToast('Enter an amount','err');return;}
+  if(!confirm('Permanently burn '+amt+' tokens? This cannot be undone.')) return;
+  const btn=document.getElementById('mtBurnBtn');
+  try{
+    btn.disabled=true;btn.textContent='...';
+    await switchToPolygon();
+    const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+    const tx=await c.burn(ethers.parseUnits(amt,_mtDecimals));
+    showToast('Burning — confirm in wallet...','ok');
+    await tx.wait();
+    showToast('✓ Burned','ok');
+    document.getElementById('mtBurnAmount').value='';
+    tokManagePolygon(_mtTokenAddr);
+  }catch(e){
+    showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
+  }finally{ btn.disabled=false;btn.textContent='Burn'; }
+}
+
+async function tokTogglePausePolygon(){
+  const btn=document.getElementById('mtPauseBtn');
+  const wantsPause=btn.textContent.includes('Pause')&&!btn.textContent.includes('Unpause');
+  try{
+    btn.disabled=true;btn.textContent='...';
+    await switchToPolygon();
+    const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+    const tx=wantsPause?await c.pause():await c.unpause();
+    showToast((wantsPause?'Pausing':'Unpausing')+' — confirm in wallet...','ok');
+    await tx.wait();
+    showToast(wantsPause?'⏸ Token paused':'▶ Token unpaused','ok');
+    tokManagePolygon(_mtTokenAddr);
+  }catch(e){
+    showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
+    btn.disabled=false;
+  }
+}
+
+async function tokTransferOwnershipPolygon(){
+  const addr=document.getElementById('mtNewOwner').value.trim();
+  if(!addr||!ethers.isAddress(addr)){showToast('Enter a valid address','err');return;}
+  if(!confirm('Transfer ownership to '+addr+'?\n\nYou will PERMANENTLY lose the ability to mint, burn, or pause this token. This cannot be undone.')) return;
+  if(!confirm('Are you absolutely sure? Type nothing here — just confirm once more to proceed.')) return;
+  try{
+    await switchToPolygon();
+    const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+    const tx=await c.transferOwnership(addr);
+    showToast('Transferring — confirm in wallet...','ok');
+    await tx.wait();
+    showToast('✓ Ownership transferred','ok');
+    document.getElementById('manageTokenModalPolygon').classList.remove('open');
+    tokLoadMyTokensPolygon();
+  }catch(e){
+    showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
+  }
 }
 
 async function loadLaunchpad(){try{const p=getReadProvider();const factory=new ethers.Contract(TOKEN_FACTORY,FACTORY_ABI,p);const fee=await factory.creationFee();const total=await factory.totalTokensCreated();document.getElementById('totalTokensCreated').textContent=total.toString();document.getElementById('ltFeeDisplay').textContent=parseFloat(ethers.formatEther(fee)).toFixed(4)+' zkLTC';}catch(e){}}
