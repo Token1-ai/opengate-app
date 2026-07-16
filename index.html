@@ -11678,14 +11678,8 @@ async function tokManage(chain,tokenAddr){
   document.getElementById('mtPauseSection').style.display='none';
   document.getElementById('mtLogo').innerHTML='🪙';
   try{
-    const [name,symbol,decimals,totalSupply,balance,owner,mintable,burnable,pausable,paused,logoURI,taxEnabled,taxBps,antiWhaleEnabled,maxWalletBps]=await _mtReadAll(function(c){
-      return Promise.all([
-        c.name(), c.symbol(), c.decimals(),
-        c.totalSupply(), c.balanceOf(userAddr), c.owner(),
-        c.mintable(), c.burnable(), c.pausable(), c.paused(),
-        c.logoURI(), c.taxEnabled(), c.taxBps(),
-        c.antiWhaleEnabled(), c.maxWalletBps()
-      ]);
+    const [name,symbol,decimals,totalSupply,balance,owner]=await _mtReadAll(function(c){
+      return Promise.all([c.name(), c.symbol(), c.decimals(), c.totalSupply(), c.balanceOf(userAddr), c.owner()]);
     });
     if(owner.toLowerCase()!==userAddr.toLowerCase()){
       document.getElementById('mtNameSym').textContent=name+' ('+symbol+')';
@@ -11694,12 +11688,28 @@ async function tokManage(chain,tokenAddr){
       return;
     }
     document.getElementById('mtNameSym').textContent=name+' ('+symbol+')';
+    document.getElementById('mtSupply').textContent=parseFloat(ethers.formatUnits(totalSupply,decimals)).toLocaleString()+' '+symbol;
+    document.getElementById('mtBalance').textContent=parseFloat(ethers.formatUnits(balance,decimals)).toLocaleString()+' '+symbol;
+    _mtDecimals=decimals;
+
+    // Optional feature fields — some older tokens (e.g. ones created
+    // before a field existed on this chain's implementation) simply
+    // don't have these functions at all, which reverts with no data.
+    // Fetched as their own group so a missing function only means "no
+    // special features shown", not "the whole panel breaks".
+    let mintable=false,burnable=false,pausable=false,paused=false,logoURI='',taxEnabled=false,taxBps=0,antiWhaleEnabled=false,maxWalletBps=0;
+    try{
+      [mintable,burnable,pausable,paused,logoURI,taxEnabled,taxBps,antiWhaleEnabled,maxWalletBps]=await _mtReadAll(function(c){
+        return Promise.all([c.mintable(),c.burnable(),c.pausable(),c.paused(),c.logoURI(),c.taxEnabled(),c.taxBps(),c.antiWhaleEnabled(),c.maxWalletBps()]);
+      });
+    }catch(e){
+      console.warn('[TokenManage] Optional feature fields unavailable on this token — showing core info only.',e.message);
+    }
+
     if(logoURI){
       const url=await resolveIPFSWithFallback(logoURI).catch(function(){return '';});
       if(url) document.getElementById('mtLogo').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
     }
-    document.getElementById('mtSupply').textContent=parseFloat(ethers.formatUnits(totalSupply,decimals)).toLocaleString()+' '+symbol;
-    document.getElementById('mtBalance').textContent=parseFloat(ethers.formatUnits(balance,decimals)).toLocaleString()+' '+symbol;
     document.getElementById('mtStatus').innerHTML=paused?'<span style="color:var(--red);">⏸ Paused</span>':'<span style="color:var(--green);">✓ Active</span>';
 
     const flags=[];
@@ -11720,7 +11730,6 @@ async function tokManage(chain,tokenAddr){
       pb.textContent=paused?'▶ Unpause':'⏸ Pause';
       pb.style.color=paused?'var(--green)':'var(--text)';
     }
-    _mtDecimals=decimals;
   }catch(e){
     document.getElementById('mtNameSym').textContent='Error loading token';
     showToast('Failed to load: '+(e.message||'').slice(0,50),'err');
