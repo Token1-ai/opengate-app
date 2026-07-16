@@ -2411,8 +2411,8 @@ async function smartConnectWallet(){
             </div>
           </div>
 
-          <!-- Transfer ownership (danger zone) -->
-          <div style="margin-top:8px;border-top:1px solid rgba(255,77,77,.3);padding-top:16px;">
+          <!-- Transfer ownership (danger zone) — Polygon tokens only, BNB's contract has no transferOwnership function -->
+          <div id="mtTransferSection" style="margin-top:8px;border-top:1px solid rgba(255,77,77,.3);padding-top:16px;">
             <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px;">⚠️ Transfer Ownership</div>
             <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Gives up your mint/burn/pause control forever. This cannot be reversed.</div>
             <div style="display:flex;gap:8px;">
@@ -8074,7 +8074,9 @@ const TOKEN_FACTORY_POLYGON_ABI = [
 
 // The token clone itself (not the factory) — used by the "Manage Token"
 // panel so creators can mint/burn/pause their own token after creation.
-const OPENGATE_TOKEN_ABI = [
+// Polygon's OpenGateToken.sol (this project's own contract, written from
+// scratch): pausable/maxWalletBps/transferOwnership all exist as named.
+const OPENGATE_TOKEN_ABI_POLYGON = [
   'function name() view returns(string)',
   'function symbol() view returns(string)',
   'function decimals() view returns(uint8)',
@@ -8095,6 +8097,35 @@ const OPENGATE_TOKEN_ABI = [
   'function pause()',
   'function unpause()',
   'function transferOwnership(address newOwner)',
+];
+
+// BNB's OpenGateToken (the ORIGINAL, earlier contract this platform
+// already had deployed) — genuinely different field names in a few
+// places, and has NO transferOwnership function at all. Confirmed
+// directly against its actual Solidity source, not guessed: pausable is
+// called `pausableFlag`, the anti-whale field is `maxTxBps` (a MAX
+// TRANSACTION size cap, not a max wallet holding — a different mechanic
+// than Polygon's `maxWalletBps`, so the label shown for it differs too).
+const OPENGATE_TOKEN_ABI_BNB = [
+  'function name() view returns(string)',
+  'function symbol() view returns(string)',
+  'function decimals() view returns(uint8)',
+  'function totalSupply() view returns(uint256)',
+  'function balanceOf(address) view returns(uint256)',
+  'function owner() view returns(address)',
+  'function mintable() view returns(bool)',
+  'function burnable() view returns(bool)',
+  'function pausableFlag() view returns(bool)',
+  'function paused() view returns(bool)',
+  'function logoURI() view returns(string)',
+  'function taxEnabled() view returns(bool)',
+  'function taxBps() view returns(uint16)',
+  'function antiWhaleEnabled() view returns(bool)',
+  'function maxTxBps() view returns(uint16)',
+  'function mint(address to, uint256 value)',
+  'function burn(uint256 value)',
+  'function pause()',
+  'function unpause()',
 ];
 
 async function nftStudioUpdatePricePolygon(){
@@ -11644,13 +11675,16 @@ let _mtDecimals=18;
 // producing "missing response for request" and similar batch mismatches.
 // One connection handling all the reads together is both lighter on
 // the RPC and avoids that race entirely.
+function _mtAbi(){
+  return _mtChain==='bnb' ? OPENGATE_TOKEN_ABI_BNB : OPENGATE_TOKEN_ABI_POLYGON;
+}
 async function _mtReadAll(readsFn){
   const pool = _mtChain==='bnb' ? BNB_RPCS : POLYGON_RPCS;
   const getProvider = _mtChain==='bnb' ? getBNBBattleProvider : getPolygonReadProvider;
   let lastErr;
   for(let i=0;i<pool.length;i++){
     try{
-      const c=new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,getProvider());
+      const c=new ethers.Contract(_mtTokenAddr,_mtAbi(),getProvider());
       return await ogTimeout(readsFn(c), 10000);
     }catch(e){ lastErr=e; }
   }
@@ -11659,7 +11693,7 @@ async function _mtReadAll(readsFn){
 async function _mtWriteContract(){
   if(_mtChain==='bnb') await switchToBNB(); else await switchToPolygon();
   const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
-  return new ethers.Contract(_mtTokenAddr,OPENGATE_TOKEN_ABI,signer);
+  return new ethers.Contract(_mtTokenAddr,_mtAbi(),signer);
 }
 
 async function tokManage(chain,tokenAddr){
@@ -11676,6 +11710,7 @@ async function tokManage(chain,tokenAddr){
   document.getElementById('mtMintSection').style.display='none';
   document.getElementById('mtBurnSection').style.display='none';
   document.getElementById('mtPauseSection').style.display='none';
+  document.getElementById('mtTransferSection').style.display=chain==='bnb'?'none':'block';
   document.getElementById('mtLogo').innerHTML='🪙';
   try{
     const [name,symbol,decimals,totalSupply,balance,owner]=await _mtReadAll(function(c){
@@ -11700,7 +11735,13 @@ async function tokManage(chain,tokenAddr){
     let mintable=false,burnable=false,pausable=false,paused=false,logoURI='',taxEnabled=false,taxBps=0,antiWhaleEnabled=false,maxWalletBps=0;
     try{
       [mintable,burnable,pausable,paused,logoURI,taxEnabled,taxBps,antiWhaleEnabled,maxWalletBps]=await _mtReadAll(function(c){
-        return Promise.all([c.mintable(),c.burnable(),c.pausable(),c.paused(),c.logoURI(),c.taxEnabled(),c.taxBps(),c.antiWhaleEnabled(),c.maxWalletBps()]);
+        return Promise.all([
+          c.mintable(), c.burnable(),
+          _mtChain==='bnb'?c.pausableFlag():c.pausable(),
+          c.paused(), c.logoURI(), c.taxEnabled(), c.taxBps(),
+          c.antiWhaleEnabled(),
+          _mtChain==='bnb'?c.maxTxBps():c.maxWalletBps()
+        ]);
       });
     }catch(e){
       console.warn('[TokenManage] Optional feature fields unavailable on this token — showing core info only.',e.message);
@@ -11717,7 +11758,7 @@ async function tokManage(chain,tokenAddr){
     if(burnable) flags.push('🔥 Burnable');
     if(pausable) flags.push('⏸ Pausable');
     if(taxEnabled) flags.push('💰 Tax '+(Number(taxBps)/100)+'%');
-    if(antiWhaleEnabled) flags.push('🐋 Max wallet '+(Number(maxWalletBps)/100)+'%');
+    if(antiWhaleEnabled) flags.push(_mtChain==='bnb'?('🐋 Max tx '+(Number(maxWalletBps)/100)+'%'):('🐋 Max wallet '+(Number(maxWalletBps)/100)+'%'));
     document.getElementById('mtFlagsRow').innerHTML=flags.map(function(f){
       return '<span style="background:var(--bg3);border:1px solid var(--border);border-radius:100px;padding:3px 10px;font-size:11px;color:var(--muted);">'+f+'</span>';
     }).join('')||'<span style="font-size:11px;color:var(--muted);">No special features enabled</span>';
