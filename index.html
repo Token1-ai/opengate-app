@@ -3859,62 +3859,51 @@ var bnbbsLastStateTs=0; // сторож: застарілі оновлення �
 var bnbbsFiring=false; // замок: один постріл за раз, швидкі кліки ігноруються
 
 // Кілька публічних RPC BNB Chain — якщо один "затикається", беремо наступний
+// Primary: a dedicated Alchemy key (domain-locked to opengate.bond, not
+// shared with the public internet) — tried FIRST, every time. The public
+// nodes below are pure fallback, only used if Alchemy itself is down.
 var BNB_RPCS=[
+  'https://bnb-mainnet.g.alchemy.com/v2/9xLdJVjBnhaD8S0QJZcBA',
   'https://bsc-dataseed.binance.org/',
   'https://bsc-dataseed1.defibit.io/',
   'https://bsc-dataseed1.ninicoin.io/',
   'https://bsc-dataseed2.binance.org/'
   // NOTE: Ankr's 'binance.ankr.com' endpoint was removed — it doesn't
   // resolve in DNS (confirmed via real browser console: ERR_NAME_NOT_RESOLVED).
-  // Needs a proper paid/registered RPC provider (see earlier pricing discussion)
-  // before adding a 5th node back into this pool.
 ];
-var _bnbRpcIdx=Math.floor(Math.random()*BNB_RPCS.length);
+function getBNBBattleProvider(){
+  return new ethers.JsonRpcProvider(BNB_RPCS[0]);
+}
+async function bnbReadRetry(fn, attempts){
+  attempts = attempts || BNB_RPCS.length;
+  let lastErr;
+  for(let i=0;i<attempts;i++){
+    try{ return await ogTimeout(fn(new ethers.JsonRpcProvider(BNB_RPCS[i])), 8000); }
+    catch(e){ lastErr=e; }
+  }
+  throw lastErr;
+}
 
-// Same rotating-pool pattern as BNB_RPCS above — a single public Polygon
-// RPC (like polygon-rpc.com alone) can start returning 401/rate-limit
-// under load, which would otherwise silently break every Polygon read
-// (NFT Studio pricing, Token Creator pricing, Marketplace listings, etc.)
-// NOTE (verified live): 'polygon-rpc.com' has deprecated free public
-// access (now requires sign-in) — every call returns 401. 'polygon.
-// llamarpc.com' failed to resolve entirely (ERR_NAME_NOT_RESOLVED),
-// '1rpc.io/matic' was CORS-blocked + 429'd, and 'polygon.api.onfinality.
-// io/public' ALSO flooded with 429 (Too Many Requests) on nearly every
-// call in real usage — confirmed live in a user's browser console.
-// After three failed guesses at a 4th public endpoint, sticking to just
-// these three well-established, consistently working ones (PublicNode,
-// dRPC, Ankr) rather than adding another unverified guess.
+// Same pattern for Polygon — dedicated Alchemy key first, public nodes
+// as pure fallback if it's ever unavailable. Public free RPCs (shared
+// with thousands of unrelated sites) kept breaking under load —
+// polygon-rpc.com deprecated free access, llamarpc.com and 1rpc.io
+// failed DNS/CORS, onfinality flooded 429s. A dedicated key fixes this
+// at the root instead of guessing at another public 4th node.
 var POLYGON_RPCS=[
+  'https://polygon-mainnet.g.alchemy.com/v2/ewcbDASKyXi9HueIuQXtW',
   'https://polygon-bor-rpc.publicnode.com',
   'https://polygon.drpc.org',
   'https://rpc.ankr.com/polygon'
 ];
-var _polygonRpcIdx=Math.floor(Math.random()*POLYGON_RPCS.length);
 function getPolygonReadProvider(){
-  _polygonRpcIdx=(_polygonRpcIdx+1)%POLYGON_RPCS.length;
-  return new ethers.JsonRpcProvider(POLYGON_RPCS[_polygonRpcIdx]);
+  return new ethers.JsonRpcProvider(POLYGON_RPCS[0]);
 }
 async function polygonReadRetry(fn, attempts){
   attempts = attempts || POLYGON_RPCS.length;
   let lastErr;
   for(let i=0;i<attempts;i++){
     try{ return await ogTimeout(fn(getPolygonReadProvider()), 8000); }
-    catch(e){ lastErr=e; }
-  }
-  throw lastErr;
-}
-function getBNBBattleProvider(){
-  _bnbRpcIdx=(_bnbRpcIdx+1)%BNB_RPCS.length;
-  return new ethers.JsonRpcProvider(BNB_RPCS[_bnbRpcIdx]);
-}
-// Retry a read across DIFFERENT nodes in the pool before giving up —
-// a single flaky/overloaded RPC node should never silently produce a
-// wrong "0" or empty result for money-relevant reads.
-async function bnbReadRetry(fn, attempts){
-  attempts = attempts || BNB_RPCS.length;
-  let lastErr;
-  for(let i=0;i<attempts;i++){
-    try{ return await fn(getBNBBattleProvider()); }
     catch(e){ lastErr=e; }
   }
   throw lastErr;
