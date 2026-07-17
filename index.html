@@ -7812,6 +7812,7 @@ function showTab(tab){
   document.getElementById('view-messages').style.display=tab==='messages'?'block':'none';
   document.getElementById('view-presale').style.display=tab==='presale'?'block':'none';
   document.getElementById('view-launchpad').style.display=tab==='launchpad'?'block':'none';
+  if(tab!=='launchpad'){ tokStopPriceAutoRefresh(); }
   document.getElementById('view-notifs').style.display=tab==='notifs'?'block':'none';
   document.getElementById('view-explore').style.display=tab==='explore'?'block':'none';
   document.getElementById('view-market').style.display=tab==='market'?'block':'none';
@@ -11007,6 +11008,8 @@ function launchSwitchChain(chain){
   if(chain==='bnb'){ tokUpdatePrice(); tokLoadMyTokens(); }
   if(chain==='polygon'){ tokUpdatePricePolygon(); tokLoadMyTokensPolygon(); }
   if(chain==='base'){ tokUpdatePriceBase(); tokLoadMyTokensBase(); }
+  // Авто-refresh цены для сетей с живым курсом оракула (все, кроме zkLitVM с фикс. ценой).
+  tokStartPriceAutoRefresh(chain);
 }
 
 async function loadMarketplaceBNB(){
@@ -12048,6 +12051,30 @@ async function tokTransferOwnershipPolygon(){
 // ══════════════════ BASE — Create Token ══════════════════
 let tokOptsBase={tokMintBase:false,tokBurnBase:false,tokPauseBase:false,tokTaxBase:false,tokWhaleBase:false};
 let tokCurrencyBase='ETH';
+let _tokPriceTimer=null; // авто-refresh цены активной сети (bnb/polygon/base)
+let _tokPriceChain=null; // какая сеть сейчас активна в Create Token
+
+// Обновляет цену активной сети каждые 15с, пока открыт Create Token.
+// Останавливается при уходе на другую сеть/раздел или скрытии вкладки —
+// иначе таймер зря молотит RPC в фоне (важно для лимитов RPC на масштабе).
+function tokStartPriceAutoRefresh(chain){
+  _tokPriceChain=chain;
+  tokStopPriceAutoRefresh();
+  if(chain!=='bnb'&&chain!=='polygon'&&chain!=='base') return;
+  _tokPriceTimer=setInterval(function(){
+    const section=document.getElementById('view-launchpad');
+    if(document.hidden || !section || section.style.display==='none'){ return; }
+    if(_tokPriceChain==='bnb') tokUpdatePrice();
+    else if(_tokPriceChain==='polygon') tokUpdatePricePolygon();
+    else if(_tokPriceChain==='base') tokUpdatePriceBase();
+  },15000);
+}
+function tokStopPriceAutoRefresh(){
+  if(_tokPriceTimer){ clearInterval(_tokPriceTimer); _tokPriceTimer=null; }
+}
+// Совместимость: старые имена для Base ведут на общий механизм.
+function tokStartBasePriceAutoRefresh(){ tokStartPriceAutoRefresh('base'); }
+function tokStopBasePriceAutoRefresh(){ tokStopPriceAutoRefresh(); }
 
 function toggleTokOptBase(id){
   tokOptsBase[id]=!tokOptsBase[id];
