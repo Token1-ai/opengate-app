@@ -266,6 +266,11 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .back-to-landing{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 14px;font-size:13px;font-weight:600;transition:all .2s;}
 .back-to-landing:hover{color:var(--text);border-color:var(--muted);}
 #connectBtn{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:7px 16px;font-size:13px;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:7px;}
+#testnetHubBtn{background:linear-gradient(135deg,#F5C842,#E0A82E);color:#08090C;border:none;border-radius:9px;padding:7px 16px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;animation:testnetPulse 1.4s ease-in-out infinite;box-shadow:0 0 0 0 rgba(245,200,66,0.7);white-space:nowrap;}
+#testnetHubBtn:hover{filter:brightness(1.08);}
+@keyframes testnetPulse{0%{box-shadow:0 0 0 0 rgba(245,200,66,0.65);}70%{box-shadow:0 0 0 10px rgba(245,200,66,0);}100%{box-shadow:0 0 0 0 rgba(245,200,66,0);}}
+.tn-card:hover{border-color:var(--gold)!important;transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.25);}
+@media(max-width:520px){#testnetHubBtn{font-size:11px;padding:6px 10px;}#view-testnet .tn-card{padding:14px!important;}}
 #connectBtn:hover{border-color:var(--gold);color:var(--gold);}
 #connectBtn.connected{border-color:var(--green);color:var(--green);}
 .w-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);}
@@ -929,6 +934,7 @@ async function smartConnectWallet(){
     <div class="app-nav-logo" onclick="goLanding()"><img src="/icon-192.png" style="width:30px;height:30px;border-radius:7px;object-fit:cover;" alt="OpenGate"/>OpenGate</div>
     <div class="app-nav-right">
       <button class="back-to-landing" onclick="goLanding()">← Landing</button>
+      <button id="testnetHubBtn" onclick="showTab('testnet')" title="Everything for the zkLitVM testnet in one place">🧪 Testnet</button>
       <button class="new-post-nav-btn" id="newPostBtn" onclick="focusComposer()">✍️ Post</button>
       <button id="pwaInstallBtn" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="installPWA()">📲 Install</button>
       <button id="connectBtn" onclick="handleConnectClick()"><div class="w-dot"></div>Connect Wallet</button>
@@ -965,6 +971,50 @@ async function smartConnectWallet(){
     </div>
 
     <div class="feed-area">
+      <div id="view-testnet" style="display:none;">
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:10px;">
+          <span>🧪 Testnet Hub</span>
+          <span style="font-size:12px;font-weight:600;color:#08090C;background:var(--gold);padding:3px 10px;border-radius:20px;">zkLitVM · ChainID 4441</span>
+        </div>
+        <div style="padding:16px 20px;max-width:720px;margin:0 auto;">
+          <div style="background:linear-gradient(135deg,rgba(245,200,66,0.12),rgba(245,200,66,0.03));border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:14px;line-height:1.6;color:var(--text);margin-bottom:20px;">
+            Everything for the <b style="color:var(--gold);">zkLitVM testnet</b> in one place — games, faucet, presale, token creator, NFT studio and lending. Free to try with test GATE. Tap any card to jump straight in.
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div onclick="testnetGo('games')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:30px;margin-bottom:8px;">🎮</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Testnet Games</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Battleship, Dice & Lottery — play free with test GATE.</div>
+            </div>
+            <div onclick="testnetGo('faucet')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:30px;margin-bottom:8px;">💧</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">GATE Faucet</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Claim free test GATE to use across the testnet.</div>
+            </div>
+            <div onclick="testnetGo('presale')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:30px;margin-bottom:8px;">🚀</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">GATE Presale</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Take part in the GATE token presale.</div>
+            </div>
+            <div onclick="testnetGo('launchpad')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:30px;margin-bottom:8px;">🪙</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Create Token</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Launch your own token on the zkLitVM testnet.</div>
+            </div>
+            <div onclick="testnetGo('nftstudio')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:30px;margin-bottom:8px;">🎨</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">NFT Studio</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Create your own NFTs on the testnet.</div>
+            </div>
+            <div onclick="testnetGo('lending')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:30px;margin-bottom:8px;">🏦</div>
+              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Lending</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Lend and borrow on the zkLitVM testnet.</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="view-feed">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span>Home</span>
@@ -7804,8 +7854,21 @@ function toggleHelpBox(id){
   }
 }
 
+// Переход из Testnet-хаба в нужный раздел с автоматически выбранным zkLitVM.
+// У разделов с переключателем сети (games/launchpad/nftstudio) принудительно
+// ставим litvm; presale/faucet/lending — сами по себе zkLitVM.
+function testnetGo(target){
+  showTab(target);
+  try{
+    if(target==='games' && typeof gamesSwitchChain==='function') gamesSwitchChain('litvm');
+    if(target==='launchpad' && typeof launchSwitchChain==='function') launchSwitchChain('litvm');
+    if(target==='nftstudio' && typeof nftStudioSwitchChain==='function') nftStudioSwitchChain('litvm');
+  }catch(e){ console.warn('[Testnet] switch chain failed',e); }
+}
+
 function showTab(tab){
   localStorage.setItem('og_active_tab', tab);
+  document.getElementById('view-testnet').style.display=tab==='testnet'?'block':'none';
   document.getElementById('view-feed').style.display=tab==='feed'?'block':'none';
   document.getElementById('view-profile').style.display=tab==='profile'?'block':'none';
   document.getElementById('view-staking').style.display=tab==='staking'?'block':'none';
