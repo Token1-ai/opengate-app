@@ -2480,6 +2480,7 @@ async function smartConnectWallet(){
           <button id="studioChainLitvm" onclick="nftStudioSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
           <button id="studioChainBnb" onclick="nftStudioSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="studioChainPolygon" onclick="nftStudioSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
+          <button id="studioChainBase" onclick="nftStudioSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
         </div>
 
         <!-- ══════════ zkLitVM PANEL ══════════ -->
@@ -2631,6 +2632,60 @@ async function smartConnectWallet(){
             </div>
 
             <button onclick="nftStudioCreateSinglePolygon()" id="studioSingleBtnPolygon" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;cursor:pointer;border:none;">✨ Create My NFT</button>
+          </div>
+        </div>
+        </div>
+
+        <!-- ══════════ BASE NFT STUDIO ══════════ -->
+        <div id="studioBaseSection" style="display:none;">
+        <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
+          <button id="studiohelp-base-btn" onclick="toggleHelpBox('studiohelp-base')" class="help-toggle-btn">❔ How does this work?</button>
+          <div id="studiohelp-base" style="display:none;background:var(--bg2);border:1px solid rgba(41,98,255,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
+            <div style="color:var(--muted);">
+              Upload your own photo → it becomes a real NFT you fully own, on your own ERC-721 contract, on Base. It works on any marketplace, so you can sell it wherever you like.<br><br>
+              <b style="color:var(--text);">🖼️ Single NFT — $0.30 each:</b><br>
+              • No pass: pay $0.30 (no free tries)<br>
+              • 🥈 Silver Pass: <b style="color:var(--text);">1 free, ever</b> — then $0.30 each<br>
+              • 🥇 Gold Pass: <b style="color:var(--text);">1 free every 30 days</b> + 20% off extra ones<br><br>
+              Pay in ETH, USDT or USDC. Your Gold/Silver Pass works here automatically — we check it for you behind the scenes.
+            </div>
+          </div>
+        </div>
+
+        <div id="studioSinglePanelBase" style="padding:20px 16px;max-width:520px;margin:0 auto;">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+              <label for="studioSingleFileBase" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
+              <span id="studioSingleFileNameBase" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
+            </div>
+            <input type="file" id="studioSingleFileBase" accept="image/*" onchange="nftStudioPreview('studioSingleFileBase','studioSinglePreviewBase');nftStudioFileNameUpdate('studioSingleFileBase','studioSingleFileNameBase')" style="display:none;"/>
+            <div id="studioSinglePreviewBase" style="display:none;width:100%;aspect-ratio:1;max-width:200px;margin:0 auto 14px;border-radius:10px;overflow:hidden;background:var(--bg3);"></div>
+
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Name *</div>
+            <input id="studioSingleNameBase" placeholder="e.g. My Sunset Photo" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:12px;font-family:'Space Grotesk',sans-serif;"/>
+
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Description</div>
+            <textarea id="studioSingleDescBase" placeholder="Optional — tell people about it" rows="2" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;resize:vertical;"></textarea>
+
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Pay with</div>
+            <div style="display:flex;gap:8px;margin-bottom:14px;">
+              <button id="nft-cur-beth" onclick="nftSelectCurrencyBase('ETH')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:var(--gold);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;">ETH</button>
+              <button id="nft-cur-busdt" onclick="nftSelectCurrencyBase('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
+              <button id="nft-cur-busdc" onclick="nftSelectCurrencyBase('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:13px;">
+              <span style="color:var(--muted);">Price for this NFT</span>
+              <span id="studioSinglePriceBase" style="font-weight:700;">—</span>
+            </div>
+
+            <button onclick="nftStudioCreateSingleBase()" id="studioSingleBtnBase" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#2962ff,#0039cb);color:#dbe7ff;font-size:15px;font-weight:700;cursor:pointer;border:none;">✨ Create My NFT</button>
+          </div>
+
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:16px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">My Base NFTs</div>
+            <div id="myBaseNFTsList"><div style="font-size:13px;color:var(--muted);">Connect wallet to see your NFTs</div></div>
           </div>
         </div>
         </div>
@@ -7897,6 +7952,7 @@ function showTab(tab){
   document.getElementById('view-goldpolygonbattle').style.display=tab==='goldpolygonbattle'?'block':'none';
   if(tab==='goldpolygonbattle') initGoldPolygonBattle();
   if(tab==='nftstudio') initNFTStudio();
+  if(tab!=='nftstudio' && typeof nftStopBasePriceAutoRefresh==='function'){ nftStopBasePriceAutoRefresh(); }
   // Scroll to top on mobile when switching tabs
   window.scrollTo({top:0,behavior:'smooth'});
   // Desktop sidebar
@@ -8056,8 +8112,8 @@ function nftStudioSymbolFrom(name){
 
 function nftStudioSwitchChain(chain){
   nftStudioChain=chain;
-  const buttons={litvm:'studioChainLitvm',bnb:'studioChainBnb',polygon:'studioChainPolygon'};
-  const sections={litvm:'studioLitvmSection',bnb:'studioBnbSection',polygon:'studioPolygonSection'};
+  const buttons={litvm:'studioChainLitvm',bnb:'studioChainBnb',polygon:'studioChainPolygon',base:'studioChainBase'};
+  const sections={litvm:'studioLitvmSection',bnb:'studioBnbSection',polygon:'studioPolygonSection',base:'studioBaseSection'};
   Object.keys(buttons).forEach(function(key){
     const active=key===chain;
     const btn=document.getElementById(buttons[key]);
@@ -8067,6 +8123,9 @@ function nftStudioSwitchChain(chain){
   });
   if(chain==='bnb') nftStudioSwitchMode(nftStudioMode);
   if(chain==='polygon') nftStudioUpdatePricePolygon();
+  // авто-refresh цены ETH только для Base (там курс живёт через оракул)
+  if(chain==='base'){ nftStudioUpdatePriceBase(); nftLoadMyNFTsBase(); nftStartBasePriceAutoRefresh(); }
+  else { nftStopBasePriceAutoRefresh(); }
 }
 
 function nftStudioSwitchModeL(mode){
@@ -8340,6 +8399,28 @@ const TOKEN_FACTORY_BASE_ABI = [
 const USDT_BASE = '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2';
 const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // native USDC (Circle)
 
+// ══════════ BASE — NFT Factory (single NFT) ══════════
+// This project's OWN Base NFT contract (OpenGateNFTFactoryBase.sol), Hardhat-
+// tested from scratch (36/36 incl. full ERC-721 standard checks + attacks).
+// Same pricing/voucher pattern as the Base token factory:
+//   getQuote(user,tier) -> (cents,ethWei,stableUnits,freeNow);
+//   mintSingle(name,symbol,tokenURI,payToken,tier,expiry,signature) payable.
+// Each mint deploys a standalone ERC-721 (1-of-1) owned by the creator, so it
+// trades on any marketplace. Voucher matches api/pass-voucher.js exactly.
+const NFT_FACTORY_BASE = '0x3eCad12b461931f78f4237660dADc068f89C6b49';
+const NFT_FACTORY_BASE_ABI = [
+  'function getQuote(address user, uint8 tier) view returns (uint256 cents, uint256 ethWei, uint256 stableUnits, bool freeNow)',
+  'function mintSingle(string name, string symbol, string tokenURI, address payToken, uint8 tier, uint256 expiry, bytes signature) payable returns (address)',
+  'function nftsOf(address creator) view returns (address[])',
+  'function priceUsdCents() view returns (uint256)',
+];
+const OPENGATE_NFT_ABI_BASE = [
+  'function name() view returns(string)',
+  'function symbol() view returns(string)',
+  'function tokenURI(uint256) view returns(string)',
+  'function ownerOf(uint256) view returns(address)',
+];
+
 // The Base token clone (OpenGateTokenBase.sol). Field names match this
 // project's own Base implementation — NOT the same as Polygon or BNB:
 //   • no logoURI, no taxEnabled/antiWhaleEnabled booleans (a feature is
@@ -8423,6 +8504,133 @@ async function nftStudioCreateSinglePolygon(){
   }finally{
     btn.disabled=false; btn.textContent=origText;
   }
+}
+
+// ══════════════════ BASE — NFT Studio ══════════════════
+let nftCurrencyBase='ETH';
+let _nftBasePriceTimer=null;
+
+function nftBaseCurrencyAddr(){
+  if(nftCurrencyBase==='ETH') return ethers.ZeroAddress;
+  if(nftCurrencyBase==='USDT') return USDT_BASE;
+  return USDC_BASE;
+}
+function nftSelectCurrencyBase(sym){
+  nftCurrencyBase=sym;
+  ['beth','busdt','busdc'].forEach(function(s){
+    const btn=document.getElementById('nft-cur-'+s);
+    const active=(s==='beth'&&sym==='ETH')||(s==='busdt'&&sym==='USDT')||(s==='busdc'&&sym==='USDC');
+    btn.style.background=active?'var(--gold)':'var(--bg3)';
+    btn.style.color=active?'#08090C':'var(--text)';
+    btn.style.borderColor=active?'var(--gold)':'var(--border)';
+  });
+  nftStudioUpdatePriceBase();
+}
+
+// Тир пропуска для живой котировки (полный voucher берётся при создании).
+async function nftBaseTier(){
+  if(!currentUser || !(currentUser.pass_type==='gold'||currentUser.pass_type==='silver')) return 0;
+  try{ const v=await fetchPassVoucher(NFT_FACTORY_BASE); return Number(v[0]); }
+  catch(e){ return 0; }
+}
+
+async function nftStudioUpdatePriceBase(){
+  const el=document.getElementById('studioSinglePriceBase');
+  if(!userAddr){ el.textContent='Connect wallet'; return; }
+  try{
+    const tier=await nftBaseTier();
+    const q=await baseReadRetry(function(p){return new ethers.Contract(NFT_FACTORY_BASE,NFT_FACTORY_BASE_ABI,p).getQuote(userAddr,tier);});
+    if(q.freeNow){ el.textContent='Free 🎉'; el.style.color='var(--green)'; return; }
+    el.style.color='var(--gold)';
+    if(nftCurrencyBase==='ETH'){ el.textContent=parseFloat(ethers.formatEther(q.ethWei)).toFixed(6)+' ETH'; }
+    else { el.textContent=parseFloat(ethers.formatUnits(q.stableUnits,6)).toFixed(2)+' '+nftCurrencyBase; }
+  }catch(e){ el.textContent='—'; }
+}
+
+function nftStartBasePriceAutoRefresh(){
+  nftStopBasePriceAutoRefresh();
+  _nftBasePriceTimer=setInterval(function(){
+    const sec=document.getElementById('studioBaseSection');
+    if(document.hidden || !sec || sec.style.display==='none'){ return; }
+    nftStudioUpdatePriceBase();
+  },15000);
+}
+function nftStopBasePriceAutoRefresh(){
+  if(_nftBasePriceTimer){ clearInterval(_nftBasePriceTimer); _nftBasePriceTimer=null; }
+}
+
+async function nftStudioCreateSingleBase(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const file=document.getElementById('studioSingleFileBase').files[0];
+  const name=document.getElementById('studioSingleNameBase').value.trim();
+  const desc=document.getElementById('studioSingleDescBase').value.trim();
+  if(!file){showToast('Choose a photo first','err');return;}
+  if(!name){showToast('Give it a name','err');return;}
+  const btn=document.getElementById('studioSingleBtnBase');
+  btn.disabled=true; const origText=btn.textContent; btn.textContent='Working...';
+  try{
+    const tokenURI=await nftStudioUploadAndPin(file,name,desc);
+    showToast('Checking your pass status...','ok');
+    // Real voucher: backend re-checks BNB Chain and signs a 10-min voucher
+    // bound to this wallet + this exact NFT factory (api/pass-voucher.js).
+    const voucher=await fetchPassVoucher(NFT_FACTORY_BASE); // [tier, expiry, signature]
+    const tier=Number(voucher[0]), expiry=voucher[1], signature=voucher[2];
+
+    await switchToBase();
+    const freshSigner=await provider.getSigner();
+    const payToken=nftBaseCurrencyAddr();
+    const q=await baseReadRetry(function(p){return new ethers.Contract(NFT_FACTORY_BASE,NFT_FACTORY_BASE_ABI,p).getQuote(userAddr,tier);});
+    const cents=q.cents;
+
+    if(cents>0n && nftCurrencyBase!=='ETH'){
+      const token=new ethers.Contract(payToken,ERC20_MIN_ABI,freshSigner);
+      const allowance=await token.allowance(userAddr,NFT_FACTORY_BASE);
+      if(allowance<q.stableUnits){
+        showToast('Approve '+nftCurrencyBase+' in MetaMask...','ok');
+        await(await token.approve(NFT_FACTORY_BASE,q.stableUnits)).wait();
+      }
+    }
+
+    const factory=new ethers.Contract(NFT_FACTORY_BASE,NFT_FACTORY_BASE_ABI,freshSigner);
+    showToast('Creating your NFT — confirm in MetaMask...','ok');
+    // ETH path: send ethWei + 2% buffer (oracle may drift); contract refunds excess.
+    let txValue=0n;
+    if(nftCurrencyBase==='ETH' && cents>0n){ txValue=(q.ethWei*102n)/100n; }
+    const tx=await factory.mintSingle(name,nftStudioSymbolFrom(name),tokenURI,payToken,tier,expiry,signature,{value:txValue});
+    await tx.wait();
+
+    showToast('🎉 Your NFT is live on Base!','ok');
+    document.getElementById('studioSingleFileBase').value='';
+    document.getElementById('studioSingleNameBase').value='';
+    document.getElementById('studioSingleDescBase').value='';
+    document.getElementById('studioSingleFileNameBase').textContent='No file chosen';
+    document.getElementById('studioSinglePreviewBase').style.display='none';
+    nftStudioUpdatePriceBase();
+    nftLoadMyNFTsBase();
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,80),'err');
+  }finally{
+    btn.disabled=false; btn.textContent=origText;
+  }
+}
+
+async function nftLoadMyNFTsBase(){
+  const el=document.getElementById('myBaseNFTsList');
+  if(!userAddr){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Connect wallet to see your NFTs</div>'; return; }
+  try{
+    const addrs=await baseReadRetry(function(p){return new ethers.Contract(NFT_FACTORY_BASE,NFT_FACTORY_BASE_ABI,p).nftsOf(userAddr);});
+    if(!addrs||addrs.length===0){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">You haven\'t created any NFTs yet</div>'; return; }
+    const rows=await Promise.all(addrs.map(async function(addr){
+      let nm='NFT';
+      try{ nm=await baseReadRetry(function(p){return new ethers.Contract(addr,OPENGATE_NFT_ABI_BASE,p).name();}); }catch(e){}
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
+        +'<div style="min-width:0;"><div style="font-size:13px;font-weight:700;">'+esc(nm)+'</div>'
+        +'<div style="font-size:11px;color:var(--muted);font-family:monospace;overflow:hidden;text-overflow:ellipsis;">'+addr+'</div></div>'
+        +'<a href="https://basescan.org/token/'+addr+'" target="_blank" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;">View ↗</a>'
+        +'</div>';
+    }));
+    el.innerHTML=rows.join('');
+  }catch(e){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load</div>'; }
 }
 
 async function nftStudioCreateSingle(){
