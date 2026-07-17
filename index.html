@@ -2949,6 +2949,15 @@ async function smartConnectWallet(){
               </div>
             </div>
 
+            <div style="margin-bottom:14px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional, stored on-chain)</span></div>
+              <div style="display:flex;gap:12px;align-items:center;">
+                <label for="tokLogoFileBase" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
+                <span id="tokLogoFileNameBase" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;">No file chosen</span>
+              </div>
+              <input type="file" id="tokLogoFileBase" accept="image/*" onchange="tokLogoPreviewBase()" style="display:none;"/>
+            </div>
+
             <div style="display:flex;gap:8px;margin-bottom:14px;">
               <input id="tokDecimalsBase" type="number" value="18" min="0" max="18" placeholder="Decimals" style="width:90px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;"/>
               <input id="tokSupplyBase" type="number" placeholder="Total Supply (e.g. 1000000)" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;"/>
@@ -8254,10 +8263,10 @@ const OPENGATE_TOKEN_ABI_BNB = [
 // Voucher format matches api/pass-voucher.js exactly (verified against the
 // real backend): keccak256(wallet,uint8 tier,uint256 expiry,contractAddr),
 // signed with the standard EIP-191 prefix.
-const TOKEN_FACTORY_BASE = '0xee9957fbc8Dc7280e42853c76508dD71f42dA10D';
+const TOKEN_FACTORY_BASE = '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143';
 const TOKEN_FACTORY_BASE_ABI = [
   'function getQuote(address user, uint8 tier) view returns (uint256 cents, uint256 ethWei, uint256 stableUnits, bool freeNow)',
-  'function createToken((string name,string symbol,uint8 decimals,uint256 supply,bool mintable,bool burnable,bool pausable,uint16 taxBps,address taxRecipient,uint16 maxWalletBps) p, address payToken, uint8 tier, uint256 expiry, bytes signature) payable returns (address)',
+  'function createToken((string name,string symbol,uint8 decimals,uint256 supply,bool mintable,bool burnable,bool pausable,uint16 taxBps,address taxRecipient,uint16 maxWalletBps,string logoURI) p, address payToken, uint8 tier, uint256 expiry, bytes signature) payable returns (address)',
   'function tokensOf(address creator) view returns (address[])',
   'function priceUsdCents() view returns (uint256)',
   'function USDT() view returns (address)',
@@ -8287,6 +8296,7 @@ const OPENGATE_TOKEN_ABI_BASE = [
   'function taxBps() view returns(uint16)',
   'function taxRecipient() view returns(address)',
   'function maxWalletBps() view returns(uint16)',
+  'function logoURI() view returns(string)',
   'function mint(address to, uint256 value)',
   'function burn(uint256 value)',
   'function setPaused(bool)',
@@ -11905,16 +11915,15 @@ async function tokManage(chain,tokenAddr){
     let mintable=false,burnable=false,pausable=false,paused=false,logoURI='',taxEnabled=false,taxBps=0,antiWhaleEnabled=false,maxWalletBps=0;
     try{
       if(_mtChain==='base'){
-        // Base token (OpenGateTokenBase): no logoURI / taxEnabled /
-        // antiWhaleEnabled getters — a feature is "on" when taxBps>0 or
-        // maxWalletBps>0. Reading the non-existent getters would revert
-        // the whole group, so we read only what actually exists here.
+        // Base token (OpenGateTokenBase): no taxEnabled / antiWhaleEnabled
+        // getters — a feature is "on" when taxBps>0 or maxWalletBps>0.
+        // logoURI DOES exist on Base and is read here.
         let _tb=0,_mw=0;
-        [mintable,burnable,pausable,paused,_tb,_mw]=await _mtReadAll(function(c){
-          return Promise.all([c.mintable(), c.burnable(), c.pausable(), c.paused(), c.taxBps(), c.maxWalletBps()]);
+        [mintable,burnable,pausable,paused,_tb,_mw,logoURI]=await _mtReadAll(function(c){
+          return Promise.all([c.mintable(), c.burnable(), c.pausable(), c.paused(), c.taxBps(), c.maxWalletBps(), c.logoURI()]);
         });
         taxBps=_tb; maxWalletBps=_mw;
-        taxEnabled=Number(_tb)>0; antiWhaleEnabled=Number(_mw)>0; logoURI='';
+        taxEnabled=Number(_tb)>0; antiWhaleEnabled=Number(_mw)>0;
       } else {
         [mintable,burnable,pausable,paused,logoURI,taxEnabled,taxBps,antiWhaleEnabled,maxWalletBps]=await _mtReadAll(function(c){
           return Promise.all([
@@ -12061,6 +12070,17 @@ function tokSelectCurrencyBase(sym){
   tokUpdatePriceBase();
 }
 
+async function tokLogoPreviewBase(){
+  const input=document.getElementById('tokLogoFileBase');
+  const file=input.files[0];
+  document.getElementById('tokLogoFileNameBase').textContent=file?file.name:'No file chosen';
+  if(!file) return;
+  const resized=await tokResizeImage(file,400);
+  input._resizedFile=resized;
+  const url=URL.createObjectURL(resized);
+  document.getElementById('tokLogoPreviewBase').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+}
+
 function tokBaseCurrencyAddr(){
   if(tokCurrencyBase==='ETH') return ethers.ZeroAddress;
   if(tokCurrencyBase==='USDT') return USDT_BASE;
@@ -12113,6 +12133,13 @@ async function tokCreateTokenBase(){
   const btn=document.getElementById('tokCreateBtnBase');
   btn.disabled=true; const origText=btn.textContent;
   try{
+    let logoURI='';
+    const logoInput=document.getElementById('tokLogoFileBase');
+    if(logoInput._resizedFile){
+      btn.textContent='Uploading logo...';
+      logoURI=await uploadImageWithFallback(logoInput._resizedFile,PINATA_JWT_TOKENS,'opengate-tokens');
+    }
+
     btn.textContent='Checking your pass status...';
     // Real voucher: backend checks BNB Chain fresh and signs a 10-min
     // voucher bound to this wallet + this exact factory (api/pass-voucher.js).
@@ -12135,13 +12162,14 @@ async function tokCreateTokenBase(){
       }
     }
 
-    // Token params tuple — matches OpenGateTokenBase.TokenParams exactly.
-    // taxRecipient must be non-zero when taxBps>0; the creator collects it.
+    // Token params tuple — matches OpenGateTokenBase.TokenParams exactly
+    // (11 fields, logoURI last). taxRecipient must be non-zero when
+    // taxBps>0; the creator collects the tax.
     const taxBps=Math.round(taxPct*100);
     const params=[
       name, symbol, decimals, ethers.parseUnits(supplyStr,decimals),
       tokOptsBase.tokMintBase, tokOptsBase.tokBurnBase, tokOptsBase.tokPauseBase,
-      taxBps, taxBps>0?userAddr:ethers.ZeroAddress, Math.round(whalePct*100)
+      taxBps, taxBps>0?userAddr:ethers.ZeroAddress, Math.round(whalePct*100), logoURI
     ];
 
     const factory=new ethers.Contract(TOKEN_FACTORY_BASE,TOKEN_FACTORY_BASE_ABI,freshSigner);
@@ -12157,6 +12185,9 @@ async function tokCreateTokenBase(){
     document.getElementById('tokNameBase').value='';
     document.getElementById('tokSymbolBase').value='';
     document.getElementById('tokSupplyBase').value='';
+    document.getElementById('tokLogoFileNameBase').textContent='No file chosen';
+    document.getElementById('tokLogoPreviewBase').innerHTML='🪙';
+    logoInput.value=''; logoInput._resizedFile=null;
     tokUpdatePriceBase();
     tokLoadMyTokensBase();
   }catch(e){
