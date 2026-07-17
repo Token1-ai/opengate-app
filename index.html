@@ -2204,6 +2204,7 @@ async function smartConnectWallet(){
           <button id="mktChainLitvm" onclick="mktSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
           <button id="mktChainBnb" onclick="mktSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="mktChainPolygon" onclick="mktSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
+          <button id="mktChainBase" onclick="mktSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
         </div>
 
         <!-- Stats (zkLitVM) -->
@@ -2279,8 +2280,29 @@ async function smartConnectWallet(){
           </div>
         </div>
 
-        <!-- Listings grid -->
-        <!-- FREE MINT — featured banner -->
+        <!-- Stats (Base) -->
+        <div id="mktStatsBase" style="display:none;gap:0;border-bottom:1px solid var(--border);margin-top:8px;">
+          <div style="flex:1;padding:12px 20px;border-right:1px solid var(--border);text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;" id="mktListingsBase">—</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Active Listings</div>
+          </div>
+          <div style="flex:1;padding:12px 20px;text-align:center;">
+            <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--green);">5%</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Platform Fee</div>
+          </div>
+        </div>
+
+        <div id="mkthelp-base-wrap" style="display:none;padding:12px 16px 0;">
+          <button id="mkthelp-base-btn" onclick="toggleHelpBox('mkthelp-base')" class="help-toggle-btn">❔ How does this work?</button>
+          <div id="mkthelp-base" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
+            <div style="color:var(--muted);">
+              <b style="color:var(--text);">To buy:</b> find an NFT you like, hit "Buy". If it's priced in ETH, one confirmation in your wallet and you're done. If it's priced in USDT/USDC, you'll be asked to "Approve" the payment first (a one-time permission), then confirm the purchase.<br><br>
+              <b style="color:var(--text);">To sell:</b> hit "+ Add NFT" at the top, enter the NFT's contract address and Token ID, choose your currency (ETH, USDT or USDC) and price, then confirm — anyone can list any NFT they own here, including NFTs created via NFT Studio's Base tab.<br><br>
+              <b style="color:var(--text);">Fee:</b> when your NFT sells, <b style="color:var(--text);">5%</b> goes to the platform and you keep the rest — automatically, no extra steps.
+            </div>
+          </div>
+        </div>
+
         <div id="freeMintSection" style="display:none;margin:14px;background:linear-gradient(145deg,rgba(124,58,237,0.14),rgba(245,200,66,0.07));border:1.5px solid rgba(245,200,66,0.4);border-radius:18px;overflow:hidden;">
           <div style="display:flex;flex-wrap:wrap;gap:18px;padding:18px;align-items:center;">
             <img id="freeMintImg" src="/merlin.jpg" alt="Merlin NFT" style="width:200px;max-width:45vw;border-radius:14px;border:2px solid var(--border-g);box-shadow:0 8px 24px rgba(0,0,0,.5);flex-shrink:0;"/>
@@ -2318,6 +2340,12 @@ async function smartConnectWallet(){
         <div id="mktPolygonSection" style="display:none;">
           <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale — Polygon (POL / USDT / USDC)</div>
           <div id="marketListingsPolygon" style="padding:12px;">
+            <div class="app-loader">Loading listings...</div>
+          </div>
+        </div>
+        <div id="mktBaseSection" style="display:none;">
+          <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale — Base (ETH / USDT / USDC)</div>
+          <div id="marketListingsBase" style="padding:12px;">
             <div class="app-loader">Loading listings...</div>
           </div>
         </div>
@@ -2406,6 +2434,36 @@ async function smartConnectWallet(){
             <div style="font-size:11px;color:var(--muted);margin-top:4px;">5% platform fee deducted from sale</div>
           </div>
           <button onclick="polymktSubmitListing()" id="submitListBtnPolygon" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;">List for Sale</button>
+        </div>
+      </div>
+
+      <!-- List NFT Modal — Base -->
+      <div class="modal-overlay" id="listNFTModalBase">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;position:relative;">
+          <button class="modal-close-btn" onclick="document.getElementById('listNFTModalBase').classList.remove('open')">✕</button>
+          <div style="font-size:20px;font-weight:700;margin-bottom:20px;">List NFT for Sale — Base</div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">NFT Contract Address *</div>
+            <input id="listContractBase" placeholder="0x... (any NFT you own on Base)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token ID *</div>
+            <input id="listTokenIdBase" type="number" placeholder="1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Currency *</div>
+            <select id="listCurrencyBase" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;">
+              <option value="ETH">ETH (native)</option>
+              <option value="USDT">USDT</option>
+              <option value="USDC">USDC</option>
+            </select>
+          </div>
+          <div style="margin-bottom:20px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Price *</div>
+            <input id="listPriceBase" type="number" step="0.0001" placeholder="e.g. 0.05" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;font-family:'Space Grotesk',sans-serif;"/>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">5% platform fee deducted from sale</div>
+          </div>
+          <button onclick="basemktSubmitListing()" id="submitListBtnBase" style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;">List for Sale</button>
         </div>
       </div>
 
@@ -8421,6 +8479,27 @@ const OPENGATE_NFT_ABI_BASE = [
   'function ownerOf(uint256) view returns(address)',
 ];
 
+// ══════════ BASE — NFT Marketplace ══════════
+// OpenGateNFTMarketBase.sol — escrow marketplace, 5% fee (owner-seller 0%),
+// pay in ETH/USDT/USDC. ABI mirrors the Polygon marketplace exactly.
+// Hardhat-tested 26/26 incl. reentrancy on buyNFT.
+const NFT_MARKET_BASE = '0xba774172f7bb0a2E9BEc9B53D7a55267A3107F5E';
+const NFT_MARKET_BASE_ABI = [
+  'function listNFT(address,uint256,uint256,address) returns(uint256)',
+  'function buyNFT(uint256) payable',
+  'function buyNFTWithToken(uint256)',
+  'function cancelListing(uint256)',
+  'function getListing(uint256) view returns(tuple(address seller,address nftContract,uint256 tokenId,uint256 price,address paymentToken,bool active))',
+  'function getActiveListings() view returns(uint256[],tuple(address seller,address nftContract,uint256 tokenId,uint256 price,address paymentToken,bool active)[])',
+  'function listingCount() view returns(uint256)',
+  'function FEE_BPS() view returns(uint256)',
+];
+const BASE_MKT_CURRENCIES = {
+  ETH:  {addr:'0x0000000000000000000000000000000000000000', decimals:18},
+  USDT: {addr:'0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2', decimals:6},
+  USDC: {addr:'0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', decimals:6},
+};
+
 // The Base token clone (OpenGateTokenBase.sol). Field names match this
 // project's own Base implementation — NOT the same as Polygon or BNB:
 //   • no logoURI, no taxEnabled/antiWhaleEnabled booleans (a feature is
@@ -11196,6 +11275,7 @@ function openListModal(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   if(mktActiveChain==='bnb'){ document.getElementById('listNFTModalBnb').classList.add('open'); return; }
   if(mktActiveChain==='polygon'){ document.getElementById('listNFTModalPolygon').classList.add('open'); return; }
+  if(mktActiveChain==='base'){ document.getElementById('listNFTModalBase').classList.add('open'); return; }
   document.getElementById('listNFTModal').classList.add('open');
 }
 async function loadNFTPreview(){}
@@ -11237,10 +11317,10 @@ async function cancelNFTListing(id){
 let mktActiveChain='litvm';
 function mktSwitchChain(chain){
   mktActiveChain=chain;
-  const buttons={litvm:'mktChainLitvm',bnb:'mktChainBnb',polygon:'mktChainPolygon'};
-  const stats={litvm:'mktStatsLitvm',bnb:'mktStatsBnb',polygon:'mktStatsPolygon'};
-  const sections={litvm:'mktLitvmSection',bnb:'mktBnbSection',polygon:'mktPolygonSection'};
-  const helpWraps={litvm:'mkthelp-litvm-wrap',bnb:'mkthelp-bnb-wrap',polygon:'mkthelp-polygon-wrap'};
+  const buttons={litvm:'mktChainLitvm',bnb:'mktChainBnb',polygon:'mktChainPolygon',base:'mktChainBase'};
+  const stats={litvm:'mktStatsLitvm',bnb:'mktStatsBnb',polygon:'mktStatsPolygon',base:'mktStatsBase'};
+  const sections={litvm:'mktLitvmSection',bnb:'mktBnbSection',polygon:'mktPolygonSection',base:'mktBaseSection'};
+  const helpWraps={litvm:'mkthelp-litvm-wrap',bnb:'mkthelp-bnb-wrap',polygon:'mkthelp-polygon-wrap',base:'mkthelp-base-wrap'};
   Object.keys(buttons).forEach(function(key){
     const active=key===chain;
     const btn=document.getElementById(buttons[key]);
@@ -11252,6 +11332,7 @@ function mktSwitchChain(chain){
   });
   if(chain==='bnb') loadMarketplaceBNB();
   if(chain==='polygon') loadMarketplacePolygon();
+  if(chain==='base') loadMarketplaceBase();
 }
 
 function gamesSwitchChain(chain){
@@ -11622,6 +11703,170 @@ async function polymktCancel(id){
     showToast(raw.slice(0,80),'err');
   }
 }
+
+// ══════════════════ BASE — NFT Marketplace ══════════════════
+async function loadMarketplaceBase(){
+  try{
+    let active=[];
+    const result=await baseReadRetry(function(p){return new ethers.Contract(NFT_MARKET_BASE,NFT_MARKET_BASE_ABI,p).getActiveListings();});
+    const ids=result[0], listings=result[1];
+    for(let i=0;i<listings.length;i++){
+      const raw=listings[i];
+      active.push({
+        seller:String(raw[0]??raw.seller??''),
+        nftContract:String(raw[1]??raw.nftContract??''),
+        tokenId:raw[2]??raw.tokenId,
+        price:raw[3]??raw.price,
+        paymentToken:String(raw[4]??raw.paymentToken??''),
+        _id:Number(ids[i])
+      });
+    }
+    const banned=await getBannedWallets();
+    const hidden=await getHiddenNFTs();
+    if(banned.size>0||hidden.size>0){
+      active=active.filter(l=>!banned.has((l.seller||'').toLowerCase())
+        && !hidden.has(('base:'+l.nftContract+':'+l.tokenId).toLowerCase()));
+    }
+    document.getElementById('mktListingsBase').textContent=active.length;
+    const grid=document.createElement('div');
+    grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fill,minmax(min(160px,45vw),1fr));gap:10px;';
+    document.getElementById('marketListingsBase').innerHTML='';
+    document.getElementById('marketListingsBase').appendChild(grid);
+
+    await Promise.all(active.map(async(l)=>{
+      let img='',name='NFT #'+l.tokenId.toString();
+      try{
+        let uri=await baseReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);});
+        const meta=await fetchNFTMeta(uri);
+        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        name=meta.name||name;
+      }catch(err){}
+      const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
+      const isNative=l.paymentToken==='0x0000000000000000000000000000000000000000';
+      const sym=isNative?'ETH':(l.paymentToken.toLowerCase()===BASE_MKT_CURRENCIES.USDT.addr.toLowerCase()?'USDT':'USDC');
+      const priceFmt=parseFloat(ethers.formatUnits(l.price,isNative?18:6)).toFixed(isNative?4:2);
+
+      const card=document.createElement('div');
+      card.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .15s;cursor:pointer;';
+      card.onmouseover=function(){this.style.transform='translateY(-2px)';};
+      card.onmouseout=function(){this.style.transform='none';};
+      const imgDiv=document.createElement('div');
+      imgDiv.style.cssText='aspect-ratio:1;background:var(--bg3);overflow:hidden;position:relative;';
+      if(img){
+        const im=document.createElement('img');
+        im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
+        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _gateways=_hash?getIPFSGateways(_hash):[img];
+        let _gwIdx=0;im.src=_gateways[_gwIdx];
+        im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
+        imgDiv.appendChild(im);
+      } else {
+        imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';
+      }
+      const info=document.createElement('div');
+      info.style.cssText='padding:8px 10px 10px;';
+      info.innerHTML=
+        '<div style="font-size:12px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(name)+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-bottom:6px;">'+sAddr(l.seller)+'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">'
+        +'<div style="font-family:monospace;font-size:12px;font-weight:700;color:var(--gold);">'+priceFmt+'<span style="font-size:10px;color:var(--muted);"> '+sym+'</span></div>'
+        +'</div>';
+      const btnWrap=info.querySelector('div:last-child');
+      const btn=document.createElement('button');
+      if(isOwn){
+        btn.textContent='✕ Cancel';
+        btn.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:6px;padding:4px 8px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;';
+        btn.onclick=(function(idx){return function(e){e.stopPropagation();basemktCancel(idx);};})(l._id);
+      } else {
+        btn.textContent='Buy';
+        btn.style.cssText='background:var(--gold);color:#08090C;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;';
+        btn.onclick=(function(idx,price,token){return function(e){e.stopPropagation();basemktBuy(idx,price,token);};})(l._id,l.price,l.paymentToken);
+      }
+      btnWrap.appendChild(btn);
+      if(isOwnerWallet()&&!isOwn){
+        const hideBtn=document.createElement('button');
+        hideBtn.textContent='🚫';hideBtn.title='Admin: hide this listing';
+        hideBtn.style.cssText='background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:6px;padding:5px 8px;font-size:11px;cursor:pointer;margin-left:4px;';
+        hideBtn.onclick=(function(idx,contract,tokenId){return function(e){e.stopPropagation();adminHideNFTListing('base',contract,tokenId,idx,this);};})(l._id,l.nftContract,l.tokenId);
+        btnWrap.appendChild(hideBtn);
+      }
+      card.appendChild(imgDiv);card.appendChild(info);
+      grid.appendChild(card);
+    }));
+  }catch(e){document.getElementById('marketListingsBase').innerHTML='<div class="app-empty">Failed to load</div>';}
+}
+
+async function basemktSubmitListing(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  const contract=document.getElementById('listContractBase').value.trim();
+  const tokenId=document.getElementById('listTokenIdBase').value.trim();
+  const currencySym=document.getElementById('listCurrencyBase').value;
+  const priceStr=document.getElementById('listPriceBase').value.trim();
+  if(!contract||!tokenId||!priceStr){showToast('Fill all fields','err');return;}
+  try{
+    await switchToBase();
+    const freshSigner=await provider.getSigner();
+    const cur=BASE_MKT_CURRENCIES[currencySym];
+    const priceWei=ethers.parseUnits(priceStr,cur.decimals);
+    const nft=new ethers.Contract(contract,ERC721_ABI,freshSigner);
+    showToast('Checking approval...','ok');
+    if(!await nft.isApprovedForAll(userAddr,NFT_MARKET_BASE)){
+      showToast('Approve marketplace in MetaMask...','ok');
+      await(await nft.setApprovalForAll(NFT_MARKET_BASE,true)).wait();
+    }
+    const market=new ethers.Contract(NFT_MARKET_BASE,NFT_MARKET_BASE_ABI,freshSigner);
+    showToast('Listing NFT...','ok');
+    await(await market.listNFT(contract,tokenId,priceWei,cur.addr)).wait();
+    showToast('NFT listed! 🎉','ok');
+    document.getElementById('listNFTModalBase').classList.remove('open');
+    loadMarketplaceBase();
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,60),'err');
+  }
+}
+
+async function basemktBuy(listingId,price,paymentToken){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    await switchToBase();
+    const freshSigner=await provider.getSigner();
+    const market=new ethers.Contract(NFT_MARKET_BASE,NFT_MARKET_BASE_ABI,freshSigner);
+    const isNative=paymentToken==='0x0000000000000000000000000000000000000000';
+    if(isNative){
+      showToast('Confirm in MetaMask...','ok');
+      await(await market.buyNFT(listingId,{value:price})).wait();
+    } else {
+      const token=new ethers.Contract(paymentToken,ERC20_MIN_ABI,freshSigner);
+      const allowance=await token.allowance(userAddr,NFT_MARKET_BASE);
+      if(allowance<price){
+        showToast('Approve token spend in MetaMask...','ok');
+        await(await token.approve(NFT_MARKET_BASE,price)).wait();
+      }
+      showToast('Confirm purchase in MetaMask...','ok');
+      await(await market.buyNFTWithToken(listingId)).wait();
+    }
+    showToast('🎉 Purchased! NFT is now yours.','ok');
+    loadMarketplaceBase();
+  }catch(e){
+    showToast((e.reason||e.message||'Failed').slice(0,80),'err');
+  }
+}
+
+async function basemktCancel(id){
+  if(!userAddr)return;
+  try{
+    await switchToBase();
+    const freshSigner=await provider.getSigner();
+    const market=new ethers.Contract(NFT_MARKET_BASE,NFT_MARKET_BASE_ABI,freshSigner);
+    showToast('Cancelling listing #'+id+'...','ok');
+    await(await market.cancelListing(id)).wait();
+    showToast('Listing cancelled ✓','ok');
+    loadMarketplaceBase();
+  }catch(e){
+    showToast((e.reason||e.data?.message||e.message||'Failed').slice(0,80),'err');
+  }
+}
+
 
 // ── EXPLORE ──
 let searchFilter='users',searchTimer=null;
@@ -12881,6 +13126,7 @@ async function adminHideNFTListing(network, contractAddr, tokenId, listingId, bt
     showToast('Listing hidden from marketplace','ok');
     if(network==='bnb') loadMarketplaceBNB();
     else if(network==='polygon') loadMarketplacePolygon();
+    else if(network==='base') loadMarketplaceBase();
     else if(typeof loadMarketplace==='function') loadMarketplace();
   }catch(e){
     showToast('Failed: '+(e.message||'').slice(0,60),'err');
