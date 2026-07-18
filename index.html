@@ -14557,11 +14557,12 @@ let _mtDecimals=18;
 function _mtAbi(){
   if(_mtChain==='bnb') return OPENGATE_TOKEN_ABI_BNB;
   if(_mtChain==='base') return OPENGATE_TOKEN_ABI_BASE;
+  if(_mtChain==='arb') return OPENGATE_TOKEN_ABI_BASE;
   return OPENGATE_TOKEN_ABI_POLYGON;
 }
 async function _mtReadAll(readsFn){
-  const pool = _mtChain==='bnb' ? BNB_RPCS : (_mtChain==='base' ? BASE_RPCS : POLYGON_RPCS);
-  const getProvider = _mtChain==='bnb' ? getBNBBattleProvider : (_mtChain==='base' ? getBaseReadProvider : getPolygonReadProvider);
+  const pool = _mtChain==='bnb' ? BNB_RPCS : (_mtChain==='base' ? BASE_RPCS : (_mtChain==='arb' ? ARB_RPCS : POLYGON_RPCS));
+  const getProvider = _mtChain==='bnb' ? getBNBBattleProvider : (_mtChain==='base' ? getBaseReadProvider : (_mtChain==='arb' ? getArbReadProvider : getPolygonReadProvider));
   let lastErr;
   for(let i=0;i<pool.length;i++){
     try{
@@ -14574,6 +14575,7 @@ async function _mtReadAll(readsFn){
 async function _mtWriteContract(){
   if(_mtChain==='bnb') await switchToBNB();
   else if(_mtChain==='base') await switchToBase();
+  else if(_mtChain==='arb') await switchToArbitrum();
   else await switchToPolygon();
   const signer=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
   return new ethers.Contract(_mtTokenAddr,_mtAbi(),signer);
@@ -14617,7 +14619,7 @@ async function tokManage(chain,tokenAddr){
     // special features shown", not "the whole panel breaks".
     let mintable=false,burnable=false,pausable=false,paused=false,logoURI='',taxEnabled=false,taxBps=0,antiWhaleEnabled=false,maxWalletBps=0;
     try{
-      if(_mtChain==='base'){
+      if(_mtChain==='base'||_mtChain==='arb'){
         // Base token (OpenGateTokenBase): no taxEnabled / antiWhaleEnabled
         // getters — a feature is "on" when taxBps>0 or maxWalletBps>0.
         // logoURI DOES exist on Base and is read here.
@@ -14685,7 +14687,7 @@ async function tokMintPolygon(){
     showToast('✓ Minted!','ok');
     document.getElementById('mtMintAmount').value='';
     tokManage(_mtChain,_mtTokenAddr);
-    if(_mtChain==='bnb') tokLoadMyTokens(); else if(_mtChain==='base') tokLoadMyTokensBase(); else tokLoadMyTokensPolygon();
+    if(_mtChain==='bnb') tokLoadMyTokens(); else if(_mtChain==='base') tokLoadMyTokensBase(); else if(_mtChain==='arb') tokLoadMyTokensArb(); else tokLoadMyTokensPolygon();
   }catch(e){
     showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
   }finally{ btn.disabled=false;btn.textContent='Mint'; }
@@ -14718,7 +14720,7 @@ async function tokTogglePausePolygon(){
     const c=await _mtWriteContract();
     // Base uses setPaused(bool); BNB/Polygon use pause()/unpause().
     let tx;
-    if(_mtChain==='base'){ tx=await c.setPaused(wantsPause); }
+    if(_mtChain==='base'||_mtChain==='arb'){ tx=await c.setPaused(wantsPause); }
     else { tx=wantsPause?await c.pause():await c.unpause(); }
     showToast((wantsPause?'Pausing':'Unpausing')+' — confirm in wallet...','ok');
     await tx.wait();
@@ -14742,7 +14744,7 @@ async function tokTransferOwnershipPolygon(){
     await tx.wait();
     showToast('✓ Ownership transferred','ok');
     document.getElementById('manageTokenModalPolygon').classList.remove('open');
-    if(_mtChain==='bnb') tokLoadMyTokens(); else if(_mtChain==='base') tokLoadMyTokensBase(); else tokLoadMyTokensPolygon();
+    if(_mtChain==='bnb') tokLoadMyTokens(); else if(_mtChain==='base') tokLoadMyTokensBase(); else if(_mtChain==='arb') tokLoadMyTokensArb(); else tokLoadMyTokensPolygon();
   }catch(e){
     showToast('Failed: '+(e.reason||e.message||'').slice(0,60),'err');
   }
@@ -15120,7 +15122,7 @@ async function tokLoadMyTokensArb(){
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">'
         +'<div><div style="font-size:13px;font-weight:700;">'+esc(name)+' ('+esc(symbol)+')</div>'
         +'<div style="font-size:11px;color:var(--muted);font-family:monospace;">'+addr+'</div></div>'
-        +'<button onclick="tokManage(\'base\',\''+addr+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">⚙️ Manage</button>'
+        +'<button onclick="tokManage(\'arb\',\''+addr+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">⚙️ Manage</button>'
         +'</div>';
     }));
     el.innerHTML=rows.join('');
