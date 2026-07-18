@@ -1853,6 +1853,150 @@ async function smartConnectWallet(){
         </div>
       </div>
 
+      <div id="view-goldbasebattle" style="display:none;">
+        <div class="feed-hdr">⚜️ Base Gold Battleship</div>
+
+        <!-- Pass check -->
+        <div id="gbbs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
+          <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Pass Required</div>
+          <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">Base Gold Battleship is a VIP table — available for Gold Pass holders only.</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <button onclick="document.getElementById('page-app').classList.remove('active');document.getElementById('page-landing').classList.add('active');setTimeout(function(){var el=document.getElementById('passes');if(el)el.scrollIntoView({behavior:'smooth'});},100);" style="padding:12px 24px;background:var(--gold);color:#08090C;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">🥇 Get Gold Pass — $9</button>
+            <button onclick="document.getElementById('page-app').classList.remove('active');document.getElementById('page-landing').classList.add('active');setTimeout(function(){var el=document.getElementById('passes');if(el)el.scrollIntoView({behavior:'smooth'});},100);" style="padding:12px 24px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">🥈 Get Silver Pass — $0.90</button>
+          </div>
+        </div>
+
+        <!-- Not connected -->
+        <div id="gbbs-noconn" style="display:none;text-align:center;padding:40px 20px;">
+          <div style="font-size:48px;margin-bottom:12px;">👛</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Connect Wallet</div>
+          <button onclick="handleConnectClick()" style="padding:12px 24px;background:var(--gold);color:#08090C;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Connect Wallet</button>
+        </div>
+
+        <!-- Main UI -->
+        <div id="gbbs-main" style="display:none;">
+
+          <!-- LOBBY -->
+          <div id="gbbs-lobby">
+            <div style="padding:16px 20px;max-width:600px;margin:0 auto;">
+
+              <!-- Create/Find -->
+              <div style="background:linear-gradient(145deg,rgba(59,130,246,0.07),rgba(59,130,246,0.02));border:1px solid rgba(59,130,246,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+                <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
+
+                <button id="bshelp-goldbase-btn" onclick="toggleHelpBox('bshelp-goldbase')" class="help-toggle-btn" style="margin-bottom:12px;">❔ How does this work?</button>
+                <div id="bshelp-goldbase" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
+                  <div style="color:var(--muted);">
+                    <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — get one from the <b style="color:var(--text);">Passes</b> section on the landing page if you don't have one yet.<br>
+                    <b style="color:var(--text);">2.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
+                    <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
+                    <b style="color:var(--text);">4.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
+                    <b style="color:var(--text);">5.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
+                    <b style="color:var(--text);">6.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.<br>
+                    <b style="color:var(--text);">7.</b> Changed your mind before anyone joined? Hit <b style="color:var(--text);">Cancel</b> on your own room any time to get your stake back — no waiting required.
+                  </div>
+                </div>
+
+                <!-- Token -->
+                <div style="margin-bottom:12px;">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token</div>
+                  <div style="display:flex;gap:8px;">
+                    <button id="gbbs-tok-usdt" onclick="gbbsSetToken('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid #3B82F6;background:rgba(59,130,246,0.1);color:#3B82F6;font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
+                    <button id="gbbs-tok-usdc" onclick="gbbsSetToken('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
+                  </div>
+                </div>
+
+                <!-- Stake -->
+                <div style="margin-bottom:10px;">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Stake Amount</div>
+                  <div style="position:relative;">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);">$</span>
+                    <input id="gbbs-amount" type="number" min="0.1" step="0.1" placeholder="0.00" style="width:100%;padding:10px 12px 10px 28px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;outline:none;"/>
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px;">Min: $0.10 · No maximum limit</div>
+                </div>
+
+                <!-- Quick amounts -->
+                <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+                  <button onclick="document.getElementById('gbbs-amount').value='0.10'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$0.10</button>
+                  <button onclick="document.getElementById('gbbs-amount').value='1'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$1</button>
+                  <button onclick="document.getElementById('gbbs-amount').value='5'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$5</button>
+                  <button onclick="document.getElementById('gbbs-amount').value='10'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$10</button>
+                  <button onclick="document.getElementById('gbbs-amount').value='50'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$50</button>
+                  <button onclick="document.getElementById('gbbs-amount').value='100'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$100</button>
+                  <button onclick="document.getElementById('gbbs-amount').value='500'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$500</button>
+                </div>
+
+                <!-- Buttons -->
+                <div style="display:flex;gap:8px;">
+                  <button onclick="gbbsMatchmake()" style="flex:1;padding:12px;border-radius:10px;background:#3B82F6;color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;">🔍 Find Game</button>
+                  <button onclick="gbbsCreate()" style="flex:1;padding:12px;border-radius:10px;background:var(--green);color:#08090C;border:none;font-size:14px;font-weight:700;cursor:pointer;">⚔️ Create Game</button>
+                </div>
+                <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Find Game — joins existing room with same stake, or creates new one</div>
+              </div>
+
+              <!-- Open rooms -->
+              <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+                <span>🔍 Open Rooms</span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span id="gbbs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <button onclick="gbbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
+                </div>
+              </div>
+              <div id="gbbs-rooms"><div class="app-loader">Loading...</div></div>
+            </div>
+          </div>
+
+          <!-- GAME (same layout as testnet — boards side by side) -->
+          <div id="gbbs-gameboard" style="display:none;">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <span style="font-size:14px;font-weight:700;" id="gbbs-status">Placing ships...</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">GPBS-1</span>
+                <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="gbbs-stake-display"></span>
+              </div>
+              <button onclick="leaveGoldBaseGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
+            </div>
+
+            <!-- Boards side by side — SAME as testnet battleGame layout -->
+            <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:100%;overflow-x:hidden;">
+
+              <!-- MY board (left) -->
+              <div style="flex:1;min-width:280px;">
+                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
+                <div id="gbbs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
+                <div style="text-align:center;margin-top:10px;" id="gbbs-setup-btns">
+                  <button id="gbbs-random-btn" onclick="gbbsRandomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
+                  <button id="gbbs-ready-btn" onclick="gbbsMarkReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
+                </div>
+              </div>
+
+              <!-- ENEMY board (right) -->
+              <div style="flex:1;min-width:280px;">
+                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;" id="gbbs-enemy-label">Enemy Fleet</div>
+                <div id="gbbs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
+              </div>
+            </div>
+
+            <!-- Ships panel — same as testnet -->
+            <div id="gbbs-ships-panel" style="padding:0 16px 16px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center;">Ships: <span id="gbbs-ships-left" style="font-weight:700;color:var(--text);"></span></div>
+              <div id="gbbs-ship-selector" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px;"></div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;">
+                <button id="gbbs-orient-btn" onclick="gbbsToggleOrientation()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">↔ Horizontal</button>
+                <button onclick="gbbsClearShips()" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.4);color:var(--red);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">🗑 Clear</button>
+              </div>
+              <div style="font-size:11px;color:var(--muted);text-align:center;">Select a ship then click on your board to place it</div>
+            </div>
+
+            <!-- Battle log -->
+            <div id="gbbs-log" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;overflow-x:hidden;"></div>
+          </div>
+
+        </div>
+      </div>
+
       <div id="view-faucet" style="display:none;">
         <div class="feed-hdr">🚰 GATE Faucet</div>
         <div style="padding:20px;max-width:500px;margin:0 auto;">
@@ -2066,12 +2210,13 @@ async function smartConnectWallet(){
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">PvP · Real money · $0.10–$50</div>
             <div style="font-size:11px;color:#4d9fff;margin-top:6px;">USDT or USDC · 90% to winner</div>
           </div>
-          <!-- Base Gold Battleship — coming next -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;text-align:center;position:relative;opacity:.55;">
-            <div style="position:absolute;top:8px;right:8px;background:var(--muted);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">SOON</div>
+          <!-- Base Gold Battleship -->
+          <div onclick="showTab('goldbasebattle')" style="background:linear-gradient(135deg,rgba(245,200,66,0.10),rgba(41,98,255,0.03));border:1px solid rgba(245,200,66,0.4);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,200,66,0.4)'">
+            <div style="position:absolute;top:8px;right:8px;background:var(--green);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">🟢 LIVE</div>
             <div style="font-size:36px;margin-bottom:8px;">⚜️</div>
             <div style="font-size:15px;font-weight:700;">Base Gold Battleship</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;">Gold Pass VIP · coming next</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">Gold Pass VIP · no bet limit</div>
+            <div style="font-size:11px;color:var(--gold);margin-top:6px;">USDT or USDC · 90% to winner</div>
           </div>
         </div>
       </div>
@@ -3911,6 +4056,7 @@ function rcOnAck(p){
     else if(mode==='polygon')pbsJoin(game);
     else if(mode==='polygon-gold')gpbsJoin(game);
     else if(mode==='base')basebsJoin(game);
+    else if(mode==='base-gold')gbbsJoin(game);
     else bnbbsJoin(game);
   }
   else showToast('Opponent declined','err');
@@ -3933,7 +4079,7 @@ function rcAccept(){
   rcSend(rcIncoming.from,'rc_ack',{from:userAddr.toLowerCase(),game:rcIncoming.game,accepted:true});
   rcIncoming=null; rcCloseModals();
   showToast('Get ready — opponent is joining!','ok');
-  var tabMap={gold:'goldbattle','polygon':'polygonbattle','polygon-gold':'goldpolygonbattle','base':'basebattle'};
+  var tabMap={gold:'goldbattle','polygon':'polygonbattle','polygon-gold':'goldpolygonbattle','base':'basebattle','base-gold':'goldbasebattle'};
   showTab(tabMap[_mode]||'bnbbattle');
 }
 function rcDecline(timedOut){
@@ -4242,7 +4388,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-73';
+var OG_BS_BUILD='BS-74';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -7896,6 +8042,874 @@ function gpbsHandleUpdate(game){
   }
 }
 
+var BASE_GOLD_BATTLE_ADDR = '0xb08A26CCEFbD2cB2194E8b9894E5DfC1D413aDC6';
+var BASE_GOLD_OFFSET = 6000000000; // Base Gold — out of BNB(0)/BNB Gold(2B)/Polygon(3B)/Polygon Gold(4B)/Base regular(5B)
+var OG_GBBS_BUILD = 'GBBS-1';
+var BASE_GOLD_BATTLE_ABI = [
+  'function createGame(uint256 betAmount, address paymentToken, uint8 tier, uint256 expiry, bytes signature) returns(uint256)',
+  'function joinGame(uint256 gameId, uint8 tier, uint256 expiry, bytes signature)',
+  'function cancelUnmatchedGame(uint256 gameId)',
+  'function getGame(uint256 gameId) view returns(tuple(address player1,address player2,uint256 betAmount,address paymentToken,uint8 status,address winner,uint256 createdAt))',
+  'function getOpenGames() view returns(uint256[])',
+  'function getMyActiveGame(address player) view returns(uint256)',
+  'function gameCount() view returns(uint256)',
+];
+
+// State
+var gbbsToken='USDT', gbbsGameId=null, gbbsOrientation='h';
+var gbbsMyShips=[], gbbsPlaced=[], gbbsSelectedSize=0;
+var gbbsMyShots={}, gbbsEnemyShots={};
+var gbbsMyTurn=false, gbbsIsReady=false, gbbsIsP1=null, gbbsGameFinished=false;
+var gbbsRealtimeChannel=null, gbbsRoomsInterval=null, gbbsPollTimer=null;
+var gbbsChainGD=null;
+var gbbsLastStateTs=0;
+var gbbsFiring=false;
+var gbbsHoverCells=[];
+
+function gbbsDbId(){ return BASE_GOLD_OFFSET + Number(gbbsGameId); }
+
+function gbbsCurrencyAddr(){ return gbbsToken==='USDT' ? USDT_BASE : USDC_BASE; }
+
+async function gbbsContractWrite(){
+  await switchToBase();
+  var p=new ethers.BrowserProvider(window.ethereum);
+  var s=await p.getSigner();
+  return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,s);
+}
+function gbbsCleanShots(o){
+  var r={};
+  if(o&&typeof o==='object'){
+    Object.keys(o).forEach(function(k){
+      if(o[k]==='hit'||o[k]==='miss'||o[k]==='pending') r[k]=o[k];
+    });
+  }
+  return r;
+}
+async function gbbsOracle(body){
+  try{
+    var r=await fetch('/api/oracle-gold-base',{method:'POST',headers:{'Content-Type':'application/json','x-oracle-secret':ORACLE_HDR},body:JSON.stringify(body)});
+    var j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok) console.warn('[Oracle-GoldBase]',r.status,j);
+    return j||{};
+  }catch(e){ console.warn('[Oracle-GoldBase] fetch failed:',e.message); return {error:e.message}; }
+}
+// ── EDGE FUNCTION: anti-cheat ──
+var EDGE_BS_GOLD_BASE_URL=SUPABASE_URL+'/functions/v1/battleship-gold-base';
+async function gbbsGetSig(){
+  var key='oggbbs_sig_'+gbbsGameId+'_'+(userAddr||'').toLowerCase();
+  var s=sessionStorage.getItem(key);
+  if(s) return s;
+  var p=new ethers.BrowserProvider(window.ethereum);
+  var signer=await p.getSigner();
+  showToast('Sign once to secure this game (free, no gas)','ok');
+  s=await signer.signMessage('OpenGate Gold Battleship Base game '+gbbsGameId);
+  sessionStorage.setItem(key,s);
+  return s;
+}
+async function gbbsEdge(action,extra){
+  var sig=await gbbsGetSig();
+  var body=Object.assign({action:action,gameId:gbbsGameId,wallet:userAddr,signature:sig},extra||{});
+  var r=await fetch(EDGE_BS_GOLD_BASE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},body:JSON.stringify(body)});
+  var j=null;try{j=await r.json();}catch(e){}
+  if(!r.ok||(j&&j.error)) throw new Error((j&&j.error)||('HTTP '+r.status));
+  return j||{};
+}
+function gbbsGameQuery(){
+  return sb.from('battleship_games').select('*').eq('contract_game_id',gbbsDbId()).is('bet_token',null);
+}
+function gbbsAddLog(msg){
+  var el=document.getElementById('gbbs-log'); if(!el) return;
+  var d=document.createElement('div');
+  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);word-break:break-all;overflow-wrap:anywhere;';
+  d.textContent=new Date().toLocaleTimeString()+' — '+msg;
+  el.insertBefore(d,el.firstChild);
+}
+
+// ── Init ──
+async function initGoldBaseBattle(){
+  if(!userAddr){
+    document.getElementById('gbbs-noconn').style.display='block';
+    document.getElementById('gbbs-nopass').style.display='none';
+    document.getElementById('gbbs-main').style.display='none';
+    return;
+  }
+  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  var isOwner=userAddr.toLowerCase()===OWNER;
+  var pass=currentUser&&currentUser.pass_type;
+  if(!isOwner&&(!pass||pass==='free')){
+    try{
+      var bnbP=getBNBBattleProvider();
+      var nftAbi=['function balanceOf(address) view returns(uint256)'];
+      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
+      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
+      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
+      if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
+    }catch(e){}
+  }
+  if(!isOwner&&(!pass||pass==='free')){
+    document.getElementById('gbbs-noconn').style.display='none';
+    document.getElementById('gbbs-nopass').style.display='block';
+    document.getElementById('gbbs-main').style.display='none';
+    return;
+  }
+  document.getElementById('gbbs-noconn').style.display='none';
+  document.getElementById('gbbs-nopass').style.display='none';
+  document.getElementById('gbbs-main').style.display='block';
+  if(gbbsRoomsInterval) clearInterval(gbbsRoomsInterval);
+  await gbbsLoadRooms();
+  gbbsRoomsInterval=setInterval(gbbsLoadRooms,8000);
+}
+
+function gbbsSetToken(tok){
+  gbbsToken=tok;
+  document.getElementById('gbbs-tok-usdt').style.borderColor=tok==='USDT'?'#3B82F6':'var(--border)';
+  document.getElementById('gbbs-tok-usdt').style.background=tok==='USDT'?'rgba(59,130,246,0.1)':'var(--bg3)';
+  document.getElementById('gbbs-tok-usdt').style.color=tok==='USDT'?'#3B82F6':'var(--muted)';
+  document.getElementById('gbbs-tok-usdc').style.borderColor=tok==='USDC'?'#3B82F6':'var(--border)';
+  document.getElementById('gbbs-tok-usdc').style.background=tok==='USDC'?'rgba(59,130,246,0.1)':'var(--bg3)';
+  document.getElementById('gbbs-tok-usdc').style.color=tok==='USDC'?'#3B82F6':'var(--muted)';
+}
+
+async function gbbsCheckActiveGame(){
+  if(!userAddr) return;
+  try{
+    var gid=Number(await baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getMyActiveGame(userAddr);}));
+    if(!gid&&gid!==0){
+      document.querySelectorAll('.gbbs-resume-banner').forEach(function(b){b.remove();});
+      return;
+    }
+    var g=await baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getGame(gid);});
+    if(Number(g.status)!==2) return; // only care about Playing (2 on this contract)
+    gbbsGameId=gid;
+    if(document.querySelector('.gbbs-resume-banner')) return;
+    document.querySelectorAll('.wait-banner').forEach(function(b){b.remove();});
+    var banner=document.createElement('div');
+    banner.className='gbbs-resume-banner';
+    banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+    banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ Active game — opponent is waiting!</div>';
+    var rb=document.createElement('button');
+    rb.textContent='⚔️ Enter Game';
+    rb.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;';
+    rb.onclick=function(){gbbsEnterGame();};
+    banner.appendChild(rb);
+    var rooms=document.getElementById('gbbs-rooms');
+    if(rooms) rooms.parentNode.insertBefore(banner,rooms);
+    if(_gbbsNotifiedActive!==gid){
+      _gbbsNotifiedActive=gid;
+      showToast('⚓ Opponent joined your Base Gold Battleship game!','ok');
+    }
+  }catch(e){}
+}
+var _gbbsNotifiedActive=null;
+
+// ── Load lobby ──
+async function gbbsLoadRooms(){
+  var el=document.getElementById('gbbs-rooms'); if(!el) return;
+  var gb=document.getElementById('gbbs-gameboard');
+  if(gb&&gb.style.display!=='none') return;
+  var view=document.getElementById('view-goldbasebattle');
+  if(!view||view.style.display==='none'){
+    if(gbbsRoomsInterval){clearInterval(gbbsRoomsInterval);gbbsRoomsInterval=null;}
+    return;
+  }
+  try{
+    var ids=await baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getOpenGames();});
+    try{
+      var uC=new ethers.Contract(gbbsCurrencyAddr(),ERC20_MIN_ABI,getBaseReadProvider());
+      var bal=await uC.balanceOf(userAddr);
+      var balEl=document.getElementById('gbbs-balance');
+      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+gbbsToken;
+    }catch(e){}
+    if(!ids||ids.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
+      gbbsCheckActiveGame();
+      return;
+    }
+    var minBet=100000n; // $0.10 at 6 decimals — no max on the Gold table
+    var rooms=await Promise.all(ids.map(function(id){
+      return baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getGame(id);}).then(function(g){return {id:Number(id),g:g};});
+    }));
+    rooms=rooms.filter(function(r){return r.g.betAmount>=minBet;});
+    if(rooms.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
+      gbbsCheckActiveGame();
+      return;
+    }
+    var wallets=[...new Set(rooms.map(function(r){return r.g.player1.toLowerCase();}))];
+    var profiles=[];
+    try{var pr=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);profiles=pr.data||[];}catch(e){}
+    var profileMap={};profiles.forEach(function(p){profileMap[p.wallet]=p;});
+    el.innerHTML=rooms.map(function(item){
+      var p1=item.g.player1.toLowerCase();
+      var prof=profileMap[p1]||{};
+      var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
+      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var amount=parseFloat(ethers.formatUnits(item.g.betAmount,6)).toFixed(2);
+      var tok=item.g.paymentToken.toLowerCase()===USDT_BASE.toLowerCase()?'USDT':'USDC';
+      var isMe=p1===(userAddr||'').toLowerCase();
+      return '<div '+(!isMe?('data-lobby-creator="'+p1+'" '):'')+'style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:12px;">'
+        +'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+av+'</div>'
+        +'<div><div style="font-size:14px;font-weight:700;">'+esc(name)+'</div>'
+        +'<div style="font-size:13px;color:var(--gold);margin-top:2px;">💰 $'+amount+' '+tok+'</div></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px;">'
+        +(isMe?'<button onclick="gbbsCancelGame('+item.id+',event)" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;">✕ Cancel</button>':'')
+        +(!isMe?'<button onclick="openDMWith(\''+p1+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;">💬 DM</button>':'')
+        +(!isMe?'<button class="lobby-join" onclick="gbbsRequestJoin('+item.id+',\''+p1+'\',\''+amount+'\')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button><span class="lobby-offline">⚫ offline</span>':'')
+        +'</div></div>';
+    }).join('');
+    gbbsCheckActiveGame();
+  }catch(e){
+    console.error('[GoldBaseBattle] loadRooms:',e);
+    el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">Error loading rooms</div>';
+  }
+}
+
+// ── Matchmake ──
+async function gbbsMatchmake(){
+  var amount=parseFloat(document.getElementById('gbbs-amount').value);
+  if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
+  try{
+    showToast('Searching...','ok');
+    var ids=await baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getOpenGames();});
+    var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),6);
+    var curAddr=gbbsCurrencyAddr();
+    var rows=await Promise.all(ids.map(function(id){
+      return baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getGame(id);}).then(function(g){return {id:Number(id),g:g};});
+    }));
+    var candidates=[];
+    rows.forEach(function(r){
+      var p1=r.g.player1.toLowerCase();
+      if(p1===(userAddr||'').toLowerCase()) return;
+      if(r.g.paymentToken.toLowerCase()===curAddr.toLowerCase()&&r.g.betAmount===amountRaw) candidates.push({id:r.id,creator:p1});
+    });
+    var pick=candidates.find(function(x){return onlineWallets.has(x.creator);})||(onlineWallets.size===0?candidates[0]:null);
+    if(pick){
+      showToast('Match found — asking them to confirm…','ok');
+      rcRequestJoin(pick.id,pick.creator,amount.toFixed(2),'base-gold');
+      return;
+    }
+    if(candidates.length>0){showToast('Matches exist but all offline. Try again shortly.','err');return;}
+    showToast('No match found. Creating room...','ok');
+    await gbbsCreate();
+  }catch(e){showToast('Error: '+(e.message||'').slice(0,40),'err');}
+}
+
+// ── Create game ──
+async function gbbsCreate(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  var amount=parseFloat(document.getElementById('gbbs-amount').value);
+  if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
+  try{
+    showToast('Checking your pass status...','ok');
+    var voucher=await fetchPassVoucher(BASE_GOLD_BATTLE_ADDR);
+    var contract=await gbbsContractWrite();
+    var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),6);
+    var tokenAddr=gbbsCurrencyAddr();
+    var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
+    var bal=await tok.balanceOf(userAddr);
+    if(bal<amountRaw){showToast('Insufficient '+gbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    showToast('Approving '+gbbsToken+'...','ok');
+    var allowance=await tok.allowance(userAddr,BASE_GOLD_BATTLE_ADDR);
+    if(allowance<amountRaw){
+      var appTx=await tok.approve(BASE_GOLD_BATTLE_ADDR,amountRaw);
+      await appTx.wait();
+    }
+    showToast('Creating game...','ok');
+    var tx=await contract.createGame(amountRaw,tokenAddr,voucher[0],voucher[1],voucher[2]);
+    var receipt=await tx.wait();
+    var newId=0;
+    try{
+      for(var li=0;li<receipt.logs.length;li++){
+        try{
+          var pl=contract.interface.parseLog(receipt.logs[li]);
+          if(pl&&pl.name==='GameCreated'&&pl.args.player1.toLowerCase()===userAddr.toLowerCase()){
+            newId=Number(pl.args.gameId); break;
+          }
+        }catch(e2){}
+      }
+    }catch(e3){}
+    if(!newId&&newId!==0){
+      try{ newId=Number(await contract.getMyActiveGame(userAddr)); }catch(e4){}
+    }
+    gbbsGameId=newId;
+    showToast('Room created! Waiting for opponent...','ok');
+    await gbbsLoadRooms();
+    gbbsShowWaitBanner();
+  }catch(e){
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+}
+
+function gbbsShowWaitBanner(){
+  var banner=document.createElement('div');
+  banner.className='wait-banner';
+  banner.style.cssText='padding:12px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin:0 0 12px;display:flex;align-items:center;gap:12px;';
+  banner.innerHTML='<div style="font-size:22px;">⏳</div><div style="flex:1;font-size:13px;">Your room is live! You\'ll be notified when someone joins.</div>';
+  var rooms=document.getElementById('gbbs-rooms');
+  if(rooms) rooms.parentNode.insertBefore(banner,rooms);
+}
+
+function gbbsRequestJoin(gameId,creator,amount){ rcRequestJoin(gameId,creator,amount,'base-gold'); }
+
+// ── Cancel game (creator reclaims stake — no waiting period needed) ──
+async function gbbsCancelGame(gameId,ev){
+  var btn=ev&&ev.target;if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    var c=await gbbsContractWrite();
+    var tx=await c.cancelUnmatchedGame(gameId);
+    await tx.wait();
+    showToast('Cancelled. Funds refunded.','ok');
+    gbbsGameId=null;
+    await gbbsLoadRooms();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='✕ Cancel';}
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,40),'err');
+  }
+}
+
+// ── Join game ──
+async function gbbsJoin(gameId){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    showToast('Checking your pass status...','ok');
+    var voucher=await fetchPassVoucher(BASE_GOLD_BATTLE_ADDR);
+    var c=await gbbsContractWrite();
+    var g=await baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getGame(gameId);});
+    var amountRaw=g.betAmount;
+    var tokenAddr=g.paymentToken;
+    var tokenName=tokenAddr.toLowerCase()===USDT_BASE.toLowerCase()?'USDT':'USDC';
+    var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
+    var bal=await tok.balanceOf(userAddr);
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    showToast('Approving...','ok');
+    var allowance=await tok.allowance(userAddr,BASE_GOLD_BATTLE_ADDR);
+    if(allowance<amountRaw){
+      var appTx=await tok.approve(BASE_GOLD_BATTLE_ADDR,amountRaw);
+      await appTx.wait();
+    }
+    showToast('Joining...','ok');
+    var tx=await c.joinGame(gameId,voucher[0],voucher[1],voucher[2]);
+    await tx.wait();
+    gbbsGameId=gameId;
+    var amount=parseFloat(ethers.formatUnits(g.betAmount,6)).toFixed(2);
+    showToast('Joined! Place your ships.','ok');
+    gbbsEnterGame('$'+amount+' '+tokenName);
+  }catch(e){
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+}
+
+function gbbsResync(){
+  if(!gbbsGameId&&gbbsGameId!==0) return;
+  showToast('Resyncing with server...','ok');
+  gbbsMyShots={};gbbsEnemyShots={};gbbsLastStateTs=0;gbbsFiring=false;
+  gbbsGameQuery().maybeSingle().then(function(pr){
+    if(pr&&pr.data){gbbsHandleUpdate(pr.data);showToast('✓ Synced','ok');}
+  });
+}
+function gbbsEnsureTimeoutBtn(){
+  if(!document.getElementById('gbbs-resync-btn')){
+    var hdrR=document.querySelector('#gbbs-gameboard > div:first-child');
+    if(hdrR){
+      var rb2=document.createElement('button');
+      rb2.id='gbbs-resync-btn';
+      rb2.textContent='🔄';
+      rb2.title='Resync game state with server';
+      rb2.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;margin-right:8px;';
+      rb2.onclick=gbbsResync;
+      hdrR.insertBefore(rb2,hdrR.lastElementChild);
+    }
+  }
+  if(document.getElementById('gbbs-timeout-btn')) return;
+  var hdr=document.querySelector('#gbbs-gameboard > div:first-child');
+  if(!hdr) return;
+  var b=document.createElement('button');
+  b.id='gbbs-timeout-btn';
+  b.textContent='⏱ Claim win';
+  b.title='If opponent is inactive for 5+ minutes, you win the pot';
+  b.style.cssText='display:none;background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,.4);color:var(--gold);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-right:8px;';
+  b.onclick=gbbsClaimMoveTimeout;
+  hdr.insertBefore(b,hdr.lastElementChild);
+}
+async function gbbsClaimMoveTimeout(){
+  if((!gbbsGameId&&gbbsGameId!==0)||!userAddr) return;
+  var tb=document.getElementById('gbbs-timeout-btn');
+  if(tb){tb.disabled=true;tb.textContent='⏳ Checking...';}
+  try{
+    showToast('Checking opponent timeout...','ok');
+    var orr=await gbbsOracle({action:'claimTimeout',gameId:gbbsGameId,claimer:userAddr});
+    if(orr&&orr.success){
+      gbbsGameFinished=true;gbbsMyTurn=false;
+      document.getElementById('gbbs-status').textContent='🎉 YOU WIN (opponent timed out)!';
+      showToast('🏆 Opponent timed out — prize sent to your wallet!','ok');
+      gbbsAddLog('🏆 Timeout payout TX: '+(orr.tx||''));
+      if(tb) tb.style.display='none';
+    } else {
+      var m=(orr&&(orr.error||''))+(orr&&orr.detail?(' ('+orr.detail+')'):'');
+      if(m.indexOf('still has time')>=0) showToast('Opponent still has time — '+(orr.detail||'wait a bit'),'err');
+      else if(m.indexOf('your move')>=0) showToast('It is your move — you cannot claim','err');
+      else showToast('Claim failed: '+m.slice(0,60),'err');
+      gbbsAddLog('⚠ Timeout claim: '+m.slice(0,120));
+    }
+  }catch(e){
+    showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+  if(tb){tb.disabled=false;tb.textContent='⏱ Claim win';}
+}
+
+// ── Enter game ──
+async function gbbsEnterGame(stakeInfo){
+  document.getElementById('gbbs-lobby').style.display='none';
+  document.getElementById('gbbs-gameboard').style.display='block';
+  document.querySelectorAll('.gbbs-resume-banner,.wait-banner').forEach(function(b){b.remove();});
+  gbbsMyShips=[];gbbsPlaced=[];gbbsSelectedSize=0;
+  gbbsMyShots={};gbbsEnemyShots={};
+  gbbsMyTurn=false;gbbsIsReady=false;gbbsIsP1=null;gbbsGameFinished=false;
+  gbbsLastStateTs=0;gbbsFiring=false;
+  gbbsBuildBoardDOM();
+  gbbsBuildShipBtns();
+  gbbsEnsureTimeoutBtn();
+  var tb0=document.getElementById('gbbs-timeout-btn'); if(tb0) tb0.style.display='none';
+  document.getElementById('gbbs-ships-panel').style.display='block';
+  var rdyBtn=document.getElementById('gbbs-ready-btn');
+  if(rdyBtn){rdyBtn.style.display='none';rdyBtn.disabled=false;}
+  var randomBtn2=document.getElementById('gbbs-random-btn');
+  if(randomBtn2) randomBtn2.style.display='inline-block';
+  var setupBtns2=document.getElementById('gbbs-setup-btns');
+  if(setupBtns2) setupBtns2.style.display='block';
+  var myBoard2=document.getElementById('gbbs-myboard');
+  if(myBoard2){myBoard2.style.pointerEvents='';myBoard2.style.cursor='';}
+  document.getElementById('gbbs-log').innerHTML='';
+  document.getElementById('gbbs-status').textContent='Loading game...';
+  if(gbbsRealtimeChannel){sb.removeChannel(gbbsRealtimeChannel);gbbsRealtimeChannel=null;}
+  gbbsRealtimeChannel=sb.channel('gbbs-'+gbbsGameId+'-'+Date.now())
+    .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+gbbsDbId()},function(payload){
+      if(payload.new&&!payload.new.bet_token) gbbsHandleUpdate(payload.new);
+    }).subscribe();
+  if(gbbsPollTimer) clearInterval(gbbsPollTimer);
+  gbbsPollTimer=setInterval(async function(){
+    if((!gbbsGameId&&gbbsGameId!==0)||gbbsGameFinished){clearInterval(gbbsPollTimer);gbbsPollTimer=null;return;}
+    try{
+      var pr=await gbbsGameQuery().maybeSingle();
+      if(pr&&pr.data) gbbsHandleUpdate(pr.data);
+    }catch(e){}
+  },3000);
+  try{
+    var gd=await baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getGame(gbbsGameId);});
+    gbbsChainGD=gd;
+    gbbsIsP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
+    if(!stakeInfo){
+      var amt=parseFloat(ethers.formatUnits(gd.betAmount,6)).toFixed(2);
+      stakeInfo='$'+amt+' '+(gd.paymentToken.toLowerCase()===USDT_BASE.toLowerCase()?'USDT':'USDC');
+    }
+    document.getElementById('gbbs-stake-display').textContent=stakeInfo;
+    if(Number(gd.status)===2){ // Playing on this contract
+      var tbA=document.getElementById('gbbs-timeout-btn');
+      if(tbA) tbA.style.display='inline-block';
+    }
+    var st=null;
+    try{ st=await gbbsEdge('getState'); }
+    catch(eS){ gbbsAddLog('⚠ State load: '+(eS.message||'').slice(0,80)); }
+    if(st&&st.state){
+      var g=st.state;
+      if(st.myBoard&&st.myBoard.length===20){
+        gbbsMyShips=st.myBoard;
+        gbbsLockBoard();
+        gbbsAddLog('↩ Your board restored (server-protected)');
+      }
+      try{ gbbsMyShots=gbbsCleanShots(JSON.parse((gbbsIsP1?g.player1_shots:g.player2_shots)||'{}')); }catch(e){gbbsMyShots={};}
+      try{ gbbsEnemyShots=gbbsCleanShots(JSON.parse((gbbsIsP1?g.player2_shots:g.player1_shots)||'{}')); }catch(e){gbbsEnemyShots={};}
+      gbbsRenderBoards();
+      gbbsHandleUpdate(g);
+      if(g.status==='finished'
+         && (g.winner_wallet||'').toLowerCase()===userAddr.toLowerCase()
+         && !g.oracle_confirmed){
+        document.getElementById('gbbs-status').textContent='🎉 YOU WIN! Retrying payout...';
+        showToast('Retrying prize payout...','ok');
+        gbbsOracle({action:'declareWinner',gameId:gbbsGameId,winner:userAddr}).then(function(orr){
+          if(orr&&orr.success){
+            document.getElementById('gbbs-status').textContent='🏆 Prize paid!';
+            showToast('🏆 Prize sent to your wallet!','ok');
+            gbbsAddLog('🏆 Payout TX: '+(orr.tx||''));
+          } else {
+            document.getElementById('gbbs-status').textContent='🎉 YOU WIN — payout pending';
+            var errTxt=orr?(orr.error||'')+(orr.detail?(' / '+orr.detail):''):'no response';
+            gbbsAddLog('⚠ Oracle error: '+errTxt.slice(0,200));
+            showToast('Payout failed: '+errTxt.slice(0,60),'err');
+          }
+        });
+      }
+    }
+  }catch(e){ console.warn('[GoldBaseBattle] restore failed:',e); }
+  if(!gbbsIsReady){
+    document.getElementById('gbbs-status').textContent='Place ships then click ✓ Ready';
+    gbbsAddLog('⚓ Place ships on the LEFT board, then click Ready.');
+    gbbsRenderBoards();
+  }
+}
+
+function leaveGoldBaseGame(){
+  gbbsChainGD=null;gbbsLastStateTs=0;gbbsFiring=false;
+  if(gbbsPollTimer){clearInterval(gbbsPollTimer);gbbsPollTimer=null;}
+  if(gbbsRealtimeChannel){sb.removeChannel(gbbsRealtimeChannel);gbbsRealtimeChannel=null;}
+  gbbsGameId=null;gbbsMyShips=[];gbbsMyShots={};gbbsEnemyShots={};
+  gbbsMyTurn=false;gbbsIsReady=false;gbbsIsP1=null;gbbsGameFinished=false;
+  var tb=document.getElementById('gbbs-timeout-btn'); if(tb) tb.style.display='none';
+  document.getElementById('gbbs-lobby').style.display='block';
+  document.getElementById('gbbs-gameboard').style.display='none';
+  gbbsLoadRooms();
+}
+
+// ── Board DOM ──
+function gbbsBuildBoardDOM(){
+  var myEl=document.getElementById('gbbs-myboard');
+  var enEl=document.getElementById('gbbs-enemyboard');
+  if(!myEl||!enEl) return;
+  myEl.innerHTML='';enEl.innerHTML='';
+  for(var i=0;i<100;i++){
+    (function(idx){
+      var mc=document.createElement('div');
+      mc.id='gbbs-my-'+idx;
+      mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
+      mc.onclick=function(){if(!gbbsIsReady)gbbsPlaceShip(idx);};
+      mc.onmouseover=function(){if(!gbbsIsReady)gbbsHover(idx,true);};
+      mc.onmouseout=function(){if(!gbbsIsReady)gbbsHover(idx,false);};
+      myEl.appendChild(mc);
+      var ec=document.createElement('div');
+      ec.id='gbbs-en-'+idx;
+      ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:not-allowed;';
+      ec.onclick=function(){gbbsFire(idx);};
+      enEl.appendChild(ec);
+    })(i);
+  }
+}
+
+function gbbsRenderBoards(){
+  for(var i=0;i<100;i++){
+    var mc=document.getElementById('gbbs-my-'+i);
+    if(!mc) continue;
+    if(gbbsEnemyShots[i]==='hit'){mc.style.background='rgba(255,77,77,0.8)';mc.style.border='2px solid #ff4d4d';mc.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
+    else if(gbbsEnemyShots[i]==='miss'){mc.style.background='rgba(90,100,120,0.4)';mc.style.border='1px solid var(--muted)';mc.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
+    else if(gbbsMyShips.includes(i)){mc.style.background=gbbsIsReady?'rgba(38,217,138,0.6)':'rgba(38,217,138,0.35)';mc.style.border='1px solid var(--green)';mc.innerHTML='';}
+    else{mc.style.background='var(--bg3)';mc.style.border='1px solid var(--border)';mc.innerHTML='';}
+  }
+  var canFire=gbbsMyTurn&&gbbsIsReady&&!gbbsGameFinished;
+  for(var j=0;j<100;j++){
+    var ec=document.getElementById('gbbs-en-'+j);
+    if(!ec) continue;
+    if(gbbsMyShots[j]==='pending'){ec.style.background='rgba(245,200,66,0.25)';ec.style.border='1px solid var(--gold)';ec.innerHTML='<b style="color:var(--gold);font-size:10px;">⏳</b>';}
+    else if(gbbsMyShots[j]==='hit'){ec.style.background='rgba(255,77,77,0.8)';ec.style.border='2px solid #ff4d4d';ec.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
+    else if(gbbsMyShots[j]==='miss'){ec.style.background='rgba(90,100,120,0.4)';ec.style.border='1px solid var(--muted)';ec.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
+    else{ec.style.background='var(--bg3)';ec.style.border='1px solid var(--border)';ec.innerHTML='';}
+    ec.style.cursor=canFire&&gbbsMyShots[j]===undefined?'crosshair':'not-allowed';
+  }
+}
+
+function gbbsBuildShipBtns(){
+  var el=document.getElementById('gbbs-ship-selector'); if(!el) return;
+  var rem={};
+  BS_SHIP_SIZES.forEach(function(s){rem[s]=(rem[s]||0)+1;});
+  gbbsPlaced.forEach(function(p){rem[p.size]--;});
+  el.innerHTML='';
+  var seen={};
+  BS_SHIP_SIZES.forEach(function(s){
+    if(seen[s]||(rem[s]||0)<=0){seen[s]=true;return;}
+    seen[s]=true;
+    var b=document.createElement('button');
+    var active=s===gbbsSelectedSize;
+    b.style.cssText='padding:8px 10px;border-radius:8px;border:1px solid '+(active?'#3B82F6':'var(--border)')+';background:'+(active?'rgba(59,130,246,0.15)':'var(--bg3)')+';color:'+(active?'#3B82F6':'var(--muted)')+';font-size:12px;font-weight:600;cursor:pointer;font-family:monospace;';
+    b.innerHTML='▪'.repeat(s)+' <span style="font-size:10px;">×'+rem[s]+'</span>';
+    (function(sz){b.onclick=function(){gbbsSelectedSize=sz;gbbsBuildShipBtns();};})(s);
+    el.appendChild(b);
+  });
+  var left=BS_SHIP_SIZES.length-gbbsPlaced.length;
+  var sl=document.getElementById('gbbs-ships-left');
+  var readyBtn=document.getElementById('gbbs-ready-btn');
+  if(sl) sl.textContent=left>0?(left+' ships left'):'All placed! Click Ready ✓';
+  if(readyBtn){
+    readyBtn.style.display=left===0?'inline-block':'none';
+    if(left===0&&!gbbsIsReady) readyBtn.disabled=false;
+  }
+}
+
+function gbbsGetCells(idx,size,horiz){
+  var row=Math.floor(idx/10),col=idx%10;
+  if(horiz&&col+size>10) return null;
+  if(!horiz&&row+size>10) return null;
+  var cells=[];
+  for(var i=0;i<size;i++) cells.push(horiz?(row*10+col+i):((row+i)*10+col));
+  return cells;
+}
+function gbbsIsValid(cells){
+  for(var i=0;i<cells.length;i++){
+    var cell=cells[i],row=Math.floor(cell/10),col=cell%10;
+    if(gbbsMyShips.includes(cell)) return false;
+    for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){
+      var nr=row+dr,nc=col+dc;
+      if(nr>=0&&nr<10&&nc>=0&&nc<10&&gbbsMyShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc)) return false;
+    }
+  }
+  return true;
+}
+function gbbsPlaceShip(idx){
+  if(gbbsIsReady) return;
+  if(!gbbsSelectedSize){showToast('Select a ship size first','err');return;}
+  var cells=gbbsGetCells(idx,gbbsSelectedSize,gbbsOrientation==='h');
+  if(!cells){showToast('Does not fit','err');return;}
+  if(!gbbsIsValid(cells)){showToast('Too close to another ship','err');return;}
+  var already=gbbsPlaced.filter(function(p){return p.size===gbbsSelectedSize;}).length;
+  var max=BS_SHIP_SIZES.filter(function(s){return s===gbbsSelectedSize;}).length;
+  if(already>=max){showToast('All of this size placed','err');return;}
+  gbbsPlaced.push({cells:cells,size:gbbsSelectedSize});
+  cells.forEach(function(c){gbbsMyShips.push(c);});
+  gbbsSelectedSize=0;
+  gbbsRenderBoards();gbbsBuildShipBtns();
+}
+function gbbsHover(idx,enter){
+  if(gbbsIsReady||!gbbsSelectedSize) return;
+  for(var h=0;h<gbbsHoverCells.length;h++){
+    var pi=gbbsHoverCells[h];
+    if(gbbsMyShips.includes(pi)) continue;
+    var pc=document.getElementById('gbbs-my-'+pi);
+    if(pc){pc.style.background='var(--bg3)';pc.style.border='1px solid var(--border)';}
+  }
+  gbbsHoverCells=[];
+  if(!enter) return;
+  var cells=gbbsGetCells(idx,gbbsSelectedSize,gbbsOrientation==='h');
+  if(!cells) return;
+  var ok=gbbsIsValid(cells);
+  cells.forEach(function(ci){
+    if(gbbsMyShips.includes(ci)) return;
+    var c=document.getElementById('gbbs-my-'+ci);
+    if(c) c.style.background=ok?'rgba(38,217,138,0.4)':'rgba(255,77,77,0.4)';
+  });
+  gbbsHoverCells=cells.slice();
+}
+function gbbsToggleOrientation(){
+  gbbsOrientation=gbbsOrientation==='h'?'v':'h';
+  var btn=document.getElementById('gbbs-orient-btn');
+  if(btn) btn.textContent=gbbsOrientation==='h'?'↔ Horizontal':'↕ Vertical';
+}
+function gbbsClearShips(){
+  if(gbbsIsReady) return;
+  gbbsMyShips=[];gbbsPlaced=[];gbbsSelectedSize=0;gbbsRenderBoards();gbbsBuildShipBtns();
+}
+
+function gbbsRandomPlaceShips(){
+  if(gbbsIsReady) return;
+  var success=false;
+  for(var attempt=0;attempt<300&&!success;attempt++){
+    gbbsMyShips=[];gbbsPlaced=[];
+    success=true;
+    var sizes=BS_SHIP_SIZES.slice().sort(function(a,b){return b-a;});
+    for(var si=0;si<sizes.length;si++){
+      var size=sizes[si];
+      var placed=false;
+      for(var tries=0;tries<3000&&!placed;tries++){
+        var h=Math.random()>.5;
+        var r=Math.floor(Math.random()*(h?10:11-size));
+        var c2=Math.floor(Math.random()*(h?11-size:10));
+        var cells=gbbsGetCells(r*10+c2,size,h);
+        if(cells&&gbbsIsValid(cells)){
+          gbbsPlaced.push({cells:cells,size:size});
+          cells.forEach(function(x){gbbsMyShips.push(x);});
+          placed=true;
+        }
+      }
+      if(!placed){success=false;break;}
+    }
+    if(success){
+      var uniq={};gbbsMyShips.forEach(function(x){uniq[x]=1;});
+      if(Object.keys(uniq).length!==20) success=false;
+    }
+  }
+  if(!success){
+    gbbsMyShips=[];gbbsPlaced=[];gbbsSelectedSize=0;
+    gbbsRenderBoards();gbbsBuildShipBtns();
+    showToast('Try Random again','err');
+    return;
+  }
+  gbbsRenderBoards();
+  gbbsBuildShipBtns();
+  showToast('Ships placed!','ok');
+}
+
+function gbbsLockBoard(){
+  gbbsIsReady=true;
+  var myBoard=document.getElementById('gbbs-myboard');
+  if(myBoard){myBoard.style.pointerEvents='none';myBoard.style.cursor='default';}
+  document.getElementById('gbbs-ships-panel').style.display='none';
+  document.getElementById('gbbs-ready-btn').style.display='none';
+  var randomBtn=document.getElementById('gbbs-random-btn');
+  if(randomBtn) randomBtn.style.display='none';
+  var setupBtns=document.getElementById('gbbs-setup-btns');
+  if(setupBtns) setupBtns.style.display='none';
+  gbbsRenderBoards();
+}
+
+async function gbbsMarkReady(){
+  if(gbbsIsReady){showToast('Board already locked','err');return;}
+  if(gbbsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all '+BS_SHIP_SIZES.length+' ships first!','err');return;}
+  var uq={};gbbsMyShips.forEach(function(x){uq[x]=1;});
+  if(Object.keys(uq).length!==20){
+    showToast('Board error — press Clear and place ships again','err');
+    return;
+  }
+  if(!gbbsGameId&&gbbsGameId!==0){showToast('No active game','err');return;}
+  var btn=document.getElementById('gbbs-ready-btn'); if(btn) btn.disabled=true;
+  gbbsAddLog('Saving board (protected)...');
+  try{
+    var res=await gbbsEdge('saveBoard',{board:gbbsMyShips});
+    if(res.alreadySaved&&res.myBoard){
+      gbbsMyShips=res.myBoard;
+      showToast('Your board was already saved — restored it','ok');
+    } else {
+      showToast('✓ Ships locked!','ok');
+    }
+    gbbsLockBoard();
+    document.getElementById('gbbs-status').textContent='⏳ Locked! Waiting for opponent...';
+    gbbsAddLog('✓ Board saved on secure server. Waiting for opponent...');
+    if(res.state) gbbsHandleUpdate(res.state);
+  }catch(e){
+    showToast('Save failed: '+(e.message||'').slice(0,60),'err');
+    gbbsAddLog('⚠ Save failed: '+(e.message||'').slice(0,120));
+  }finally{
+    if(btn&&!gbbsIsReady) btn.disabled=false;
+  }
+}
+
+async function gbbsFire(idx){
+  if(gbbsFiring){showToast('Shot in flight — wait','err');return;}
+  if(gbbsGameFinished) return;
+  if(!gbbsIsReady){showToast('Click Ready first!','err');return;}
+  if(!gbbsMyTurn){showToast('Not your turn','err');return;}
+  if(!gbbsGameId&&gbbsGameId!==0) return;
+  if(gbbsMyShots[idx]!==undefined){
+    showToast('Already fired here','err');
+    gbbsGameQuery().maybeSingle().then(function(pr){
+      if(pr&&pr.data){
+        try{
+          var srv=JSON.parse((gbbsIsP1?pr.data.player1_shots:pr.data.player2_shots)||'{}');
+          if(srv[String(idx)]===undefined){
+            delete gbbsMyShots[idx];
+            gbbsRenderBoards();
+            showToast('Cell unlocked — fire again','ok');
+          }
+        }catch(e){}
+      }
+    });
+    return;
+  }
+  gbbsFiring=true;
+  setTimeout(function(){gbbsFiring=false;},20000);
+  gbbsMyTurn=false;
+  document.getElementById('gbbs-status').textContent='🎯 Firing '+gbbsCoord(idx)+'...';
+  gbbsMyShots[idx]='pending';
+  gbbsRenderBoards();
+  try{
+    var res=await gbbsEdge('fire',{cell:idx});
+    gbbsMyShots[idx]=res.result;
+    gbbsAddLog(res.result==='hit'?('💥 Hit! '+gbbsCoord(idx)):('💧 Miss '+gbbsCoord(idx)));
+    if(res.state) gbbsHandleUpdate(res.state);
+    if(res.won){
+      gbbsGameFinished=true;gbbsMyTurn=false;
+      gbbsRenderBoards();
+      document.getElementById('gbbs-status').textContent='🎉 YOU WIN! Sending prize...';
+      showToast('🎉 YOU WIN! Paying out...','ok');
+      var orRes=await gbbsOracle({action:'declareWinner',gameId:gbbsGameId,winner:userAddr});
+      if(orRes&&orRes.success){
+        showToast('🏆 Prize sent to your wallet!','ok');
+        gbbsAddLog('🏆 Payout TX: '+(orRes.tx||''));
+      } else {
+        showToast('Win saved. Payout pending — re-enter game to retry.','err');
+        gbbsAddLog('⚠ Oracle: '+JSON.stringify(orRes||{}).slice(0,140));
+      }
+      var tbW=document.getElementById('gbbs-timeout-btn'); if(tbW) tbW.style.display='none';
+    } else if(res.result==='hit'){
+      document.getElementById('gbbs-status').textContent='💥 HIT! Shoot again!';
+    }
+  }catch(e){
+    var m=(e.message||'');
+    if(gbbsMyShots[idx]==='pending') delete gbbsMyShots[idx];
+    if(m.indexOf('Not your turn')<0&&m.indexOf('Already fired')<0) gbbsMyTurn=true;
+    gbbsRenderBoards();
+    showToast('Shot failed: '+m.slice(0,50),'err');
+    gbbsAddLog('⚠ Shot failed: '+m.slice(0,120));
+  }finally{
+    gbbsFiring=false;
+  }
+}
+
+function gbbsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/10)+1);}
+
+function gbbsHandleUpdate(game){
+  if(!game||(!gbbsGameId&&gbbsGameId!==0)) return;
+  if(game.bet_token) return;
+  var _ts=game.last_move_at?new Date(game.last_move_at).getTime():0;
+  if(_ts&&_ts<gbbsLastStateTs) return;
+  if(_ts) gbbsLastStateTs=_ts;
+  if(game.status==='finished'){
+    gbbsGameFinished=true;gbbsMyTurn=false;
+    var won=(game.winner_wallet||'').toLowerCase()===userAddr.toLowerCase();
+    document.getElementById('gbbs-status').textContent=won?'🎉 YOU WIN!':'💀 You lost!';
+    if(!won&&game.winner_wallet) showToast('💀 You lost!','err');
+    var tbF=document.getElementById('gbbs-timeout-btn'); if(tbF) tbF.style.display='none';
+    gbbsRenderBoards();
+    return;
+  }
+  var apply=function(isP1){
+    gbbsIsP1=isP1;
+    var didRestore=false;
+    if(!gbbsIsReady){
+      var myB=[];
+      try{myB=JSON.parse((isP1?game.player1_board:game.player2_board)||'[]')||[];}catch(e){}
+      if(myB.length>0){ gbbsMyShips=myB; gbbsLockBoard(); didRestore=true; }
+    }
+    try{
+      var mine=JSON.parse((isP1?game.player1_shots:game.player2_shots)||'{}')||{};
+      var pend={};Object.keys(gbbsMyShots).forEach(function(k){if(gbbsMyShots[k]==='pending')pend[k]='pending';});
+      gbbsMyShots=gbbsCleanShots(Object.assign({},mine,pend));
+    }catch(e){}
+    var oldEn=gbbsEnemyShots||{};
+    var newEn={};
+    try{newEn=gbbsCleanShots(JSON.parse((isP1?game.player2_shots:game.player1_shots)||'{}'));}catch(e){}
+    Object.keys(newEn).forEach(function(k){
+      if(oldEn[k]===undefined){
+        gbbsAddLog(newEn[k]==='hit'?('💥 Enemy hit '+gbbsCoord(Number(k))+'!'):('💧 Enemy missed '+gbbsCoord(Number(k))));
+      }
+    });
+    gbbsEnemyShots=newEn;
+    var myTurn=(game.current_turn||'').toLowerCase()===userAddr.toLowerCase();
+    var bothReady=!!(game.player1_board&&game.player2_board);
+    var tb=document.getElementById('gbbs-timeout-btn');
+    if(bothReady&&gbbsIsReady){
+      gbbsMyTurn=myTurn;
+      document.getElementById('gbbs-status').textContent=myTurn?'⚔️ YOUR TURN — fire!':"⏳ Opponent's turn...";
+      var enLabel=document.getElementById('gbbs-enemy-label');
+      if(enLabel) enLabel.textContent=myTurn?'ENEMY FLEET — CLICK TO FIRE!':'Enemy Fleet';
+      if(tb) tb.style.display=myTurn?'none':'inline-block';
+    } else if(!bothReady&&gbbsIsReady){
+      document.getElementById('gbbs-status').textContent='⏳ Waiting for opponent to place ships...';
+    } else if(bothReady&&!gbbsIsReady){
+      document.getElementById('gbbs-status').textContent='⏳ Opponent ready! Place your ships and click Ready.';
+    }
+    if(gbbsIsReady||didRestore) gbbsRenderBoards();
+  };
+  if(gbbsIsP1!==null){ apply(gbbsIsP1); }
+  else {
+    baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getGame(gbbsGameId);}).then(function(gd){
+      apply(gd.player1.toLowerCase()===userAddr.toLowerCase());
+    }).catch(function(){});
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ⚜️ GOLD BATTLESHIP — окрема VIP-гра (тільки Gold Pass, без ліміту ставки)
 // Окремий контракт, окремий oracle-ендпоінт, окрема Edge Function.
@@ -9049,6 +10063,8 @@ function showTab(tab){
   if(tab==='polygonbattle') initPolygonBattle();
   document.getElementById('view-basebattle').style.display=tab==='basebattle'?'block':'none';
   if(tab==='basebattle') initBaseBattle();
+  document.getElementById('view-goldbasebattle').style.display=tab==='goldbasebattle'?'block':'none';
+  if(tab==='goldbasebattle') initGoldBaseBattle();
   document.getElementById('view-goldpolygonbattle').style.display=tab==='goldpolygonbattle'?'block':'none';
   if(tab==='goldpolygonbattle') initGoldPolygonBattle();
   if(tab==='nftstudio') initNFTStudio();
