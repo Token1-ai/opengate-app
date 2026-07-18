@@ -10828,7 +10828,9 @@ async function nftStudioCreateSinglePolygon(){
 
 // ══════════════════ BASE — NFT Studio ══════════════════
 let nftCurrencyBase='ETH';
+let nftCurrencyArb='ETH';
 let _nftBasePriceTimer=null;
+let _nftArbPriceTimer=null;
 
 function nftBaseCurrencyAddr(){
   if(nftCurrencyBase==='ETH') return ethers.ZeroAddress;
