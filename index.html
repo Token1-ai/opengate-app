@@ -1567,6 +1567,148 @@ async function smartConnectWallet(){
         </div>
       </div>
 
+      <div id="view-basebattle" style="display:none;">
+        <div class="feed-hdr">⚓ Base Battleship</div>
+
+        <!-- Pass check -->
+        <div id="basebs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
+          <div style="font-size:48px;margin-bottom:12px;">🔒</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Pass Required</div>
+          <div style="font-size:14px;color:var(--muted);margin-bottom:20px;">Base Battleship is available for Gold and Silver Pass holders only.</div>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+            <button onclick="document.getElementById('page-app').classList.remove('active');document.getElementById('page-landing').classList.add('active');setTimeout(function(){var el=document.getElementById('passes');if(el)el.scrollIntoView({behavior:'smooth'});},100);" style="padding:12px 24px;background:var(--gold);color:#08090C;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">🥇 Get Gold Pass — $9</button>
+            <button onclick="document.getElementById('page-app').classList.remove('active');document.getElementById('page-landing').classList.add('active');setTimeout(function(){var el=document.getElementById('passes');if(el)el.scrollIntoView({behavior:'smooth'});},100);" style="padding:12px 24px;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;">🥈 Get Silver Pass — $0.90</button>
+          </div>
+        </div>
+
+        <!-- Not connected -->
+        <div id="basebs-noconn" style="display:none;text-align:center;padding:40px 20px;">
+          <div style="font-size:48px;margin-bottom:12px;">👛</div>
+          <div style="font-size:18px;font-weight:700;margin-bottom:8px;">Connect Wallet</div>
+          <button onclick="handleConnectClick()" style="padding:12px 24px;background:var(--gold);color:#08090C;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">Connect Wallet</button>
+        </div>
+
+        <!-- Main UI -->
+        <div id="basebs-main" style="display:none;">
+
+          <!-- LOBBY -->
+          <div id="basebs-lobby">
+            <div style="padding:16px 20px;max-width:600px;margin:0 auto;">
+
+              <!-- Create/Find -->
+              <div style="background:linear-gradient(145deg,rgba(59,130,246,0.07),rgba(59,130,246,0.02));border:1px solid rgba(59,130,246,0.2);border-radius:var(--r);padding:20px;margin-bottom:16px;">
+                <div style="font-size:15px;font-weight:700;margin-bottom:16px;">⚔️ Create New Game</div>
+
+                <button id="bshelp-base-btn" onclick="toggleHelpBox('bshelp-base')" class="help-toggle-btn" style="margin-bottom:12px;">❔ How does this work?</button>
+                <div id="bshelp-base" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
+                  <div style="color:var(--muted);">
+                    <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — get one from the <b style="color:var(--text);">Passes</b> section on the landing page if you don't have one yet.<br>
+                    <b style="color:var(--text);">2.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
+                    <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
+                    <b style="color:var(--text);">4.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
+                    <b style="color:var(--text);">5.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
+                    <b style="color:var(--text);">6.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.<br>
+                    <b style="color:var(--text);">7.</b> Changed your mind before anyone joined? Hit <b style="color:var(--text);">Cancel</b> on your own room any time to get your stake back — no waiting required.
+                  </div>
+                </div>
+
+                <!-- Token -->
+                <div style="margin-bottom:12px;">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Token</div>
+                  <div style="display:flex;gap:8px;">
+                    <button id="basebs-tok-usdt" onclick="basebsSetToken('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid #3B82F6;background:rgba(59,130,246,0.1);color:#3B82F6;font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
+                    <button id="basebs-tok-usdc" onclick="basebsSetToken('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
+                  </div>
+                </div>
+
+                <!-- Stake -->
+                <div style="margin-bottom:10px;">
+                  <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Stake Amount</div>
+                  <div style="position:relative;">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);">$</span>
+                    <input id="basebs-amount" type="number" min="0.1" step="0.1" placeholder="0.00" style="width:100%;padding:10px 12px 10px 28px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:16px;box-sizing:border-box;outline:none;"/>
+                  </div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:4px;">Min: $0.10 · Max: $50</div>
+                </div>
+
+                <!-- Quick amounts -->
+                <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+                  <button onclick="document.getElementById('basebs-amount').value='0.10'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$0.10</button>
+                  <button onclick="document.getElementById('basebs-amount').value='1'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$1</button>
+                  <button onclick="document.getElementById('basebs-amount').value='5'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$5</button>
+                  <button onclick="document.getElementById('basebs-amount').value='10'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$10</button>
+                  <button onclick="document.getElementById('basebs-amount').value='50'" style="padding:5px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;">$50</button>
+                </div>
+
+                <!-- Buttons -->
+                <div style="display:flex;gap:8px;">
+                  <button onclick="basebsMatchmake()" style="flex:1;padding:12px;border-radius:10px;background:#3B82F6;color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;">🔍 Find Game</button>
+                  <button onclick="basebsCreate()" style="flex:1;padding:12px;border-radius:10px;background:var(--green);color:#08090C;border:none;font-size:14px;font-weight:700;cursor:pointer;">⚔️ Create Game</button>
+                </div>
+                <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:8px;">Find Game — joins existing room with same stake, or creates new one</div>
+              </div>
+
+              <!-- Open rooms -->
+              <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+                <span>🔍 Open Rooms</span>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <span id="basebs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <button onclick="basebsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
+                </div>
+              </div>
+              <div id="basebs-rooms"><div class="app-loader">Loading...</div></div>
+            </div>
+          </div>
+
+          <!-- GAME (same layout as testnet — boards side by side) -->
+          <div id="basebs-gameboard" style="display:none;">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+              <div>
+                <span style="font-size:14px;font-weight:700;" id="basebs-status">Placing ships...</span>
+                <span style="font-size:9px;color:var(--muted);opacity:.6;margin-left:6px;">PBS-1</span>
+                <span style="font-size:12px;color:var(--muted);margin-left:8px;" id="basebs-stake-display"></span>
+              </div>
+              <button onclick="leaveBaseGame()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">← Leave</button>
+            </div>
+
+            <!-- Boards side by side — SAME as testnet battleGame layout -->
+            <div style="padding:16px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:100%;overflow-x:hidden;">
+
+              <!-- MY board (left) -->
+              <div style="flex:1;min-width:280px;">
+                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;">Your Fleet</div>
+                <div id="basebs-myboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
+                <div style="text-align:center;margin-top:10px;" id="basebs-setup-btns">
+                  <button id="basebs-random-btn" onclick="basebsRandomPlaceShips()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;margin-right:8px;">🎲 Random</button>
+                  <button id="basebs-ready-btn" onclick="basebsMarkReady()" style="background:var(--gold);color:#08090C;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:700;cursor:pointer;display:none;">✓ Ready!</button>
+                </div>
+              </div>
+
+              <!-- ENEMY board (right) -->
+              <div style="flex:1;min-width:280px;">
+                <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;text-align:center;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;" id="basebs-enemy-label">Enemy Fleet</div>
+                <div id="basebs-enemyboard" style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;max-width:min(300px,92vw);width:100%;margin:0 auto;overflow:hidden;"></div>
+              </div>
+            </div>
+
+            <!-- Ships panel — same as testnet -->
+            <div id="basebs-ships-panel" style="padding:0 16px 16px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:10px;text-align:center;">Ships: <span id="basebs-ships-left" style="font-weight:700;color:var(--text);"></span></div>
+              <div id="basebs-ship-selector" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:10px;"></div>
+              <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:10px;">
+                <button id="basebs-orient-btn" onclick="basebsToggleOrientation()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">↔ Horizontal</button>
+                <button onclick="basebsClearShips()" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.4);color:var(--red);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;">🗑 Clear</button>
+              </div>
+              <div style="font-size:11px;color:var(--muted);text-align:center;">Select a ship then click on your board to place it</div>
+            </div>
+
+            <!-- Battle log -->
+            <div id="basebs-log" style="padding:0 16px 16px;max-height:120px;overflow-y:auto;overflow-x:hidden;"></div>
+          </div>
+
+        </div>
+      </div>
+
       <div id="view-goldpolygonbattle" style="display:none;">
         <div class="feed-hdr">⚜️ Polygon Gold Battleship</div>
 
@@ -1835,6 +1977,7 @@ async function smartConnectWallet(){
           <button id="gamesChainLitvm" onclick="gamesSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
           <button id="gamesChainBnb" onclick="gamesSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="gamesChainPolygon" onclick="gamesSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
+          <button id="gamesChainBase" onclick="gamesSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
         </div>
 
         <!-- zkLitVM games -->
@@ -1910,6 +2053,25 @@ async function smartConnectWallet(){
             <div style="font-size:15px;font-weight:700;">Polygon Gold Battleship</div>
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">Gold Pass only · $0.10 – no limit</div>
             <div style="font-size:11px;color:var(--gold);margin-top:6px;">USDT or USDC · 90% to winner</div>
+          </div>
+        </div>
+
+        <!-- Base games -->
+        <div id="gamesBaseSection" style="display:none;padding:16px;grid-template-columns:1fr 1fr;gap:12px;max-width:600px;margin:0 auto;">
+          <!-- Base Battleship -->
+          <div onclick="showTab('basebattle')" style="background:linear-gradient(135deg,rgba(41,98,255,0.08),rgba(38,217,138,0.03));border:1px solid rgba(41,98,255,0.35);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='#2962ff'" onmouseout="this.style.borderColor='rgba(41,98,255,0.35)'">
+            <div style="position:absolute;top:8px;right:8px;background:var(--green);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">🟢 LIVE</div>
+            <div style="font-size:36px;margin-bottom:8px;">🔵</div>
+            <div style="font-size:15px;font-weight:700;">Base Battleship</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">PvP · Real money · $0.10–$50</div>
+            <div style="font-size:11px;color:#4d9fff;margin-top:6px;">USDT or USDC · 90% to winner</div>
+          </div>
+          <!-- Base Gold Battleship — coming next -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;text-align:center;position:relative;opacity:.55;">
+            <div style="position:absolute;top:8px;right:8px;background:var(--muted);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">SOON</div>
+            <div style="font-size:36px;margin-bottom:8px;">⚜️</div>
+            <div style="font-size:15px;font-weight:700;">Base Gold Battleship</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">Gold Pass VIP · coming next</div>
           </div>
         </div>
       </div>
@@ -3748,6 +3910,7 @@ function rcOnAck(p){
     if(mode==='gold')gbsJoin(game);
     else if(mode==='polygon')pbsJoin(game);
     else if(mode==='polygon-gold')gpbsJoin(game);
+    else if(mode==='base')basebsJoin(game);
     else bnbbsJoin(game);
   }
   else showToast('Opponent declined','err');
@@ -3770,7 +3933,7 @@ function rcAccept(){
   rcSend(rcIncoming.from,'rc_ack',{from:userAddr.toLowerCase(),game:rcIncoming.game,accepted:true});
   rcIncoming=null; rcCloseModals();
   showToast('Get ready — opponent is joining!','ok');
-  var tabMap={gold:'goldbattle','polygon':'polygonbattle','polygon-gold':'goldpolygonbattle'};
+  var tabMap={gold:'goldbattle','polygon':'polygonbattle','polygon-gold':'goldpolygonbattle','base':'basebattle'};
   showTab(tabMap[_mode]||'bnbbattle');
 }
 function rcDecline(timedOut){
@@ -5988,6 +6151,883 @@ function pbsHandleUpdate(game){
 // checking the DB. Cross-chain Gold/Silver Pass verified via signed voucher
 // (Polygon can't read BNB Chain directly).
 // ═══════════════════════════════════════════════════════════════════════════
+// ⚔️ BASE BATTLESHIP — regular table (Silver or Gold Pass, $0.10–$50 stake)
+// Same anti-cheat design as BNB Battleship: contract only escrows/pays out,
+// Supabase Edge Function validates every move, oracle only pays after
+// checking the DB. Cross-chain Gold/Silver Pass verified via signed voucher
+// (Base can't read BNB Chain directly).
+// ═══════════════════════════════════════════════════════════════════════════
+var BASE_BATTLE_ADDR = '0x22597403bFa0982803Be28D070a14b6E45700dc0';
+var BASE_BS_OFFSET = 5000000000; // Base regular — out of BNB(0)/BNB Gold(2B)/Polygon(3B)/Polygon Gold(4B)
+var OG_BBS_BUILD = 'BBS-1';
+var BASE_BATTLE_ABI = [
+  'function createGame(uint256 betAmount, address paymentToken, uint8 tier, uint256 expiry, bytes signature) returns(uint256)',
+  'function joinGame(uint256 gameId, uint8 tier, uint256 expiry, bytes signature)',
+  'function cancelUnmatchedGame(uint256 gameId)',
+  'function getGame(uint256 gameId) view returns(tuple(address player1,address player2,uint256 betAmount,address paymentToken,uint8 status,address winner,uint256 createdAt))',
+  'function getOpenGames() view returns(uint256[])',
+  'function getMyActiveGame(address player) view returns(uint256)',
+  'function gameCount() view returns(uint256)',
+];
+
+// State
+var basebsToken='USDT', basebsGameId=null, basebsOrientation='h';
+var basebsMyShips=[], basebsPlaced=[], basebsSelectedSize=0;
+var basebsMyShots={}, basebsEnemyShots={};
+var basebsMyTurn=false, basebsIsReady=false, basebsIsP1=null, basebsGameFinished=false;
+var basebsRealtimeChannel=null, basebsRoomsInterval=null, basebsPollTimer=null;
+var basebsChainGD=null;
+var basebsLastStateTs=0;
+var basebsFiring=false;
+var basebsHoverCells=[];
+
+function basebsDbId(){ return BASE_BS_OFFSET + Number(basebsGameId); }
+
+function basebsCurrencyAddr(){ return basebsToken==='USDT' ? USDT_BASE : USDC_BASE; }
+
+async function basebsContractWrite(){
+  await switchToBase();
+  var p=new ethers.BrowserProvider(window.ethereum);
+  var s=await p.getSigner();
+  return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,s);
+}
+function basebsCleanShots(o){
+  var r={};
+  if(o&&typeof o==='object'){
+    Object.keys(o).forEach(function(k){
+      if(o[k]==='hit'||o[k]==='miss'||o[k]==='pending') r[k]=o[k];
+    });
+  }
+  return r;
+}
+async function basebsOracle(body){
+  try{
+    var r=await fetch('/api/oracle-base',{method:'POST',headers:{'Content-Type':'application/json','x-oracle-secret':ORACLE_HDR},body:JSON.stringify(body)});
+    var j=null; try{j=await r.json();}catch(e){}
+    if(!r.ok) console.warn('[Oracle-Base]',r.status,j);
+    return j||{};
+  }catch(e){ console.warn('[Oracle-Base] fetch failed:',e.message); return {error:e.message}; }
+}
+// ── EDGE FUNCTION: anti-cheat ──
+var EDGE_BS_BASE_URL=SUPABASE_URL+'/functions/v1/battleship-base';
+async function basebsGetSig(){
+  var key='ogbasebs_sig_'+basebsGameId+'_'+(userAddr||'').toLowerCase();
+  var s=sessionStorage.getItem(key);
+  if(s) return s;
+  var p=new ethers.BrowserProvider(window.ethereum);
+  var signer=await p.getSigner();
+  showToast('Sign once to secure this game (free, no gas)','ok');
+  s=await signer.signMessage('OpenGate Battleship Base game '+basebsGameId);
+  sessionStorage.setItem(key,s);
+  return s;
+}
+async function basebsEdge(action,extra){
+  var sig=await basebsGetSig();
+  var body=Object.assign({action:action,gameId:basebsGameId,wallet:userAddr,signature:sig},extra||{});
+  var r=await fetch(EDGE_BS_BASE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},body:JSON.stringify(body)});
+  var j=null;try{j=await r.json();}catch(e){}
+  if(!r.ok||(j&&j.error)) throw new Error((j&&j.error)||('HTTP '+r.status));
+  return j||{};
+}
+function basebsGameQuery(){
+  return sb.from('battleship_games').select('*').eq('contract_game_id',basebsDbId()).is('bet_token',null);
+}
+function basebsAddLog(msg){
+  var el=document.getElementById('basebs-log'); if(!el) return;
+  var d=document.createElement('div');
+  d.style.cssText='font-size:12px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border);word-break:break-all;overflow-wrap:anywhere;';
+  d.textContent=new Date().toLocaleTimeString()+' — '+msg;
+  el.insertBefore(d,el.firstChild);
+}
+
+// ── Init ──
+async function initBaseBattle(){
+  if(!userAddr){
+    document.getElementById('basebs-noconn').style.display='block';
+    document.getElementById('basebs-nopass').style.display='none';
+    document.getElementById('basebs-main').style.display='none';
+    return;
+  }
+  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  var isOwner=userAddr.toLowerCase()===OWNER;
+  var pass=currentUser&&currentUser.pass_type;
+  if(!isOwner&&(!pass||pass==='free')){
+    try{
+      var bnbP=getBNBBattleProvider();
+      var nftAbi=['function balanceOf(address) view returns(uint256)'];
+      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
+      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
+      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
+      if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
+    }catch(e){}
+  }
+  if(!isOwner&&(!pass||pass==='free')){
+    document.getElementById('basebs-noconn').style.display='none';
+    document.getElementById('basebs-nopass').style.display='block';
+    document.getElementById('basebs-main').style.display='none';
+    return;
+  }
+  document.getElementById('basebs-noconn').style.display='none';
+  document.getElementById('basebs-nopass').style.display='none';
+  document.getElementById('basebs-main').style.display='block';
+  if(basebsRoomsInterval) clearInterval(basebsRoomsInterval);
+  await basebsLoadRooms();
+  basebsRoomsInterval=setInterval(basebsLoadRooms,8000);
+}
+
+function basebsSetToken(tok){
+  basebsToken=tok;
+  document.getElementById('basebs-tok-usdt').style.borderColor=tok==='USDT'?'#3B82F6':'var(--border)';
+  document.getElementById('basebs-tok-usdt').style.background=tok==='USDT'?'rgba(59,130,246,0.1)':'var(--bg3)';
+  document.getElementById('basebs-tok-usdt').style.color=tok==='USDT'?'#3B82F6':'var(--muted)';
+  document.getElementById('basebs-tok-usdc').style.borderColor=tok==='USDC'?'#3B82F6':'var(--border)';
+  document.getElementById('basebs-tok-usdc').style.background=tok==='USDC'?'rgba(59,130,246,0.1)':'var(--bg3)';
+  document.getElementById('basebs-tok-usdc').style.color=tok==='USDC'?'#3B82F6':'var(--muted)';
+}
+
+async function basebsCheckActiveGame(){
+  if(!userAddr) return;
+  try{
+    var gid=Number(await baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getMyActiveGame(userAddr);}));
+    if(!gid&&gid!==0){
+      document.querySelectorAll('.basebs-resume-banner').forEach(function(b){b.remove();});
+      return;
+    }
+    var g=await baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getGame(gid);});
+    if(Number(g.status)!==2) return; // only care about Playing (2 on this contract)
+    basebsGameId=gid;
+    if(document.querySelector('.basebs-resume-banner')) return;
+    document.querySelectorAll('.wait-banner').forEach(function(b){b.remove();});
+    var banner=document.createElement('div');
+    banner.className='basebs-resume-banner';
+    banner.style.cssText='padding:14px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+    banner.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--green);">⚓ Active game — opponent is waiting!</div>';
+    var rb=document.createElement('button');
+    rb.textContent='⚔️ Enter Game';
+    rb.style.cssText='background:var(--green);color:#08090C;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;';
+    rb.onclick=function(){basebsEnterGame();};
+    banner.appendChild(rb);
+    var rooms=document.getElementById('basebs-rooms');
+    if(rooms) rooms.parentNode.insertBefore(banner,rooms);
+    if(_basebsNotifiedActive!==gid){
+      _basebsNotifiedActive=gid;
+      showToast('⚓ Opponent joined your Base Battleship game!','ok');
+    }
+  }catch(e){}
+}
+var _basebsNotifiedActive=null;
+
+// ── Load lobby ──
+async function basebsLoadRooms(){
+  var el=document.getElementById('basebs-rooms'); if(!el) return;
+  var gb=document.getElementById('basebs-gameboard');
+  if(gb&&gb.style.display!=='none') return;
+  var view=document.getElementById('view-basebattle');
+  if(!view||view.style.display==='none'){
+    if(basebsRoomsInterval){clearInterval(basebsRoomsInterval);basebsRoomsInterval=null;}
+    return;
+  }
+  try{
+    var ids=await baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getOpenGames();});
+    try{
+      var uC=new ethers.Contract(basebsCurrencyAddr(),ERC20_MIN_ABI,getBaseReadProvider());
+      var bal=await uC.balanceOf(userAddr);
+      var balEl=document.getElementById('basebs-balance');
+      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+basebsToken;
+    }catch(e){}
+    if(!ids||ids.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
+      basebsCheckActiveGame();
+      return;
+    }
+    var minBet=100000n, maxBet=50000000n; // $0.10 / $50 at 6 decimals
+    var rooms=await Promise.all(ids.map(function(id){
+      return baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getGame(id);}).then(function(g){return {id:Number(id),g:g};});
+    }));
+    rooms=rooms.filter(function(r){return r.g.betAmount>=minBet&&r.g.betAmount<=maxBet;});
+    if(rooms.length===0){
+      el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
+      basebsCheckActiveGame();
+      return;
+    }
+    var wallets=[...new Set(rooms.map(function(r){return r.g.player1.toLowerCase();}))];
+    var profiles=[];
+    try{var pr=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets);profiles=pr.data||[];}catch(e){}
+    var profileMap={};profiles.forEach(function(p){profileMap[p.wallet]=p;});
+    el.innerHTML=rooms.map(function(item){
+      var p1=item.g.player1.toLowerCase();
+      var prof=profileMap[p1]||{};
+      var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
+      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var amount=parseFloat(ethers.formatUnits(item.g.betAmount,6)).toFixed(2);
+      var tok=item.g.paymentToken.toLowerCase()===USDT_BASE.toLowerCase()?'USDT':'USDC';
+      var isMe=p1===(userAddr||'').toLowerCase();
+      return '<div '+(!isMe?('data-lobby-creator="'+p1+'" '):'')+'style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;">'
+        +'<div style="display:flex;align-items:center;gap:12px;">'
+        +'<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+av+'</div>'
+        +'<div><div style="font-size:14px;font-weight:700;">'+esc(name)+'</div>'
+        +'<div style="font-size:13px;color:var(--gold);margin-top:2px;">💰 $'+amount+' '+tok+'</div></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:6px;">'
+        +(isMe?'<button onclick="basebsCancelGame('+item.id+',event)" style="background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;">✕ Cancel</button>':'')
+        +(!isMe?'<button onclick="openDMWith(\''+p1+'\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;">💬 DM</button>':'')
+        +(!isMe?'<button class="lobby-join" onclick="basebsRequestJoin('+item.id+',\''+p1+'\',\''+amount+'\')" style="background:var(--green);color:#08090C;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;">⚔️ Join</button><span class="lobby-offline">⚫ offline</span>':'')
+        +'</div></div>';
+    }).join('');
+    basebsCheckActiveGame();
+  }catch(e){
+    console.error('[BaseBattle] loadRooms:',e);
+    el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">Error loading rooms</div>';
+  }
+}
+
+// ── Matchmake ──
+async function basebsMatchmake(){
+  var amount=parseFloat(document.getElementById('basebs-amount').value);
+  if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
+  if(amount>50){showToast('Max stake $50','err');return;}
+  try{
+    showToast('Searching...','ok');
+    var ids=await baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getOpenGames();});
+    var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),6);
+    var curAddr=basebsCurrencyAddr();
+    var rows=await Promise.all(ids.map(function(id){
+      return baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getGame(id);}).then(function(g){return {id:Number(id),g:g};});
+    }));
+    var candidates=[];
+    rows.forEach(function(r){
+      var p1=r.g.player1.toLowerCase();
+      if(p1===(userAddr||'').toLowerCase()) return;
+      if(r.g.paymentToken.toLowerCase()===curAddr.toLowerCase()&&r.g.betAmount===amountRaw) candidates.push({id:r.id,creator:p1});
+    });
+    var pick=candidates.find(function(x){return onlineWallets.has(x.creator);})||(onlineWallets.size===0?candidates[0]:null);
+    if(pick){
+      showToast('Match found — asking them to confirm…','ok');
+      rcRequestJoin(pick.id,pick.creator,amount.toFixed(2),'base');
+      return;
+    }
+    if(candidates.length>0){showToast('Matches exist but all offline. Try again shortly.','err');return;}
+    showToast('No match found. Creating room...','ok');
+    await basebsCreate();
+  }catch(e){showToast('Error: '+(e.message||'').slice(0,40),'err');}
+}
+
+// ── Create game ──
+async function basebsCreate(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  var amount=parseFloat(document.getElementById('basebs-amount').value);
+  if(!amount||amount<0.1){showToast('Min stake $0.10','err');return;}
+  if(amount>50){showToast('Max stake $50','err');return;}
+  try{
+    showToast('Checking your pass status...','ok');
+    var voucher=await fetchPassVoucher(BASE_BATTLE_ADDR);
+    var contract=await basebsContractWrite();
+    var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    var amountRaw=ethers.parseUnits(String(Math.round(amount*100)/100),6);
+    var tokenAddr=basebsCurrencyAddr();
+    var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
+    var bal=await tok.balanceOf(userAddr);
+    if(bal<amountRaw){showToast('Insufficient '+basebsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    showToast('Approving '+basebsToken+'...','ok');
+    var allowance=await tok.allowance(userAddr,BASE_BATTLE_ADDR);
+    if(allowance<amountRaw){
+      var appTx=await tok.approve(BASE_BATTLE_ADDR,amountRaw);
+      await appTx.wait();
+    }
+    showToast('Creating game...','ok');
+    var tx=await contract.createGame(amountRaw,tokenAddr,voucher[0],voucher[1],voucher[2]);
+    var receipt=await tx.wait();
+    var newId=0;
+    try{
+      for(var li=0;li<receipt.logs.length;li++){
+        try{
+          var pl=contract.interface.parseLog(receipt.logs[li]);
+          if(pl&&pl.name==='GameCreated'&&pl.args.player1.toLowerCase()===userAddr.toLowerCase()){
+            newId=Number(pl.args.gameId); break;
+          }
+        }catch(e2){}
+      }
+    }catch(e3){}
+    if(!newId&&newId!==0){
+      try{ newId=Number(await contract.getMyActiveGame(userAddr)); }catch(e4){}
+    }
+    basebsGameId=newId;
+    showToast('Room created! Waiting for opponent...','ok');
+    await basebsLoadRooms();
+    basebsShowWaitBanner();
+  }catch(e){
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+}
+
+function basebsShowWaitBanner(){
+  var banner=document.createElement('div');
+  banner.className='wait-banner';
+  banner.style.cssText='padding:12px 16px;background:rgba(38,217,138,0.08);border:1px solid rgba(38,217,138,0.3);border-radius:12px;margin:0 0 12px;display:flex;align-items:center;gap:12px;';
+  banner.innerHTML='<div style="font-size:22px;">⏳</div><div style="flex:1;font-size:13px;">Your room is live! You\'ll be notified when someone joins.</div>';
+  var rooms=document.getElementById('basebs-rooms');
+  if(rooms) rooms.parentNode.insertBefore(banner,rooms);
+}
+
+function basebsRequestJoin(gameId,creator,amount){ rcRequestJoin(gameId,creator,amount,'base'); }
+
+// ── Cancel game (creator reclaims stake — no waiting period needed) ──
+async function basebsCancelGame(gameId,ev){
+  var btn=ev&&ev.target;if(btn){btn.disabled=true;btn.textContent='...';}
+  try{
+    var c=await basebsContractWrite();
+    var tx=await c.cancelUnmatchedGame(gameId);
+    await tx.wait();
+    showToast('Cancelled. Funds refunded.','ok');
+    basebsGameId=null;
+    await basebsLoadRooms();
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='✕ Cancel';}
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,40),'err');
+  }
+}
+
+// ── Join game ──
+async function basebsJoin(gameId){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  try{
+    showToast('Checking your pass status...','ok');
+    var voucher=await fetchPassVoucher(BASE_BATTLE_ADDR);
+    var c=await basebsContractWrite();
+    var g=await baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getGame(gameId);});
+    var amountRaw=g.betAmount;
+    var tokenAddr=g.paymentToken;
+    var tokenName=tokenAddr.toLowerCase()===USDT_BASE.toLowerCase()?'USDT':'USDC';
+    var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+    var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
+    var bal=await tok.balanceOf(userAddr);
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    showToast('Approving...','ok');
+    var allowance=await tok.allowance(userAddr,BASE_BATTLE_ADDR);
+    if(allowance<amountRaw){
+      var appTx=await tok.approve(BASE_BATTLE_ADDR,amountRaw);
+      await appTx.wait();
+    }
+    showToast('Joining...','ok');
+    var tx=await c.joinGame(gameId,voucher[0],voucher[1],voucher[2]);
+    await tx.wait();
+    basebsGameId=gameId;
+    var amount=parseFloat(ethers.formatUnits(g.betAmount,6)).toFixed(2);
+    showToast('Joined! Place your ships.','ok');
+    basebsEnterGame('$'+amount+' '+tokenName);
+  }catch(e){
+    if(e.code===4001||e.message&&e.message.includes('rejected'))showToast('Cancelled','err');
+    else showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+}
+
+function basebsResync(){
+  if(!basebsGameId&&basebsGameId!==0) return;
+  showToast('Resyncing with server...','ok');
+  basebsMyShots={};basebsEnemyShots={};basebsLastStateTs=0;basebsFiring=false;
+  basebsGameQuery().maybeSingle().then(function(pr){
+    if(pr&&pr.data){basebsHandleUpdate(pr.data);showToast('✓ Synced','ok');}
+  });
+}
+function basebsEnsureTimeoutBtn(){
+  if(!document.getElementById('basebs-resync-btn')){
+    var hdrR=document.querySelector('#basebs-gameboard > div:first-child');
+    if(hdrR){
+      var rb2=document.createElement('button');
+      rb2.id='basebs-resync-btn';
+      rb2.textContent='🔄';
+      rb2.title='Resync game state with server';
+      rb2.style.cssText='background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;margin-right:8px;';
+      rb2.onclick=basebsResync;
+      hdrR.insertBefore(rb2,hdrR.lastElementChild);
+    }
+  }
+  if(document.getElementById('basebs-timeout-btn')) return;
+  var hdr=document.querySelector('#basebs-gameboard > div:first-child');
+  if(!hdr) return;
+  var b=document.createElement('button');
+  b.id='basebs-timeout-btn';
+  b.textContent='⏱ Claim win';
+  b.title='If opponent is inactive for 5+ minutes, you win the pot';
+  b.style.cssText='display:none;background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,.4);color:var(--gold);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;margin-right:8px;';
+  b.onclick=basebsClaimMoveTimeout;
+  hdr.insertBefore(b,hdr.lastElementChild);
+}
+async function basebsClaimMoveTimeout(){
+  if((!basebsGameId&&basebsGameId!==0)||!userAddr) return;
+  var tb=document.getElementById('basebs-timeout-btn');
+  if(tb){tb.disabled=true;tb.textContent='⏳ Checking...';}
+  try{
+    showToast('Checking opponent timeout...','ok');
+    var orr=await basebsOracle({action:'claimTimeout',gameId:basebsGameId,claimer:userAddr});
+    if(orr&&orr.success){
+      basebsGameFinished=true;basebsMyTurn=false;
+      document.getElementById('basebs-status').textContent='🎉 YOU WIN (opponent timed out)!';
+      showToast('🏆 Opponent timed out — prize sent to your wallet!','ok');
+      basebsAddLog('🏆 Timeout payout TX: '+(orr.tx||''));
+      if(tb) tb.style.display='none';
+    } else {
+      var m=(orr&&(orr.error||''))+(orr&&orr.detail?(' ('+orr.detail+')'):'');
+      if(m.indexOf('still has time')>=0) showToast('Opponent still has time — '+(orr.detail||'wait a bit'),'err');
+      else if(m.indexOf('your move')>=0) showToast('It is your move — you cannot claim','err');
+      else showToast('Claim failed: '+m.slice(0,60),'err');
+      basebsAddLog('⚠ Timeout claim: '+m.slice(0,120));
+    }
+  }catch(e){
+    showToast('Error: '+(e.message||'').slice(0,50),'err');
+  }
+  if(tb){tb.disabled=false;tb.textContent='⏱ Claim win';}
+}
+
+// ── Enter game ──
+async function basebsEnterGame(stakeInfo){
+  document.getElementById('basebs-lobby').style.display='none';
+  document.getElementById('basebs-gameboard').style.display='block';
+  document.querySelectorAll('.basebs-resume-banner,.wait-banner').forEach(function(b){b.remove();});
+  basebsMyShips=[];basebsPlaced=[];basebsSelectedSize=0;
+  basebsMyShots={};basebsEnemyShots={};
+  basebsMyTurn=false;basebsIsReady=false;basebsIsP1=null;basebsGameFinished=false;
+  basebsLastStateTs=0;basebsFiring=false;
+  basebsBuildBoardDOM();
+  basebsBuildShipBtns();
+  basebsEnsureTimeoutBtn();
+  var tb0=document.getElementById('basebs-timeout-btn'); if(tb0) tb0.style.display='none';
+  document.getElementById('basebs-ships-panel').style.display='block';
+  var rdyBtn=document.getElementById('basebs-ready-btn');
+  if(rdyBtn){rdyBtn.style.display='none';rdyBtn.disabled=false;}
+  var randomBtn2=document.getElementById('basebs-random-btn');
+  if(randomBtn2) randomBtn2.style.display='inline-block';
+  var setupBtns2=document.getElementById('basebs-setup-btns');
+  if(setupBtns2) setupBtns2.style.display='block';
+  var myBoard2=document.getElementById('basebs-myboard');
+  if(myBoard2){myBoard2.style.pointerEvents='';myBoard2.style.cursor='';}
+  document.getElementById('basebs-log').innerHTML='';
+  document.getElementById('basebs-status').textContent='Loading game...';
+  if(basebsRealtimeChannel){sb.removeChannel(basebsRealtimeChannel);basebsRealtimeChannel=null;}
+  basebsRealtimeChannel=sb.channel('basebs-'+basebsGameId+'-'+Date.now())
+    .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+basebsDbId()},function(payload){
+      if(payload.new&&!payload.new.bet_token) basebsHandleUpdate(payload.new);
+    }).subscribe();
+  if(basebsPollTimer) clearInterval(basebsPollTimer);
+  basebsPollTimer=setInterval(async function(){
+    if((!basebsGameId&&basebsGameId!==0)||basebsGameFinished){clearInterval(basebsPollTimer);basebsPollTimer=null;return;}
+    try{
+      var pr=await basebsGameQuery().maybeSingle();
+      if(pr&&pr.data) basebsHandleUpdate(pr.data);
+    }catch(e){}
+  },3000);
+  try{
+    var gd=await baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getGame(basebsGameId);});
+    basebsChainGD=gd;
+    basebsIsP1=gd.player1.toLowerCase()===userAddr.toLowerCase();
+    if(!stakeInfo){
+      var amt=parseFloat(ethers.formatUnits(gd.betAmount,6)).toFixed(2);
+      stakeInfo='$'+amt+' '+(gd.paymentToken.toLowerCase()===USDT_BASE.toLowerCase()?'USDT':'USDC');
+    }
+    document.getElementById('basebs-stake-display').textContent=stakeInfo;
+    if(Number(gd.status)===2){ // Playing on this contract
+      var tbA=document.getElementById('basebs-timeout-btn');
+      if(tbA) tbA.style.display='inline-block';
+    }
+    var st=null;
+    try{ st=await basebsEdge('getState'); }
+    catch(eS){ basebsAddLog('⚠ State load: '+(eS.message||'').slice(0,80)); }
+    if(st&&st.state){
+      var g=st.state;
+      if(st.myBoard&&st.myBoard.length===20){
+        basebsMyShips=st.myBoard;
+        basebsLockBoard();
+        basebsAddLog('↩ Your board restored (server-protected)');
+      }
+      try{ basebsMyShots=basebsCleanShots(JSON.parse((basebsIsP1?g.player1_shots:g.player2_shots)||'{}')); }catch(e){basebsMyShots={};}
+      try{ basebsEnemyShots=basebsCleanShots(JSON.parse((basebsIsP1?g.player2_shots:g.player1_shots)||'{}')); }catch(e){basebsEnemyShots={};}
+      basebsRenderBoards();
+      basebsHandleUpdate(g);
+      if(g.status==='finished'
+         && (g.winner_wallet||'').toLowerCase()===userAddr.toLowerCase()
+         && !g.oracle_confirmed){
+        document.getElementById('basebs-status').textContent='🎉 YOU WIN! Retrying payout...';
+        showToast('Retrying prize payout...','ok');
+        basebsOracle({action:'declareWinner',gameId:basebsGameId,winner:userAddr}).then(function(orr){
+          if(orr&&orr.success){
+            document.getElementById('basebs-status').textContent='🏆 Prize paid!';
+            showToast('🏆 Prize sent to your wallet!','ok');
+            basebsAddLog('🏆 Payout TX: '+(orr.tx||''));
+          } else {
+            document.getElementById('basebs-status').textContent='🎉 YOU WIN — payout pending';
+            var errTxt=orr?(orr.error||'')+(orr.detail?(' / '+orr.detail):''):'no response';
+            basebsAddLog('⚠ Oracle error: '+errTxt.slice(0,200));
+            showToast('Payout failed: '+errTxt.slice(0,60),'err');
+          }
+        });
+      }
+    }
+  }catch(e){ console.warn('[BaseBattle] restore failed:',e); }
+  if(!basebsIsReady){
+    document.getElementById('basebs-status').textContent='Place ships then click ✓ Ready';
+    basebsAddLog('⚓ Place ships on the LEFT board, then click Ready.');
+    basebsRenderBoards();
+  }
+}
+
+function leaveBaseGame(){
+  basebsChainGD=null;basebsLastStateTs=0;basebsFiring=false;
+  if(basebsPollTimer){clearInterval(basebsPollTimer);basebsPollTimer=null;}
+  if(basebsRealtimeChannel){sb.removeChannel(basebsRealtimeChannel);basebsRealtimeChannel=null;}
+  basebsGameId=null;basebsMyShips=[];basebsMyShots={};basebsEnemyShots={};
+  basebsMyTurn=false;basebsIsReady=false;basebsIsP1=null;basebsGameFinished=false;
+  var tb=document.getElementById('basebs-timeout-btn'); if(tb) tb.style.display='none';
+  document.getElementById('basebs-lobby').style.display='block';
+  document.getElementById('basebs-gameboard').style.display='none';
+  basebsLoadRooms();
+}
+
+// ── Board DOM ──
+function basebsBuildBoardDOM(){
+  var myEl=document.getElementById('basebs-myboard');
+  var enEl=document.getElementById('basebs-enemyboard');
+  if(!myEl||!enEl) return;
+  myEl.innerHTML='';enEl.innerHTML='';
+  for(var i=0;i<100;i++){
+    (function(idx){
+      var mc=document.createElement('div');
+      mc.id='basebs-my-'+idx;
+      mc.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:crosshair;';
+      mc.onclick=function(){if(!basebsIsReady)basebsPlaceShip(idx);};
+      mc.onmouseover=function(){if(!basebsIsReady)basebsHover(idx,true);};
+      mc.onmouseout=function(){if(!basebsIsReady)basebsHover(idx,false);};
+      myEl.appendChild(mc);
+      var ec=document.createElement('div');
+      ec.id='basebs-en-'+idx;
+      ec.style.cssText='aspect-ratio:1;border-radius:2px;background:var(--bg3);border:1px solid var(--border);cursor:not-allowed;';
+      ec.onclick=function(){basebsFire(idx);};
+      enEl.appendChild(ec);
+    })(i);
+  }
+}
+
+function basebsRenderBoards(){
+  for(var i=0;i<100;i++){
+    var mc=document.getElementById('basebs-my-'+i);
+    if(!mc) continue;
+    if(basebsEnemyShots[i]==='hit'){mc.style.background='rgba(255,77,77,0.8)';mc.style.border='2px solid #ff4d4d';mc.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
+    else if(basebsEnemyShots[i]==='miss'){mc.style.background='rgba(90,100,120,0.4)';mc.style.border='1px solid var(--muted)';mc.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
+    else if(basebsMyShips.includes(i)){mc.style.background=basebsIsReady?'rgba(38,217,138,0.6)':'rgba(38,217,138,0.35)';mc.style.border='1px solid var(--green)';mc.innerHTML='';}
+    else{mc.style.background='var(--bg3)';mc.style.border='1px solid var(--border)';mc.innerHTML='';}
+  }
+  var canFire=basebsMyTurn&&basebsIsReady&&!basebsGameFinished;
+  for(var j=0;j<100;j++){
+    var ec=document.getElementById('basebs-en-'+j);
+    if(!ec) continue;
+    if(basebsMyShots[j]==='pending'){ec.style.background='rgba(245,200,66,0.25)';ec.style.border='1px solid var(--gold)';ec.innerHTML='<b style="color:var(--gold);font-size:10px;">⏳</b>';}
+    else if(basebsMyShots[j]==='hit'){ec.style.background='rgba(255,77,77,0.8)';ec.style.border='2px solid #ff4d4d';ec.innerHTML='<b style="color:#fff;font-size:12px;">✕</b>';}
+    else if(basebsMyShots[j]==='miss'){ec.style.background='rgba(90,100,120,0.4)';ec.style.border='1px solid var(--muted)';ec.innerHTML='<b style="color:#aaa;font-size:10px;">•</b>';}
+    else{ec.style.background='var(--bg3)';ec.style.border='1px solid var(--border)';ec.innerHTML='';}
+    ec.style.cursor=canFire&&basebsMyShots[j]===undefined?'crosshair':'not-allowed';
+  }
+}
+
+function basebsBuildShipBtns(){
+  var el=document.getElementById('basebs-ship-selector'); if(!el) return;
+  var rem={};
+  BS_SHIP_SIZES.forEach(function(s){rem[s]=(rem[s]||0)+1;});
+  basebsPlaced.forEach(function(p){rem[p.size]--;});
+  el.innerHTML='';
+  var seen={};
+  BS_SHIP_SIZES.forEach(function(s){
+    if(seen[s]||(rem[s]||0)<=0){seen[s]=true;return;}
+    seen[s]=true;
+    var b=document.createElement('button');
+    var active=s===basebsSelectedSize;
+    b.style.cssText='padding:8px 10px;border-radius:8px;border:1px solid '+(active?'#3B82F6':'var(--border)')+';background:'+(active?'rgba(59,130,246,0.15)':'var(--bg3)')+';color:'+(active?'#3B82F6':'var(--muted)')+';font-size:12px;font-weight:600;cursor:pointer;font-family:monospace;';
+    b.innerHTML='▪'.repeat(s)+' <span style="font-size:10px;">×'+rem[s]+'</span>';
+    (function(sz){b.onclick=function(){basebsSelectedSize=sz;basebsBuildShipBtns();};})(s);
+    el.appendChild(b);
+  });
+  var left=BS_SHIP_SIZES.length-basebsPlaced.length;
+  var sl=document.getElementById('basebs-ships-left');
+  var readyBtn=document.getElementById('basebs-ready-btn');
+  if(sl) sl.textContent=left>0?(left+' ships left'):'All placed! Click Ready ✓';
+  if(readyBtn){
+    readyBtn.style.display=left===0?'inline-block':'none';
+    if(left===0&&!basebsIsReady) readyBtn.disabled=false;
+  }
+}
+
+function basebsGetCells(idx,size,horiz){
+  var row=Math.floor(idx/10),col=idx%10;
+  if(horiz&&col+size>10) return null;
+  if(!horiz&&row+size>10) return null;
+  var cells=[];
+  for(var i=0;i<size;i++) cells.push(horiz?(row*10+col+i):((row+i)*10+col));
+  return cells;
+}
+function basebsIsValid(cells){
+  for(var i=0;i<cells.length;i++){
+    var cell=cells[i],row=Math.floor(cell/10),col=cell%10;
+    if(basebsMyShips.includes(cell)) return false;
+    for(var dr=-1;dr<=1;dr++) for(var dc=-1;dc<=1;dc++){
+      var nr=row+dr,nc=col+dc;
+      if(nr>=0&&nr<10&&nc>=0&&nc<10&&basebsMyShips.includes(nr*10+nc)&&!cells.includes(nr*10+nc)) return false;
+    }
+  }
+  return true;
+}
+function basebsPlaceShip(idx){
+  if(basebsIsReady) return;
+  if(!basebsSelectedSize){showToast('Select a ship size first','err');return;}
+  var cells=basebsGetCells(idx,basebsSelectedSize,basebsOrientation==='h');
+  if(!cells){showToast('Does not fit','err');return;}
+  if(!basebsIsValid(cells)){showToast('Too close to another ship','err');return;}
+  var already=basebsPlaced.filter(function(p){return p.size===basebsSelectedSize;}).length;
+  var max=BS_SHIP_SIZES.filter(function(s){return s===basebsSelectedSize;}).length;
+  if(already>=max){showToast('All of this size placed','err');return;}
+  basebsPlaced.push({cells:cells,size:basebsSelectedSize});
+  cells.forEach(function(c){basebsMyShips.push(c);});
+  basebsSelectedSize=0;
+  basebsRenderBoards();basebsBuildShipBtns();
+}
+function basebsHover(idx,enter){
+  if(basebsIsReady||!basebsSelectedSize) return;
+  for(var h=0;h<basebsHoverCells.length;h++){
+    var pi=basebsHoverCells[h];
+    if(basebsMyShips.includes(pi)) continue;
+    var pc=document.getElementById('basebs-my-'+pi);
+    if(pc){pc.style.background='var(--bg3)';pc.style.border='1px solid var(--border)';}
+  }
+  basebsHoverCells=[];
+  if(!enter) return;
+  var cells=basebsGetCells(idx,basebsSelectedSize,basebsOrientation==='h');
+  if(!cells) return;
+  var ok=basebsIsValid(cells);
+  cells.forEach(function(ci){
+    if(basebsMyShips.includes(ci)) return;
+    var c=document.getElementById('basebs-my-'+ci);
+    if(c) c.style.background=ok?'rgba(38,217,138,0.4)':'rgba(255,77,77,0.4)';
+  });
+  basebsHoverCells=cells.slice();
+}
+function basebsToggleOrientation(){
+  basebsOrientation=basebsOrientation==='h'?'v':'h';
+  var btn=document.getElementById('basebs-orient-btn');
+  if(btn) btn.textContent=basebsOrientation==='h'?'↔ Horizontal':'↕ Vertical';
+}
+function basebsClearShips(){
+  if(basebsIsReady) return;
+  basebsMyShips=[];basebsPlaced=[];basebsSelectedSize=0;basebsRenderBoards();basebsBuildShipBtns();
+}
+
+function basebsRandomPlaceShips(){
+  if(basebsIsReady) return;
+  var success=false;
+  for(var attempt=0;attempt<300&&!success;attempt++){
+    basebsMyShips=[];basebsPlaced=[];
+    success=true;
+    var sizes=BS_SHIP_SIZES.slice().sort(function(a,b){return b-a;});
+    for(var si=0;si<sizes.length;si++){
+      var size=sizes[si];
+      var placed=false;
+      for(var tries=0;tries<3000&&!placed;tries++){
+        var h=Math.random()>.5;
+        var r=Math.floor(Math.random()*(h?10:11-size));
+        var c2=Math.floor(Math.random()*(h?11-size:10));
+        var cells=basebsGetCells(r*10+c2,size,h);
+        if(cells&&basebsIsValid(cells)){
+          basebsPlaced.push({cells:cells,size:size});
+          cells.forEach(function(x){basebsMyShips.push(x);});
+          placed=true;
+        }
+      }
+      if(!placed){success=false;break;}
+    }
+    if(success){
+      var uniq={};basebsMyShips.forEach(function(x){uniq[x]=1;});
+      if(Object.keys(uniq).length!==20) success=false;
+    }
+  }
+  if(!success){
+    basebsMyShips=[];basebsPlaced=[];basebsSelectedSize=0;
+    basebsRenderBoards();basebsBuildShipBtns();
+    showToast('Try Random again','err');
+    return;
+  }
+  basebsRenderBoards();
+  basebsBuildShipBtns();
+  showToast('Ships placed!','ok');
+}
+
+function basebsLockBoard(){
+  basebsIsReady=true;
+  var myBoard=document.getElementById('basebs-myboard');
+  if(myBoard){myBoard.style.pointerEvents='none';myBoard.style.cursor='default';}
+  document.getElementById('basebs-ships-panel').style.display='none';
+  document.getElementById('basebs-ready-btn').style.display='none';
+  var randomBtn=document.getElementById('basebs-random-btn');
+  if(randomBtn) randomBtn.style.display='none';
+  var setupBtns=document.getElementById('basebs-setup-btns');
+  if(setupBtns) setupBtns.style.display='none';
+  basebsRenderBoards();
+}
+
+async function basebsMarkReady(){
+  if(basebsIsReady){showToast('Board already locked','err');return;}
+  if(basebsPlaced.length<BS_SHIP_SIZES.length){showToast('Place all '+BS_SHIP_SIZES.length+' ships first!','err');return;}
+  var uq={};basebsMyShips.forEach(function(x){uq[x]=1;});
+  if(Object.keys(uq).length!==20){
+    showToast('Board error — press Clear and place ships again','err');
+    return;
+  }
+  if(!basebsGameId&&basebsGameId!==0){showToast('No active game','err');return;}
+  var btn=document.getElementById('basebs-ready-btn'); if(btn) btn.disabled=true;
+  basebsAddLog('Saving board (protected)...');
+  try{
+    var res=await basebsEdge('saveBoard',{board:basebsMyShips});
+    if(res.alreadySaved&&res.myBoard){
+      basebsMyShips=res.myBoard;
+      showToast('Your board was already saved — restored it','ok');
+    } else {
+      showToast('✓ Ships locked!','ok');
+    }
+    basebsLockBoard();
+    document.getElementById('basebs-status').textContent='⏳ Locked! Waiting for opponent...';
+    basebsAddLog('✓ Board saved on secure server. Waiting for opponent...');
+    if(res.state) basebsHandleUpdate(res.state);
+  }catch(e){
+    showToast('Save failed: '+(e.message||'').slice(0,60),'err');
+    basebsAddLog('⚠ Save failed: '+(e.message||'').slice(0,120));
+  }finally{
+    if(btn&&!basebsIsReady) btn.disabled=false;
+  }
+}
+
+async function basebsFire(idx){
+  if(basebsFiring){showToast('Shot in flight — wait','err');return;}
+  if(basebsGameFinished) return;
+  if(!basebsIsReady){showToast('Click Ready first!','err');return;}
+  if(!basebsMyTurn){showToast('Not your turn','err');return;}
+  if(!basebsGameId&&basebsGameId!==0) return;
+  if(basebsMyShots[idx]!==undefined){
+    showToast('Already fired here','err');
+    basebsGameQuery().maybeSingle().then(function(pr){
+      if(pr&&pr.data){
+        try{
+          var srv=JSON.parse((basebsIsP1?pr.data.player1_shots:pr.data.player2_shots)||'{}');
+          if(srv[String(idx)]===undefined){
+            delete basebsMyShots[idx];
+            basebsRenderBoards();
+            showToast('Cell unlocked — fire again','ok');
+          }
+        }catch(e){}
+      }
+    });
+    return;
+  }
+  basebsFiring=true;
+  setTimeout(function(){basebsFiring=false;},20000);
+  basebsMyTurn=false;
+  document.getElementById('basebs-status').textContent='🎯 Firing '+basebsCoord(idx)+'...';
+  basebsMyShots[idx]='pending';
+  basebsRenderBoards();
+  try{
+    var res=await basebsEdge('fire',{cell:idx});
+    basebsMyShots[idx]=res.result;
+    basebsAddLog(res.result==='hit'?('💥 Hit! '+basebsCoord(idx)):('💧 Miss '+basebsCoord(idx)));
+    if(res.state) basebsHandleUpdate(res.state);
+    if(res.won){
+      basebsGameFinished=true;basebsMyTurn=false;
+      basebsRenderBoards();
+      document.getElementById('basebs-status').textContent='🎉 YOU WIN! Sending prize...';
+      showToast('🎉 YOU WIN! Paying out...','ok');
+      var orRes=await basebsOracle({action:'declareWinner',gameId:basebsGameId,winner:userAddr});
+      if(orRes&&orRes.success){
+        showToast('🏆 Prize sent to your wallet!','ok');
+        basebsAddLog('🏆 Payout TX: '+(orRes.tx||''));
+      } else {
+        showToast('Win saved. Payout pending — re-enter game to retry.','err');
+        basebsAddLog('⚠ Oracle: '+JSON.stringify(orRes||{}).slice(0,140));
+      }
+      var tbW=document.getElementById('basebs-timeout-btn'); if(tbW) tbW.style.display='none';
+    } else if(res.result==='hit'){
+      document.getElementById('basebs-status').textContent='💥 HIT! Shoot again!';
+    }
+  }catch(e){
+    var m=(e.message||'');
+    if(basebsMyShots[idx]==='pending') delete basebsMyShots[idx];
+    if(m.indexOf('Not your turn')<0&&m.indexOf('Already fired')<0) basebsMyTurn=true;
+    basebsRenderBoards();
+    showToast('Shot failed: '+m.slice(0,50),'err');
+    basebsAddLog('⚠ Shot failed: '+m.slice(0,120));
+  }finally{
+    basebsFiring=false;
+  }
+}
+
+function basebsCoord(idx){return String.fromCharCode(65+idx%10)+(Math.floor(idx/10)+1);}
+
+function basebsHandleUpdate(game){
+  if(!game||(!basebsGameId&&basebsGameId!==0)) return;
+  if(game.bet_token) return;
+  var _ts=game.last_move_at?new Date(game.last_move_at).getTime():0;
+  if(_ts&&_ts<basebsLastStateTs) return;
+  if(_ts) basebsLastStateTs=_ts;
+  if(game.status==='finished'){
+    basebsGameFinished=true;basebsMyTurn=false;
+    var won=(game.winner_wallet||'').toLowerCase()===userAddr.toLowerCase();
+    document.getElementById('basebs-status').textContent=won?'🎉 YOU WIN!':'💀 You lost!';
+    if(!won&&game.winner_wallet) showToast('💀 You lost!','err');
+    var tbF=document.getElementById('basebs-timeout-btn'); if(tbF) tbF.style.display='none';
+    basebsRenderBoards();
+    return;
+  }
+  var apply=function(isP1){
+    basebsIsP1=isP1;
+    var didRestore=false;
+    if(!basebsIsReady){
+      var myB=[];
+      try{myB=JSON.parse((isP1?game.player1_board:game.player2_board)||'[]')||[];}catch(e){}
+      if(myB.length>0){ basebsMyShips=myB; basebsLockBoard(); didRestore=true; }
+    }
+    try{
+      var mine=JSON.parse((isP1?game.player1_shots:game.player2_shots)||'{}')||{};
+      var pend={};Object.keys(basebsMyShots).forEach(function(k){if(basebsMyShots[k]==='pending')pend[k]='pending';});
+      basebsMyShots=basebsCleanShots(Object.assign({},mine,pend));
+    }catch(e){}
+    var oldEn=basebsEnemyShots||{};
+    var newEn={};
+    try{newEn=basebsCleanShots(JSON.parse((isP1?game.player2_shots:game.player1_shots)||'{}'));}catch(e){}
+    Object.keys(newEn).forEach(function(k){
+      if(oldEn[k]===undefined){
+        basebsAddLog(newEn[k]==='hit'?('💥 Enemy hit '+basebsCoord(Number(k))+'!'):('💧 Enemy missed '+basebsCoord(Number(k))));
+      }
+    });
+    basebsEnemyShots=newEn;
+    var myTurn=(game.current_turn||'').toLowerCase()===userAddr.toLowerCase();
+    var bothReady=!!(game.player1_board&&game.player2_board);
+    var tb=document.getElementById('basebs-timeout-btn');
+    if(bothReady&&basebsIsReady){
+      basebsMyTurn=myTurn;
+      document.getElementById('basebs-status').textContent=myTurn?'⚔️ YOUR TURN — fire!':"⏳ Opponent's turn...";
+      var enLabel=document.getElementById('basebs-enemy-label');
+      if(enLabel) enLabel.textContent=myTurn?'ENEMY FLEET — CLICK TO FIRE!':'Enemy Fleet';
+      if(tb) tb.style.display=myTurn?'none':'inline-block';
+    } else if(!bothReady&&basebsIsReady){
+      document.getElementById('basebs-status').textContent='⏳ Waiting for opponent to place ships...';
+    } else if(bothReady&&!basebsIsReady){
+      document.getElementById('basebs-status').textContent='⏳ Opponent ready! Place your ships and click Ready.';
+    }
+    if(basebsIsReady||didRestore) basebsRenderBoards();
+  };
+  if(basebsIsP1!==null){ apply(basebsIsP1); }
+  else {
+    baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getGame(basebsGameId);}).then(function(gd){
+      apply(gd.player1.toLowerCase()===userAddr.toLowerCase());
+    }).catch(function(){});
+  }
+}
+
+
 var POLYGON_GOLD_BATTLE_ADDR = '0xb08A26CCEFbD2cB2194E8b9894E5DfC1D413aDC6';
 var POLYGON_GOLD_OFFSET = 4000000000; // keeps this table's DB ids out of every other range
 var OG_GPBS_BUILD = 'GPBS-1';
@@ -8007,6 +9047,8 @@ function showTab(tab){
   if(tab==='goldbattle') initGoldBattle();
   document.getElementById('view-polygonbattle').style.display=tab==='polygonbattle'?'block':'none';
   if(tab==='polygonbattle') initPolygonBattle();
+  document.getElementById('view-basebattle').style.display=tab==='basebattle'?'block':'none';
+  if(tab==='basebattle') initBaseBattle();
   document.getElementById('view-goldpolygonbattle').style.display=tab==='goldpolygonbattle'?'block':'none';
   if(tab==='goldpolygonbattle') initGoldPolygonBattle();
   if(tab==='nftstudio') initNFTStudio();
@@ -11336,8 +12378,8 @@ function mktSwitchChain(chain){
 }
 
 function gamesSwitchChain(chain){
-  const buttons={litvm:'gamesChainLitvm',bnb:'gamesChainBnb',polygon:'gamesChainPolygon'};
-  const sections={litvm:'gamesLitvmSection',bnb:'gamesBnbSection',polygon:'gamesPolygonSection'};
+  const buttons={litvm:'gamesChainLitvm',bnb:'gamesChainBnb',polygon:'gamesChainPolygon',base:'gamesChainBase'};
+  const sections={litvm:'gamesLitvmSection',bnb:'gamesBnbSection',polygon:'gamesPolygonSection',base:'gamesBaseSection'};
   Object.keys(buttons).forEach(function(key){
     const active=key===chain;
     const btn=document.getElementById(buttons[key]);
