@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no" class="notranslate">
 <head>
 <meta charset="UTF-8"/>
 <link rel="icon" type="image/png" href="/icon-192.png"/>
@@ -165,7 +165,7 @@ button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline
   #groupChatView .feed-hdr{gap:6px!important;padding:10px 12px!important;}
   #groupChatName{font-size:14px!important;}
   #groupMessages{padding:10px 12px!important;}
-  #groupMessages img{max-width:60vw!important;height:auto!important;}
+  .grp-msg-img{max-width:65vw!important;width:auto!important;height:auto!important;}
   #groupComposer{padding:8px 12px!important;}
   #groupComposer textarea{font-size:16px!important;}
   #groupComposer label,#groupSendBtn{padding:8px 10px!important;font-size:13px!important;}
@@ -4728,7 +4728,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-85';
+var OG_BS_BUILD='BS-86';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -16118,6 +16118,10 @@ const EMOJI_SET=['👍','❤️','🔥','😂','😮','😢'];
 
 async function renderGroupMessages(msgs, polls){
   const el=document.getElementById('groupMessages');
+  // запомним, какие ответы были раскрыты + позицию скролла (чтобы не прыгало/не сворачивалось)
+  const openReplies={};
+  el.querySelectorAll('[id^="replies-"]').forEach(function(rc){ if(rc.style.display==='block'){ openReplies[rc.id]=true; } });
+  const wasNearBottom = (el.scrollHeight-el.scrollTop-el.clientHeight)<80;
   const wallets=[...new Set(msgs.map(m=>m.author_wallet))];
   let profiles={};
   if(wallets.length){ try{ const {data}=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets); (data||[]).forEach(u=>profiles[u.wallet.toLowerCase()]=u); }catch(e){} }
@@ -16153,7 +16157,7 @@ async function renderGroupMessages(msgs, polls){
   function msgBody(m,isReply){
     const nm=nameOf(m);
     const validImg=m.image_url && m.image_url.indexOf('blob:')!==0;
-    const img=validImg?'<img src="'+esc(m.image_url)+'" onerror="this.style.display=\'none\'" style="max-width:min(220px,60vw);max-height:220px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;"/>':'';
+    const img=validImg?'<img src="'+esc(m.image_url)+'" class="grp-msg-img" onerror="this.style.display=\'none\'" style="max-width:220px;width:auto;height:auto;max-height:220px;border-radius:10px;margin-top:6px;display:block;object-fit:contain;"/>':'';
     const txt=m.content?'<div style="font-size:14px;margin-top:2px;word-wrap:break-word;overflow-wrap:anywhere;">'+esc(m.content)+'</div>':'';
     const replyCount=(repliesByParent[m.id]||[]).length;
     const repliesBtn=(!isReply&&replyCount>0)?'<button onclick="toggleReplies('+m.id+',this)" style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;">💬 Replies ('+replyCount+')</button>':'';
@@ -16183,7 +16187,10 @@ async function renderGroupMessages(msgs, polls){
     el.appendChild(row);
    }catch(err){ console.warn('skip msg',err); }
   });
-  el.scrollTop=el.scrollHeight;
+  // восстановить раскрытые ответы
+  Object.keys(openReplies).forEach(function(id){ const rc=document.getElementById(id); if(rc) rc.style.display='block'; });
+  // скроллим вниз только если пользователь и так был внизу (не дёргаем при чтении старого)
+  if(wasNearBottom){ el.scrollTop=el.scrollHeight; }
 }
 
 function toggleReplies(msgId,btn){
@@ -16346,16 +16353,35 @@ async function toggleGroupLike(msgId, btn){
 }
 
 // ─────────── Realtime ───────────
+let _groupReloadTimer=null;
+let _groupReloadPending=false;
+function _doGroupReload(){
+  _groupReloadTimer=null;
+  if(!_groupReloadPending) return;
+  // не перерисовываем, пока пользователь печатает (фокус в поле ввода)
+  const ae=document.activeElement;
+  if(ae && ae.id==='groupMsgInput'){
+    _groupReloadTimer=setTimeout(_doGroupReload,1500);
+    return;
+  }
+  _groupReloadPending=false;
+  loadGroupMessages();
+}
+function scheduleGroupReload(){
+  // дебаунс: собираем все realtime-события в одно обновление
+  _groupReloadPending=true;
+  if(_groupReloadTimer) return;
+  _groupReloadTimer=setTimeout(_doGroupReload,500);
+}
 function subscribeGroupRealtime(){
   if(_groupRealtimeChannel){ sb.removeChannel(_groupRealtimeChannel); _groupRealtimeChannel=null; }
   if(!_currentGroup || _currentGroup.gate_readable==='holders') return; // закрытые перечитываем вручную
   var gid=_currentGroup.id;
-  var reload=function(){ loadGroupMessages(); };
   _groupRealtimeChannel=sb.channel('group-'+gid)
-    .on('postgres_changes',{event:'*',schema:'public',table:'group_messages',filter:'group_id=eq.'+gid},reload)
-    .on('postgres_changes',{event:'*',schema:'public',table:'group_polls',filter:'group_id=eq.'+gid},reload)
-    .on('postgres_changes',{event:'*',schema:'public',table:'group_message_reactions'},reload)
-    .on('postgres_changes',{event:'*',schema:'public',table:'group_poll_votes'},reload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'group_messages',filter:'group_id=eq.'+gid},scheduleGroupReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'group_polls',filter:'group_id=eq.'+gid},scheduleGroupReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'group_message_reactions'},scheduleGroupReload)
+    .on('postgres_changes',{event:'*',schema:'public',table:'group_poll_votes'},scheduleGroupReload)
     .subscribe();
 }
 
