@@ -952,6 +952,7 @@ async function smartConnectWallet(){
 
         <button class="side-btn" id="tab-lending" onclick="showTab('lending')"><span class="side-ico">🏦</span>Lending</button>
         <button class="side-btn" id="tab-games" onclick="showTab('games')"><span class="side-ico">🎮</span>Games</button>
+        <button class="side-btn" id="tab-groups" onclick="showTab('groups')"><span class="side-ico">👥</span>Groups</button>
         
         
         
@@ -2220,6 +2221,47 @@ async function smartConnectWallet(){
           </div>
         </div>
       </div>
+      <div id="view-groups" style="display:none;">
+        <!-- Список групп -->
+        <div id="groupsListView">
+          <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
+            <span>👥 Groups</span>
+            <button onclick="openCreateGroup()" style="background:var(--gold);color:#08090C;border:none;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">+ Create Group</button>
+          </div>
+          <div style="padding:8px 16px 0;">
+            <input id="groupsSearch" oninput="groupsFilter()" placeholder="Search groups..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"/>
+          </div>
+          <div id="groupsList" style="padding:12px 16px;"><div class="app-loader">Loading groups...</div></div>
+        </div>
+
+        <!-- Внутри группы (чат) -->
+        <div id="groupChatView" style="display:none;">
+          <div class="feed-hdr" style="display:flex;align-items:center;gap:10px;">
+            <button onclick="closeGroupChat()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;">← Back</button>
+            <img id="groupChatAvatar" src="" style="width:34px;height:34px;border-radius:9px;object-fit:cover;background:var(--bg3);display:none;"/>
+            <div style="flex:1;min-width:0;">
+              <div id="groupChatName" style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Group</div>
+              <div id="groupChatMeta" style="font-size:11px;color:var(--muted);"></div>
+            </div>
+            <button onclick="shareGroup()" title="Share group link" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;">🔗</button>
+            <button id="groupPollBtn" onclick="openCreatePoll()" title="Create poll" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;">📊</button>
+          </div>
+          <div id="groupChatDesc" style="padding:8px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);"></div>
+          <div id="groupMessages" style="padding:12px 16px;min-height:200px;"><div class="app-loader">Loading...</div></div>
+          <!-- Composer -->
+          <div id="groupComposer" style="position:sticky;bottom:0;background:var(--bg2);border-top:1px solid var(--border);padding:10px 16px;">
+            <div id="groupReplyBar" style="display:none;font-size:12px;color:var(--muted);margin-bottom:6px;">Replying to <span id="groupReplyName"></span> <button onclick="cancelGroupReply()" style="background:none;border:none;color:var(--red);cursor:pointer;">✕</button></div>
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+              <textarea id="groupMsgInput" rows="1" placeholder="Message..." style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;resize:none;max-height:120px;"></textarea>
+              <label for="groupImgInput" id="groupImgBtn" title="Photo (Pass required)" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:16px;cursor:pointer;">🖼️</label>
+              <input type="file" id="groupImgInput" accept="image/*" style="display:none;" onchange="groupImageSelected()"/>
+              <button onclick="sendGroupMessage()" id="groupSendBtn" style="background:var(--gold);color:#08090C;border:none;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer;">Send</button>
+            </div>
+            <div id="groupImgPreview" style="display:none;margin-top:8px;position:relative;width:80px;height:80px;"><img id="groupImgPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px;"/><button onclick="clearGroupImage()" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;">✕</button></div>
+            <div id="groupComposerNote" style="font-size:11px;color:var(--muted);margin-top:6px;"></div>
+          </div>
+        </div>
+      </div>
       <div id="view-battle" style="display:none;">
         <div class="feed-hdr">⚓ Battleship PvP</div>
         <div id="battleLobby">
@@ -2772,6 +2814,77 @@ async function smartConnectWallet(){
       </div>
 
       <!-- List NFT Modal — Base -->
+      <!-- Create Group Modal -->
+      <div class="modal-overlay" id="createGroupModal">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:460px;position:relative;max-height:90vh;overflow-y:auto;">
+          <button class="modal-close-btn" onclick="document.getElementById('createGroupModal').classList.remove('open')">✕</button>
+          <div style="font-size:20px;font-weight:700;margin-bottom:6px;">Create a Group</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:18px;">Silver Pass: 1 group / 30 days · Gold Pass: 5 / 30 days</div>
+          <div style="text-align:center;margin-bottom:16px;">
+            <label for="groupAvatarInput" style="cursor:pointer;display:inline-block;">
+              <div id="groupAvatarPreview" style="width:72px;height:72px;border-radius:16px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;">📷</div>
+            </label>
+            <input type="file" id="groupAvatarInput" accept="image/*" style="display:none;" onchange="groupAvatarSelected()"/>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Group photo</div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;">Name *</div>
+            <input id="groupNameInput" maxlength="60" placeholder="My awesome group" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"/>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;">Description</div>
+            <textarea id="groupDescInput" maxlength="300" rows="2" placeholder="What is this group about?" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;resize:none;"></textarea>
+          </div>
+          <!-- Token gate (optional) -->
+          <div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:16px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:600;">
+              <input type="checkbox" id="groupGateToggle" onchange="toggleGroupGate()" style="width:16px;height:16px;"/>
+              🔒 Token-gated group
+            </label>
+            <div id="groupGateOptions" style="display:none;margin-top:12px;">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Only holders of a token/NFT can join.</div>
+              <div style="display:flex;gap:8px;margin-bottom:8px;">
+                <select id="groupGateType" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;color:var(--text);font-size:13px;">
+                  <option value="token">ERC-20 Token</option>
+                  <option value="nft">NFT Collection</option>
+                </select>
+                <select id="groupGateChain" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;color:var(--text);font-size:13px;">
+                  <option value="bnb">BNB Chain</option>
+                  <option value="polygon">Polygon</option>
+                  <option value="base">Base</option>
+                  <option value="arb">Arbitrum</option>
+                </select>
+              </div>
+              <input id="groupGateContract" placeholder="0x... token/NFT contract" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px;"/>
+              <input id="groupGateMin" type="number" min="1" placeholder="Min amount (e.g. 1)" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;margin-bottom:8px;"/>
+              <select id="groupGateReadable" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px;color:var(--text);font-size:13px;">
+                <option value="public">Anyone can read, only holders post</option>
+                <option value="holders">Fully private (only holders read)</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="submitCreateGroup()" id="createGroupBtn" style="width:100%;padding:13px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;border:none;cursor:pointer;">Create Group</button>
+        </div>
+      </div>
+
+      <!-- Create Poll Modal -->
+      <div class="modal-overlay" id="createPollModal">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:440px;position:relative;">
+          <button class="modal-close-btn" onclick="document.getElementById('createPollModal').classList.remove('open')">✕</button>
+          <div style="font-size:20px;font-weight:700;margin-bottom:18px;">📊 Create Poll</div>
+          <div style="margin-bottom:12px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;">Question *</div>
+            <input id="pollQuestion" maxlength="300" placeholder="Your question" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;"/>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;">Options *</div>
+          <div id="pollOptions">
+            <input class="pollOpt" placeholder="Option 1" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;"/>
+            <input class="pollOpt" placeholder="Option 2" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;"/>
+          </div>
+          <button onclick="addPollOption()" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;margin-bottom:16px;">+ Add option</button>
+          <button onclick="submitCreatePoll()" id="createPollBtn" style="width:100%;padding:13px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;border:none;cursor:pointer;">Create Poll</button>
+        </div>
+      </div>
       <div class="modal-overlay" id="listNFTModalBase">
         <div style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;position:relative;">
           <button class="modal-close-btn" onclick="document.getElementById('listNFTModalBase').classList.remove('open')">✕</button>
@@ -3848,6 +3961,7 @@ async function smartConnectWallet(){
 
       <div class="drawer-lbl">Play</div>
       <button class="drawer-btn" id="drawer-games" onclick="closeDrawer();showTab('games')"><span class="drawer-ico">🎮</span>Games</button>
+      <button class="drawer-btn" id="drawer-groups" onclick="closeDrawer();showTab('groups')"><span class="drawer-ico">👥</span>Groups</button>
       <button class="drawer-btn" id="drawer-lottery" onclick="closeDrawer();showTab('lottery')"><span class="drawer-ico">🎰</span>Lottery</button>
 
       <div class="drawer-lbl">More</div>
@@ -3911,6 +4025,11 @@ window.addEventListener('load',function(){
     console.log('[PWA] navigator.standalone (iOS):', navigator.standalone);
     console.log('[PWA] SW controller:', navigator.serviceWorker?.controller?'active':'none yet');
   }, 3000);
+  // Deep-link: если открыли по ссылке ?group=<id> — сразу перейти в раздел групп
+  try{
+    var _gp=new URLSearchParams(location.search).get('group');
+    if(_gp){ setTimeout(function(){ showTab('groups'); }, 400); }
+  }catch(e){}
 });
 
 // ── CONFIG ──
@@ -4589,7 +4708,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-79';
+var OG_BS_BUILD='BS-80';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -10283,6 +10402,9 @@ function showTab(tab){
   document.getElementById('view-dice').style.display=tab==='dice'?'block':'none';
   document.getElementById('view-battle').style.display=tab==='battle'?'block':'none';
   document.getElementById('view-games').style.display=tab==='games'?'block':'none';
+  document.getElementById('view-groups').style.display=tab==='groups'?'block':'none';
+  if(tab==='groups') initGroups();
+  if(tab!=='groups' && typeof groupsCleanup==='function'){ groupsCleanup(); }
   document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
   document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
   document.getElementById('view-bnblottery').style.display=tab==='bnblottery'?'block':'none';
@@ -11631,6 +11753,15 @@ async function loadProfile(wallet){
       }
     </div>
     <div id="profPosts"><div class="app-loader">Loading...</div></div>`;
+  // Мои группы (только на своём профиле)
+  if(isOwn){
+    const gWrap=document.createElement('div');
+    gWrap.style.cssText='padding:16px;border-top:1px solid var(--border);';
+    gWrap.innerHTML='<div style="font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;"><span>👥 My Groups</span><button onclick="showTab(\'groups\')" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;">Browse all →</button></div><div id="myGroupsList"><div class="app-loader">Loading...</div></div>';
+    const pp=document.getElementById('profPosts');
+    pp.parentNode.insertBefore(gWrap, pp);
+    loadMyGroups('myGroupsList');
+  }
   // Update bell button state after render
   scheduleOnlineDots();
   const bellBtn=document.getElementById('bell-'+target);
@@ -15770,6 +15901,355 @@ async function loadMessages(){
 async function sendDM(){if(!userAddr){showToast('Connect wallet first','err');return;}if(!currentDMWallet)return;const input=document.getElementById('msgInput');const content=input.value.trim();if(!content)return;input.value='';try{await sb.from('messages').insert({from_wallet:userAddr,to_wallet:currentDMWallet,content});await createNotif(currentDMWallet,'dm');loadMessages();}catch(e){showToast('Failed','err');input.value=content;}}
 function openConversation(wallet){openDM(wallet);}
 function openDMWith(wallet){showTab('messages');setTimeout(function(){openDM(wallet);},300);}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OpenGate Groups — фронтенд-логика (Telegram-style группы)
+// Backend: Edge Function group-action (Путь Б, подпись) + таблицы group_*
+// ═══════════════════════════════════════════════════════════════════════════
+const GROUP_ACTION_URL = SUPABASE_URL + '/functions/v1/group-action';
+let _groupsAll = [];
+let _currentGroup = null;
+let _groupRealtimeChannel = null;
+let _groupReplyTo = null;
+let _groupImgFile = null;
+let _groupAvatarFile = null;
+
+// Подписать действие для Edge Function (personal_sign, nonce = timestamp)
+async function signGroupAction(action){
+  if(!userAddr){ showToast('Connect wallet first','err'); throw new Error('no wallet'); }
+  const nonce = Math.floor(Date.now()/1000);
+  const msg = 'OpenGate group '+action+' '+nonce;
+  const freshSigner = await provider.getSigner();
+  const signature = await freshSigner.signMessage(msg);
+  return { wallet:userAddr, nonce, signature };
+}
+async function callGroupAction(action, payload){
+  const sig = await signGroupAction(action);
+  const res = await fetch(GROUP_ACTION_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
+    body:JSON.stringify({ action, ...sig, ...payload })
+  });
+  const j = await res.json();
+  if(!res.ok) throw new Error(j.error||'Request failed');
+  return j;
+}
+
+async function initGroups(){
+  document.getElementById('groupsListView').style.display='block';
+  document.getElementById('groupChatView').style.display='none';
+  await loadGroupsList();
+  // deep link ?group=<id>
+  const params = new URLSearchParams(location.search);
+  const gid = params.get('group');
+  if(gid){ openGroup(gid); history.replaceState({}, '', location.pathname); }
+}
+function groupsCleanup(){
+  if(_groupRealtimeChannel){ sb.removeChannel(_groupRealtimeChannel); _groupRealtimeChannel=null; }
+  _currentGroup=null;
+}
+
+async function loadGroupsList(){
+  const el = document.getElementById('groupsList');
+  try{
+    const { data } = await sb.from('groups').select('*').order('created_at',{ascending:false}).limit(100);
+    _groupsAll = data||[];
+    renderGroupsList(_groupsAll);
+  }catch(e){ el.innerHTML='<div class="app-empty">Failed to load groups</div>'; }
+}
+function groupsFilter(){
+  const q=(document.getElementById('groupsSearch').value||'').toLowerCase();
+  renderGroupsList(_groupsAll.filter(g=>g.name.toLowerCase().includes(q)||(g.description||'').toLowerCase().includes(q)));
+}
+function renderGroupsList(list){
+  const el = document.getElementById('groupsList');
+  if(!list.length){ el.innerHTML='<div class="app-empty">No groups yet. Create the first one!</div>'; return; }
+  el.innerHTML='';
+  list.forEach(g=>{
+    const card=document.createElement('div');
+    card.style.cssText='display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer;transition:border-color .15s;';
+    card.onmouseover=function(){this.style.borderColor='var(--gold)';};
+    card.onmouseout=function(){this.style.borderColor='var(--border)';};
+    card.onclick=(function(id){return function(){openGroup(id);};})(g.id);
+    const gate = g.gate_type&&g.gate_type!=='pass' ? '<span style="font-size:10px;background:rgba(245,200,66,0.15);color:var(--gold);padding:1px 7px;border-radius:100px;margin-left:6px;">🔒 '+(g.gate_type==='nft'?'NFT':'Token')+'</span>' : '';
+    const av = g.avatar_url ? '<img src="'+esc(g.avatar_url)+'" style="width:46px;height:46px;border-radius:12px;object-fit:cover;background:var(--bg3);"/>' : '<div style="width:46px;height:46px;border-radius:12px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:22px;">👥</div>';
+    card.innerHTML=av+'<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;">'+esc(g.name)+gate+'</div><div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(g.description||'')+'</div><div style="font-size:11px;color:var(--gold);margin-top:3px;font-weight:600;">👥 '+(g.members_count||1)+' member'+((g.members_count||1)===1?'':'s')+'</div></div>';
+    el.appendChild(card);
+  });
+}
+
+// ─────────── Открыть группу (чат) ───────────
+async function openGroup(groupId){
+  let g = _groupsAll.find(x=>x.id===groupId);
+  if(!g){ const {data}=await sb.from('groups').select('*').eq('id',groupId).maybeSingle(); g=data; }
+  if(!g){ showToast('Group not found','err'); return; }
+  _currentGroup = g;
+  document.getElementById('groupsListView').style.display='none';
+  document.getElementById('groupChatView').style.display='block';
+  document.getElementById('groupChatName').textContent=g.name;
+  document.getElementById('groupChatMeta').textContent='👥 '+(g.members_count||1)+' member'+((g.members_count||1)===1?'':'s');
+  document.getElementById('groupChatDesc').textContent=g.description||'';
+  document.getElementById('groupChatDesc').style.display=g.description?'block':'none';
+  const av=document.getElementById('groupChatAvatar');
+  if(g.avatar_url){ av.src=g.avatar_url; av.style.display='block'; } else av.style.display='none';
+  // кнопка опроса — только создатель/админ
+  const isAdmin = userAddr && g.creator_wallet.toLowerCase()===userAddr.toLowerCase();
+  document.getElementById('groupPollBtn').style.display=isAdmin?'block':'none';
+  // токен-гейтед: попытка вступить (проверка владения при входе)
+  if(g.gate_type&&g.gate_type!=='pass'&&userAddr){
+    try{ await callGroupAction('joinGate',{group_id:g.id}); }
+    catch(e){
+      if(g.gate_readable==='holders'){
+        document.getElementById('groupMessages').innerHTML='<div class="app-empty">🔒 This group is private. You must hold the required token/NFT to view it.<br><br>'+esc(e.message)+'</div>';
+        document.getElementById('groupComposer').style.display='none';
+        return;
+      }
+    }
+  }
+  document.getElementById('groupComposer').style.display='block';
+  await loadGroupMessages();
+  subscribeGroupRealtime();
+}
+function closeGroupChat(){
+  if(_groupRealtimeChannel){ sb.removeChannel(_groupRealtimeChannel); _groupRealtimeChannel=null; }
+  _currentGroup=null; _groupReplyTo=null; clearGroupImage();
+  document.getElementById('groupChatView').style.display='none';
+  document.getElementById('groupsListView').style.display='block';
+  loadGroupsList();
+}
+
+async function loadGroupMessages(){
+  if(!_currentGroup) return;
+  const el=document.getElementById('groupMessages');
+  try{
+    let msgs;
+    if(_currentGroup.gate_readable==='holders'){
+      const r=await callGroupAction('readGated',{group_id:_currentGroup.id, limit:80});
+      msgs=r.messages||[];
+    } else {
+      const {data}=await sb.from('group_messages').select('*').eq('group_id',_currentGroup.id).order('created_at',{ascending:true}).limit(80);
+      msgs=data||[];
+    }
+    // опросы группы
+    const {data:polls}=await sb.from('group_polls').select('*').eq('group_id',_currentGroup.id).order('created_at',{ascending:false});
+    await renderGroupMessages(msgs, polls||[]);
+  }catch(e){ el.innerHTML='<div class="app-empty">'+esc(e.message||'Failed to load')+'</div>'; }
+}
+
+async function renderGroupMessages(msgs, polls){
+  const el=document.getElementById('groupMessages');
+  // профили авторов
+  const wallets=[...new Set(msgs.map(m=>m.author_wallet))];
+  let profiles={};
+  if(wallets.length){ try{ const {data}=await sb.from('users').select('wallet,username,avatar_url').in('wallet',wallets); (data||[]).forEach(u=>profiles[u.wallet.toLowerCase()]=u); }catch(e){} }
+  // мои лайки
+  let myLikes=new Set();
+  if(userAddr && msgs.length){ try{ const {data}=await sb.from('group_message_likes').select('message_id').eq('wallet',userAddr).in('message_id',msgs.map(m=>m.id)); (data||[]).forEach(l=>myLikes.add(l.message_id)); }catch(e){} }
+  el.innerHTML='';
+  // опросы сверху
+  polls.forEach(p=>el.appendChild(renderPoll(p)));
+  const byId={}; msgs.forEach(m=>byId[m.id]=m);
+  msgs.forEach(m=>{
+    const u=profiles[m.author_wallet.toLowerCase()]||{};
+    const name=u.username||sAddr(m.author_wallet);
+    const row=document.createElement('div');
+    row.style.cssText='margin-bottom:14px;';
+    let replyHtml='';
+    if(m.reply_to&&byId[m.reply_to]){ const rm=byId[m.reply_to]; const ru=profiles[rm.author_wallet.toLowerCase()]||{}; replyHtml='<div style="border-left:2px solid var(--gold);padding-left:8px;margin-bottom:4px;font-size:12px;color:var(--muted);">↩ '+esc(ru.username||sAddr(rm.author_wallet))+': '+esc((rm.content||'📷').slice(0,60))+'</div>'; }
+    const av=u.avatar_url?'<img src="'+esc(u.avatar_url)+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"/>':'<div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;">'+name.charAt(0).toUpperCase()+'</div>';
+    const img=m.image_url?'<img src="'+esc(m.image_url)+'" style="max-width:220px;max-height:220px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;"/>':'';
+    const liked=myLikes.has(m.id);
+    row.innerHTML='<div style="display:flex;gap:10px;">'+av+'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;">'+esc(name)+' <span style="font-size:11px;color:var(--muted);font-weight:400;">'+tAgo(m.created_at)+'</span></div>'+replyHtml+(m.content?'<div style="font-size:14px;margin-top:2px;word-wrap:break-word;">'+esc(m.content)+'</div>':'')+img+
+      '<div style="display:flex;gap:14px;margin-top:5px;"><button onclick="toggleGroupLike('+m.id+',this)" style="background:none;border:none;color:'+(liked?'var(--gold)':'var(--muted)')+';font-size:12px;cursor:pointer;">❤ <span>'+(m.like_count||0)+'</span></button><button onclick="setGroupReply('+m.id+',\''+esc(name).replace(/'/g,"")+'\')" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;">↩ Reply</button></div></div></div>';
+    el.appendChild(row);
+  });
+  el.scrollTop=el.scrollHeight;
+  window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+
+// ─────────── Опросы ───────────
+function renderPoll(p){
+  const box=document.createElement('div');
+  box.style.cssText='background:var(--bg2);border:1px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:14px;';
+  box.id='poll-'+p.id;
+  box.innerHTML='<div style="font-size:14px;font-weight:700;margin-bottom:10px;">📊 '+esc(p.question)+'</div><div id="pollBody-'+p.id+'"><div class="app-loader">Loading...</div></div>';
+  loadPollResults(p);
+  return box;
+}
+async function loadPollResults(p){
+  const body=document.getElementById('pollBody-'+p.id);
+  if(!body) return;
+  let votes=[];
+  try{ const {data}=await sb.from('group_poll_votes').select('option_idx,wallet').eq('poll_id',p.id); votes=data||[]; }catch(e){}
+  const total=votes.length;
+  const counts=p.options.map((_,i)=>votes.filter(v=>v.option_idx===i).length);
+  const myVote=userAddr?votes.find(v=>v.wallet.toLowerCase()===userAddr.toLowerCase()):null;
+  body.innerHTML=p.options.map((opt,i)=>{
+    const pct=total?Math.round(counts[i]/total*100):0;
+    const mine=myVote&&myVote.option_idx===i;
+    if(myVote){
+      return '<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px;"><span>'+(mine?'✅ ':'')+esc(opt)+'</span><span style="color:var(--muted);">'+pct+'%</span></div><div style="background:var(--bg3);border-radius:6px;height:8px;overflow:hidden;"><div style="background:var(--gold);height:100%;width:'+pct+'%;"></div></div></div>';
+    }
+    return '<button onclick="votePoll('+p.id+','+i+')" style="display:block;width:100%;text-align:left;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;margin-bottom:8px;">'+esc(opt)+'</button>';
+  }).join('')+'<div style="font-size:11px;color:var(--muted);margin-top:4px;">'+total+' vote'+(total===1?'':'s')+'</div>';
+}
+async function votePoll(pollId, idx){
+  if(!userAddr){ showToast('Connect wallet to vote','err'); return; }
+  try{
+    await sb.from('group_poll_votes').insert({poll_id:pollId,wallet:userAddr,option_idx:idx});
+    const p=(await sb.from('group_polls').select('*').eq('id',pollId).maybeSingle()).data;
+    if(p) loadPollResults(p);
+  }catch(e){ showToast('Already voted or failed','err'); }
+}
+function openCreatePoll(){ document.getElementById('createPollModal').classList.add('open'); }
+function addPollOption(){
+  const opts=document.getElementById('pollOptions');
+  if(opts.querySelectorAll('.pollOpt').length>=10) return;
+  const inp=document.createElement('input');
+  inp.className='pollOpt'; inp.placeholder='Option '+(opts.querySelectorAll('.pollOpt').length+1);
+  inp.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:9px 12px;color:var(--text);font-size:14px;outline:none;margin-bottom:8px;';
+  opts.appendChild(inp);
+}
+async function submitCreatePoll(){
+  if(!_currentGroup) return;
+  const q=document.getElementById('pollQuestion').value.trim();
+  const options=[...document.querySelectorAll('.pollOpt')].map(i=>i.value.trim()).filter(Boolean);
+  if(!q||options.length<2){ showToast('Need question + 2 options','err'); return; }
+  const btn=document.getElementById('createPollBtn'); btn.disabled=true; btn.textContent='Creating...';
+  try{
+    await callGroupAction('createPoll',{group_id:_currentGroup.id,question:q,options});
+    showToast('Poll created ✓','ok');
+    document.getElementById('createPollModal').classList.remove('open');
+    document.getElementById('pollQuestion').value='';
+    loadGroupMessages();
+  }catch(e){ showToast(e.message||'Failed','err'); }
+  btn.disabled=false; btn.textContent='Create Poll';
+}
+
+// ─────────── Отправка сообщений ───────────
+function setGroupReply(id,name){ _groupReplyTo=id; document.getElementById('groupReplyBar').style.display='block'; document.getElementById('groupReplyName').textContent=name; document.getElementById('groupMsgInput').focus(); }
+function cancelGroupReply(){ _groupReplyTo=null; document.getElementById('groupReplyBar').style.display='none'; }
+function groupImageSelected(){
+  const f=document.getElementById('groupImgInput').files[0]; if(!f) return;
+  _groupImgFile=f;
+  document.getElementById('groupImgPreview').style.display='block';
+  document.getElementById('groupImgPreviewImg').src=URL.createObjectURL(f);
+}
+function clearGroupImage(){ _groupImgFile=null; document.getElementById('groupImgInput').value=''; document.getElementById('groupImgPreview').style.display='none'; }
+
+async function sendGroupMessage(){
+  if(!_currentGroup){ return; }
+  if(!userAddr){ showToast('Connect wallet first','err'); return; }
+  const input=document.getElementById('groupMsgInput');
+  const text=input.value.trim();
+  if(!text && !_groupImgFile){ return; }
+  const btn=document.getElementById('groupSendBtn'); btn.disabled=true;
+  try{
+    if(_groupImgFile){
+      // фото — через Edge Function (проверка пропуска)
+      showToast('Uploading photo...','ok');
+      const url=await uploadImageWithFallback(_groupImgFile,PINATA_JWT,'opengate-groups');
+      await callGroupAction('postImage',{group_id:_currentGroup.id, image_url:url, content:text||null, reply_to:_groupReplyTo});
+      clearGroupImage();
+    } else {
+      // текст — напрямую (RLS разрешает)
+      await sb.from('group_messages').insert({group_id:_currentGroup.id, author_wallet:userAddr, content:text, reply_to:_groupReplyTo});
+    }
+    input.value=''; cancelGroupReply();
+    // realtime сам добавит; но подстрахуемся
+    if(_currentGroup.gate_readable==='holders') loadGroupMessages();
+  }catch(e){ showToast(e.message||'Failed to send','err'); }
+  btn.disabled=false;
+}
+
+async function toggleGroupLike(msgId, btn){
+  if(!userAddr){ showToast('Connect wallet to like','err'); return; }
+  const span=btn.querySelector('span'); const n=parseInt(span.textContent)||0;
+  const liked=btn.style.color.includes('gold');
+  try{
+    if(liked){ await sb.from('group_message_likes').delete().eq('message_id',msgId).eq('wallet',userAddr); btn.style.color='var(--muted)'; span.textContent=Math.max(0,n-1); }
+    else{ await sb.from('group_message_likes').insert({message_id:msgId,wallet:userAddr}); btn.style.color='var(--gold)'; span.textContent=n+1; }
+  }catch(e){ /* дубль лайка — игнор */ }
+}
+
+// ─────────── Realtime ───────────
+function subscribeGroupRealtime(){
+  if(_groupRealtimeChannel){ sb.removeChannel(_groupRealtimeChannel); _groupRealtimeChannel=null; }
+  if(!_currentGroup || _currentGroup.gate_readable==='holders') return; // закрытые перечитываем вручную
+  _groupRealtimeChannel=sb.channel('group-'+_currentGroup.id)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'group_messages',filter:'group_id=eq.'+_currentGroup.id},function(){ loadGroupMessages(); })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'group_polls',filter:'group_id=eq.'+_currentGroup.id},function(){ loadGroupMessages(); })
+    .subscribe();
+}
+
+// ─────────── Создание группы ───────────
+function openCreateGroup(){
+  if(!userAddr){ showToast('Connect wallet first','err'); return; }
+  document.getElementById('createGroupModal').classList.add('open');
+}
+function toggleGroupGate(){ document.getElementById('groupGateOptions').style.display=document.getElementById('groupGateToggle').checked?'block':'none'; }
+function groupAvatarSelected(){
+  const f=document.getElementById('groupAvatarInput').files[0]; if(!f) return;
+  _groupAvatarFile=f;
+  document.getElementById('groupAvatarPreview').innerHTML='<img src="'+URL.createObjectURL(f)+'" style="width:100%;height:100%;object-fit:cover;"/>';
+}
+async function submitCreateGroup(){
+  if(!userAddr){ showToast('Connect wallet first','err'); return; }
+  const name=document.getElementById('groupNameInput').value.trim();
+  if(!name){ showToast('Enter a group name','err'); return; }
+  const desc=document.getElementById('groupDescInput').value.trim();
+  const btn=document.getElementById('createGroupBtn'); btn.disabled=true; btn.textContent='Creating...';
+  try{
+    let avatar_url=null;
+    if(_groupAvatarFile){ showToast('Uploading photo...','ok'); avatar_url=await uploadImageWithFallback(_groupAvatarFile,PINATA_JWT,'opengate-groups'); }
+    let gate=null;
+    if(document.getElementById('groupGateToggle').checked){
+      const contract=document.getElementById('groupGateContract').value.trim();
+      if(!contract){ showToast('Enter gate contract address','err'); btn.disabled=false; btn.textContent='Create Group'; return; }
+      gate={ type:document.getElementById('groupGateType').value, chain:document.getElementById('groupGateChain').value, contract, min_amount:parseInt(document.getElementById('groupGateMin').value)||1, readable:document.getElementById('groupGateReadable').value };
+    }
+    const r=await callGroupAction('createGroup',{name,description:desc,avatar_url,gate});
+    showToast('Group created! 🎉','ok');
+    document.getElementById('createGroupModal').classList.remove('open');
+    document.getElementById('groupNameInput').value=''; document.getElementById('groupDescInput').value='';
+    _groupAvatarFile=null; document.getElementById('groupAvatarPreview').innerHTML='📷';
+    await loadGroupsList();
+    if(r.group) openGroup(r.group.id);
+  }catch(e){ showToast(e.message||'Failed to create','err'); }
+  btn.disabled=false; btn.textContent='Create Group';
+}
+
+// ─────────── Шеринг ───────────
+function shareGroup(){
+  if(!_currentGroup) return;
+  const url=location.origin+location.pathname+'?group='+_currentGroup.id;
+  if(navigator.clipboard){ navigator.clipboard.writeText(url); showToast('Group link copied! 🔗','ok'); }
+  else{ prompt('Copy group link:', url); }
+}
+
+// ─────────── Мои группы (для профиля) ───────────
+async function loadMyGroups(containerId){
+  const el=document.getElementById(containerId); if(!el||!userAddr) return;
+  try{
+    const {data:mem}=await sb.from('group_members').select('group_id,role').eq('wallet',userAddr);
+    if(!mem||!mem.length){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">You have not joined any groups yet.</div>'; return; }
+    const ids=mem.map(m=>m.group_id);
+    const roleById={}; mem.forEach(m=>roleById[m.group_id]=m.role);
+    const {data:groups}=await sb.from('groups').select('*').in('id',ids);
+    if(!groups||!groups.length){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">No groups.</div>'; return; }
+    el.innerHTML='';
+    groups.forEach(g=>{
+      const card=document.createElement('div');
+      card.style.cssText='display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;';
+      card.onclick=(function(id){return function(){ showTab('groups'); setTimeout(function(){openGroup(id);},250); };})(g.id);
+      const av=g.avatar_url?'<img src="'+esc(g.avatar_url)+'" style="width:38px;height:38px;border-radius:10px;object-fit:cover;"/>':'<div style="width:38px;height:38px;border-radius:10px;background:var(--bg2);display:flex;align-items:center;justify-content:center;">👥</div>';
+      const badge=roleById[g.id]==='owner'?'<span style="font-size:10px;background:rgba(245,200,66,0.15);color:var(--gold);padding:1px 7px;border-radius:100px;margin-left:6px;">Owner</span>':'';
+      card.innerHTML=av+'<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:700;">'+esc(g.name)+badge+'</div><div style="font-size:11px;color:var(--muted);">'+(g.members_count||1)+' members</div></div>';
+      el.appendChild(card);
+    });
+  }catch(e){ el.innerHTML='<div style="font-size:13px;color:var(--muted);">Failed to load.</div>'; }
+}
+
 
 // ── STAKING ──
 async function loadStakingInfo(){try{const p=getReadProvider();const sc=new ethers.Contract(GATE_STAKING,STAKING_ABI,p);const [rp,ts]=await Promise.all([sc.rewardPool(),sc.totalStaked()]);document.getElementById('rewardPoolVal').textContent=parseFloat(ethers.formatEther(rp)).toFixed(0)+' GATE';document.getElementById('totalStakedVal').textContent=parseFloat(ethers.formatEther(ts)).toFixed(2);if(userAddr){const [staked,pending]=await sc.getStakeInfo(userAddr);document.getElementById('myStaked').textContent=parseFloat(ethers.formatEther(staked)).toFixed(2);document.getElementById('myPending').textContent=parseFloat(ethers.formatEther(pending)).toFixed(4);}}catch(e){}}
