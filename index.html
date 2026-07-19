@@ -158,7 +158,15 @@ button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline
 /* EARN */
 #earn{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
 .earn-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;}
-@media(max-width:700px){.earn-grid{grid-template-columns:1fr;gap:40px;}}
+@media(max-width:680px){
+  #view-groups .feed-hdr{flex-wrap:wrap;gap:8px;}
+  #groupsList > div{flex-wrap:nowrap!important;}
+  #groupChatView .feed-hdr{flex-wrap:nowrap;gap:6px!important;}
+  #groupChatName{font-size:14px!important;}
+  #groupComposer textarea{font-size:16px!important;}
+  #groupMessages img{max-width:70vw!important;}
+  #createGroupModal > div, #createPollModal > div{max-width:94vw!important;padding:20px!important;}
+}
 .earn-terminal{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
 .terminal-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);}
 .t-dot{width:10px;height:10px;border-radius:50%;}
@@ -4715,7 +4723,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-82';
+var OG_BS_BUILD='BS-83';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -16149,19 +16157,28 @@ async function loadPollResults(p){
   let opts=p.options;
   if(typeof opts==='string'){ try{ opts=JSON.parse(opts); }catch(e){ opts=[]; } }
   if(!Array.isArray(opts)) opts=[];
-  let votes=[];
-  try{ const {data}=await sb.from('group_poll_votes').select('option_idx,wallet').eq('poll_id',p.id); votes=data||[]; }catch(e){}
-  const total=votes.length;
-  const counts=opts.map((_,i)=>votes.filter(v=>v.option_idx===i).length);
-  const myVote=userAddr?votes.find(v=>v.wallet.toLowerCase()===userAddr.toLowerCase()):null;
-  body.innerHTML=opts.map((opt,i)=>{
-    const pct=total?Math.round(counts[i]/total*100):0;
-    const mine=myVote&&myVote.option_idx===i;
-    if(myVote){
-      return '<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px;"><span>'+(mine?'✅ ':'')+esc(opt)+'</span><span style="color:var(--muted);">'+pct+'%</span></div><div style="background:var(--bg3);border-radius:6px;height:8px;overflow:hidden;"><div style="background:var(--gold);height:100%;width:'+pct+'%;"></div></div></div>';
-    }
-    return '<button onclick="votePoll('+p.id+','+i+')" style="display:block;width:100%;text-align:left;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;margin-bottom:8px;">'+esc(opt)+'</button>';
-  }).join('')+'<div style="font-size:11px;color:var(--muted);margin-top:4px;">'+total+' vote'+(total===1?'':'s')+'</div>';
+  if(!opts.length){ body.innerHTML='<div style="font-size:12px;color:var(--muted);">No options</div>'; return; }
+  // сразу показать варианты (кнопки) — чтобы не висело "Loading"
+  const renderVotes=function(votes){
+    const total=votes.length;
+    const counts=opts.map((_,i)=>votes.filter(v=>v.option_idx===i).length);
+    const myVote=userAddr?votes.find(v=>v.wallet&&v.wallet.toLowerCase()===userAddr.toLowerCase()):null;
+    body.innerHTML=opts.map(function(opt,i){
+      const pct=total?Math.round(counts[i]/total*100):0;
+      const mine=myVote&&myVote.option_idx===i;
+      if(myVote){
+        return '<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:2px;"><span>'+(mine?'✅ ':'')+esc(opt)+'</span><span style="color:var(--muted);">'+pct+'%</span></div><div style="background:var(--bg3);border-radius:6px;height:8px;overflow:hidden;"><div style="background:var(--gold);height:100%;width:'+pct+'%;"></div></div></div>';
+      }
+      return '<button onclick="votePoll('+p.id+','+i+')" style="display:block;width:100%;text-align:left;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;margin-bottom:8px;">'+esc(opt)+'</button>';
+    }).join('')+'<div style="font-size:11px;color:var(--muted);margin-top:4px;">'+total+' vote'+(total===1?'':'s')+'</div>';
+  };
+  // показать варианты сразу (0 голосов), потом обновить реальными
+  renderVotes([]);
+  try{
+    const q=sb.from('group_poll_votes').select('option_idx,wallet').eq('poll_id',p.id);
+    const {data}=await Promise.race([q, new Promise(function(res){ setTimeout(function(){res({data:[]});},5000); })]);
+    renderVotes(data||[]);
+  }catch(e){ /* оставляем варианты с 0 голосов */ }
 }
 async function votePoll(pollId, idx){
   if(!userAddr){ showToast('Connect wallet to vote','err'); return; }
