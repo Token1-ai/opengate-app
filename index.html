@@ -4723,7 +4723,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-83';
+var OG_BS_BUILD='BS-84';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -16123,6 +16123,7 @@ async function renderGroupMessages(msgs, polls){
   polls.forEach(p=>el.appendChild(renderPoll(p)));
   const byId={}; msgs.forEach(m=>byId[m.id]=m);
   msgs.forEach(m=>{
+   try{
     const u=profiles[m.author_wallet.toLowerCase()]||{};
     const name=u.username||sAddr(m.author_wallet);
     const row=document.createElement('div');
@@ -16130,12 +16131,14 @@ async function renderGroupMessages(msgs, polls){
     let replyHtml='';
     if(m.reply_to&&byId[m.reply_to]){ const rm=byId[m.reply_to]; const ru=profiles[rm.author_wallet.toLowerCase()]||{}; replyHtml='<div style="border-left:2px solid var(--gold);padding-left:8px;margin-bottom:4px;font-size:12px;color:var(--muted);">↩ '+esc(ru.username||sAddr(rm.author_wallet))+': '+esc((rm.content||'📷').slice(0,60))+'</div>'; }
     const validAv = u.avatar_url && u.avatar_url.indexOf('blob:')!==0;
-    const av=validAv?'<img src="'+esc(u.avatar_url)+'" onerror="this.outerHTML=\'<div style=&quot;width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;&quot;>'+name.charAt(0).toUpperCase()+'</div>\'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;"/>':'<div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;">'+name.charAt(0).toUpperCase()+'</div>';
-    const img=m.image_url?'<img src="'+esc(m.image_url)+'" style="max-width:220px;max-height:220px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;"/>':'';
+    const av=validAv?'<img src="'+esc(u.avatar_url)+'" onerror="this.style.display=\'none\'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;"/>':'<div style="width:32px;height:32px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">'+name.charAt(0).toUpperCase()+'</div>';
+    const validImg = m.image_url && m.image_url.indexOf('blob:')!==0;
+    const img=validImg?'<img src="'+esc(m.image_url)+'" onerror="this.style.display=\'none\'" style="max-width:220px;max-height:220px;border-radius:10px;margin-top:6px;display:block;object-fit:cover;"/>':'';
     const liked=myLikes.has(m.id);
-    row.innerHTML='<div style="display:flex;gap:10px;">'+av+'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;">'+esc(name)+' <span style="font-size:11px;color:var(--muted);font-weight:400;">'+tAgo(m.created_at)+'</span></div>'+replyHtml+(m.content?'<div style="font-size:14px;margin-top:2px;word-wrap:break-word;">'+esc(m.content)+'</div>':'')+img+
+    row.innerHTML='<div style="display:flex;gap:10px;">'+av+'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;">'+esc(name)+' <span style="font-size:11px;color:var(--muted);font-weight:400;">'+tAgo(m.created_at)+'</span></div>'+replyHtml+(m.content?'<div style="font-size:14px;margin-top:2px;word-wrap:break-word;overflow-wrap:anywhere;">'+esc(m.content)+'</div>':'')+img+
       '<div style="display:flex;gap:14px;margin-top:5px;"><button onclick="toggleGroupLike('+m.id+',this)" style="background:none;border:none;color:'+(liked?'var(--gold)':'var(--muted)')+';font-size:12px;cursor:pointer;">❤ <span>'+(m.like_count||0)+'</span></button><button onclick="setGroupReply('+m.id+',\''+esc(name).replace(/'/g,"")+'\')" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;">↩ Reply</button></div></div></div>';
     el.appendChild(row);
+   }catch(err){ console.warn('skip message render',err); }
   });
   el.scrollTop=el.scrollHeight;
   window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
@@ -16147,7 +16150,9 @@ function renderPoll(p){
   box.style.cssText='background:var(--bg2);border:1px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:14px;';
   box.id='poll-'+p.id;
   box.innerHTML='<div style="font-size:14px;font-weight:700;margin-bottom:10px;">📊 '+esc(p.question)+'</div><div id="pollBody-'+p.id+'"><div class="app-loader">Loading...</div></div>';
-  loadPollResults(p);
+  // ВАЖНО: box ещё не в DOM — откладываем загрузку результатов до следующего тика,
+  // когда appendChild уже произошёл, иначе getElementById('pollBody-..') вернёт null
+  setTimeout(function(){ loadPollResults(p); }, 0);
   return box;
 }
 async function loadPollResults(p){
@@ -16243,8 +16248,8 @@ async function sendGroupMessage(){
       await sb.from('group_messages').insert({group_id:_currentGroup.id, author_wallet:userAddr, content:text, reply_to:_groupReplyTo});
     }
     input.value=''; cancelGroupReply();
-    // realtime сам добавит; но подстрахуемся
-    if(_currentGroup.gate_readable==='holders') loadGroupMessages();
+    // всегда перезагружаем список (realtime тоже сработает, но не полагаемся только на него)
+    await loadGroupMessages();
   }catch(e){ showToast(e.message||'Failed to send','err'); }
   btn.disabled=false;
 }
