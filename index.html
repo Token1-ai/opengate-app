@@ -2260,6 +2260,7 @@ async function smartConnectWallet(){
               <div id="groupChatMeta" style="font-size:11px;color:var(--muted);"></div>
             </div>
             <button onclick="shareGroup()" title="Share group link" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;">🔗</button>
+            <button id="groupMsgCreatorBtn" onclick="messageGroupCreator()" title="Message creator" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;">✉️</button>
             <button id="groupPollBtn" onclick="openCreatePoll()" title="Create poll" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;">📊</button>
             <button id="groupDeleteBtn" onclick="deleteCurrentGroup()" title="Delete group" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--red);border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer;">🗑️</button>
           </div>
@@ -4731,7 +4732,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-88';
+var OG_BS_BUILD='BS-89';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -16015,10 +16016,13 @@ async function openGroup(groupId){
   document.getElementById('groupChatDesc').style.display=g.description?'block':'none';
   const av=document.getElementById('groupChatAvatar');
   if(g.avatar_url){ av.src=g.avatar_url; av.style.display='block'; } else av.style.display='none';
-  // кнопка опроса/удаления — только создатель/админ
+  // кнопка опроса — только создатель; удаление группы — создатель ИЛИ owner платформы
   const isAdmin = userAddr && g.creator_wallet.toLowerCase()===userAddr.toLowerCase();
+  const isOwnerPlatform = userAddr && userAddr.toLowerCase()===OWNER_WALLET_LC;
   document.getElementById('groupPollBtn').style.display=isAdmin?'block':'none';
-  document.getElementById('groupDeleteBtn').style.display=isAdmin?'block':'none';
+  document.getElementById('groupDeleteBtn').style.display=(isAdmin||isOwnerPlatform)?'block':'none';
+  // кнопка "написать создателю" — всем, кроме самого создателя
+  document.getElementById('groupMsgCreatorBtn').style.display=(userAddr&&!isAdmin)?'block':'none';
 
   // для holders-групп: если не участник и не владелец — показать замок и выйти
   // (проверка владения происходит при нажатии Join)
@@ -16164,8 +16168,11 @@ async function renderGroupMessages(msgs, polls){
     const txt=m.content?'<div style="font-size:14px;margin-top:2px;word-wrap:break-word;overflow-wrap:anywhere;">'+esc(m.content)+'</div>':'';
     const replyCount=(repliesByParent[m.id]||[]).length;
     const repliesBtn=(!isReply&&replyCount>0)?'<button onclick="toggleReplies('+m.id+',this)" style="background:none;border:none;color:var(--gold);font-size:12px;cursor:pointer;">💬 Replies ('+replyCount+')</button>':'';
+    // кнопка удаления — если owner платформы или создатель этой группы
+    const canDelete = userAddr && _currentGroup && (userAddr.toLowerCase()===OWNER_WALLET_LC || _currentGroup.creator_wallet.toLowerCase()===userAddr.toLowerCase());
+    const delBtn = canDelete ? '<button onclick="deleteGroupMessage('+m.id+')" title="Delete message" style="background:none;border:none;color:var(--red);font-size:12px;cursor:pointer;">🗑</button>' : '';
     return '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;">'+esc(nm)+' <span style="font-size:11px;color:var(--muted);font-weight:400;">'+tAgo(m.created_at)+'</span></div>'+txt+img+
-      '<div style="display:flex;gap:12px;margin-top:5px;align-items:center;flex-wrap:wrap;">'+reactionsBar(m)+'<button onclick="setGroupReply('+m.id+',\''+esc(nm).replace(/\'/g,"")+'\')" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;">↩ Reply</button>'+repliesBtn+'</div></div>';
+      '<div style="display:flex;gap:12px;margin-top:5px;align-items:center;flex-wrap:wrap;">'+reactionsBar(m)+'<button onclick="setGroupReply('+m.id+',\''+esc(nm).replace(/\'/g,"")+'\')" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;">↩ Reply</button>'+repliesBtn+delBtn+'</div></div>';
   }
 
   // рендерим только верхнеуровневые (без reply_to), ответы — вложенно и свёрнуто
@@ -16432,6 +16439,11 @@ function shareGroup(){
   if(navigator.clipboard){ navigator.clipboard.writeText(url); showToast('Group link copied! 🔗','ok'); }
   else{ prompt('Copy group link:', url); }
 }
+function messageGroupCreator(){
+  if(!_currentGroup||!_currentGroup.creator_wallet) return;
+  if(!userAddr){ showToast('Connect wallet first','err'); return; }
+  openDMWith(_currentGroup.creator_wallet);
+}
 async function deleteCurrentGroup(){
   if(!_currentGroup) return;
   if(!confirm('Delete this group permanently? All messages, polls and members will be removed. This cannot be undone.')) return;
@@ -16439,6 +16451,14 @@ async function deleteCurrentGroup(){
     await callGroupAction('deleteGroup',{group_id:_currentGroup.id});
     showToast('Group deleted','ok');
     closeGroupChat();
+  }catch(e){ showToast(e.message||'Failed to delete','err'); }
+}
+async function deleteGroupMessage(msgId){
+  if(!confirm('Delete this message? This cannot be undone.')) return;
+  try{
+    await callGroupAction('deleteMessage',{message_id:msgId});
+    showToast('Message deleted','ok');
+    loadGroupMessages();
   }catch(e){ showToast(e.message||'Failed to delete','err'); }
 }
 
