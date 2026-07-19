@@ -2249,6 +2249,11 @@ async function smartConnectWallet(){
           </div>
           <div id="groupChatDesc" style="padding:8px 16px;font-size:13px;color:var(--muted);border-bottom:1px solid var(--border);"></div>
           <div id="groupMessages" style="padding:12px 16px;min-height:200px;"><div class="app-loader">Loading...</div></div>
+          <!-- Join bar (показывается не-участникам) -->
+          <div id="groupJoinBar" style="display:none;position:sticky;bottom:0;background:var(--bg2);border-top:1px solid var(--border);padding:14px 16px;text-align:center;">
+            <div id="groupJoinText" style="font-size:13px;color:var(--muted);margin-bottom:8px;">Join this group to post and participate</div>
+            <button id="groupJoinBtn" onclick="joinCurrentGroup()" style="background:var(--gold);color:#08090C;border:none;border-radius:10px;padding:10px 28px;font-size:14px;font-weight:700;cursor:pointer;">Join Group</button>
+          </div>
           <!-- Composer -->
           <div id="groupComposer" style="position:sticky;bottom:0;background:var(--bg2);border-top:1px solid var(--border);padding:10px 16px;">
             <div id="groupReplyBar" style="display:none;font-size:12px;color:var(--muted);margin-bottom:6px;">Replying to <span id="groupReplyName"></span> <button onclick="cancelGroupReply()" style="background:none;border:none;color:var(--red);cursor:pointer;">✕</button></div>
@@ -4710,7 +4715,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-81';
+var OG_BS_BUILD='BS-82';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -15994,24 +15999,81 @@ async function openGroup(groupId){
   document.getElementById('groupChatDesc').style.display=g.description?'block':'none';
   const av=document.getElementById('groupChatAvatar');
   if(g.avatar_url){ av.src=g.avatar_url; av.style.display='block'; } else av.style.display='none';
-  // кнопка опроса — только создатель/админ
+  // кнопка опроса/удаления — только создатель/админ
   const isAdmin = userAddr && g.creator_wallet.toLowerCase()===userAddr.toLowerCase();
   document.getElementById('groupPollBtn').style.display=isAdmin?'block':'none';
   document.getElementById('groupDeleteBtn').style.display=isAdmin?'block':'none';
-  // токен-гейтед: попытка вступить (проверка владения при входе)
-  if(g.gate_type&&g.gate_type!=='pass'&&userAddr){
-    try{ await callGroupAction('joinGate',{group_id:g.id}); }
-    catch(e){
-      if(g.gate_readable==='holders'){
-        document.getElementById('groupMessages').innerHTML='<div class="app-empty">🔒 This group is private. You must hold the required token/NFT to view it.<br><br>'+esc(e.message)+'</div>';
-        document.getElementById('groupComposer').style.display='none';
-        return;
-      }
-    }
+
+  // для holders-групп: если не участник и не владелец — показать замок и выйти
+  // (проверка владения происходит при нажатии Join)
+  let isMember = isAdmin;
+  if(userAddr && !isAdmin){
+    try{
+      const {data:mem}=await sb.from('group_members').select('wallet').eq('group_id',g.id).eq('wallet',userAddr).maybeSingle();
+      isMember=!!mem;
+    }catch(e){}
   }
-  document.getElementById('groupComposer').style.display='block';
+
+  // holders-группа и не участник → закрыто на чтение до вступления
+  if(g.gate_type&&g.gate_type!=='pass'&&g.gate_readable==='holders'&&!isMember){
+    document.getElementById('groupMessages').innerHTML='<div class="app-empty">🔒 This is a private token-gated group.<br><br>Join to verify you hold the required token/NFT.</div>';
+    document.getElementById('groupComposer').style.display='none';
+    updateGroupJoinBar(false);
+    return;
+  }
+
   await loadGroupMessages();
   subscribeGroupRealtime();
+  // композер и кнопка Join зависят от членства
+  updateGroupJoinBar(isMember);
+}
+
+// Показать/скрыть кнопку Join и композер в зависимости от членства
+function updateGroupJoinBar(isMember){
+  const composer=document.getElementById('groupComposer');
+  const joinBar=document.getElementById('groupJoinBar');
+  if(!userAddr){
+    // без кошелька — только чтение
+    composer.style.display='none';
+    joinBar.style.display='block';
+    document.getElementById('groupJoinText').textContent='Connect your wallet to join and post';
+    document.getElementById('groupJoinBtn').style.display='none';
+    return;
+  }
+  if(isMember){
+    composer.style.display='block';
+    joinBar.style.display='none';
+  } else {
+    composer.style.display='none';
+    joinBar.style.display='block';
+    document.getElementById('groupJoinText').textContent='Join this group to post and participate';
+    document.getElementById('groupJoinBtn').style.display='inline-block';
+  }
+}
+
+// Вступить в группу (кнопка Join)
+async function joinCurrentGroup(){
+  if(!_currentGroup){ return; }
+  if(!userAddr){ showToast('Connect wallet first','err'); return; }
+  const btn=document.getElementById('groupJoinBtn'); btn.disabled=true; btn.textContent='Joining...';
+  try{
+    const g=_currentGroup;
+    if(g.gate_type&&g.gate_type!=='pass'){
+      // токен-гейтед — проверка владения через Edge (joinGate)
+      await callGroupAction('joinGate',{group_id:g.id});
+    } else {
+      // обычная группа — прямое вступление (RLS разрешает role='member')
+      await sb.from('group_members').upsert({group_id:g.id, wallet:userAddr, role:'member'}, {onConflict:'group_id,wallet'});
+    }
+    showToast('Joined! 🎉','ok');
+    // обновить счётчик и открыть заново
+    const {data:fresh}=await sb.from('groups').select('*').eq('id',g.id).maybeSingle();
+    if(fresh){ _currentGroup=fresh; document.getElementById('groupChatMeta').textContent='👥 '+(fresh.members_count||1)+' member'+((fresh.members_count||1)===1?'':'s'); }
+    await loadGroupMessages();
+    subscribeGroupRealtime();
+    updateGroupJoinBar(true);
+  }catch(e){ showToast(e.message||'Failed to join','err'); }
+  btn.disabled=false; btn.textContent='Join Group';
 }
 function closeGroupChat(){
   if(_groupRealtimeChannel){ sb.removeChannel(_groupRealtimeChannel); _groupRealtimeChannel=null; }
