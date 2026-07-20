@@ -59,6 +59,15 @@ window.addEventListener('error',function(e){
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 input,select,textarea{color:var(--text);-webkit-text-fill-color:var(--text);caret-color:var(--gold);}
+/* Chrome autofill красит поле белым — возвращаем тёмный фон и светлый текст */
+input:-webkit-autofill,input:-webkit-autofill:hover,input:-webkit-autofill:focus,
+textarea:-webkit-autofill,select:-webkit-autofill{
+  -webkit-text-fill-color:var(--text)!important;
+  -webkit-box-shadow:0 0 0 1000px var(--bg3) inset!important;
+  box-shadow:0 0 0 1000px var(--bg3) inset!important;
+  caret-color:var(--text)!important;
+  transition:background-color 9999s ease-in-out 0s;
+}
 html{scroll-behavior:smooth;}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 .help-toggle-btn{background:var(--gold);border:none;color:#08090C;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;animation:helpPulse 1.8s ease-in-out infinite;}
@@ -4768,7 +4777,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-97';
+var OG_BS_BUILD='BS-98';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
