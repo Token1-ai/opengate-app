@@ -174,13 +174,16 @@ button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline
   #createGroupModal > div, #createPollModal > div{max-width:94vw!important;padding:20px!important;}
   #reactionPicker{max-width:90vw!important;}
 
-  /* Переключатель сетей: кнопкам хватает места на текст, ряд прокручивается вбок */
+  /* Переключатель сетей: все кнопки видны — переносятся на 2 ряда, не прячутся */
+  .chain-switch-row{flex-wrap:wrap!important;}
   #view-launchpad [id^="launchChain"],
   #view-nftstudio [id^="studioChain"],
   #view-market [id^="mktChain"],
   #view-games [id^="gamesChain"]{
-    min-width:100px;
-    flex-shrink:0;
+    flex:1 1 30%!important;
+    min-width:90px!important;
+    font-size:12px!important;
+    padding:8px 4px!important;
   }
   /* родитель кнопок сетей — разрешаем горизонтальную прокрутку */
   #view-launchpad [id^="launchChain"]:first-child,
@@ -188,10 +191,17 @@ button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline
   #view-market [id^="mktChain"]:first-child{
     margin-left:0;
   }
-  .chain-switch-row{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
-  .chain-switch-row::-webkit-scrollbar{display:none;}
   /* числовые ряды в Dice/Lottery — переносятся, если не влезают */
   #view-dice [style*="justify-content:center"], #view-lottery [style*="justify-content:center"]{flex-wrap:wrap!important;}
+  /* карточки игр (grid 2 колонки) — padding не распирает за экран */
+  #view-games [style*="display:grid"]{padding:12px!important;box-sizing:border-box!important;max-width:100%!important;}
+  #view-games [style*="display:grid"] > div{box-sizing:border-box!important;min-width:0!important;padding:16px!important;}
+  #view-games [style*="display:grid"] > div *{max-width:100%!important;overflow-wrap:anywhere!important;}
+  /* ВСЕ grid-карточки во всех разделах: padding входит в ширину, не выходят за экран */
+  .feed-area [style*="display:grid"]{box-sizing:border-box!important;max-width:100%!important;}
+  .feed-area [style*="display:grid"] > div{box-sizing:border-box!important;min-width:0!important;}
+  /* все модалки — не шире экрана */
+  .modal-overlay > div{max-width:94vw!important;box-sizing:border-box!important;}
 }
 
 .earn-terminal{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
@@ -4751,7 +4761,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-93';
+var OG_BS_BUILD='BS-95';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
