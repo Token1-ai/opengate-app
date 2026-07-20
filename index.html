@@ -23,7 +23,7 @@
 <meta name="twitter:title" content="OpenGate — Post. Earn. Own."/>
 <meta name="twitter:description" content="Web3 social platform. Earn GATE tokens from likes."/>
 <meta name="twitter:image" content="/icon-512.png"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta http-equiv="Content-Language" content="en"/>
 <title>OpenGate — Post. Earn. Own.</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" crossorigin="anonymous"></script>
@@ -58,6 +58,7 @@ window.addEventListener('error',function(e){
   --r:14px;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
+input,select,textarea{color:var(--text);-webkit-text-fill-color:var(--text);caret-color:var(--gold);}
 html{scroll-behavior:smooth;}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 .help-toggle-btn{background:var(--gold);border:none;color:#08090C;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;animation:helpPulse 1.8s ease-in-out infinite;}
@@ -202,6 +203,12 @@ button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline
   .feed-area [style*="display:grid"] > div{box-sizing:border-box!important;min-width:0!important;}
   /* все модалки — не шире экрана */
   .modal-overlay > div{max-width:94vw!important;box-sizing:border-box!important;}
+
+  /* ФИКС МИГАНИЯ при вводе: backdrop-filter blur перерисовывается на каждом кадре
+     когда открыта клавиатура → убираем blur, ставим сплошной фон на мобильном */
+  #app-nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:#0a0b0e!important;}
+  .mob-nav{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;background:#0a0b0e!important;}
+  .drawer{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
 }
 
 .earn-terminal{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
@@ -4761,7 +4768,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-95';
+var OG_BS_BUILD='BS-96';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
