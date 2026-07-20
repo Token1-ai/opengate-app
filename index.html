@@ -4768,7 +4768,7 @@ async function connectWallet(){
 // кнопка таймауту, коректний game id, нотифікація про суперника.
 
 var BNB_BATTLE_ADDR='0xb9ECfD91aC7020cce6b6Bd405214bec60DA786f5'; // v4
-var OG_BS_BUILD='BS-96';
+var OG_BS_BUILD='BS-97';
 console.log('%c[OpenGate] Battleship build '+OG_BS_BUILD,'color:#F5C842;font-weight:bold');
 var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
@@ -10376,8 +10376,8 @@ async function checkPassType(){
     const goldNFT   = new ethers.Contract('0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c', nftAbi, bnbP);
     const silverNFT = new ethers.Contract('0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89', nftAbi, bnbP);
     const [goldBal, silverBal] = await Promise.all([
-      goldNFT.balanceOf(userAddr),
-      silverNFT.balanceOf(userAddr)
+      ogTimeout(goldNFT.balanceOf(userAddr), 8000),
+      ogTimeout(silverNFT.balanceOf(userAddr), 8000)
     ]);
     let passType = 'free';
     if(goldBal > 0n) passType = 'gold';
@@ -17833,9 +17833,12 @@ async function _doConnect(addr){
   btn.innerHTML='<div class="w-dot"></div>'+userAddr.slice(0,6)+'...'+userAddr.slice(-4);
   document.getElementById('newPostBtn').classList.add('show');
   document.getElementById('composer').classList.add('show');
-  await ensureUser();
-  updateComposer();
-  updateDrawerUser();
+  // Профиль/пропуск/балансы грузим В ФОНЕ — не держим подключение.
+  // Интерфейс уже доступен, данные подтянутся через пару сотен мс.
+  ensureUser().then(function(){
+    updateComposer();
+    updateDrawerUser();
+  }).catch(function(){});
   loadGateBal();loadPosts();updateNotifBadge();cleanupOldNotifications();loadRewardsPool();
   setTimeout(applyLang, 300);
   setTimeout(function(){
