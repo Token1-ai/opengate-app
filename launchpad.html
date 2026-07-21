@@ -6,6 +6,7 @@
 <title>OpenGate LaunchLab</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#08090C; --bg2:#111318; --bg3:#1a1d24; --border:#252932;
@@ -16,56 +17,57 @@
 body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;cursor:pointer;}
-input{font-family:inherit;}
+input,textarea{font-family:inherit;color:var(--text);-webkit-text-fill-color:var(--text);caret-color:var(--gold);}
+input:-webkit-autofill,textarea:-webkit-autofill{-webkit-text-fill-color:var(--text)!important;-webkit-box-shadow:0 0 0 1000px var(--bg3) inset!important;transition:background-color 9999s;}
 
-/* ─── Top nav ─── */
-.lab-nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;
-  padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border);}
-.lab-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;}
+.lab-nav{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border);}
+.lab-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;cursor:pointer;}
 .lab-logo .dot{width:28px;height:28px;border-radius:8px;background:var(--gold);display:flex;align-items:center;justify-content:center;color:#000;font-weight:900;}
 .lab-nav-actions{display:flex;align-items:center;gap:12px;}
 .btn-gold{background:var(--gold);color:#000;border:none;border-radius:10px;padding:9px 18px;font-weight:700;font-size:14px;}
 .btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:10px;padding:9px 16px;font-weight:600;font-size:14px;}
 .wallet-chip{background:var(--bg3);border:1px solid var(--green);color:var(--green);border-radius:100px;padding:7px 14px;font-size:13px;font-weight:600;}
 
-/* ─── Layout ─── */
 .lab-wrap{max-width:1400px;margin:0 auto;padding:20px;}
 
-/* ─── Token list (home) ─── */
+/* new-token ticker */
+.new-ticker{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;overflow:hidden;}
+.new-ticker-label{color:var(--gold);font-weight:700;font-size:13px;white-space:nowrap;}
+.new-ticker-items{display:flex;gap:20px;flex:1;overflow:hidden;}
+.nti{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;color:var(--muted);cursor:pointer;}
+.nti img{width:20px;height:20px;border-radius:50%;object-fit:cover;}
+
 .lab-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
-.lab-search{flex:1;min-width:200px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;}
-.filter-btn{background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;}
+.lab-search{flex:1;min-width:200px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:14px;outline:none;}
+.filter-btn{background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;white-space:nowrap;}
 .filter-btn.active{background:var(--gold);color:#000;border-color:var(--gold);}
 
 .token-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
 .token-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:border-color .15s,transform .1s;}
 .token-card:hover{border-color:var(--gold);transform:translateY(-2px);}
 .tc-head{display:flex;gap:12px;align-items:center;margin-bottom:10px;}
-.tc-avatar{width:52px;height:52px;border-radius:12px;background:var(--bg3);object-fit:cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;}
+.tc-avatar{width:52px;height:52px;border-radius:12px;background:var(--bg3);object-fit:cover;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;}
 .tc-name{font-weight:700;font-size:15px;}
 .tc-ticker{color:var(--muted);font-size:13px;}
-.tc-desc{color:var(--muted);font-size:12px;line-height:1.4;margin-bottom:10px;height:34px;overflow:hidden;}
+.tc-desc{color:var(--muted);font-size:12px;line-height:1.4;margin:6px 0;height:34px;overflow:hidden;}
 .tc-mc{color:var(--gold);font-weight:700;font-size:14px;}
 .tc-progress{margin-top:8px;height:6px;background:var(--bg3);border-radius:100px;overflow:hidden;}
 .tc-progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:100px;transition:width .3s;}
 .tc-progress-label{font-size:11px;color:var(--muted);margin-top:4px;}
-.badge-grad{background:var(--green);color:#000;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;}
-.badge-hot{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;margin-left:6px;}
+.badge-grad{background:var(--green);color:#000;}
+.badge-hot{background:var(--red);color:#fff;}
 
-/* ─── New token ticker ─── */
-.new-ticker{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;overflow:hidden;}
-.new-ticker-label{color:var(--gold);font-weight:700;font-size:13px;white-space:nowrap;}
-.new-ticker-items{display:flex;gap:16px;overflow:hidden;flex:1;}
-.new-ticker-item{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:13px;color:var(--muted);}
-
-/* ─── Trade page ─── */
 .trade-layout{display:grid;grid-template-columns:1fr 380px;gap:20px;}
 .chart-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;}
-.chart-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+.chart-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
 .chart-token{display:flex;align-items:center;gap:10px;}
 .chart-token-name{font-weight:700;font-size:16px;}
 .chart-price{font-size:14px;color:var(--muted);}
-#chartContainer{height:420px;width:100%;}
+#chartContainer{height:380px;width:100%;}
+
+.socials{display:flex;gap:8px;}
+.social-link{width:32px;height:32px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:15px;}
 
 .trade-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;height:fit-content;}
 .bs-tabs{display:flex;gap:8px;margin-bottom:16px;background:var(--bg3);border-radius:10px;padding:4px;}
@@ -74,7 +76,7 @@ input{font-family:inherit;}
 .bs-tab.active-sell{background:var(--red);color:#fff;}
 .bs-label{font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between;}
 .bs-input-row{display:flex;align-items:center;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:12px;}
-.bs-input{flex:1;background:none;border:none;color:var(--text);font-size:18px;font-weight:700;outline:none;width:100%;}
+.bs-input{flex:1;background:none;border:none;color:var(--text);font-size:18px;font-weight:700;outline:none;width:100%;-webkit-text-fill-color:var(--text);}
 .bs-cur{color:var(--muted);font-weight:700;font-size:14px;background:var(--bg2);padding:4px 10px;border-radius:8px;}
 .bs-presets{display:flex;gap:8px;margin-bottom:14px;}
 .bs-preset{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:7px;font-size:12px;font-weight:600;}
@@ -89,40 +91,41 @@ input{font-family:inherit;}
 .info-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px;border-bottom:1px solid var(--border);}
 .info-row:last-child{border-bottom:none;}
 .info-row .k{color:var(--muted);}
-.info-row .v{font-weight:600;}
+.info-row .v{font-weight:600;word-break:break-all;text-align:right;max-width:60%;}
 
-/* ─── Launch modal ─── */
+/* trades feed */
+.feed-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-top:16px;}
+.feed-title{font-weight:700;font-size:14px;margin-bottom:12px;}
+.trade-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.trade-row:last-child{border-bottom:none;}
+.trade-side{font-weight:700;padding:2px 8px;border-radius:6px;font-size:11px;}
+.trade-side.buy{background:rgba(34,197,94,.15);color:var(--green);}
+.trade-side.sell{background:rgba(239,68,68,.15);color:var(--red);}
+
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;padding:20px;}
 .modal-overlay.show{display:flex;}
-.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:24px;max-width:460px;width:100%;max-height:92vh;overflow-y:auto;}
 .modal-title{font-size:18px;font-weight:700;margin-bottom:16px;}
 .field-label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block;}
-.field-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;margin-bottom:14px;outline:none;}
+.field-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:14px;margin-bottom:14px;outline:none;-webkit-text-fill-color:var(--text);}
 .field-input:focus{border-color:var(--gold);}
+.img-drop{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:14px;cursor:pointer;}
+.img-drop.has-img{padding:8px;}
+.img-preview{max-width:100px;max-height:100px;border-radius:10px;object-fit:cover;}
 
-/* toast */
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:14px;z-index:200;display:none;max-width:90vw;}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:14px;z-index:200;display:none;max-width:90vw;text-align:center;}
 #toast.show{display:block;}
 #toast.ok{border-color:var(--green);}
 #toast.err{border-color:var(--red);}
 
-.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1/-1;}
 .hidden{display:none!important;}
 
-@media(max-width:900px){
-  .trade-layout{grid-template-columns:1fr;}
-  #chartContainer{height:320px;}
-}
-@media(max-width:680px){
-  .lab-wrap{padding:12px;}
-  .token-grid{grid-template-columns:1fr;}
-  .lab-nav{padding:12px;}
-  .lab-logo{font-size:16px;}
-}
+@media(max-width:900px){.trade-layout{grid-template-columns:1fr;}#chartContainer{height:300px;}}
+@media(max-width:680px){.lab-wrap{padding:12px;}.token-grid{grid-template-columns:1fr;}.lab-nav{padding:12px;}.lab-logo{font-size:15px;}.btn-gold{padding:8px 12px;font-size:13px;}.info-row .v{max-width:55%;}}
 </style>
 </head>
 <body>
-
 <!-- NAV -->
 <nav class="lab-nav">
   <div class="lab-logo" onclick="showHome()"><div class="dot">O</div> OpenGate <span style="color:var(--gold);">LaunchLab</span></div>
@@ -134,35 +137,25 @@ input{font-family:inherit;}
 </nav>
 
 <div class="lab-wrap">
-  <!-- HOME: token list -->
+  <!-- HOME -->
   <div id="homeView">
-    <!-- New token ticker -->
     <div class="new-ticker">
-      <span class="new-ticker-label">🆕 New Tokens</span>
-      <div class="new-ticker-items" id="newTickerItems">
-        <span class="new-ticker-item">Waiting for launches...</span>
-      </div>
+      <span class="new-ticker-label">🆕 New</span>
+      <div class="new-ticker-items" id="newTickerItems"><span class="nti">Loading...</span></div>
     </div>
-
-    <!-- Toolbar -->
     <div class="lab-toolbar">
       <input class="lab-search" id="searchInput" placeholder="🔍 Search tokens..." oninput="renderTokenList()"/>
       <button class="filter-btn active" id="filter-hot" onclick="setFilter('hot')">🔥 Hot</button>
       <button class="filter-btn" id="filter-new" onclick="setFilter('new')">🆕 New</button>
       <button class="filter-btn" id="filter-graduated" onclick="setFilter('graduated')">🎓 Graduated</button>
     </div>
-
-    <!-- Token grid -->
-    <div class="token-grid" id="tokenGrid">
-      <div class="empty">Loading tokens...</div>
-    </div>
+    <div class="token-grid" id="tokenGrid"><div class="empty">Loading tokens...</div></div>
   </div>
 
-  <!-- TRADE: single token -->
+  <!-- TRADE -->
   <div id="tradeView" class="hidden">
     <button class="btn-ghost" onclick="showHome()" style="margin-bottom:16px;">← Back</button>
     <div class="trade-layout">
-      <!-- Chart -->
       <div>
         <div class="chart-panel">
           <div class="chart-head">
@@ -173,19 +166,24 @@ input{font-family:inherit;}
                 <div class="chart-price" id="tradePrice">—</div>
               </div>
             </div>
-            <div id="tradeChange" style="font-weight:700;"></div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="socials" id="tradeSocials"></div>
+              <div id="tradeChange" style="font-weight:700;"></div>
+            </div>
           </div>
           <div id="chartContainer"></div>
         </div>
-        <!-- Info -->
         <div class="info-box">
+          <div class="info-row"><span class="k">Price</span><span class="v" id="infoPrice">—</span></div>
           <div class="info-row"><span class="k">Market Cap</span><span class="v" id="infoMC">—</span></div>
           <div class="info-row"><span class="k">Progress to graduate</span><span class="v" id="infoProgress">—</span></div>
+          <div class="info-row"><span class="k">Creator fee</span><span class="v" id="infoCreatorFee">—</span></div>
           <div class="info-row"><span class="k">Creator</span><span class="v" id="infoCreator">—</span></div>
           <div class="info-row"><span class="k">Contract</span><span class="v" id="infoContract">—</span></div>
+          <div class="info-row" id="infoGradRow" style="display:none;"><span class="k">Status</span><span class="v"><a id="infoPancake" href="#" target="_blank" style="color:var(--green);">🎓 Graduated — trade on PancakeSwap ↗</a></span></div>
         </div>
+        <div id="tradeDesc" style="color:var(--muted);font-size:13px;line-height:1.5;margin-top:16px;"></div>
       </div>
-      <!-- Buy/Sell -->
       <div>
         <div class="trade-box">
           <div class="bs-tabs">
@@ -206,6 +204,11 @@ input{font-family:inherit;}
           <div class="bs-receive">You receive: <b id="receiveAmount">—</b></div>
           <button class="bs-action buy" id="tradeActionBtn" onclick="executeTrade()">Connect Wallet</button>
         </div>
+        <!-- live trades -->
+        <div class="feed-box">
+          <div class="feed-title">💱 Recent Trades</div>
+          <div id="tradesFeed"><div style="color:var(--muted);font-size:12px;">No trades yet</div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -215,16 +218,27 @@ input{font-family:inherit;}
 <div class="modal-overlay" id="launchModal">
   <div class="modal-box">
     <div class="modal-title">🚀 Launch a Token</div>
+    <div class="img-drop" id="imgDrop" onclick="document.getElementById('launchImage').click()">
+      <span id="imgDropText">📷 Click to upload logo (PNG/JPG/GIF)</span>
+      <img id="imgPreview" class="img-preview hidden"/>
+    </div>
+    <input type="file" id="launchImage" accept="image/*" class="hidden" onchange="previewImage(this)"/>
     <label class="field-label">Token Name *</label>
     <input class="field-input" id="launchName" placeholder="e.g. My Meme Coin"/>
     <label class="field-label">Symbol *</label>
     <input class="field-input" id="launchSymbol" placeholder="e.g. MEME"/>
     <label class="field-label">Description</label>
-    <input class="field-input" id="launchDesc" placeholder="Optional — tell people about it"/>
+    <input class="field-input" id="launchDesc" placeholder="Tell people about it"/>
+    <label class="field-label">Twitter (optional)</label>
+    <input class="field-input" id="launchTwitter" placeholder="https://x.com/..."/>
+    <label class="field-label">Telegram (optional)</label>
+    <input class="field-input" id="launchTelegram" placeholder="https://t.me/..."/>
+    <label class="field-label">Website (optional)</label>
+    <input class="field-input" id="launchWebsite" placeholder="https://..."/>
     <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5;">
-      Requires Silver or Gold Pass. Your token launches on a bonding curve —
-      price rises as people buy. At the target it auto-lists on PancakeSwap with
-      liquidity burned forever (anti-rug).
+      Requires Silver or Gold Pass. Token launches on a bonding curve — price rises
+      as people buy. At the target it auto-lists on PancakeSwap with liquidity burned
+      forever (anti-rug). You earn a share of every trade's fee.
     </div>
     <button class="btn-gold" style="width:100%;padding:13px;" id="launchSubmitBtn" onclick="submitLaunch()">Launch Token</button>
     <button class="btn-ghost" style="width:100%;padding:11px;margin-top:8px;" onclick="closeLaunchModal()">Cancel</button>
@@ -235,32 +249,115 @@ input{font-family:inherit;}
 
 <script>
 // ═══════════════════════════════════════════════════════════
-// OpenGate LaunchLab — frontend logic
+// OpenGate LaunchLab
 // ═══════════════════════════════════════════════════════════
 const LAUNCHPAD_ADDRESS = '0x24DB137722507515E28A295717b73bB074192931';
-const BNB_CHAIN_ID = 56;
+const SUPABASE_URL = 'https://hgzthbidfdqomuotdocb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnenRoYmlkZmRxb211b3Rkb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTI2NjEsImV4cCI6MjA5NjU4ODY2MX0.otgk-jq2k0COrIE3cUEnRBPYKGnzAHRi3LEIQhE7khA';
+const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNmY5ZWM5OC0wNmMyLTRiYjYtOWE0OS1hYzkyZmRiY2YwMzIiLCJlbWFpbCI6ImJ0Y2ZpbHNzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI3YTE4OTZlZjgyNDAwYzA2NTI4NyIsInNjb3BlZEtleVNlY3JldCI6IjM5MjMzNWVmYmQyYzJiYzZlNDk5NDIzYzk1YzMxZWM5NDA3NzgxMjhkYmZiNTE1NzQyODkzMmU4OWFkY2Y1YzciLCJleHAiOjE4MTI1NjgzMzF9.WkiIwhZqxvx3hz_xymtuv2257hVdRg-Bxo_1Vee3fl0';
 const BNB_PARAMS = {
   chainId:'0x38', chainName:'BNB Smart Chain',
   nativeCurrency:{name:'BNB',symbol:'BNB',decimals:18},
-  rpcUrls:['https://bsc-dataseed.binance.org/'],
+  rpcUrls:['https://bsc-dataseed.binance.org/','https://bsc-dataseed1.defibit.io/','https://bsc-dataseed1.ninicoin.io/'],
   blockExplorerUrls:['https://bscscan.com/']
 };
-// ABI вставляется ниже
 const LAUNCHPAD_ABI = [{"inputs": [{"internalType": "address", "name": "_router", "type": "address"}, {"internalType": "address[]", "name": "_passes", "type": "address[]"}], "stateMutability": "nonpayable", "type": "constructor"}, {"anonymous": false, "inputs": [{"indexed": true, "internalType": "address", "name": "token", "type": "address"}, {"indexed": true, "internalType": "address", "name": "buyer", "type": "address"}, {"indexed": false, "internalType": "uint256", "name": "bnbIn", "type": "uint256"}, {"indexed": false, "internalType": "uint256", "name": "tokensOut", "type": "uint256"}, {"indexed": false, "internalType": "uint256", "name": "newPrice", "type": "uint256"}], "name": "Buy", "type": "event"}, {"anonymous": false, "inputs": [{"indexed": true, "internalType": "address", "name": "token", "type": "address"}, {"indexed": false, "internalType": "uint256", "name": "bnbToLP", "type": "uint256"}, {"indexed": false, "internalType": "uint256", "name": "tokensToLP", "type": "uint256"}], "name": "Graduated", "type": "event"}, {"anonymous": false, "inputs": [{"indexed": true, "internalType": "address", "name": "token", "type": "address"}, {"indexed": true, "internalType": "address", "name": "seller", "type": "address"}, {"indexed": false, "internalType": "uint256", "name": "tokensIn", "type": "uint256"}, {"indexed": false, "internalType": "uint256", "name": "bnbOut", "type": "uint256"}, {"indexed": false, "internalType": "uint256", "name": "newPrice", "type": "uint256"}], "name": "Sell", "type": "event"}, {"anonymous": false, "inputs": [{"indexed": true, "internalType": "address", "name": "token", "type": "address"}, {"indexed": true, "internalType": "address", "name": "creator", "type": "address"}, {"indexed": false, "internalType": "string", "name": "name", "type": "string"}, {"indexed": false, "internalType": "string", "name": "symbol", "type": "string"}], "name": "TokenCreated", "type": "event"}, {"inputs": [], "name": "CURVE_SUPPLY", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "DEAD", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "LP_SUPPLY", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "MAX_FEE", "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "OWNER_WALLET", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "TOTAL_SUPPLY", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "_pass", "type": "address"}], "name": "addPassContract", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "name": "allTokens", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "token", "type": "address"}, {"internalType": "uint256", "name": "minTokensOut", "type": "uint256"}], "name": "buy", "outputs": [], "stateMutability": "payable", "type": "function"}, {"inputs": [{"internalType": "string", "name": "name", "type": "string"}, {"internalType": "string", "name": "symbol", "type": "string"}], "name": "createToken", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "payable", "type": "function"}, {"inputs": [], "name": "creationFee", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "creatorFeeBps", "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "", "type": "address"}], "name": "curves", "outputs": [{"internalType": "address", "name": "token", "type": "address"}, {"internalType": "address", "name": "creator", "type": "address"}, {"internalType": "uint256", "name": "realBNB", "type": "uint256"}, {"internalType": "uint256", "name": "tokensSold", "type": "uint256"}, {"internalType": "bool", "name": "graduated", "type": "bool"}, {"internalType": "uint256", "name": "createdAt", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "token", "type": "address"}], "name": "getCurve", "outputs": [{"internalType": "address", "name": "creator", "type": "address"}, {"internalType": "uint256", "name": "realBNB", "type": "uint256"}, {"internalType": "uint256", "name": "tokensSold", "type": "uint256"}, {"internalType": "bool", "name": "graduated", "type": "bool"}, {"internalType": "uint256", "name": "createdAt", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "token", "type": "address"}], "name": "getPrice", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "token", "type": "address"}], "name": "getProgress", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "user", "type": "address"}], "name": "hasPass", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "", "type": "address"}], "name": "isPassContract", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "owner", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "pancakeRouter", "outputs": [{"internalType": "contract IPancakeRouter", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "name": "passContracts", "outputs": [{"internalType": "address", "name": "", "type": "address"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "passCount", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "token", "type": "address"}, {"internalType": "uint256", "name": "bnbIn", "type": "uint256"}], "name": "quoteBuy", "outputs": [{"internalType": "uint256", "name": "tokensOut", "type": "uint256"}, {"internalType": "uint256", "name": "fee", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "token", "type": "address"}, {"internalType": "uint256", "name": "tokensIn", "type": "uint256"}], "name": "quoteSell", "outputs": [{"internalType": "uint256", "name": "bnbOut", "type": "uint256"}, {"internalType": "uint256", "name": "fee", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "_pass", "type": "address"}], "name": "removePassContract", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "address", "name": "token", "type": "address"}, {"internalType": "uint256", "name": "tokensIn", "type": "uint256"}, {"internalType": "uint256", "name": "minBNBOut", "type": "uint256"}], "name": "sell", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "uint256", "name": "_fee", "type": "uint256"}], "name": "setCreationFee", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "uint16", "name": "_tradeFee", "type": "uint16"}, {"internalType": "uint16", "name": "_creatorFee", "type": "uint16"}], "name": "setFees", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "address", "name": "_r", "type": "address"}], "name": "setRouter", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "uint256", "name": "_target", "type": "uint256"}], "name": "setTargetBNB", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "uint256", "name": "_v", "type": "uint256"}], "name": "setVirtualBNB", "outputs": [], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [], "name": "targetBNB", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "tokenCount", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "tradeFeeBps", "outputs": [{"internalType": "uint16", "name": "", "type": "uint16"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "virtualBNB", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"stateMutability": "payable", "type": "receive"}];
 const TOKEN_ABI = [{"inputs": [{"internalType": "string", "name": "_name", "type": "string"}, {"internalType": "string", "name": "_symbol", "type": "string"}, {"internalType": "uint256", "name": "_supply", "type": "uint256"}, {"internalType": "address", "name": "_curve", "type": "address"}], "stateMutability": "nonpayable", "type": "constructor"}, {"anonymous": false, "inputs": [{"indexed": true, "internalType": "address", "name": "owner", "type": "address"}, {"indexed": true, "internalType": "address", "name": "spender", "type": "address"}, {"indexed": false, "internalType": "uint256", "name": "value", "type": "uint256"}], "name": "Approval", "type": "event"}, {"anonymous": false, "inputs": [{"indexed": true, "internalType": "address", "name": "from", "type": "address"}, {"indexed": true, "internalType": "address", "name": "to", "type": "address"}, {"indexed": false, "internalType": "uint256", "name": "value", "type": "uint256"}], "name": "Transfer", "type": "event"}, {"inputs": [{"internalType": "address", "name": "", "type": "address"}, {"internalType": "address", "name": "", "type": "address"}], "name": "allowance", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "spender", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}], "name": "approve", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "address", "name": "", "type": "address"}], "name": "balanceOf", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "decimals", "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "name", "outputs": [{"internalType": "string", "name": "", "type": "string"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "symbol", "outputs": [{"internalType": "string", "name": "", "type": "string"}], "stateMutability": "view", "type": "function"}, {"inputs": [], "name": "totalSupply", "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"}, {"inputs": [{"internalType": "address", "name": "to", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}], "name": "transfer", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "nonpayable", "type": "function"}, {"inputs": [{"internalType": "address", "name": "from", "type": "address"}, {"internalType": "address", "name": "to", "type": "address"}, {"internalType": "uint256", "name": "amount", "type": "uint256"}], "name": "transferFrom", "outputs": [{"internalType": "bool", "name": "", "type": "bool"}], "stateMutability": "nonpayable", "type": "function"}];
 
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 let provider, signer, userAddr, launchpad;
-let currentToken = null;    // адрес токена на торговой странице
-let tradeSide = 'buy';
-let activeFilter = 'hot';
-let tokensCache = [];       // список токенов
-let chart, candleSeries;
+let currentToken = null, currentTokenMeta = null;
+let tradeSide = 'buy', activeFilter = 'hot';
+let tokensCache = [], metaCache = {};
+let chart, candleSeries, tradesChannel, pendingImageFile = null;
+let bnbUsdPrice = 0;
+
+// ─── Оракул цены BNB/USD ───
+async function loadBnbPrice(){
+  // читаем on-chain Chainlink BNB/USD feed на BNB Chain
+  try{
+    const rp = getReadProvider();
+    const FEED = '0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE'; // Chainlink BNB/USD (BSC)
+    const feedAbi = ['function latestRoundData() view returns (uint80,int256,uint256,uint256,uint80)','function decimals() view returns (uint8)'];
+    const feed = new ethers.Contract(FEED, feedAbi, rp);
+    const [,answer] = await feed.latestRoundData();
+    const dec = await feed.decimals();
+    bnbUsdPrice = Number(answer) / Math.pow(10, Number(dec));
+  }catch(e){
+    // fallback: публичный API
+    try{
+      const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT');
+      const j = await r.json();
+      bnbUsdPrice = Number(j.price);
+    }catch(e2){ bnbUsdPrice = 0; }
+  }
+}
+
+// ─── Read-only provider с ротацией ───
+let _rpIndex = 0;
+function getReadProvider(){
+  const url = BNB_PARAMS.rpcUrls[_rpIndex % BNB_PARAMS.rpcUrls.length];
+  return new ethers.JsonRpcProvider(url);
+}
+function getReadLaunchpad(){ return new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, getReadProvider()); }
 
 // ─── Toast ───
-function toast(msg, type){
+function toast(msg,type){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='show '+(type||'');
-  setTimeout(()=>t.className='',3000);
+  setTimeout(()=>t.className='',3200);
+}
+
+// ─── Хелперы форматирования ───
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function fmtBNB(wei){ return (Number(wei)/1e18).toFixed(4); }
+function fmtUsd(bnbAmount){
+  if(!bnbUsdPrice) return '—';
+  const usd = (Number(bnbAmount)/1e18) * bnbUsdPrice;
+  if(usd>=1e6) return '$'+(usd/1e6).toFixed(2)+'M';
+  if(usd>=1e3) return '$'+(usd/1e3).toFixed(2)+'K';
+  if(usd>=1) return '$'+usd.toFixed(2);
+  return '$'+usd.toFixed(4);
+}
+function fmtPriceUsd(priceWei){
+  if(!bnbUsdPrice) return '—';
+  const usd = (Number(priceWei)/1e18) * bnbUsdPrice;
+  if(usd < 0.00001) return '$'+usd.toExponential(2);
+  return '$'+usd.toFixed(6);
+}
+function fmtTokens(wei){ const n=Number(wei)/1e18; return n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0); }
+function shortAddr(a){ return a? a.slice(0,6)+'...'+a.slice(-4) : ''; }
+function timeAgo(ts){
+  const s=Math.floor((Date.now()-new Date(ts).getTime())/1000);
+  if(s<60) return s+'s'; if(s<3600) return Math.floor(s/60)+'m';
+  if(s<86400) return Math.floor(s/3600)+'h'; return Math.floor(s/86400)+'d';
+}
+
+// ─── Кошелёк ───
+async function connectWallet(){
+  if(!window.ethereum){ toast('Install MetaMask','err'); return; }
+  try{
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    try{
+      await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BNB_PARAMS.chainId}]});
+    }catch(e){
+      if(e.code===4902) await window.ethereum.request({method:'wallet_addEthereumChain',params:[BNB_PARAMS]});
+    }
+    provider = new ethers.BrowserProvider(window.ethereum);
+    signer = await provider.getSigner();
+    userAddr = await signer.getAddress();
+    launchpad = new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, signer);
+    document.getElementById('connectBtn').classList.add('hidden');
+    const chip=document.getElementById('walletChip');
+    chip.classList.remove('hidden');
+    chip.textContent=shortAddr(userAddr);
+    toast('Wallet connected','ok');
+    if(currentToken) updateTradeButton();
+    window.ethereum.on('accountsChanged',()=>location.reload());
+    window.ethereum.on('chainChanged',()=>location.reload());
+  }catch(e){ toast(e.message||'Connect failed','err'); }
 }
 
 // ─── Навигация ───
@@ -268,6 +365,7 @@ function showHome(){
   document.getElementById('homeView').classList.remove('hidden');
   document.getElementById('tradeView').classList.add('hidden');
   currentToken=null;
+  if(tradesChannel){ sb.removeChannel(tradesChannel); tradesChannel=null; }
   loadTokens();
 }
 function showTrade(token){
@@ -277,107 +375,72 @@ function showTrade(token){
   openTradePage(token);
 }
 
-// ─── Read-only provider (для чтения без кошелька) ───
-function getReadProvider(){
-  return new ethers.JsonRpcProvider(BNB_PARAMS.rpcUrls[0]);
-}
-function getReadLaunchpad(){
-  return new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, getReadProvider());
-}
-
-// ─── Подключение кошелька ───
-async function connectWallet(){
-  if(!window.ethereum){ toast('Install MetaMask','err'); return; }
-  try{
-    provider = new ethers.BrowserProvider(window.ethereum);
-    await provider.send('eth_requestAccounts', []);
-    // переключить на BNB Chain
-    try{
-      await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:BNB_PARAMS.chainId}]});
-    }catch(e){
-      if(e.code===4902){
-        await window.ethereum.request({method:'wallet_addEthereumChain',params:[BNB_PARAMS]});
-      }
-    }
-    provider = new ethers.BrowserProvider(window.ethereum);
-    signer = await provider.getSigner();
-    userAddr = (await signer.getAddress());
-    launchpad = new ethers.Contract(LAUNCHPAD_ADDRESS, LAUNCHPAD_ABI, signer);
-    // UI
-    document.getElementById('connectBtn').classList.add('hidden');
-    const chip=document.getElementById('walletChip');
-    chip.classList.remove('hidden');
-    chip.textContent = userAddr.slice(0,6)+'...'+userAddr.slice(-4);
-    updateTradeButton();
-    toast('Wallet connected','ok');
-    // авто-реакция на смену аккаунта/сети
-    window.ethereum.on('accountsChanged',()=>location.reload());
-    window.ethereum.on('chainChanged',()=>location.reload());
-  }catch(e){ toast(e.message||'Connect failed','err'); }
-}
-
-// ─── Загрузка списка токенов ───
+// ─── Загрузка токенов (контракт + метаданные из Supabase) ───
 async function loadTokens(){
   const grid=document.getElementById('tokenGrid');
-  if(LAUNCHPAD_ADDRESS==='0x0000000000000000000000000000000000000000'){
-    grid.innerHTML='<div class="empty">⚠️ Contract not deployed yet.<br>Deploy the contract and set LAUNCHPAD_ADDRESS.</div>';
-    return;
-  }
   try{
     const lp=getReadLaunchpad();
     const count=Number(await lp.tokenCount());
-    if(count===0){ grid.innerHTML='<div class="empty">No tokens yet. Be the first to launch! 🚀</div>'; return; }
-    const tokens=[];
-    // читаем последние 60 токенов (для скорости)
-    const start=Math.max(0,count-60);
+    // метаданные из Supabase (картинки, описания)
+    const {data:metas}=await sb.from('launchpad_tokens').select('*');
+    metaCache={}; (metas||[]).forEach(m=>metaCache[m.address.toLowerCase()]=m);
+    if(count===0){ grid.innerHTML='<div class="empty">No tokens yet. Be the first to launch! 🚀</div>'; renderNewTicker(); return; }
+    const tokens=[]; const start=Math.max(0,count-100);
     for(let i=count-1;i>=start;i--){
       try{
         const addr=await lp.allTokens(i);
         const c=await lp.getCurve(addr);
         const progress=Number(await lp.getProgress(addr));
         const price=await lp.getPrice(addr);
-        // метаданные токена (name/symbol) из ERC-20
-        const tk=new ethers.Contract(addr, TOKEN_ABI, getReadProvider());
-        const [name,symbol]=await Promise.all([tk.name(),tk.symbol()]);
-        tokens.push({
-          address:addr, name, symbol,
-          creator:c[0], realBNB:c[1], tokensSold:c[2], graduated:c[3], createdAt:Number(c[4]),
-          progress, price
-        });
-      }catch(e){ /* пропускаем битые */ }
+        const meta=metaCache[addr.toLowerCase()]||{};
+        let name=meta.name, symbol=meta.symbol;
+        if(!name||!symbol){
+          const tk=new ethers.Contract(addr,TOKEN_ABI,getReadProvider());
+          [name,symbol]=await Promise.all([tk.name(),tk.symbol()]);
+        }
+        tokens.push({address:addr,name,symbol,creator:c[0],realBNB:c[1],tokensSold:c[2],graduated:c[3],createdAt:Number(c[4]),progress,price,meta});
+      }catch(e){}
     }
     tokensCache=tokens;
     renderTokenList();
-  }catch(e){
-    grid.innerHTML='<div class="empty">Failed to load tokens: '+(e.message||'')+'</div>';
-  }
+    renderNewTicker();
+  }catch(e){ grid.innerHTML='<div class="empty">Failed to load: '+esc(e.message||'')+'</div>'; }
 }
 
-// ─── Рендер списка с фильтрами ───
+function renderNewTicker(){
+  const el=document.getElementById('newTickerItems');
+  const newest=tokensCache.slice().sort((a,b)=>b.createdAt-a.createdAt).slice(0,6);
+  if(!newest.length){ el.innerHTML='<span class="nti">Waiting for launches...</span>'; return; }
+  el.innerHTML=newest.map(t=>{
+    const img=t.meta&&t.meta.image_url?'<img src="'+esc(t.meta.image_url)+'"/>':'';
+    return '<span class="nti" onclick="showTrade(\''+t.address+'\')">'+img+esc(t.symbol)+' • '+esc(t.name).slice(0,16)+'</span>';
+  }).join('');
+}
+
 function renderTokenList(){
   const grid=document.getElementById('tokenGrid');
   const q=(document.getElementById('searchInput').value||'').toLowerCase();
   let list=tokensCache.slice();
-  // фильтр
   if(activeFilter==='new') list.sort((a,b)=>b.createdAt-a.createdAt);
   else if(activeFilter==='graduated') list=list.filter(t=>t.graduated);
-  else /* hot */ list.sort((a,b)=>Number(b.realBNB)-Number(a.realBNB));
-  // поиск
+  else list.sort((a,b)=>Number(b.realBNB)-Number(a.realBNB));
   if(q) list=list.filter(t=>t.name.toLowerCase().includes(q)||t.symbol.toLowerCase().includes(q));
   if(!list.length){ grid.innerHTML='<div class="empty">No tokens match.</div>'; return; }
   grid.innerHTML='';
   list.forEach(t=>{
-    const mc=formatBNB(t.realBNB);
+    const meta=t.meta||{};
+    const avatar=meta.image_url?'<img class="tc-avatar" src="'+esc(meta.image_url)+'" onerror="this.outerHTML=\'<div class=&quot;tc-avatar&quot;>'+esc(t.symbol.charAt(0))+'</div>\'"/>':'<div class="tc-avatar">'+esc(t.symbol.charAt(0))+'</div>';
+    const gradBadge=t.graduated?'<span class="badge badge-grad">🎓 Graduated</span>':'';
+    const hotBadge=(!t.graduated&&t.progress>50)?'<span class="badge badge-hot">🔥</span>':'';
+    const desc=meta.description?'<div class="tc-desc">'+esc(meta.description)+'</div>':'';
     const card=document.createElement('div');
     card.className='token-card';
     card.onclick=()=>showTrade(t.address);
-    const gradBadge=t.graduated?'<span class="badge-grad">🎓 Graduated</span>':'';
-    const hotBadge=(!t.graduated&&Number(t.realBNB)>0&&t.progress>50)?'<span class="badge-hot">🔥 Hot</span>':'';
     card.innerHTML=
-      '<div class="tc-head"><div class="tc-avatar">'+t.symbol.charAt(0)+'</div>'+
+      '<div class="tc-head">'+avatar+
       '<div style="min-width:0;"><div class="tc-name">'+esc(t.name)+gradBadge+hotBadge+'</div>'+
-      '<div class="tc-ticker">$'+esc(t.symbol)+'</div></div></div>'+
-      '<div class="tc-mc">MC: '+mc+' BNB</div>'+
+      '<div class="tc-ticker">$'+esc(t.symbol)+'</div></div></div>'+desc+
+      '<div class="tc-mc">MC: '+fmtUsd(t.realBNB)+'</div>'+
       '<div class="tc-progress"><div class="tc-progress-fill" style="width:'+(t.progress/100)+'%"></div></div>'+
       '<div class="tc-progress-label">'+(t.progress/100).toFixed(1)+'% to graduate</div>';
     grid.appendChild(card);
@@ -386,130 +449,172 @@ function renderTokenList(){
 
 function setFilter(f){
   activeFilter=f;
-  ['hot','new','graduated'].forEach(x=>{
-    document.getElementById('filter-'+x).classList.toggle('active',x===f);
-  });
+  ['hot','new','graduated'].forEach(x=>document.getElementById('filter-'+x).classList.toggle('active',x===f));
   renderTokenList();
 }
 
 // ─── Торговая страница ───
-let priceHistory=[]; // для графика
 async function openTradePage(token){
   const lp=getReadLaunchpad();
-  const tk=new ethers.Contract(token, TOKEN_ABI, getReadProvider());
   try{
-    const [name,symbol]=await Promise.all([tk.name(),tk.symbol()]);
+    // метаданные
+    const {data:meta}=await sb.from('launchpad_tokens').select('*').eq('address',token.toLowerCase()).maybeSingle();
+    currentTokenMeta=meta||{};
+    let name=meta&&meta.name, symbol=meta&&meta.symbol;
+    if(!name||!symbol){
+      const tk=new ethers.Contract(token,TOKEN_ABI,getReadProvider());
+      [name,symbol]=await Promise.all([tk.name(),tk.symbol()]);
+    }
     const c=await lp.getCurve(token);
     const progress=Number(await lp.getProgress(token));
     const price=await lp.getPrice(token);
+    const creatorFeeBps=Number(await lp.creatorFeeBps());
+
     document.getElementById('tradeName').textContent=name+' ($'+symbol+')';
-    document.getElementById('tradeAvatar').textContent=symbol.charAt(0);
-    document.getElementById('tradePrice').textContent=formatPrice(price)+' BNB';
-    document.getElementById('infoMC').textContent=formatBNB(c[1])+' BNB';
+    document.getElementById('tradePrice').textContent=fmtPriceUsd(price);
+    // аватар
+    const av=document.getElementById('tradeAvatar');
+    if(meta&&meta.image_url){ av.innerHTML='<img src="'+esc(meta.image_url)+'" style="width:100%;height:100%;border-radius:12px;object-fit:cover;"/>'; }
+    else av.textContent=symbol.charAt(0);
+    // соцсети
+    const soc=document.getElementById('tradeSocials'); soc.innerHTML='';
+    if(meta){
+      if(meta.twitter) soc.innerHTML+='<a class="social-link" href="'+esc(meta.twitter)+'" target="_blank">𝕏</a>';
+      if(meta.telegram) soc.innerHTML+='<a class="social-link" href="'+esc(meta.telegram)+'" target="_blank">✈️</a>';
+      if(meta.website) soc.innerHTML+='<a class="social-link" href="'+esc(meta.website)+'" target="_blank">🌐</a>';
+    }
+    // инфо
+    document.getElementById('infoPrice').textContent=fmtPriceUsd(price)+' ('+Number(price)/1e18+' BNB)';
+    document.getElementById('infoMC').textContent=fmtUsd(c[1]);
     document.getElementById('infoProgress').textContent=(progress/100).toFixed(1)+'%';
-    document.getElementById('infoCreator').textContent=c[0].slice(0,6)+'...'+c[0].slice(-4);
-    document.getElementById('infoContract').textContent=token.slice(0,6)+'...'+token.slice(-4);
+    document.getElementById('infoCreatorFee').textContent=(creatorFeeBps/100).toFixed(2)+'% of each trade';
+    document.getElementById('infoCreator').textContent=shortAddr(c[0]);
+    document.getElementById('infoContract').textContent=shortAddr(token);
+    // graduated
+    if(c[3]){
+      document.getElementById('infoGradRow').style.display='flex';
+      document.getElementById('infoPancake').href='https://pancakeswap.finance/swap?outputCurrency='+token;
+    }else document.getElementById('infoGradRow').style.display='none';
+    // описание
+    document.getElementById('tradeDesc').textContent=meta&&meta.description?meta.description:'';
     document.getElementById('tradeCur').textContent = tradeSide==='buy'?'BNB':symbol;
-    // инициализировать график
+
     initChart();
-    await loadPriceHistory(token);
+    await loadChartFromTrades(token);
+    await loadTradesFeed(token);
+    subscribeTrades(token);
     updateTradeButton();
     updateReceive();
   }catch(e){ toast('Failed to load token','err'); }
 }
 
-// ─── График (lightweight-charts) ───
+// ─── График (lightweight-charts) из Supabase-сделок ───
 function initChart(){
   const el=document.getElementById('chartContainer');
   el.innerHTML='';
   chart=LightweightCharts.createChart(el,{
-    width:el.clientWidth, height:el.clientHeight,
+    width:el.clientWidth,height:el.clientHeight,
     layout:{background:{color:'#111318'},textColor:'#8b909a'},
     grid:{vertLines:{color:'#1a1d24'},horzLines:{color:'#1a1d24'}},
     timeScale:{timeVisible:true,borderColor:'#252932'},
     rightPriceScale:{borderColor:'#252932'},
   });
-  candleSeries=chart.addCandlestickSeries({
-    upColor:'#22c55e',downColor:'#ef4444',borderVisible:false,
-    wickUpColor:'#22c55e',wickDownColor:'#ef4444'
-  });
-  window.addEventListener('resize',()=>{ if(chart) chart.applyOptions({width:el.clientWidth}); });
+  candleSeries=chart.addCandlestickSeries({upColor:'#22c55e',downColor:'#ef4444',borderVisible:false,wickUpColor:'#22c55e',wickDownColor:'#ef4444'});
+  if(!window._lpResize){ window._lpResize=true; window.addEventListener('resize',()=>{ if(chart){const e=document.getElementById('chartContainer'); chart.applyOptions({width:e.clientWidth});} }); }
 }
 
-// строим свечи из событий Buy/Sell контракта
-async function loadPriceHistory(token){
+async function loadChartFromTrades(token){
   try{
-    const lp=getReadLaunchpad();
-    const rp=getReadProvider();
-    const current=await rp.getBlockNumber();
-    const fromBlock=Math.max(0,current-100000); // последние ~100k блоков
-    const buyFilter=lp.filters.Buy(token);
-    const sellFilter=lp.filters.Sell(token);
-    const [buys,sells]=await Promise.all([
-      lp.queryFilter(buyFilter,fromBlock,current),
-      lp.queryFilter(sellFilter,fromBlock,current)
-    ]);
-    // объединяем события с ценой и временем
-    const events=[];
-    for(const e of buys){ const b=await rp.getBlock(e.blockNumber); events.push({t:b.timestamp,price:Number(e.args.newPrice)/1e18}); }
-    for(const e of sells){ const b=await rp.getBlock(e.blockNumber); events.push({t:b.timestamp,price:Number(e.args.newPrice)/1e18}); }
-    events.sort((a,b)=>a.t-b.t);
-    // агрегируем в минутные свечи
-    const candles=aggregateCandles(events,60);
-    if(candles.length) candleSeries.setData(candles);
-    else{
-      // нет истории — покажем текущую цену как одну точку
-      const price=Number(await lp.getPrice(token))/1e18;
+    const {data:trades}=await sb.from('launchpad_trades').select('price,created_at')
+      .eq('token_address',token.toLowerCase()).order('created_at',{ascending:true}).limit(2000);
+    if(!trades||!trades.length){
+      // нет сделок — стартовая цена из контракта одной точкой
+      const price=Number(await getReadLaunchpad().getPrice(token))/1e18;
       const now=Math.floor(Date.now()/1000);
       candleSeries.setData([{time:now,open:price,high:price,low:price,close:price}]);
+      chart.timeScale().fitContent();
+      return;
     }
+    const events=trades.map(t=>({t:Math.floor(new Date(t.created_at).getTime()/1000),price:Number(t.price)}));
+    const candles=aggregateCandles(events,60); // минутные свечи
+    candleSeries.setData(candles);
     chart.timeScale().fitContent();
-  }catch(e){ /* график пустой */ }
+  }catch(e){}
 }
 
 function aggregateCandles(events,interval){
   if(!events.length) return [];
   const buckets={};
   for(const e of events){
-    const bucket=Math.floor(e.t/interval)*interval;
-    if(!buckets[bucket]) buckets[bucket]={time:bucket,open:e.price,high:e.price,low:e.price,close:e.price};
-    else{
-      const b=buckets[bucket];
-      b.high=Math.max(b.high,e.price); b.low=Math.min(b.low,e.price); b.close=e.price;
-    }
+    const b=Math.floor(e.t/interval)*interval;
+    if(!buckets[b]) buckets[b]={time:b,open:e.price,high:e.price,low:e.price,close:e.price};
+    else{ const x=buckets[b]; x.high=Math.max(x.high,e.price); x.low=Math.min(x.low,e.price); x.close=e.price; }
   }
   return Object.values(buckets).sort((a,b)=>a.time-b.time);
 }
 
-// ─── Buy/Sell side ───
+// ─── Лента сделок ───
+async function loadTradesFeed(token){
+  try{
+    const {data:trades}=await sb.from('launchpad_trades').select('*')
+      .eq('token_address',token.toLowerCase()).order('created_at',{ascending:false}).limit(30);
+    renderTradesFeed(trades||[]);
+  }catch(e){}
+}
+function renderTradesFeed(trades){
+  const el=document.getElementById('tradesFeed');
+  if(!trades.length){ el.innerHTML='<div style="color:var(--muted);font-size:12px;">No trades yet</div>'; return; }
+  el.innerHTML=trades.map(t=>
+    '<div class="trade-row"><span><span class="trade-side '+t.side+'">'+(t.side==='buy'?'BUY':'SELL')+'</span> '+shortAddr(t.wallet)+'</span>'+
+    '<span>'+fmtUsd(t.bnb_amount*1e18)+' • '+timeAgo(t.created_at)+'</span></div>'
+  ).join('');
+}
+// реалтайм — новые сделки появляются сами + график обновляется
+function subscribeTrades(token){
+  if(tradesChannel){ sb.removeChannel(tradesChannel); tradesChannel=null; }
+  tradesChannel=sb.channel('trades-'+token.toLowerCase())
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'launchpad_trades',filter:'token_address=eq.'+token.toLowerCase()},
+      ()=>{ loadTradesFeed(token); loadChartFromTrades(token); refreshTradeInfo(token); })
+    .subscribe();
+}
+async function refreshTradeInfo(token){
+  try{
+    const lp=getReadLaunchpad();
+    const c=await lp.getCurve(token);
+    const progress=Number(await lp.getProgress(token));
+    const price=await lp.getPrice(token);
+    document.getElementById('tradePrice').textContent=fmtPriceUsd(price);
+    document.getElementById('infoPrice').textContent=fmtPriceUsd(price)+' ('+Number(price)/1e18+' BNB)';
+    document.getElementById('infoMC').textContent=fmtUsd(c[1]);
+    document.getElementById('infoProgress').textContent=(progress/100).toFixed(1)+'%';
+  }catch(e){}
+}
+
+// ─── Buy/Sell переключение ───
 function setTradeSide(side){
   tradeSide=side;
   document.getElementById('tabBuy').classList.toggle('active-buy',side==='buy');
   document.getElementById('tabSell').classList.toggle('active-sell',side==='sell');
-  document.getElementById('amountLabel').textContent = side==='buy'?'Amount (BNB)':'Amount (tokens)';
-  document.getElementById('tradeCur').textContent = side==='buy'?'BNB':'TOKEN';
-  const btn=document.getElementById('tradeActionBtn');
-  btn.className='bs-action '+side;
-  document.getElementById('buyPresets').style.display = side==='buy'?'flex':'none';
-  updateReceive();
+  document.getElementById('amountLabel').textContent=side==='buy'?'Amount (BNB)':'Amount (tokens)';
+  const sym = currentTokenMeta&&currentTokenMeta.symbol ? currentTokenMeta.symbol : 'TOKEN';
+  document.getElementById('tradeCur').textContent=side==='buy'?'BNB':sym;
+  document.getElementById('tradeActionBtn').className='bs-action '+side;
+  document.getElementById('buyPresets').style.display=side==='buy'?'flex':'none';
+  updateReceive(); updateTradeButton();
 }
 function setAmount(v){ document.getElementById('tradeAmount').value=v; updateReceive(); }
 async function setMaxAmount(){
-  if(!userAddr){ return; }
+  if(!userAddr) return;
   if(tradeSide==='buy'){
     const bal=await provider.getBalance(userAddr);
-    // оставляем немного на газ
     const max=bal>ethers.parseEther('0.01')?bal-ethers.parseEther('0.01'):0n;
     document.getElementById('tradeAmount').value=ethers.formatEther(max);
   }else{
     const tk=new ethers.Contract(currentToken,TOKEN_ABI,provider);
-    const bal=await tk.balanceOf(userAddr);
-    document.getElementById('tradeAmount').value=ethers.formatEther(bal);
+    document.getElementById('tradeAmount').value=ethers.formatEther(await tk.balanceOf(userAddr));
   }
   updateReceive();
 }
-
-// ─── Расчёт "You receive" ───
 async function updateReceive(){
   const el=document.getElementById('receiveAmount');
   const amtStr=document.getElementById('tradeAmount').value;
@@ -517,41 +622,26 @@ async function updateReceive(){
   try{
     const lp=getReadLaunchpad();
     if(tradeSide==='buy'){
-      const bnbIn=ethers.parseEther(amtStr);
-      const [tokensOut]=await lp.quoteBuy(currentToken,bnbIn);
-      el.textContent=formatTokens(tokensOut)+' tokens';
+      const [tokensOut]=await lp.quoteBuy(currentToken,ethers.parseEther(amtStr));
+      el.textContent=fmtTokens(tokensOut)+' tokens';
     }else{
-      const tokensIn=ethers.parseEther(amtStr);
-      const [bnbOut]=await lp.quoteSell(currentToken,tokensIn);
-      el.textContent=formatPrice(bnbOut)+' BNB';
+      const [bnbOut]=await lp.quoteSell(currentToken,ethers.parseEther(amtStr));
+      el.textContent=fmtBNB(bnbOut)+' BNB ('+fmtUsd(bnbOut)+')';
     }
   }catch(e){ el.textContent='—'; }
 }
-
 function updateTradeButton(){
   const btn=document.getElementById('tradeActionBtn');
   const balLabel=document.getElementById('balanceLabel');
   if(!userAddr){ btn.textContent='Connect Wallet'; btn.disabled=false; return; }
-  btn.textContent = tradeSide==='buy'?'Buy':'Sell';
-  btn.disabled=false;
-  // показать баланс
-  if(currentToken){
-    (async()=>{
-      try{
-        if(tradeSide==='sell'){
-          const tk=new ethers.Contract(currentToken,TOKEN_ABI,provider);
-          const bal=await tk.balanceOf(userAddr);
-          balLabel.textContent='Balance: '+formatTokens(bal);
-        }else{
-          const bal=await provider.getBalance(userAddr);
-          balLabel.textContent='Balance: '+formatPrice(bal)+' BNB';
-        }
-      }catch(e){ balLabel.textContent=''; }
-    })();
-  }
+  btn.textContent=tradeSide==='buy'?'Buy':'Sell'; btn.disabled=false;
+  if(currentToken){(async()=>{try{
+    if(tradeSide==='sell'){ const tk=new ethers.Contract(currentToken,TOKEN_ABI,provider); balLabel.textContent='Balance: '+fmtTokens(await tk.balanceOf(userAddr)); }
+    else{ balLabel.textContent='Balance: '+fmtBNB(await provider.getBalance(userAddr))+' BNB'; }
+  }catch(e){ balLabel.textContent=''; }})();}
 }
 
-// ─── Выполнить сделку ───
+// ─── Выполнить сделку + записать в Supabase ───
 async function executeTrade(){
   if(!userAddr){ connectWallet(); return; }
   const amtStr=document.getElementById('tradeAmount').value;
@@ -559,42 +649,67 @@ async function executeTrade(){
   const btn=document.getElementById('tradeActionBtn');
   btn.disabled=true; btn.textContent='Processing...';
   try{
+    let txHash, sideBnb, sideTokens, priceBnb;
     if(tradeSide==='buy'){
       const bnbIn=ethers.parseEther(amtStr);
-      // расчёт minTokensOut со слиппеджем 5%
       const [tokensOut]=await launchpad.quoteBuy(currentToken,bnbIn);
       const minOut=tokensOut*95n/100n;
       const tx=await launchpad.buy(currentToken,minOut,{value:bnbIn});
       toast('Buying... confirm in wallet','ok');
-      await tx.wait();
+      const rc=await tx.wait();
+      txHash=rc.hash; sideBnb=Number(amtStr); sideTokens=Number(ethers.formatEther(tokensOut));
+      priceBnb=Number(await getReadLaunchpad().getPrice(currentToken))/1e18;
       toast('Bought! 🎉','ok');
     }else{
       const tokensIn=ethers.parseEther(amtStr);
-      // approve
       const tk=new ethers.Contract(currentToken,TOKEN_ABI,signer);
       const allowance=await tk.allowance(userAddr,LAUNCHPAD_ADDRESS);
-      if(allowance<tokensIn){
-        const atx=await tk.approve(LAUNCHPAD_ADDRESS,tokensIn);
-        toast('Approving...','ok');
-        await atx.wait();
-      }
+      if(allowance<tokensIn){ const atx=await tk.approve(LAUNCHPAD_ADDRESS,tokensIn); toast('Approving...','ok'); await atx.wait(); }
       const [bnbOut]=await launchpad.quoteSell(currentToken,tokensIn);
       const minOut=bnbOut*95n/100n;
       const tx=await launchpad.sell(currentToken,tokensIn,minOut);
       toast('Selling... confirm in wallet','ok');
-      await tx.wait();
+      const rc=await tx.wait();
+      txHash=rc.hash; sideBnb=Number(ethers.formatEther(bnbOut)); sideTokens=Number(amtStr);
+      priceBnb=Number(await getReadLaunchpad().getPrice(currentToken))/1e18;
       toast('Sold! 🎉','ok');
     }
+    // запись сделки в Supabase (для графика + ленты)
+    try{
+      await sb.from('launchpad_trades').insert({
+        token_address:currentToken.toLowerCase(), wallet:userAddr.toLowerCase(),
+        side:tradeSide, bnb_amount:sideBnb, token_amount:sideTokens, price:priceBnb, tx_hash:txHash
+      });
+    }catch(e){}
     document.getElementById('tradeAmount').value='';
-    await openTradePage(currentToken); // обновить
-  }catch(e){
-    toast(e.reason||e.message||'Trade failed','err');
-  }
-  btn.disabled=false;
-  updateTradeButton();
+    document.getElementById('receiveAmount').textContent='—';
+    // realtime сам обновит график/ленту, но обновим инфо сразу
+    refreshTradeInfo(currentToken);
+    updateTradeButton();
+  }catch(e){ toast(e.reason||e.message||'Trade failed','err'); }
+  btn.disabled=false; btn.textContent=tradeSide==='buy'?'Buy':'Sell';
 }
 
-// ─── Создание токена ───
+// ─── Создание токена (картинка + метаданные + контракт) ───
+function previewImage(input){
+  const f=input.files[0]; if(!f) return;
+  pendingImageFile=f;
+  const drop=document.getElementById('imgDrop');
+  const prev=document.getElementById('imgPreview');
+  const txt=document.getElementById('imgDropText');
+  const url=URL.createObjectURL(f);
+  prev.src=url; prev.classList.remove('hidden'); txt.classList.add('hidden'); drop.classList.add('has-img');
+}
+async function uploadTokenImage(file){
+  // прямой аплоад на Pinata
+  const fd=new FormData(); fd.append('file',file);
+  const r=await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS',{
+    method:'POST', headers:{'Authorization':'Bearer '+PINATA_JWT}, body:fd
+  });
+  if(!r.ok) throw new Error('Image upload failed');
+  const j=await r.json();
+  return 'https://gateway.pinata.cloud/ipfs/'+j.IpfsHash;
+}
 async function submitLaunch(){
   if(!userAddr){ toast('Connect wallet first','err'); await connectWallet(); return; }
   const name=document.getElementById('launchName').value.trim();
@@ -603,36 +718,57 @@ async function submitLaunch(){
   const btn=document.getElementById('launchSubmitBtn');
   btn.disabled=true; btn.textContent='Launching...';
   try{
-    // проверка пропуска
     const hasPass=await launchpad.hasPass(userAddr);
     if(!hasPass){ toast('Silver or Gold Pass required','err'); btn.disabled=false; btn.textContent='Launch Token'; return; }
+    // 1. картинка (если есть)
+    let imageUrl='';
+    if(pendingImageFile){ try{ toast('Uploading image...','ok'); imageUrl=await uploadTokenImage(pendingImageFile); }catch(e){ toast('Image upload failed, continuing','err'); } }
+    // 2. деплой токена через контракт
     const fee=await launchpad.creationFee();
     const tx=await launchpad.createToken(name,symbol,{value:fee});
-    toast('Launching... confirm in wallet','ok');
-    await tx.wait();
+    toast('Creating token... confirm in wallet','ok');
+    const rc=await tx.wait();
+    // адрес нового токена из события TokenCreated
+    let tokenAddr=null;
+    for(const log of rc.logs){
+      try{ const parsed=launchpad.interface.parseLog(log); if(parsed&&parsed.name==='TokenCreated'){ tokenAddr=parsed.args.token; break; } }catch(e){}
+    }
+    // 3. метаданные в Supabase
+    if(tokenAddr){
+      try{
+        await sb.from('launchpad_tokens').insert({
+          address:tokenAddr.toLowerCase(), name, symbol,
+          description:document.getElementById('launchDesc').value.trim(),
+          image_url:imageUrl,
+          twitter:document.getElementById('launchTwitter').value.trim(),
+          telegram:document.getElementById('launchTelegram').value.trim(),
+          website:document.getElementById('launchWebsite').value.trim(),
+          creator:userAddr.toLowerCase(), chain:'bnb'
+        });
+      }catch(e){}
+    }
     toast('Token launched! 🚀','ok');
     closeLaunchModal();
-    document.getElementById('launchName').value='';
-    document.getElementById('launchSymbol').value='';
-    document.getElementById('launchDesc').value='';
+    ['launchName','launchSymbol','launchDesc','launchTwitter','launchTelegram','launchWebsite'].forEach(id=>document.getElementById(id).value='');
+    pendingImageFile=null;
+    document.getElementById('imgPreview').classList.add('hidden');
+    document.getElementById('imgDropText').classList.remove('hidden');
+    document.getElementById('imgDrop').classList.remove('has-img');
     await loadTokens();
-  }catch(e){
-    toast(e.reason||e.message||'Launch failed','err');
-  }
+    if(tokenAddr) showTrade(tokenAddr);
+  }catch(e){ toast(e.reason||e.message||'Launch failed','err'); }
   btn.disabled=false; btn.textContent='Launch Token';
 }
-
 function openLaunchModal(){ document.getElementById('launchModal').classList.add('show'); }
 function closeLaunchModal(){ document.getElementById('launchModal').classList.remove('show'); }
 
-// ─── Хелперы форматирования ───
-function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-function formatBNB(wei){ return (Number(wei)/1e18).toFixed(3); }
-function formatPrice(wei){ const n=Number(wei)/1e18; return n<0.0001?n.toExponential(2):n.toFixed(5); }
-function formatTokens(wei){ const n=Number(wei)/1e18; return n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':n.toFixed(0); }
+// ─── Старт ───
+(async function init(){
+  await loadBnbPrice();
+  setInterval(loadBnbPrice, 60000); // обновлять цену BNB каждую минуту
+  showHome();
+})();
 
-// старт
-showHome();
 </script>
 </body>
 </html>
