@@ -26,8 +26,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <meta http-equiv="Content-Language" content="en"/>
 <title>OpenGate — Post. Earn. Own.</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
+<!-- Библиотеки скачиваются заранее, но выполняются ниже — там, где впервые
+     нужны. Раньше оба тега стояли здесь и держали показ страницы, пока не
+     загрузятся ~470 КБ: до стилей и до всей разметки. -->
+<link rel="preload" as="script" crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js">
+<link rel="preload" as="script" crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
 <script>
 // Поліфіл: WalletConnect зібраний під Node.js і звертається до process.env.
 // У чистому браузері без збірника (webpack/vite) такого обʼєкта нема —
@@ -35,7 +38,11 @@
 // ДО завантаження бібліотеки.
 window.process=window.process||{env:{NODE_ENV:'production'},browser:true,version:'',nextTick:function(fn){setTimeout(fn,0);}};
 </script>
-<script defer id="wc-umd" src="/wc.js"></script>
+<!-- WalletConnect (854 КБ) больше НЕ грузится при открытии страницы.
+     Тег остаётся статическим — адрес ему задаёт ensureWalletConnectLoaded()
+     в момент, когда человек действительно выбрал WalletConnect. Новых тегов
+     скрипта не создаём: раньше такие блокировались молча. -->
+<script defer id="wc-umd"></script>
 <script>
 // Ловимо будь-яку помилку виконання саме з wc.js — щоб побачити РЕАЛЬНУ
 // причину, якщо бібліотека завантажилась, але впала під час запуску.
@@ -4135,6 +4142,9 @@ async function smartConnectWallet(){
   </div>
 </div>
 
+<!-- Здесь библиотеки впервые нужны: следующий блок обращается к ним сразу. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" crossorigin="anonymous"></script>
 <script>
 // Global error catcher — with crossorigin set on script tags above, this
 // should now show real error messages/stack traces instead of the generic
@@ -4765,6 +4775,14 @@ function ensureWalletConnectLoaded(){
   if(tryBridge()) return Promise.resolve(true);
   if(window._wcLoadPromise) return window._wcLoadPromise;
 
+  // Запускаем загрузку ТОЛЬКО сейчас. Тег стоит в <head> с самого начала,
+  // мы лишь задаём ему адрес — новый тег не создаётся, поэтому запрет на
+  // динамически созданные скрипты нас не касается.
+  try{
+    var wcTag=document.getElementById('wc-umd');
+    if(wcTag && !wcTag.src){ wcTag.src='/wc.js'; }
+  }catch(e){ console.error('[WalletConnect] не удалось начать загрузку:',e); }
+
   window._wcLoadPromise=new Promise(function(resolve){
     var waited=0;
     var iv=setInterval(function(){
@@ -5216,7 +5234,7 @@ async function bnbbsLoadRooms(){
       var p1=item.g.player1.toLowerCase();
       var prof=profileMap[p1]||{};
       var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
-      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var av=prof.avatar_url?'<img loading="lazy" decoding="async" src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
       var amount=parseFloat(ethers.formatUnits(item.g.betAmount,18)).toFixed(2);
       var tok=Number(item.g.token)===0?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
@@ -6152,7 +6170,7 @@ async function pbsLoadRooms(){
       var p1=item.g.player1.toLowerCase();
       var prof=profileMap[p1]||{};
       var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
-      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var av=prof.avatar_url?'<img loading="lazy" decoding="async" src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
       var amount=parseFloat(ethers.formatUnits(item.g.betAmount,6)).toFixed(2);
       var tok=item.g.paymentToken.toLowerCase()===USDT_POLYGON.toLowerCase()?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
@@ -7035,7 +7053,7 @@ async function basebsLoadRooms(){
       var p1=item.g.player1.toLowerCase();
       var prof=profileMap[p1]||{};
       var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
-      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var av=prof.avatar_url?'<img loading="lazy" decoding="async" src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
       var amount=parseFloat(ethers.formatUnits(item.g.betAmount,6)).toFixed(2);
       var tok=item.g.paymentToken.toLowerCase()===USDT_BASE.toLowerCase()?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
@@ -7906,7 +7924,7 @@ async function gpbsLoadRooms(){
       var p1=item.g.player1.toLowerCase();
       var prof=profileMap[p1]||{};
       var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
-      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var av=prof.avatar_url?'<img loading="lazy" decoding="async" src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
       var amount=parseFloat(ethers.formatUnits(item.g.betAmount,6)).toFixed(2);
       var tok=item.g.paymentToken.toLowerCase()===USDT_POLYGON.toLowerCase()?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
@@ -8774,7 +8792,7 @@ async function gbbsLoadRooms(){
       var p1=item.g.player1.toLowerCase();
       var prof=profileMap[p1]||{};
       var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
-      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var av=prof.avatar_url?'<img loading="lazy" decoding="async" src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
       var amount=parseFloat(ethers.formatUnits(item.g.betAmount,6)).toFixed(2);
       var tok=item.g.paymentToken.toLowerCase()===USDT_BASE.toLowerCase()?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
@@ -9662,7 +9680,7 @@ async function gbsLoadRooms(){
       var p1=item.g.player1.toLowerCase();
       var prof=profileMap[p1]||{};
       var name=prof.username||p1.slice(0,6)+'...'+p1.slice(-4);
-      var av=prof.avatar_url?'<img src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
+      var av=prof.avatar_url?'<img loading="lazy" decoding="async" src="'+prof.avatar_url+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>':'👤';
       var amount=parseFloat(ethers.formatUnits(item.g.betAmount,18)).toFixed(2);
       var tok=Number(item.g.token)===0?'USDT':'USDC';
       var isMe=p1===(userAddr||'').toLowerCase();
@@ -10525,7 +10543,7 @@ async function checkPassType(){
 function updateCompAv(){
   if(!currentUser) return;
   const el=document.getElementById('compAv');
-  el.innerHTML=currentUser.avatar_url?`<img src="${currentUser.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:(currentUser.username?currentUser.username[0].toUpperCase():'🧑');
+  el.innerHTML=currentUser.avatar_url?`<img loading="lazy" decoding="async" src="${currentUser.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:(currentUser.username?currentUser.username[0].toUpperCase():'🧑');
 }
 let _gateBalCache=null,_gateBalTime=0;
 async function loadGateBal(force=false){
@@ -10913,7 +10931,7 @@ function nftStudioPreview(inputId,previewId){
   const file=input.files[0];
   if(!file){preview.style.display='none';return;}
   const url=URL.createObjectURL(file);
-  preview.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+  preview.innerHTML='<img loading="lazy" decoding="async" src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
   preview.style.display='block';
 }
 
@@ -11676,7 +11694,7 @@ async function handleImages(input){
 function renderImgPreviews(){
   const el = document.getElementById('imgPreviews');
   el.innerHTML = pendingImages.map((url,i) => 
-    `<div class="img-preview-wrap"><img src="${url}"/><button class="img-preview-del" onclick="removeImg(${i})">✕</button></div>`
+    `<div class="img-preview-wrap"><img loading="lazy" decoding="async" src="${url}"/><button class="img-preview-del" onclick="removeImg(${i})">✕</button></div>`
   ).join('');
 }
 
@@ -11795,7 +11813,7 @@ function isOwnerWallet(){
 function renderPost(post,liked){
   const u=post.users||{};
   const name=u.username||sAddr(post.author_wallet);
-  const av=u.avatar_url?`<img src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
+  const av=u.avatar_url?`<img loading="lazy" decoding="async" src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
   return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;position:relative;">${av}<span class="og-dot" data-og-online="${(post.author_wallet||'').toLowerCase()}"></span></div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div>${renderPostText(post.content,post.id)}${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
           <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
@@ -12174,7 +12192,7 @@ async function loadNFTAvatar(){
     const meta=await res.json();
     let img=meta.image||'';
     if(img.startsWith('ipfs://')) img='https://gateway.pinata.cloud/ipfs/'+img.slice(7);
-    preview.innerHTML=`<img src="${img}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-top:8px;" onerror="this.parentElement.innerHTML='<div style=color:var(--red);font-size:12px;>Could not load NFT image</div>'"/>`;
+    preview.innerHTML=`<img loading="lazy" decoding="async" src="${img}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-top:8px;" onerror="this.parentElement.innerHTML='<div style=color:var(--red);font-size:12px;>Could not load NFT image</div>'"/>`;
     document.getElementById('editAvatar').value=img;
     showToast('NFT loaded! ✓','ok');
   }catch(e){preview.innerHTML='<div style="font-size:12px;color:var(--red);">Could not load NFT</div>';}
@@ -12206,7 +12224,7 @@ async function uploadAvatarFile(input){
     }
     document.getElementById('editAvatar').value=url;
     const thumb2=document.getElementById('avatarThumb');
-    if(thumb2) thumb2.innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;"/>';
+    if(thumb2) thumb2.innerHTML='<img loading="lazy" decoding="async" src="'+url+'" style="width:100%;height:100%;object-fit:cover;"/>';
     status.textContent='✓ Готово! Натисни "Зберегти профіль"';
     status.style.color='var(--green)';
     showToast('Фото готове! ✓','ok');
@@ -15027,7 +15045,7 @@ async function tokStudioLogoPreview(){
   const resized=await tokResizeImage(file,400);
   input._resizedFile=resized;
   const url=URL.createObjectURL(resized);
-  document.getElementById('tokLogoPreview').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+  document.getElementById('tokLogoPreview').innerHTML='<img loading="lazy" decoding="async" src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
 }
 
 async function tokUpdatePrice(){
@@ -15156,7 +15174,7 @@ async function tokStudioLogoPreviewPolygon(){
   const resized=await tokResizeImage(file,400);
   input._resizedFile=resized;
   const url=URL.createObjectURL(resized);
-  document.getElementById('tokLogoPreviewPolygon').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+  document.getElementById('tokLogoPreviewPolygon').innerHTML='<img loading="lazy" decoding="async" src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
 }
 
 function tokPolygonCurrencyAddr(){
@@ -15384,7 +15402,7 @@ async function tokManage(chain,tokenAddr){
 
     if(logoURI){
       const url=await resolveIPFSWithFallback(logoURI).catch(function(){return '';});
-      if(url) document.getElementById('mtLogo').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+      if(url) document.getElementById('mtLogo').innerHTML='<img loading="lazy" decoding="async" src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
     }
     document.getElementById('mtStatus').innerHTML=paused?'<span style="color:var(--red);">⏸ Paused</span>':'<span style="color:var(--green);">✓ Active</span>';
 
@@ -15546,7 +15564,7 @@ async function tokLogoPreviewBase(){
   const resized=await tokResizeImage(file,400);
   input._resizedFile=resized;
   const url=URL.createObjectURL(resized);
-  document.getElementById('tokLogoPreviewBase').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+  document.getElementById('tokLogoPreviewBase').innerHTML='<img loading="lazy" decoding="async" src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
 }
 
 function tokBaseCurrencyAddr(){
@@ -15725,7 +15743,7 @@ async function tokLogoPreviewArb(){
   const resized=await tokResizeImage(file,400);
   input._resizedFile=resized;
   const url=URL.createObjectURL(resized);
-  document.getElementById('tokLogoPreviewArb').innerHTML='<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
+  document.getElementById('tokLogoPreviewArb').innerHTML='<img loading="lazy" decoding="async" src="'+url+'" style="width:100%;height:100%;object-fit:cover;">';
 }
 
 function tokArbCurrencyAddr(){
@@ -16891,7 +16909,7 @@ async function loadComments(postId){
     }
     // Comment input
     html+=`<div style="display:flex;gap:8px;margin-top:6px;align-items:flex-start;">
-      <div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;">${currentUser?.avatar_url?`<img src="${currentUser.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`:'🧑'}</div>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;">${currentUser?.avatar_url?`<img loading="lazy" decoding="async" src="${currentUser.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`:'🧑'}</div>
       <div style="flex:1;display:flex;gap:6px;">
         <input id="cmt-inp-${postId}" placeholder="Write a comment..." maxlength="300"
           style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:7px 14px;color:var(--text);font-size:13px;outline:none;font-family:'Space Grotesk',sans-serif;"
