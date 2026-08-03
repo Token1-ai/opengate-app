@@ -7759,7 +7759,7 @@ async function gpbsOracle(body){
 // ── EDGE FUNCTION: anti-cheat ──
 var EDGE_BS_GOLD_POLYGON_URL=SUPABASE_URL+'/functions/v1/battleship-gold-polygon';
 async function gpbsGetSig(){
-  var key='ogpbs_sig_'+gpbsGameId+'_'+(userAddr||'').toLowerCase();
+  var key='oggpbs_sig_'+gpbsGameId+'_'+(userAddr||'').toLowerCase();
   var s=sessionStorage.getItem(key);
   if(s) return s;
   var p=new ethers.BrowserProvider(window.ethereum);
@@ -9503,7 +9503,7 @@ async function gbsOracle(body){
 // ── EDGE FUNCTION: захищена гра (анти-чит) ──
 var EDGE_GBS_URL=SUPABASE_URL+'/functions/v1/battleship-gold';
 async function gbsGetSig(){
-  var key='ogbs_sig_'+gbsGameId+'_'+(userAddr||'').toLowerCase();
+  var key='oggbs_sig_'+gbsGameId+'_'+(userAddr||'').toLowerCase();
   var s=sessionStorage.getItem(key);
   if(s) return s;
   var p=new ethers.BrowserProvider(window.ethereum);
