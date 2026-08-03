@@ -46,7 +46,7 @@ const ABI_V3_GAME = [
 
 // Ротація публічних RPC — якщо один лагає, наступний виклик піде на інший
 // ── КОНФІГ ЗОЛОТОЇ ГРИ ──
-const GOLD_CONTRACT = '0x79c8d1cE862f51a98f3caCfee43Cc2454839D2F8'; // BattleshipGoldBNB
+const GOLD_CONTRACT = '0x7a2808690be859aD786dC3C43001d42550f39BEF'; // BattleshipGoldBNBv5 (старий: 0x79c8d1cE862f51a98f3caCfee43Cc2454839D2F8)
 const GOLD_OFFSET   = 2000000000; // зсув id золотих ігор у БД
 
 const RPCS = [
