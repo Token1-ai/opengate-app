@@ -3293,8 +3293,8 @@ async function smartConnectWallet(){
         </div>
         <div id="studioArbSection" style="display:none;">
         <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
-          <button id="studiohelp-arb-btn" onclick="toggleHelpBox('studiohelp-arb')" class="help-toggle-btn">❔ How does this work?</button>
-          <div id="studiohelp-arb" style="display:none;background:var(--bg2);border:1px solid rgba(41,98,255,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
+          <button id="studiohelp-base-btn" onclick="toggleHelpBox('studiohelp-base')" class="help-toggle-btn">❔ How does this work?</button>
+          <div id="studiohelp-base" style="display:none;background:var(--bg2);border:1px solid rgba(41,98,255,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               Upload your own photo → it becomes a real NFT you fully own, on your own ERC-721 contract, on Base. It works on any marketplace, so you can sell it wherever you like.<br><br>
               <b style="color:var(--text);">🖼️ Single NFT — $0.30 each:</b><br>
@@ -3324,9 +3324,9 @@ async function smartConnectWallet(){
 
             <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Pay with</div>
             <div style="display:flex;gap:8px;margin-bottom:14px;">
-              <button id="nft-cur-aeth" onclick="nftSelectCurrencyArb('ETH')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:var(--gold);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;">ETH</button>
-              <button id="nft-cur-ausdt" onclick="nftSelectCurrencyArb('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
-              <button id="nft-cur-ausdc" onclick="nftSelectCurrencyArb('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
+              <button id="nft-cur-beth" onclick="nftSelectCurrencyArb('ETH')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:var(--gold);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;">ETH</button>
+              <button id="nft-cur-busdt" onclick="nftSelectCurrencyArb('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
+              <button id="nft-cur-busdc" onclick="nftSelectCurrencyArb('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
             </div>
 
             <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:16px;font-size:13px;">
@@ -3765,8 +3765,8 @@ async function smartConnectWallet(){
         </div>
         <div id="launchArbSection" style="display:none;">
         <div style="padding:20px 20px 0;max-width:560px;margin:0 auto;">
-          <button id="launchhelp-arb-btn" class="help-toggle-btn" onclick="toggleHelpBox('launchhelp-arb')">❔ How does this work?</button>
-          <div id="launchhelp-arb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
+          <button id="launchhelp-arb-btn" class="help-toggle-btn" onclick="toggleHelpBox('launchhelp-base')">❔ How does this work?</button>
+          <div id="launchhelp-base" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
             <div style="color:var(--muted);">
               <b style="color:var(--text);">1.</b> Fill in your token's name, symbol, decimals (18 is standard) and total supply.<br>
               <b style="color:var(--text);">2.</b> Optionally enable <b style="color:var(--text);">Mintable</b>, <b style="color:var(--text);">Burnable</b>, <b style="color:var(--text);">Pausable</b>, a transfer <b style="color:var(--text);">Tax</b> (up to 10%) or <b style="color:var(--text);">Anti-Whale</b> max-wallet cap. A real, independent ERC-20 gets deployed on Arbitrum, fully owned by you.<br>
@@ -3827,9 +3827,9 @@ async function smartConnectWallet(){
             <div style="margin-bottom:8px;">
               <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Pay with</div>
               <div style="display:flex;gap:8px;">
-                <button id="tok-cur-aeth" onclick="tokSelectCurrencyArb('ETH')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:var(--gold);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;">ETH</button>
-                <button id="tok-cur-ausdt" onclick="tokSelectCurrencyArb('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
-                <button id="tok-cur-ausdc" onclick="tokSelectCurrencyArb('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
+                <button id="tok-cur-beth" onclick="tokSelectCurrencyArb('ETH')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--gold);background:var(--gold);color:#08090C;font-size:13px;font-weight:700;cursor:pointer;">ETH</button>
+                <button id="tok-cur-busdt" onclick="tokSelectCurrencyArb('USDT')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDT</button>
+                <button id="tok-cur-busdc" onclick="tokSelectCurrencyArb('USDC')" style="flex:1;padding:9px;border-radius:9px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;">USDC</button>
               </div>
             </div>
 
@@ -4325,52 +4325,9 @@ const STAKING_ABI = [
   'function rewardPool() view returns(uint256)',
   'function totalStaked() view returns(uint256)',
 ];
-// Ключи Pinata больше НЕ лежат в этом файле. Главный ключ живёт в переменных
-// окружения Vercel, а браузер получает одноразовый токен с правом только на
-// загрузку. Ниже — не ключи, а метки назначения: по ним сервер помечает
-// выданный токен, чтобы в панели Pinata было видно, какой раздел что залил.
-const PINATA_JWT = 'general';
-const PINATA_JWT_LITVM = 'litvm';
-const PINATA_JWT_TOKENS = 'tokens';
-
-// Подпись кошелька запрашивается один раз за сессию и переиспользуется,
-// чтобы MetaMask не всплывал на каждую картинку.
-let _pinataSess = null;          // {wallet, ts, signature}
-let _pinataPool = {};            // назначение -> {jwt, left}
-const PINATA_BATCH = 25;         // сколько загрузок берём одним токеном
-
-async function _pinataSession(){
-  if(!userAddr) throw new Error('Connect wallet first');
-  if(_pinataSess && _pinataSess.wallet===userAddr.toLowerCase()
-     && Date.now()-_pinataSess.ts < 4*60*1000) return _pinataSess;
-  const signer = await provider.getSigner();
-  const ts = Date.now();
-  const msg = 'OpenGate Pinata upload ' + userAddr.toLowerCase() + ' ' + ts;
-  const signature = await signer.signMessage(msg);
-  _pinataSess = { wallet: userAddr.toLowerCase(), ts, signature };
-  return _pinataSess;
-}
-
-// Возвращает рабочий ключ Pinata. Держит небольшой запас, чтобы не ходить
-// на сервер за каждым файлом — важно для коллекций из сотен фотографий.
-async function getPinataJwt(purpose){
-  const tag = ['general','litvm','tokens'].includes(purpose) ? purpose : 'general';
-  const pool = _pinataPool[tag];
-  if(pool && pool.left > 0){ pool.left--; return pool.jwt; }
-  const sess = await _pinataSession();
-  const r = await fetch('/api/filebase-upload',{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ action:'pinataKey', wallet:sess.wallet, ts:sess.ts,
-                           signature:sess.signature, purpose:tag, uses:PINATA_BATCH })
-  });
-  const j = await r.json().catch(()=>({}));
-  if(!r.ok || !j.jwt){
-    _pinataSess = null; // подпись могла протухнуть — попросим заново
-    throw new Error(j.error || 'Could not get an upload key');
-  }
-  _pinataPool[tag] = { jwt: j.jwt, left: (j.uses||1) - 1 };
-  return j.jwt;
-}
+const PINATA_JWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIyNmY5ZWM5OC0wNmMyLTRiYjYtOWE0OS1hYzkyZmRiY2YwMzIiLCJlbWFpbCI6ImJ0Y2ZpbHNzQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaW5fcG9saWN5Ijp7InJlZ2lvbnMiOlt7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6IkZSQTEifSx7ImRlc2lyZWRSZXBsaWNhdGlvbkNvdW50IjoxLCJpZCI6Ik5ZQzEifV0sInZlcnNpb24iOjF9LCJtZmFfZW5hYmxlZCI6ZmFsc2UsInN0YXR1cyI6IkFDVElWRSJ9LCJhdXRoZW50aWNhdGlvblR5cGUiOiJzY29wZWRLZXkiLCJzY29wZWRLZXlLZXkiOiI3YTE4OTZlZjgyNDAwYzA2NTI4NyIsInNjb3BlZEtleVNlY3JldCI6IjM5MjMzNWVmYmQyYzJiYzZlNDk5NDIzYzk1YzMxZWM5NDA3NzgxMjhkYmZiNTE1NzQyODkzMmU4OWFkY2Y1YzciLCJleHAiOjE4MTI1NjgzMzF9.WkiIwhZqxvx3hz_xymtuv2257hVdRg-Bxo_1Vee3fl0';
+const PINATA_JWT_LITVM = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiIwNzBjNDJlMi1iMGQ5LTQyNTEtYmJmYi1mZGQ3ZDc2OTFiMWEiLCJlbWFpbCI6ImdvcGVuZ2F0ZUBnbWFpbC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGluX3BvbGljeSI6eyJyZWdpb25zIjpbeyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJGUkExIn0seyJkZXNpcmVkUmVwbGljYXRpb25Db3VudCI6MSwiaWQiOiJOWUMxIn1dLCJ2ZXJzaW9uIjoxfSwibWZhX2VuYWJsZWQiOmZhbHNlLCJzdGF0dXMiOiJBQ1RJVkUifSwiYXV0aGVudGljYXRpb25UeXBlIjoic2NvcGVkS2V5Iiwic2NvcGVkS2V5S2V5IjoiNDMzMmVjNDQzNTA3MTllYTI2MjgiLCJzY29wZWRLZXlTZWNyZXQiOiI2NGYyNTViZTlmMmI5NzE4ZjYwMmQ3ZTFiMGY1ZWY3ODkyMTBiZGJmNmJkZDAzNzUwMjMzNTM0YmMxODg1MzM3IiwiZXhwIjoxODE1NDExOTAzfQ.JFLKk6TFqSM6WGXskkXuPHkk01QfbPD0GION3VmSP7A';
+const PINATA_JWT_TOKENS = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI0YzQzYzBjOS05MGNmLTQwZGMtODBkYy02YzM1YTRkNDM3MjUiLCJlbWFpbCI6Im5mdGluMjRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjQ4YWViMzI4MmEzMDMzMTVmNTBhIiwic2NvcGVkS2V5U2VjcmV0IjoiZGU3YmFlNmUxODA0YmFjYzYwZTA2YzNjMmIwNTQ3ZTY1NDJlZDljYzhlZGY3YmM0YThjN2UyZGZjNDljMWZhYSIsImV4cCI6MTgxNTQ4ODYyN30.hqNh-wmwbX2qJE8UETfkLknem9Un8KE-1xkjzRzFZwg';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ── ONLINE PRESENCE — Facebook-style green dot, ZERO DB load (Supabase Realtime Presence) ── */
@@ -10624,14 +10581,13 @@ async function uploadToSupabase(file){
   return sb.storage.from('media').getPublicUrl(path).data.publicUrl;
 }
 
-async function uploadToPinataOnly(file,purpose){
-  const jwt=await getPinataJwt(purpose||PINATA_JWT);
+async function uploadToPinataOnly(file,jwt){
   const formData=new FormData();
   formData.append('file',file);
   formData.append('pinataMetadata',JSON.stringify({name:'og-'+Date.now()}));
   const res=await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS',{
     method:'POST',
-    headers:{Authorization:'Bearer '+jwt},
+    headers:{Authorization:'Bearer '+(jwt||PINATA_JWT)},
     body:formData
   });
   if(!res.ok) throw new Error('Pinata upload failed: '+res.status);
@@ -10670,11 +10626,10 @@ async function uploadImageWithFallback(file,pinataJwt,filebaseBucket){
   }
 }
 
-async function pinJSONToIPFS(obj,purpose){
-  const jwt=await getPinataJwt(purpose||PINATA_JWT);
+async function pinJSONToIPFS(obj,jwt){
   const res=await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS',{
     method:'POST',
-    headers:{'Content-Type':'application/json',Authorization:'Bearer '+jwt},
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+(jwt||PINATA_JWT)},
     body:JSON.stringify({pinataMetadata:{name:'og-meta-'+Date.now()},pinataContent:obj})
   });
   if(!res.ok) throw new Error('Pinata metadata pin failed: '+res.status);
@@ -11261,9 +11216,9 @@ function nftArbCurrencyAddr(){
 }
 function nftSelectCurrencyArb(sym){
   nftCurrencyArb=sym;
-  ['aeth','ausdt','ausdc'].forEach(function(s){
+  ['beth','busdt','busdc'].forEach(function(s){
     const btn=document.getElementById('nft-cur-'+s);
-    const active=(s==='aeth'&&sym==='ETH')||(s==='ausdt'&&sym==='USDT')||(s==='ausdc'&&sym==='USDC');
+    const active=(s==='beth'&&sym==='ETH')||(s==='busdt'&&sym==='USDT')||(s==='busdc'&&sym==='USDC');
     btn.style.background=active?'var(--gold)':'var(--bg3)';
     btn.style.color=active?'#08090C':'var(--text)';
     btn.style.borderColor=active?'var(--gold)':'var(--border)';
@@ -15627,9 +15582,9 @@ function toggleTokOptArbitrum(id){
 
 function tokSelectCurrencyArb(sym){
   tokCurrencyArb=sym;
-  ['aeth','ausdt','ausdc'].forEach(function(s){
+  ['beth','busdt','busdc'].forEach(function(s){
     const btn=document.getElementById('tok-cur-'+s);
-    const active=(s==='aeth'&&sym==='ETH')||(s==='ausdt'&&sym==='USDT')||(s==='ausdc'&&sym==='USDC');
+    const active=(s==='beth'&&sym==='ETH')||(s==='busdt'&&sym==='USDT')||(s==='busdc'&&sym==='USDC');
     btn.style.background=active?'var(--gold)':'var(--bg3)';
     btn.style.color=active?'#08090C':'var(--text)';
     btn.style.borderColor=active?'var(--gold)':'var(--border)';
