@@ -28,7 +28,7 @@
 const { ethers } = require('ethers');
 const { createClient } = require('@supabase/supabase-js');
 
-const BATTLESHIP_CONTRACT = '0xb08A26CCEFbD2cB2194E8b9894E5DfC1D413aDC6'; // Gold VIP table
+const BATTLESHIP_CONTRACT = '0xb21482cFd2b5A7a35A85fF4193501CDEDFDdB7dd'; // Gold VIP table
 
 const ABI = [
   'function declareWinner(uint256 gameId, address winner) external',
