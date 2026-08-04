@@ -28,7 +28,7 @@
 const { ethers } = require('ethers');
 const { createClient } = require('@supabase/supabase-js');
 
-const BATTLESHIP_CONTRACT = '0x22597403bFa0982803Be28D070a14b6E45700dc0'; // regular table
+const BATTLESHIP_CONTRACT = '0x9E723b339dA57f046435239dac168003f90B1B20'; // regular table
 
 const ABI = [
   'function declareWinner(uint256 gameId, address winner) external',
