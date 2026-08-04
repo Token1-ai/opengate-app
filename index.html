@@ -5202,14 +5202,19 @@ async function bnbbsLoadRooms(){
   }
   try{
     var c=bnbbsContractRead();
-    var ids=await ogTimeout(c.getOpenGames(),10000);
-    // Balance
+    // Баланс запрашиваем ПАРАЛЛЕЛЬНО со списком комнат, а не после него.
+    // Раньше он ждал, пока придут комнаты (до 10 секунд), хотя эти два
+    // запроса друг от друга не зависят — отсюда и долгая загрузка суммы.
+    // Плюс ограничение в 8 секунд: зависший узел больше не оставляет
+    // надпись пустой навсегда.
     try{
       var uC=new ethers.Contract(USDT_BNB_ADDR,ERC20_SIMPLE_ABI,getBNBBattleProvider());
-      var bal=await uC.balanceOf(userAddr);
-      var balEl=document.getElementById('bnbbs-balance');
-      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2)+' USDT';
+      ogTimeout(uC.balanceOf(userAddr),8000).then(function(bal){
+        var balEl=document.getElementById('bnbbs-balance');
+        if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2)+' USDT';
+      }).catch(function(){});
     }catch(e){}
+    var ids=await ogTimeout(c.getOpenGames(),10000);
     if(!ids||ids.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
       bnbbsCheckActiveGame();
@@ -6151,13 +6156,19 @@ async function pbsLoadRooms(){
     return;
   }
   try{
-    var ids=await polygonReadRetry(function(p){return new ethers.Contract(POLYGON_BATTLE_ADDR,POLYGON_BATTLE_ABI,p).getOpenGames();});
+    // Баланс запрашиваем ПАРАЛЛЕЛЬНО со списком комнат, а не после него.
+    // Раньше он ждал, пока придут комнаты (до 10 секунд), хотя эти два
+    // запроса друг от друга не зависят — отсюда и долгая загрузка суммы.
+    // Плюс ограничение в 8 секунд: зависший узел больше не оставляет
+    // надпись пустой навсегда.
     try{
       var uC=new ethers.Contract(pbsCurrencyAddr(),ERC20_MIN_ABI,getPolygonReadProvider());
-      var bal=await uC.balanceOf(userAddr);
-      var balEl=document.getElementById('pbs-balance');
-      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+pbsToken;
+      ogTimeout(uC.balanceOf(userAddr),8000).then(function(bal){
+        var balEl=document.getElementById('pbs-balance');
+        if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+pbsToken;
+      }).catch(function(){});
     }catch(e){}
+    var ids=await polygonReadRetry(function(p){return new ethers.Contract(POLYGON_BATTLE_ADDR,POLYGON_BATTLE_ABI,p).getOpenGames();});
     if(!ids||ids.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
       pbsCheckActiveGame();
@@ -7045,13 +7056,19 @@ async function basebsLoadRooms(){
     return;
   }
   try{
-    var ids=await baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getOpenGames();});
+    // Баланс запрашиваем ПАРАЛЛЕЛЬНО со списком комнат, а не после него.
+    // Раньше он ждал, пока придут комнаты (до 10 секунд), хотя эти два
+    // запроса друг от друга не зависят — отсюда и долгая загрузка суммы.
+    // Плюс ограничение в 8 секунд: зависший узел больше не оставляет
+    // надпись пустой навсегда.
     try{
       var uC=new ethers.Contract(basebsCurrencyAddr(),ERC20_MIN_ABI,getBaseReadProvider());
-      var bal=await uC.balanceOf(userAddr);
-      var balEl=document.getElementById('basebs-balance');
-      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+basebsToken;
+      ogTimeout(uC.balanceOf(userAddr),8000).then(function(bal){
+        var balEl=document.getElementById('basebs-balance');
+        if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+basebsToken;
+      }).catch(function(){});
     }catch(e){}
+    var ids=await baseReadRetry(function(p){return new ethers.Contract(BASE_BATTLE_ADDR,BASE_BATTLE_ABI,p).getOpenGames();});
     if(!ids||ids.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
       basebsCheckActiveGame();
@@ -7927,13 +7944,19 @@ async function gpbsLoadRooms(){
     return;
   }
   try{
-    var ids=await polygonReadRetry(function(p){return new ethers.Contract(POLYGON_GOLD_BATTLE_ADDR,POLYGON_GOLD_BATTLE_ABI,p).getOpenGames();});
+    // Баланс запрашиваем ПАРАЛЛЕЛЬНО со списком комнат, а не после него.
+    // Раньше он ждал, пока придут комнаты (до 10 секунд), хотя эти два
+    // запроса друг от друга не зависят — отсюда и долгая загрузка суммы.
+    // Плюс ограничение в 8 секунд: зависший узел больше не оставляет
+    // надпись пустой навсегда.
     try{
       var uC=new ethers.Contract(gpbsCurrencyAddr(),ERC20_MIN_ABI,getPolygonReadProvider());
-      var bal=await uC.balanceOf(userAddr);
-      var balEl=document.getElementById('gpbs-balance');
-      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+gpbsToken;
+      ogTimeout(uC.balanceOf(userAddr),8000).then(function(bal){
+        var balEl=document.getElementById('gpbs-balance');
+        if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+gpbsToken;
+      }).catch(function(){});
     }catch(e){}
+    var ids=await polygonReadRetry(function(p){return new ethers.Contract(POLYGON_GOLD_BATTLE_ADDR,POLYGON_GOLD_BATTLE_ABI,p).getOpenGames();});
     if(!ids||ids.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
       gpbsCheckActiveGame();
@@ -8806,13 +8829,19 @@ async function gbbsLoadRooms(){
     return;
   }
   try{
-    var ids=await baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getOpenGames();});
+    // Баланс запрашиваем ПАРАЛЛЕЛЬНО со списком комнат, а не после него.
+    // Раньше он ждал, пока придут комнаты (до 10 секунд), хотя эти два
+    // запроса друг от друга не зависят — отсюда и долгая загрузка суммы.
+    // Плюс ограничение в 8 секунд: зависший узел больше не оставляет
+    // надпись пустой навсегда.
     try{
       var uC=new ethers.Contract(gbbsCurrencyAddr(),ERC20_MIN_ABI,getBaseReadProvider());
-      var bal=await uC.balanceOf(userAddr);
-      var balEl=document.getElementById('gbbs-balance');
-      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+gbbsToken;
+      ogTimeout(uC.balanceOf(userAddr),8000).then(function(bal){
+        var balEl=document.getElementById('gbbs-balance');
+        if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2)+' '+gbbsToken;
+      }).catch(function(){});
     }catch(e){}
+    var ids=await baseReadRetry(function(p){return new ethers.Contract(BASE_GOLD_BATTLE_ADDR,BASE_GOLD_BATTLE_ABI,p).getOpenGames();});
     if(!ids||ids.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
       gbbsCheckActiveGame();
@@ -9703,14 +9732,19 @@ async function gbsLoadRooms(){
   }
   try{
     var c=gbsContractRead();
-    var ids=await ogTimeout(c.getOpenGames(),10000);
-    // Balance
+    // Баланс запрашиваем ПАРАЛЛЕЛЬНО со списком комнат, а не после него.
+    // Раньше он ждал, пока придут комнаты (до 10 секунд), хотя эти два
+    // запроса друг от друга не зависят — отсюда и долгая загрузка суммы.
+    // Плюс ограничение в 8 секунд: зависший узел больше не оставляет
+    // надпись пустой навсегда.
     try{
       var uC=new ethers.Contract(USDT_BNB_ADDR,ERC20_SIMPLE_ABI,getBNBBattleProvider());
-      var bal=await uC.balanceOf(userAddr);
-      var balEl=document.getElementById('gbs-balance');
-      if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2)+' USDT';
+      ogTimeout(uC.balanceOf(userAddr),8000).then(function(bal){
+        var balEl=document.getElementById('gbs-balance');
+        if(balEl) balEl.textContent='Balance: $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2)+' USDT';
+      }).catch(function(){});
     }catch(e){}
+    var ids=await ogTimeout(c.getOpenGames(),10000);
     if(!ids||ids.length===0){
       el.innerHTML='<div class="app-empty"><div class="app-empty-ico">⚓</div>No open games.<br>Create one above!</div>';
       gbsCheckActiveGame();
