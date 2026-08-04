@@ -5515,12 +5515,23 @@ async function bnbbsEnterGame(stakeInfo){
   bnbbsRealtimeChannel=sb.channel('bnbbs-'+bnbbsGameId+'-'+Date.now())
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+bnbbsGameId},function(payload){
       if(payload.new&&!payload.new.bet_token) bnbbsHandleUpdate(payload.new);
-    }).subscribe();
+    }).subscribe(function(st){
+      // Помним, жива ли подписка. Пока жива — резервный опрос почти
+      // не трогает базу; замолчала — он сразу берёт всё на себя.
+      window._rtLive_bnbbs = (st === 'SUBSCRIBED');
+    });
   // Резервне опитування кожні 4с — гра синхронізується навіть якщо Realtime мовчить
   if(bnbbsPollTimer) clearInterval(bnbbsPollTimer);
   bnbbsPollTimer=setInterval(async function(){
     if(!bnbbsGameId||bnbbsGameFinished){clearInterval(bnbbsPollTimer);bnbbsPollTimer=null;return;}
-    try{
+    
+      // Раньше опрос дёргал базу каждые 3 секунды всегда, даже когда
+      // подписка приносила изменения мгновенно — одни и те же данные
+      // тянулись дважды. Теперь при живой подписке база опрашивается
+      // раз в 15 секунд, только для сверки.
+      window._rtTick_bnbbs = (window._rtTick_bnbbs || 0) + 1;
+      if (window._rtLive_bnbbs && (window._rtTick_bnbbs % 5 !== 0)) return;
+      try{
       var pr=await bnbbsGameQuery().maybeSingle();
       if(pr&&pr.data) bnbbsHandleUpdate(pr.data);
     }catch(e){}
@@ -6421,11 +6432,22 @@ async function pbsEnterGame(stakeInfo){
   pbsRealtimeChannel=sb.channel('pbs-'+pbsGameId+'-'+Date.now())
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+pbsDbId()},function(payload){
       if(payload.new&&!payload.new.bet_token) pbsHandleUpdate(payload.new);
-    }).subscribe();
+    }).subscribe(function(st){
+      // Помним, жива ли подписка. Пока жива — резервный опрос почти
+      // не трогает базу; замолчала — он сразу берёт всё на себя.
+      window._rtLive_pbs = (st === 'SUBSCRIBED');
+    });
   if(pbsPollTimer) clearInterval(pbsPollTimer);
   pbsPollTimer=setInterval(async function(){
     if((!pbsGameId&&pbsGameId!==0)||pbsGameFinished){clearInterval(pbsPollTimer);pbsPollTimer=null;return;}
-    try{
+    
+      // Раньше опрос дёргал базу каждые 3 секунды всегда, даже когда
+      // подписка приносила изменения мгновенно — одни и те же данные
+      // тянулись дважды. Теперь при живой подписке база опрашивается
+      // раз в 15 секунд, только для сверки.
+      window._rtTick_pbs = (window._rtTick_pbs || 0) + 1;
+      if (window._rtLive_pbs && (window._rtTick_pbs % 5 !== 0)) return;
+      try{
       var pr=await pbsGameQuery().maybeSingle();
       if(pr&&pr.data) pbsHandleUpdate(pr.data);
     }catch(e){}
@@ -7304,11 +7326,22 @@ async function basebsEnterGame(stakeInfo){
   basebsRealtimeChannel=sb.channel('basebs-'+basebsGameId+'-'+Date.now())
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+basebsDbId()},function(payload){
       if(payload.new&&!payload.new.bet_token) basebsHandleUpdate(payload.new);
-    }).subscribe();
+    }).subscribe(function(st){
+      // Помним, жива ли подписка. Пока жива — резервный опрос почти
+      // не трогает базу; замолчала — он сразу берёт всё на себя.
+      window._rtLive_basebs = (st === 'SUBSCRIBED');
+    });
   if(basebsPollTimer) clearInterval(basebsPollTimer);
   basebsPollTimer=setInterval(async function(){
     if((!basebsGameId&&basebsGameId!==0)||basebsGameFinished){clearInterval(basebsPollTimer);basebsPollTimer=null;return;}
-    try{
+    
+      // Раньше опрос дёргал базу каждые 3 секунды всегда, даже когда
+      // подписка приносила изменения мгновенно — одни и те же данные
+      // тянулись дважды. Теперь при живой подписке база опрашивается
+      // раз в 15 секунд, только для сверки.
+      window._rtTick_basebs = (window._rtTick_basebs || 0) + 1;
+      if (window._rtLive_basebs && (window._rtTick_basebs % 5 !== 0)) return;
+      try{
       var pr=await basebsGameQuery().maybeSingle();
       if(pr&&pr.data) basebsHandleUpdate(pr.data);
     }catch(e){}
@@ -8173,11 +8206,22 @@ async function gpbsEnterGame(stakeInfo){
   gpbsRealtimeChannel=sb.channel('gpbs-'+gpbsGameId+'-'+Date.now())
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+gpbsDbId()},function(payload){
       if(payload.new&&!payload.new.bet_token) gpbsHandleUpdate(payload.new);
-    }).subscribe();
+    }).subscribe(function(st){
+      // Помним, жива ли подписка. Пока жива — резервный опрос почти
+      // не трогает базу; замолчала — он сразу берёт всё на себя.
+      window._rtLive_gpbs = (st === 'SUBSCRIBED');
+    });
   if(gpbsPollTimer) clearInterval(gpbsPollTimer);
   gpbsPollTimer=setInterval(async function(){
     if((!gpbsGameId&&gpbsGameId!==0)||gpbsGameFinished){clearInterval(gpbsPollTimer);gpbsPollTimer=null;return;}
-    try{
+    
+      // Раньше опрос дёргал базу каждые 3 секунды всегда, даже когда
+      // подписка приносила изменения мгновенно — одни и те же данные
+      // тянулись дважды. Теперь при живой подписке база опрашивается
+      // раз в 15 секунд, только для сверки.
+      window._rtTick_gpbs = (window._rtTick_gpbs || 0) + 1;
+      if (window._rtLive_gpbs && (window._rtTick_gpbs % 5 !== 0)) return;
+      try{
       var pr=await gpbsGameQuery().maybeSingle();
       if(pr&&pr.data) gpbsHandleUpdate(pr.data);
     }catch(e){}
@@ -9041,11 +9085,22 @@ async function gbbsEnterGame(stakeInfo){
   gbbsRealtimeChannel=sb.channel('gbbs-'+gbbsGameId+'-'+Date.now())
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+gbbsDbId()},function(payload){
       if(payload.new&&!payload.new.bet_token) gbbsHandleUpdate(payload.new);
-    }).subscribe();
+    }).subscribe(function(st){
+      // Помним, жива ли подписка. Пока жива — резервный опрос почти
+      // не трогает базу; замолчала — он сразу берёт всё на себя.
+      window._rtLive_gbbs = (st === 'SUBSCRIBED');
+    });
   if(gbbsPollTimer) clearInterval(gbbsPollTimer);
   gbbsPollTimer=setInterval(async function(){
     if((!gbbsGameId&&gbbsGameId!==0)||gbbsGameFinished){clearInterval(gbbsPollTimer);gbbsPollTimer=null;return;}
-    try{
+    
+      // Раньше опрос дёргал базу каждые 3 секунды всегда, даже когда
+      // подписка приносила изменения мгновенно — одни и те же данные
+      // тянулись дважды. Теперь при живой подписке база опрашивается
+      // раз в 15 секунд, только для сверки.
+      window._rtTick_gbbs = (window._rtTick_gbbs || 0) + 1;
+      if (window._rtLive_gbbs && (window._rtTick_gbbs % 5 !== 0)) return;
+      try{
       var pr=await gbbsGameQuery().maybeSingle();
       if(pr&&pr.data) gbbsHandleUpdate(pr.data);
     }catch(e){}
@@ -9957,12 +10012,23 @@ async function gbsEnterGame(stakeInfo){
   gbsRealtimeChannel=sb.channel('gbs-'+gbsGameId+'-'+Date.now())
     .on('postgres_changes',{event:'*',schema:'public',table:'battleship_games',filter:'contract_game_id=eq.'+gbsDbId()},function(payload){
       if(payload.new&&!payload.new.bet_token) gbsHandleUpdate(payload.new);
-    }).subscribe();
+    }).subscribe(function(st){
+      // Помним, жива ли подписка. Пока жива — резервный опрос почти
+      // не трогает базу; замолчала — он сразу берёт всё на себя.
+      window._rtLive_gbs = (st === 'SUBSCRIBED');
+    });
   // Резервне опитування кожні 4с — гра синхронізується навіть якщо Realtime мовчить
   if(gbsPollTimer) clearInterval(gbsPollTimer);
   gbsPollTimer=setInterval(async function(){
     if(!gbsGameId||gbsGameFinished){clearInterval(gbsPollTimer);gbsPollTimer=null;return;}
-    try{
+    
+      // Раньше опрос дёргал базу каждые 3 секунды всегда, даже когда
+      // подписка приносила изменения мгновенно — одни и те же данные
+      // тянулись дважды. Теперь при живой подписке база опрашивается
+      // раз в 15 секунд, только для сверки.
+      window._rtTick_gbs = (window._rtTick_gbs || 0) + 1;
+      if (window._rtLive_gbs && (window._rtTick_gbs % 5 !== 0)) return;
+      try{
       var pr=await gbsGameQuery().maybeSingle();
       if(pr&&pr.data) gbsHandleUpdate(pr.data);
     }catch(e){}
@@ -16062,7 +16128,14 @@ function showConvList(){
 async function loadMessages(){
   if(!currentDMWallet||!userAddr)return;
   const el=document.getElementById('msgList');
-  const {data:msgs}=await sb.from('messages').select('*').or('and(from_wallet.eq.'+userAddr+',to_wallet.eq.'+currentDMWallet+'),and(from_wallet.eq.'+currentDMWallet+',to_wallet.eq.'+userAddr+')').order('created_at',{ascending:true});
+  const {data:msgs}=await sb.from('messages').select('*').or('and(from_wallet.eq.'+userAddr+',to_wallet.eq.'+currentDMWallet+'),and(from_wallet.eq.'+currentDMWallet+',to_wallet.eq.'+userAddr+')').order('created_at',{ascending:false}).limit(300);
+  // Берём последние 300 сообщений, а не всю переписку целиком.
+  // Раньше при каждом обновлении — а оно приходит и по подписке, и по
+  // таймеру раз в 5 секунд — заново скачивалась вся история. При длинной
+  // переписке это тормозило всё сильнее с каждым днём.
+  // Запрашиваем от новых к старым (так база берёт их по индексу сразу),
+  // а переворачиваем уже здесь, чтобы порядок на экране не изменился.
+  if(msgs) msgs.reverse();
   if(!msgs||msgs.length===0){el.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;">No messages yet 👋</div>';return;}
   el.innerHTML='';
   msgs.forEach(function(m,idx){
