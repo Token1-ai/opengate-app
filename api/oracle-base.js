@@ -28,7 +28,7 @@
 const { ethers } = require('ethers');
 const { createClient } = require('@supabase/supabase-js');
 
-const BATTLESHIP_CONTRACT = '0x22597403bFa0982803Be28D070a14b6E45700dc0'; // BattleshipBase regular (Base)
+const BATTLESHIP_CONTRACT = '0xc4844EBDACE533D7b98C730ad06aF57376eCbf12'; // BattleshipBase regular (Base)
 
 const ABI = [
   'function declareWinner(uint256 gameId, address winner) external',
