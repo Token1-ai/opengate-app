@@ -5969,7 +5969,7 @@ function bnbbsHandleUpdate(game){
 // checking the DB. Cross-chain Gold/Silver Pass verified via signed voucher
 // (Polygon can't read BNB Chain directly).
 // ═══════════════════════════════════════════════════════════════════════════
-var POLYGON_BATTLE_ADDR = '0x22597403bFa0982803Be28D070a14b6E45700dc0';
+var POLYGON_BATTLE_ADDR = '0x9E723b339dA57f046435239dac168003f90B1B20'; // v2 (старый: 0x22597403bFa0982803Be28D070a14b6E45700dc0)
 var POLYGON_OFFSET = 3000000000; // keeps this table's DB ids out of every other range
 var OG_PBS_BUILD = 'PBS-1';
 var POLYGON_BATTLE_ABI = [
@@ -6852,7 +6852,7 @@ function pbsHandleUpdate(game){
 // checking the DB. Cross-chain Gold/Silver Pass verified via signed voucher
 // (Base can't read BNB Chain directly).
 // ═══════════════════════════════════════════════════════════════════════════
-var BASE_BATTLE_ADDR = '0x22597403bFa0982803Be28D070a14b6E45700dc0';
+var BASE_BATTLE_ADDR = '0xc4844EBDACE533D7b98C730ad06aF57376eCbf12'; // v2 (старый: 0x22597403bFa0982803Be28D070a14b6E45700dc0)
 var BASE_BS_OFFSET = 5000000000; // Base regular — out of BNB(0)/BNB Gold(2B)/Polygon(3B)/Polygon Gold(4B)
 var OG_BBS_BUILD = 'BBS-1';
 var BASE_BATTLE_ABI = [
@@ -7723,7 +7723,7 @@ function basebsHandleUpdate(game){
 }
 
 
-var POLYGON_GOLD_BATTLE_ADDR = '0xb08A26CCEFbD2cB2194E8b9894E5DfC1D413aDC6';
+var POLYGON_GOLD_BATTLE_ADDR = '0xb21482cFd2b5A7a35A85fF4193501CDEDFDdB7dd'; // v2 (старый: 0xb08A26CCEFbD2cB2194E8b9894E5DfC1D413aDC6)
 var POLYGON_GOLD_OFFSET = 4000000000; // keeps this table's DB ids out of every other range
 var OG_GPBS_BUILD = 'GPBS-1';
 var POLYGON_GOLD_BATTLE_ABI = [
@@ -8591,7 +8591,7 @@ function gpbsHandleUpdate(game){
   }
 }
 
-var BASE_GOLD_BATTLE_ADDR = '0xb08A26CCEFbD2cB2194E8b9894E5DfC1D413aDC6';
+var BASE_GOLD_BATTLE_ADDR = '0x2b7b9d98404Fa0b5F0ffcAB89387373B98268acE'; // v2 (старый: 0xb08A26CCEFbD2cB2194E8b9894E5DfC1D413aDC6)
 var BASE_GOLD_OFFSET = 6000000000; // Base Gold — out of BNB(0)/BNB Gold(2B)/Polygon(3B)/Polygon Gold(4B)/Base regular(5B)
 var OG_GBBS_BUILD = 'GBBS-1';
 var BASE_GOLD_BATTLE_ABI = [
