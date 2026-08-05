@@ -390,6 +390,17 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 #fundNavBtn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;}
 @media(max-width:560px){#fundNavBtn{display:none;}}
 .fund-inline{background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;-webkit-tap-highlight-color:transparent;}
+.nft-hub-card{display:flex;align-items:center;gap:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;cursor:pointer;transition:border-color .2s;-webkit-tap-highlight-color:transparent;}
+.nft-hub-card:active{border-color:var(--gold);}
+.nft-hub-ico{font-size:34px;flex-shrink:0;}
+.nft-hub-body{flex:1;min-width:0;}
+.nft-hub-t{font-size:16px;font-weight:800;margin-bottom:5px;}
+.nft-hub-d{font-size:12.5px;line-height:1.6;color:var(--muted);}
+.nft-hub-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.nft-hub-tags span{font-size:10.5px;color:var(--gold);background:var(--bg3);border:1px solid var(--border);border-radius:100px;padding:3px 9px;}
+.nft-hub-arrow{font-size:19px;color:var(--muted);flex-shrink:0;}
+.nft-hub-note{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;padding:6px 8px 20px;}
+.nft-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0 0 0 2px;-webkit-tap-highlight-color:transparent;}
 .lot-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;}
 .lot-round-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;}
 .lot-round-no{font-size:18px;font-weight:800;}
@@ -2752,9 +2763,37 @@ async function smartConnectWallet(){
         </div>
       </div>
 
+      <div id="view-nfthub" style="display:none;">
+        <div class="feed-hdr">🖼️ NFT</div>
+        <div style="max-width:520px;margin:0 auto;padding:16px;">
+
+          <div class="nft-hub-card" onclick="showTab('nftstudio')">
+            <div class="nft-hub-ico">🎨</div>
+            <div class="nft-hub-body">
+              <div class="nft-hub-t">NFT Studio</div>
+              <div class="nft-hub-d">Make your own collection. Upload the art, set the name and supply, and it is minted on the network you choose.</div>
+              <div class="nft-hub-tags"><span>Create</span><span>Mint</span><span>Your own art</span></div>
+            </div>
+            <div class="nft-hub-arrow">→</div>
+          </div>
+
+          <div class="nft-hub-card" onclick="showTab('market')">
+            <div class="nft-hub-ico">🛒</div>
+            <div class="nft-hub-body">
+              <div class="nft-hub-t">NFT Marketplace</div>
+              <div class="nft-hub-d">Buy and sell NFTs that already exist — yours, other people’s, and the Gold and Silver Passes.</div>
+              <div class="nft-hub-tags"><span>Buy</span><span>Sell</span><span>Passes</span></div>
+            </div>
+            <div class="nft-hub-arrow">→</div>
+          </div>
+
+          <div class="nft-hub-note">New here? Start with the Studio if you want to make something, or the Marketplace if you want to buy something.</div>
+        </div>
+      </div>
+
       <div id="view-market" style="display:none;">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
-          <span>🛒 NFT Marketplace</span>
+          <span style="display:flex;align-items:center;gap:10px;"><button class="nft-back" onclick="showTab('nfthub')">←</button>🛒 NFT Marketplace</span>
           <button id="mktListBtn" onclick="openListModal()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:6px 14px;font-size:13px;font-weight:700;">+ Add NFT</button>
         </div>
 
@@ -3217,7 +3256,10 @@ async function smartConnectWallet(){
       </div>
 
       <div id="view-nftstudio" style="display:none;">
-        <div class="feed-hdr">🎨 NFT Studio</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:10px;">
+          <button class="nft-back" onclick="showTab('nfthub')">←</button>
+          <span>🎨 NFT Studio</span>
+        </div>
 
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;">
           <button id="studioChainLitvm" onclick="nftStudioSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
@@ -4176,8 +4218,7 @@ async function smartConnectWallet(){
       <button class="drawer-btn" id="drawer-lottery" onclick="closeDrawer();showTab('lottery')"><span class="drawer-ico">🎰</span>Lottery</button>
 
       <div class="drawer-lbl">More</div>
-      <button class="drawer-btn" id="drawer-market" onclick="closeDrawer();showTab('market')"><span class="drawer-ico">🛒</span>NFT Market</button>
-      <button class="drawer-btn" id="drawer-nftstudio" onclick="closeDrawer();showTab('nftstudio')"><span class="drawer-ico">🎨</span>NFT Studio</button>
+      <button class="drawer-btn" id="drawer-nfthub" onclick="closeDrawer();showTab('nfthub')"><span class="drawer-ico">🖼️</span>NFT</button>
       <button class="drawer-btn" id="drawer-launchpad" onclick="closeDrawer();showTab('launchpad')"><span class="drawer-ico">🚀</span>Create Token</button>
       <button class="drawer-btn" id="drawer-faucet" onclick="closeDrawer();showTab('faucet')"><span class="drawer-ico">🚰</span>Faucet</button>
       <button class="drawer-btn" id="drawer-fund" onclick="closeDrawer();openFundGeneric()"><span class="drawer-ico">💳</span>Add funds</button>
@@ -10771,6 +10812,7 @@ function showTab(tab){
   if(tab!=='launchpad'){ tokStopPriceAutoRefresh(); }
   document.getElementById('view-notifs').style.display=tab==='notifs'?'block':'none';
   document.getElementById('view-explore').style.display=tab==='explore'?'block':'none';
+  document.getElementById('view-nfthub').style.display=tab==='nfthub'?'block':'none';
   document.getElementById('view-market').style.display=tab==='market'?'block':'none';
   document.getElementById('view-nftstudio').style.display=tab==='nftstudio'?'block':'none';
   document.getElementById('view-dao').style.display=tab==='dao'?'block':'none';
@@ -17821,6 +17863,7 @@ function handleConnectClick(){
 const LANGS = {
   en: {
     // Поповнення гаманця
+    nfthub:'NFT',
     fundBtn:'Add funds',
     fundTitle:'How to add funds',
     fundSub:'You need {T} on the {N} network',
@@ -17888,6 +17931,7 @@ const LANGS = {
   },
   ru: {
     // Поповнення гаманця
+    nfthub:'NFT',
     fundBtn:'Пополнить кошелёк',
     fundTitle:'Как пополнить кошелёк',
     fundSub:'Нужен {T} в сети {N}',
@@ -17947,6 +17991,7 @@ const LANGS = {
   },
   uk: {
     // Поповнення гаманця
+    nfthub:'NFT',
     fundBtn:'Поповнити гаманець',
     fundTitle:'Як поповнити гаманець',
     fundSub:'Потрібен {T} у мережі {N}',
@@ -18006,6 +18051,7 @@ const LANGS = {
   },
   hi: {
     // Поповнення гаманця
+    nfthub:'NFT',
     fundBtn:'वॉलेट में पैसे जोड़ें',
     fundTitle:'वॉलेट में पैसे कैसे जोड़ें',
     fundSub:'{N} नेटवर्क पर {T} चाहिए',
@@ -18065,6 +18111,7 @@ const LANGS = {
   },
   zh: {
     // Поповнення гаманця
+    nfthub:'NFT',
     fundBtn:'为钱包充值',
     fundTitle:'如何为钱包充值',
     fundSub:'需要 {N} 网络上的 {T}',
@@ -18124,6 +18171,7 @@ const LANGS = {
   },
   tr: {
     // Поповнення гаманця
+    nfthub:'NFT',
     fundBtn:'Cüzdana para ekle',
     fundTitle:'Cüzdanınıza para nasıl eklenir',
     fundSub:'{N} ağında {T} gerekiyor',
@@ -18183,6 +18231,7 @@ const LANGS = {
   },
   de: {
     // Поповнення гаманця
+    nfthub:'NFT',
     fundBtn:'Guthaben aufladen',
     fundTitle:'So laden Sie Ihre Wallet auf',
     fundSub:'Sie brauchen {T} im Netzwerk {N}',
@@ -18286,7 +18335,7 @@ function applyLang(){
   const cb=document.getElementById('connectBtn');
   if(cb&&!cb.classList.contains('connected'))cb.innerHTML='<div class="w-dot"></div>'+t('connectWallet');
   // Drawer btns
-  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet','drawer-fund':'fundBtn'};
+  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-nfthub':'nfthub','drawer-launchpad':'launchpad','drawer-faucet':'faucet','drawer-fund':'fundBtn'};
   Object.keys(dm).forEach(function(id){
     const el=document.getElementById(id);if(!el)return;
     const ico=el.querySelector('.drawer-ico');const badge=el.querySelector('.drawer-badge');
