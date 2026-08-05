@@ -379,6 +379,21 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .modal-exec-btn.gold-btn{background:var(--gold);color:#08090C;}
 .modal-exec-btn.silver-btn{background:var(--silver);color:#08090C;}
 .modal-exec-btn:disabled{opacity:.5;cursor:not-allowed;}
+/* ── Поповнення гаманця ── */
+.fund-h{font-size:20px;font-weight:700;margin-bottom:6px;padding-right:36px;}
+.fund-sub{font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+.fund-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
+.fund-card-t{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:.02em;}
+.fund-ol{margin:0;padding-left:20px;}
+.fund-ol li{font-size:14px;line-height:1.65;margin-bottom:9px;color:var(--text);}
+.fund-ol li:last-child{margin-bottom:0;}
+.fund-key{font-family:'Space Mono',monospace;font-size:12.5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1px 6px;color:var(--gold);}
+.fund-addr{font-family:'Space Mono',monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;margin-bottom:10px;overflow-wrap:break-word;word-break:break-all;}
+.fund-copy{width:100%;padding:11px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.fund-warn{font-size:12.5px;line-height:1.6;color:var(--muted);background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.18);border-radius:10px;padding:10px 12px;margin-top:10px;}
+.fund-notes{margin:0 0 18px;padding-left:18px;}
+.fund-notes li{font-size:12.5px;line-height:1.6;color:var(--muted);margin-bottom:7px;}
+.fund-ok{width:100%;padding:15px;border-radius:12px;background:var(--gold);color:#08090C;font-size:16px;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 
 /* TOAST */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s;white-space:nowrap;}
@@ -751,6 +766,10 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 </div>
 
 <!-- WALLET SELECTION MODAL -->
+<div class="modal-overlay" id="fundModal">
+  <div id="fundModalBody" style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px 24px 32px;width:100%;max-width:460px;position:relative;max-height:88vh;overflow-y:auto;"></div>
+</div>
+
 <div class="modal-overlay" id="walletModal">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;position:relative;">
     <button class="modal-close-btn" onclick="document.getElementById('walletModal').classList.remove('open')">✕</button>
@@ -4124,6 +4143,7 @@ async function smartConnectWallet(){
       <button class="drawer-btn" id="drawer-nftstudio" onclick="closeDrawer();showTab('nftstudio')"><span class="drawer-ico">🎨</span>NFT Studio</button>
       <button class="drawer-btn" id="drawer-launchpad" onclick="closeDrawer();showTab('launchpad')"><span class="drawer-ico">🚀</span>Create Token</button>
       <button class="drawer-btn" id="drawer-faucet" onclick="closeDrawer();showTab('faucet')"><span class="drawer-ico">🚰</span>Faucet</button>
+      <button class="drawer-btn" id="drawer-fund" onclick="closeDrawer();openFundGeneric()"><span class="drawer-ico">💳</span>Add funds</button>
 
       <div style="padding:16px 12px 8px;">
         <button onclick="closeDrawer();goLanding()" style="width:100%;padding:10px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;">← Landing Page</button>
@@ -5314,7 +5334,7 @@ async function bnbbsCreate(){
     var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+bnbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+bnbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');ogFund('0x38',bnbbsToken);return;}
     showToast('Approving '+bnbbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,BNB_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -5409,7 +5429,7 @@ async function bnbbsJoin(gameId){
     var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');ogFund('0x38',tokenName);return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,BNB_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -6261,7 +6281,7 @@ async function pbsCreate(){
     var tokenAddr=pbsCurrencyAddr();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+pbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+pbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x89',pbsToken);return;}
     showToast('Approving '+pbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,POLYGON_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -6337,7 +6357,7 @@ async function pbsJoin(gameId){
     var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x89',tokenName);return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,POLYGON_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -7161,7 +7181,7 @@ async function basebsCreate(){
     var tokenAddr=basebsCurrencyAddr();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+basebsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+basebsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x2105',basebsToken);return;}
     showToast('Approving '+basebsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,BASE_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -7237,7 +7257,7 @@ async function basebsJoin(gameId){
     var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x2105',tokenName);return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,BASE_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -8047,7 +8067,7 @@ async function gpbsCreate(){
     var tokenAddr=gpbsCurrencyAddr();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+gpbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+gpbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x89',gpbsToken);return;}
     showToast('Approving '+gpbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,POLYGON_GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -8123,7 +8143,7 @@ async function gpbsJoin(gameId){
     var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x89',tokenName);return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,POLYGON_GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -8932,7 +8952,7 @@ async function gbbsCreate(){
     var tokenAddr=gbbsCurrencyAddr();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+gbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+gbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x2105',gbbsToken);return;}
     showToast('Approving '+gbbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,BASE_GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -9008,7 +9028,7 @@ async function gbbsJoin(gameId){
     var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x2105',tokenName);return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,BASE_GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -9840,7 +9860,7 @@ async function gbsCreate(){
     var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+gbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+gbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');ogFund('0x38',gbsToken);return;}
     showToast('Approving '+gbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -9935,7 +9955,7 @@ async function gbsJoin(gameId){
     var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');ogFund('0x38',tokenName);return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -17075,6 +17095,135 @@ async function smartApprove(spender, amount, signerToUse){
   showToast('Approving GATE (one time only)...','ok');
   await (await gate.approve(spender, MAX_UINT)).wait();
 }
+// ── ПОПОЛНЕННЯ ГАМАНЦЯ (fiat on-ramp підказка) ──
+// Ми НЕ продаємо крипту і не приймаємо карти. Гроші не проходять через OpenGate.
+// Тут лише пояснення, де в самому гаманці людини лежить кнопка «Buy»,
+// плюс її власна адреса, щоб купити будь-де і надіслати собі.
+var OG_FUND_NET = {
+  '0x38':   {name:'BNB Smart Chain', native:'BNB',  buyOK:true},
+  '0x89':   {name:'Polygon',         native:'POL',  buyOK:true},
+  '0x2105': {name:'Base',            native:'ETH',  buyOK:false},
+  '0xa4b1': {name:'Arbitrum One',    native:'ETH',  buyOK:true},
+  '0x1':    {name:'Ethereum',        native:'ETH',  buyOK:true}
+};
+
+function ogWalletInfo(){
+  var e = window.ethereum || {};
+  var ps = Array.isArray(e.providers) ? e.providers : [];
+  function any(f){
+    try{ if(f(e)) return true; }catch(_){}
+    for(var i=0;i<ps.length;i++){ try{ if(f(ps[i])) return true; }catch(_){} }
+    return false;
+  }
+  // MetaMask перевіряємо ОСТАННІМ: багато гаманців ставлять isMetaMask=true
+  // заради сумісності, тож інакше вони всі визначались би як MetaMask.
+  if(window.trustwallet || any(function(p){return p.isTrust||p.isTrustWallet;})) return {k:'trust',n:'Trust Wallet'};
+  if(any(function(p){return p.isCoinbaseWallet||p.isCoinbaseBrowser;}))          return {k:'coinbase',n:'Coinbase Wallet'};
+  if(window.okxwallet || any(function(p){return p.isOkxWallet||p.isOKExWallet;}))return {k:'okx',n:'OKX Wallet'};
+  if(window.bitkeep || any(function(p){return p.isBitKeep||p.isBitget;}))        return {k:'bitget',n:'Bitget Wallet'};
+  if(window.BinanceChain || any(function(p){return p.isBinance;}))               return {k:'binance',n:'Binance Wallet'};
+  if(any(function(p){return p.isTokenPocket;}))                                 return {k:'tokenpocket',n:'TokenPocket'};
+  if(any(function(p){return p.isSafePal;}))                                     return {k:'safepal',n:'SafePal'};
+  if(any(function(p){return p.isRabby;}))                                       return {k:'rabby',n:'Rabby'};
+  if(any(function(p){return p.isBraveWallet;}))                                 return {k:'brave',n:'Brave Wallet'};
+  if(any(function(p){return p.isMetaMask;}))                                    return {k:'metamask',n:'MetaMask'};
+  return {k:'unknown',n:''};
+}
+
+function fundEsc(s){
+  // Назви кнопок гаманця в \u27ea...\u27eb лишаємо неперекладними:
+  // Google Translate інакше перекладе «Buy», і людина не знайде її на екрані.
+  return esc(s||'').replace(/\u27EA(.+?)\u27EB/g,'<span class="fund-key notranslate" translate="no">$1</span>');
+}
+
+function ogFundSteps(wk, isMob){
+  // Кроки взято з довідки самих гаманців. Назви кнопок лишаємо
+  // англійською в лапках — саме так вони підписані в інтерфейсі.
+  if(wk==='metamask'){
+    if(isMob) return [t('fundMM1'), t('fundMM2'), t('fundMM3'), t('fundMM4'), t('fundMM5')];
+    return [t('fundMMD1'), t('fundMM2'), t('fundMM3'), t('fundMM4'), t('fundMM5')];
+  }
+  if(wk==='trust')    return [t('fundTW1'), t('fundTW2'), t('fundTW3'), t('fundTW4')];
+  if(wk==='coinbase') return [t('fundCB1'), t('fundCB2'), t('fundCB3')];
+  return [t('fundGen1'), t('fundGen2'), t('fundGen3')];
+}
+
+var _ogFundLast = null;
+function ogFund(chainId, symbol){
+  _ogFundLast = {chainId:chainId, symbol:symbol};
+  try{ openFundModal(chainId, symbol); }catch(e){ console.warn('[fund]', e); }
+}
+
+function openFundModal(chainId, symbol){
+  var net  = OG_FUND_NET[chainId] || {name:'', native:'', buyOK:true};
+  var w    = ogWalletInfo();
+  var isMob= /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  var sym  = symbol || net.native || '';
+  var body = document.getElementById('fundModalBody');
+  if(!body) return;
+
+  var h = '';
+  h += '<button class="modal-close-btn" onclick="closeFundModal()">&#10005;</button>';
+  h += '<div class="fund-h">'+fundEsc(t('fundTitle'))+'</div>';
+  if(sym && net.name){
+    h += '<div class="fund-sub">'+fundEsc(t('fundSub').replace('{T}',sym).replace('{N}',net.name))+'</div>';
+  }
+
+  // ── Кроки в гаманці ──
+  h += '<div class="fund-card">';
+  h += '<div class="fund-card-t">'+fundEsc(w.n ? t('fundIn').replace('{W}',w.n) : t('fundInGeneric'))+'</div>';
+  h += '<ol class="fund-ol">';
+  ogFundSteps(w.k, isMob).forEach(function(s){ h += '<li>'+fundEsc(s)+'</li>'; });
+  h += '</ol>';
+  h += '</div>';
+
+  // ── Base не в списку MetaMask ──
+  if(!net.buyOK && (w.k==='metamask'||w.k==='unknown')){
+    h += '<div class="fund-warn">'+fundEsc(t('fundBaseNote'))+'</div>';
+  }
+
+  // ── Своя адреса: купити будь-де і надіслати собі ──
+  if(typeof userAddr!=='undefined' && userAddr){
+    h += '<div class="fund-card">';
+    h += '<div class="fund-card-t">'+fundEsc(t('fundOwn'))+'</div>';
+    h += '<div class="fund-addr" id="fundAddr">'+esc(userAddr)+'</div>';
+    h += '<button class="fund-copy" onclick="fundCopyAddr()">'+fundEsc(t('fundCopy'))+'</button>';
+    if(net.name) h += '<div class="fund-warn">'+fundEsc(t('fundNetNote').replace('{N}',net.name))+'</div>';
+    h += '</div>';
+  }
+
+  // ── Чесні застереження ──
+  h += '<ul class="fund-notes">';
+  if(net.native && sym!==net.native) h += '<li>'+fundEsc(t('fundGasNote').replace('{G}',net.native))+'</li>';
+  h += '<li>'+fundEsc(t('fundFeeNote'))+'</li>';
+  h += '<li>'+fundEsc(t('fundRegionNote'))+'</li>';
+  h += '</ul>';
+
+  h += '<button class="fund-ok" onclick="closeFundModal()">'+fundEsc(t('fundClose'))+'</button>';
+
+  body.innerHTML = h;
+  document.getElementById('fundModal').classList.add('open');
+}
+
+function closeFundModal(){
+  var m=document.getElementById('fundModal');
+  if(m) m.classList.remove('open');
+}
+
+function fundCopyAddr(){
+  var a=document.getElementById('fundAddr');
+  if(!a) return;
+  try{ navigator.clipboard.writeText(a.textContent.trim()); showToast(t('fundCopied'),'ok'); }
+  catch(e){ showToast(t('fundCopied'),'ok'); }
+}
+
+// Пункт меню — працює і без підключеного гаманця
+function openFundGeneric(){
+  var cid = null;
+  try{ cid = window.ethereum && window.ethereum.chainId; }catch(e){}
+  openFundModal(cid || '0x38', null);
+}
+
 let toastT;
 function showToast(msg,type='ok'){
   // Filter wallet-level errors that confuse users
@@ -17263,6 +17412,37 @@ function handleConnectClick(){
 // ── i18n ──
 const LANGS = {
   en: {
+    // Поповнення гаманця
+    fundBtn:'Add funds',
+    fundTitle:'How to add funds',
+    fundSub:'You need {T} on the {N} network',
+    fundIn:'In {W}',
+    fundInGeneric:'In your wallet app',
+    fundMM1:'Open MetaMask and tap ⟪Buy⟫ under your balance.',
+    fundMMD1:'In the MetaMask extension click ⟪Buy/Sell⟫ — it opens MetaMask Portfolio in a new tab.',
+    fundMM2:'Choose the token you need and the network it sits on.',
+    fundMM3:'Enter the amount and pick a payment method — card, bank transfer, Apple Pay or Google Pay.',
+    fundMM4:'On a first purchase the provider asks you to verify your identity.',
+    fundMM5:'Confirm the order. The coins land in this same wallet.',
+    fundTW1:'Open Trust Wallet and tap ⟪Buy⟫.',
+    fundTW2:'Choose the token. Card purchases cover BNB Chain, Base and Solana.',
+    fundTW3:'Enter the amount and pick a payment method.',
+    fundTW4:'Confirm the order.',
+    fundCB1:'Open Coinbase Wallet and tap ⟪Buy⟫.',
+    fundCB2:'Choose the token and the network.',
+    fundCB3:'Pay by card or from a linked Coinbase account.',
+    fundGen1:'Open your wallet app.',
+    fundGen2:'Look for ⟪Buy⟫ or ⟪Deposit⟫ on the main screen — most wallets have it built in.',
+    fundGen3:'Choose the token, the network and a payment method.',
+    fundBaseNote:'MetaMask does not list Base among the networks it sells on. Buy ETH on Ethereum and move it over with ⟪Bridge⟫, or use Trust Wallet or Coinbase Wallet, which do cover Base.',
+    fundOwn:'Or buy anywhere and send it to yourself',
+    fundCopy:'Copy my address',
+    fundCopied:'Address copied',
+    fundNetNote:'Send on the {N} network only. Coins sent on a different network are lost.',
+    fundGasNote:'Keep a little {G} as well — the network fee is paid in it.',
+    fundFeeNote:'The wallet and the payment provider each take a cut, so you receive slightly less than you pay.',
+    fundRegionNote:'Card purchases are handled by your wallet and its providers, not by OpenGate, and are unavailable in some countries.',
+    fundClose:'Got it',
     feed:'Feed', profile:'Profile', post:'Post', notifs:'Notifs', more:'More',
     home:'Home', allPosts:'All Posts', following:'Following',
     connectWallet:'Connect Wallet', explore:'Explore', messages:'Messages',
@@ -17299,6 +17479,37 @@ const LANGS = {
     connectTitle:'Connect Wallet', connectSub:'Choose your connection method',
   },
   ru: {
+    // Поповнення гаманця
+    fundBtn:'Пополнить кошелёк',
+    fundTitle:'Как пополнить кошелёк',
+    fundSub:'Нужен {T} в сети {N}',
+    fundIn:'В приложении {W}',
+    fundInGeneric:'В приложении вашего кошелька',
+    fundMM1:'Откройте MetaMask и нажмите ⟪Buy⟫ под балансом.',
+    fundMMD1:'В расширении MetaMask нажмите ⟪Buy/Sell⟫ — откроется MetaMask Portfolio в новой вкладке.',
+    fundMM2:'Выберите нужную монету и сеть, в которой она вам нужна.',
+    fundMM3:'Введите сумму и выберите способ оплаты — карта, банковский перевод, Apple Pay или Google Pay.',
+    fundMM4:'При первой покупке сервис попросит подтвердить личность.',
+    fundMM5:'Подтвердите заказ. Монеты придут на этот же кошелёк.',
+    fundTW1:'Откройте Trust Wallet и нажмите ⟪Buy⟫.',
+    fundTW2:'Выберите монету. Покупка картой работает для BNB Chain, Base и Solana.',
+    fundTW3:'Введите сумму и выберите способ оплаты.',
+    fundTW4:'Подтвердите заказ.',
+    fundCB1:'Откройте Coinbase Wallet и нажмите ⟪Buy⟫.',
+    fundCB2:'Выберите монету и сеть.',
+    fundCB3:'Оплатите картой или со связанного счёта Coinbase.',
+    fundGen1:'Откройте приложение своего кошелька.',
+    fundGen2:'Найдите на главном экране ⟪Buy⟫ или ⟪Deposit⟫ — почти во всех кошельках это уже встроено.',
+    fundGen3:'Выберите монету, сеть и способ оплаты.',
+    fundBaseNote:'У MetaMask сети Base нет в списке для покупки. Купите ETH в сети Ethereum и переведите через ⟪Bridge⟫ — либо возьмите Trust Wallet или Coinbase Wallet, они Base поддерживают.',
+    fundOwn:'Или купите где угодно и пришлите себе',
+    fundCopy:'Скопировать мой адрес',
+    fundCopied:'Адрес скопирован',
+    fundNetNote:'Присылайте только по сети {N}. Монеты, отправленные по другой сети, пропадут.',
+    fundGasNote:'Держите немного {G} — из него платится комиссия сети.',
+    fundFeeNote:'Кошелёк и платёжный сервис берут свою долю, поэтому придёт чуть меньше, чем вы заплатите.',
+    fundRegionNote:'Покупку картой проводит ваш кошелёк и его сервисы, а не OpenGate. В некоторых странах она недоступна.',
+    fundClose:'Понятно',
     feed:'Лента', profile:'Профиль', post:'Пост', notifs:'Уведомл.', more:'Меню',
     home:'Главная', allPosts:'Все посты', following:'Подписки',
     connectWallet:'Подключить кошелёк', explore:'Поиск', messages:'Сообщения',
@@ -17327,6 +17538,37 @@ const LANGS = {
     connectTitle:'Подключить кошелёк', connectSub:'Выбери способ подключения',
   },
   uk: {
+    // Поповнення гаманця
+    fundBtn:'Поповнити гаманець',
+    fundTitle:'Як поповнити гаманець',
+    fundSub:'Потрібен {T} у мережі {N}',
+    fundIn:'У застосунку {W}',
+    fundInGeneric:'У застосунку вашого гаманця',
+    fundMM1:'Відкрийте MetaMask і натисніть ⟪Buy⟫ під балансом.',
+    fundMMD1:'У розширенні MetaMask натисніть ⟪Buy/Sell⟫ — відкриється MetaMask Portfolio у новій вкладці.',
+    fundMM2:'Оберіть потрібну монету і мережу, у якій вона вам потрібна.',
+    fundMM3:'Введіть суму й оберіть спосіб оплати — картка, банківський переказ, Apple Pay або Google Pay.',
+    fundMM4:'Під час першої покупки сервіс попросить підтвердити особу.',
+    fundMM5:'Підтвердьте замовлення. Монети надійдуть на цей самий гаманець.',
+    fundTW1:'Відкрийте Trust Wallet і натисніть ⟪Buy⟫.',
+    fundTW2:'Оберіть монету. Купівля карткою працює для BNB Chain, Base і Solana.',
+    fundTW3:'Введіть суму й оберіть спосіб оплати.',
+    fundTW4:'Підтвердьте замовлення.',
+    fundCB1:'Відкрийте Coinbase Wallet і натисніть ⟪Buy⟫.',
+    fundCB2:'Оберіть монету і мережу.',
+    fundCB3:'Сплатіть карткою або з пов’язаного рахунку Coinbase.',
+    fundGen1:'Відкрийте застосунок свого гаманця.',
+    fundGen2:'Знайдіть на головному екрані ⟪Buy⟫ або ⟪Deposit⟫ — майже в усіх гаманцях це вже вбудовано.',
+    fundGen3:'Оберіть монету, мережу і спосіб оплати.',
+    fundBaseNote:'У MetaMask мережі Base немає в списку для купівлі. Купіть ETH у мережі Ethereum і перекиньте через ⟪Bridge⟫ — або візьміть Trust Wallet чи Coinbase Wallet, вони Base підтримують.',
+    fundOwn:'Або купіть будь-де і надішліть собі',
+    fundCopy:'Скопіювати мою адресу',
+    fundCopied:'Адресу скопійовано',
+    fundNetNote:'Надсилайте лише мережею {N}. Монети, надіслані іншою мережею, зникнуть.',
+    fundGasNote:'Тримайте трохи {G} — з нього сплачується комісія мережі.',
+    fundFeeNote:'Гаманець і платіжний сервіс беруть свою частку, тож надійде трохи менше, ніж ви заплатите.',
+    fundRegionNote:'Купівлю карткою проводить ваш гаманець і його сервіси, а не OpenGate. У деяких країнах вона недоступна.',
+    fundClose:'Зрозуміло',
     feed:'Стрічка', profile:'Профіль', post:'Пост', notifs:'Сповіщ.', more:'Меню',
     home:'Головна', allPosts:'Всі пости', following:'Підписки',
     connectWallet:'Підключити гаманець', explore:'Пошук', messages:'Повідомлення',
@@ -17355,6 +17597,37 @@ const LANGS = {
     connectTitle:'Підключити гаманець', connectSub:'Обери спосіб підключення',
   },
   hi: {
+    // Поповнення гаманця
+    fundBtn:'वॉलेट में पैसे जोड़ें',
+    fundTitle:'वॉलेट में पैसे कैसे जोड़ें',
+    fundSub:'{N} नेटवर्क पर {T} चाहिए',
+    fundIn:'{W} ऐप में',
+    fundInGeneric:'अपने वॉलेट ऐप में',
+    fundMM1:'MetaMask खोलें और बैलेंस के नीचे ⟪Buy⟫ दबाएँ।',
+    fundMMD1:'MetaMask एक्सटेंशन में ⟪Buy/Sell⟫ दबाएँ — नए टैब में MetaMask Portfolio खुलेगा।',
+    fundMM2:'जो सिक्का चाहिए उसे और उसका नेटवर्क चुनें।',
+    fundMM3:'रकम डालें और भुगतान का तरीका चुनें — कार्ड, बैंक ट्रांसफ़र, Apple Pay या Google Pay।',
+    fundMM4:'पहली खरीद पर सेवा पहचान की पुष्टि माँगती है।',
+    fundMM5:'ऑर्डर पक्का करें। सिक्के इसी वॉलेट में आ जाएँगे।',
+    fundTW1:'Trust Wallet खोलें और ⟪Buy⟫ दबाएँ।',
+    fundTW2:'सिक्का चुनें। कार्ड से खरीद BNB Chain, Base और Solana पर चलती है।',
+    fundTW3:'रकम डालें और भुगतान का तरीका चुनें।',
+    fundTW4:'ऑर्डर पक्का करें।',
+    fundCB1:'Coinbase Wallet खोलें और ⟪Buy⟫ दबाएँ।',
+    fundCB2:'सिक्का और नेटवर्क चुनें।',
+    fundCB3:'कार्ड से या जुड़े Coinbase खाते से भुगतान करें।',
+    fundGen1:'अपना वॉलेट ऐप खोलें।',
+    fundGen2:'मुख्य स्क्रीन पर ⟪Buy⟫ या ⟪Deposit⟫ ढूँढें — लगभग हर वॉलेट में यह पहले से होता है।',
+    fundGen3:'सिक्का, नेटवर्क और भुगतान का तरीका चुनें।',
+    fundBaseNote:'MetaMask की खरीद सूची में Base नहीं है। Ethereum पर ETH खरीदकर ⟪Bridge⟫ से भेजें, या Trust Wallet अथवा Coinbase Wallet इस्तेमाल करें — उनमें Base है।',
+    fundOwn:'या कहीं से भी खरीदकर खुद को भेजें',
+    fundCopy:'मेरा पता कॉपी करें',
+    fundCopied:'पता कॉपी हो गया',
+    fundNetNote:'केवल {N} नेटवर्क से भेजें। दूसरे नेटवर्क से भेजे सिक्के खो जाते हैं।',
+    fundGasNote:'थोड़ा {G} रखें — नेटवर्क शुल्क उसी से कटता है।',
+    fundFeeNote:'वॉलेट और भुगतान सेवा दोनों अपना हिस्सा लेते हैं, इसलिए भुगतान से थोड़ा कम मिलता है।',
+    fundRegionNote:'कार्ड से खरीद आपका वॉलेट और उसकी सेवाएँ करती हैं, OpenGate नहीं। कुछ देशों में यह उपलब्ध नहीं है।',
+    fundClose:'समझ गया',
     feed:'फीड', profile:'प्रोफाइल', post:'पोस्ट', notifs:'सूचना', more:'मेनू',
     home:'होम', allPosts:'सभी पोस्ट', following:'फ़ॉलोइंग',
     connectWallet:'वॉलेट जोड़ें', explore:'खोजें', messages:'संदेश',
@@ -17383,6 +17656,37 @@ const LANGS = {
     connectTitle:'वॉलेट जोड़ें', connectSub:'कनेक्शन का तरीका चुनें',
   },
   zh: {
+    // Поповнення гаманця
+    fundBtn:'为钱包充值',
+    fundTitle:'如何为钱包充值',
+    fundSub:'需要 {N} 网络上的 {T}',
+    fundIn:'在 {W} 中',
+    fundInGeneric:'在你的钱包应用中',
+    fundMM1:'打开 MetaMask，点击余额下方的 ⟪Buy⟫。',
+    fundMMD1:'在 MetaMask 扩展中点击 ⟪Buy/Sell⟫ — 会在新标签页打开 MetaMask Portfolio。',
+    fundMM2:'选择你需要的币种和它所在的网络。',
+    fundMM3:'输入金额并选择支付方式 — 银行卡、转账、Apple Pay 或 Google Pay。',
+    fundMM4:'首次购买时，服务商会要求验证身份。',
+    fundMM5:'确认订单。币会到达同一个钱包。',
+    fundTW1:'打开 Trust Wallet，点击 ⟪Buy⟫。',
+    fundTW2:'选择币种。刷卡购买覆盖 BNB Chain、Base 和 Solana。',
+    fundTW3:'输入金额并选择支付方式。',
+    fundTW4:'确认订单。',
+    fundCB1:'打开 Coinbase Wallet，点击 ⟪Buy⟫。',
+    fundCB2:'选择币种和网络。',
+    fundCB3:'用银行卡或已关联的 Coinbase 账户支付。',
+    fundGen1:'打开你的钱包应用。',
+    fundGen2:'在主界面找 ⟪Buy⟫ 或 ⟪Deposit⟫ — 几乎所有钱包都内置了。',
+    fundGen3:'选择币种、网络和支付方式。',
+    fundBaseNote:'MetaMask 的购买网络列表中没有 Base。可在 Ethereum 上买 ETH 再用 ⟪Bridge⟫ 转过去，或改用支持 Base 的 Trust Wallet、Coinbase Wallet。',
+    fundOwn:'或者在任何地方购买后转给自己',
+    fundCopy:'复制我的地址',
+    fundCopied:'地址已复制',
+    fundNetNote:'只能通过 {N} 网络转入。用其他网络转入的币会丢失。',
+    fundGasNote:'另外留一点 {G} — 网络手续费用它支付。',
+    fundFeeNote:'钱包和支付服务商各收一部分，所以到账会比你支付的略少。',
+    fundRegionNote:'刷卡购买由你的钱包及其服务商处理，与 OpenGate 无关，部分国家无法使用。',
+    fundClose:'明白了',
     feed:'动态', profile:'我的', post:'发帖', notifs:'通知', more:'更多',
     home:'主页', allPosts:'全部帖子', following:'关注',
     connectWallet:'连接钱包', explore:'探索', messages:'消息',
@@ -17411,6 +17715,37 @@ const LANGS = {
     connectTitle:'连接钱包', connectSub:'选择连接方式',
   },
   tr: {
+    // Поповнення гаманця
+    fundBtn:'Cüzdana para ekle',
+    fundTitle:'Cüzdanınıza para nasıl eklenir',
+    fundSub:'{N} ağında {T} gerekiyor',
+    fundIn:'{W} uygulamasında',
+    fundInGeneric:'Cüzdan uygulamanızda',
+    fundMM1:'MetaMask’i açın ve bakiyenizin altındaki ⟪Buy⟫ düğmesine dokunun.',
+    fundMMD1:'MetaMask eklentisinde ⟪Buy/Sell⟫ düğmesine tıklayın — MetaMask Portfolio yeni sekmede açılır.',
+    fundMM2:'İhtiyacınız olan coini ve bulunduğu ağı seçin.',
+    fundMM3:'Tutarı girin ve ödeme yöntemini seçin — kart, banka havalesi, Apple Pay veya Google Pay.',
+    fundMM4:'İlk alımda sağlayıcı kimlik doğrulaması ister.',
+    fundMM5:'Siparişi onaylayın. Coinler aynı cüzdana gelir.',
+    fundTW1:'Trust Wallet’i açın ve ⟪Buy⟫ düğmesine dokunun.',
+    fundTW2:'Coini seçin. Kartla alım BNB Chain, Base ve Solana için geçerli.',
+    fundTW3:'Tutarı girin ve ödeme yöntemini seçin.',
+    fundTW4:'Siparişi onaylayın.',
+    fundCB1:'Coinbase Wallet’i açın ve ⟪Buy⟫ düğmesine dokunun.',
+    fundCB2:'Coini ve ağı seçin.',
+    fundCB3:'Kartla veya bağlı Coinbase hesabınızdan ödeyin.',
+    fundGen1:'Cüzdan uygulamanızı açın.',
+    fundGen2:'Ana ekranda ⟪Buy⟫ ya da ⟪Deposit⟫ arayın — neredeyse her cüzdanda hazır gelir.',
+    fundGen3:'Coini, ağı ve ödeme yöntemini seçin.',
+    fundBaseNote:'MetaMask satın alma listesinde Base yok. Ethereum ağında ETH alıp ⟪Bridge⟫ ile aktarın ya da Base’i destekleyen Trust Wallet veya Coinbase Wallet kullanın.',
+    fundOwn:'Ya da istediğiniz yerden alıp kendinize gönderin',
+    fundCopy:'Adresimi kopyala',
+    fundCopied:'Adres kopyalandı',
+    fundNetNote:'Yalnızca {N} ağı üzerinden gönderin. Başka ağdan gönderilen coinler kaybolur.',
+    fundGasNote:'Biraz {G} bulundurun — ağ ücreti bununla ödenir.',
+    fundFeeNote:'Cüzdan ve ödeme sağlayıcısı pay alır, bu yüzden ödediğinizden biraz azını alırsınız.',
+    fundRegionNote:'Kartla alımı OpenGate değil, cüzdanınız ve sağlayıcıları yürütür. Bazı ülkelerde kullanılamaz.',
+    fundClose:'Anladım',
     feed:'Akış', profile:'Profil', post:'Gönderi', notifs:'Bildirim', more:'Menü',
     home:'Ana Sayfa', allPosts:'Tüm Gönderiler', following:'Takip',
     connectWallet:'Cüzdan Bağla', explore:'Keşfet', messages:'Mesajlar',
@@ -17439,6 +17774,37 @@ const LANGS = {
     connectTitle:'Cüzdan Bağla', connectSub:'Bağlantı yöntemini seç',
   },
   de: {
+    // Поповнення гаманця
+    fundBtn:'Guthaben aufladen',
+    fundTitle:'So laden Sie Ihre Wallet auf',
+    fundSub:'Sie brauchen {T} im Netzwerk {N}',
+    fundIn:'In {W}',
+    fundInGeneric:'In Ihrer Wallet-App',
+    fundMM1:'Öffnen Sie MetaMask und tippen Sie unter Ihrem Guthaben auf ⟪Buy⟫.',
+    fundMMD1:'Klicken Sie in der MetaMask-Erweiterung auf ⟪Buy/Sell⟫ — MetaMask Portfolio öffnet sich in einem neuen Tab.',
+    fundMM2:'Wählen Sie die gewünschte Münze und das passende Netzwerk.',
+    fundMM3:'Geben Sie den Betrag ein und wählen Sie eine Zahlungsart — Karte, Überweisung, Apple Pay oder Google Pay.',
+    fundMM4:'Beim ersten Kauf verlangt der Anbieter eine Identitätsprüfung.',
+    fundMM5:'Bestätigen Sie die Bestellung. Die Münzen kommen in dieselbe Wallet.',
+    fundTW1:'Öffnen Sie Trust Wallet und tippen Sie auf ⟪Buy⟫.',
+    fundTW2:'Wählen Sie die Münze. Kartenkauf gilt für BNB Chain, Base und Solana.',
+    fundTW3:'Geben Sie den Betrag ein und wählen Sie eine Zahlungsart.',
+    fundTW4:'Bestätigen Sie die Bestellung.',
+    fundCB1:'Öffnen Sie Coinbase Wallet und tippen Sie auf ⟪Buy⟫.',
+    fundCB2:'Wählen Sie Münze und Netzwerk.',
+    fundCB3:'Zahlen Sie per Karte oder über Ihr verknüpftes Coinbase-Konto.',
+    fundGen1:'Öffnen Sie Ihre Wallet-App.',
+    fundGen2:'Suchen Sie auf dem Hauptbildschirm ⟪Buy⟫ oder ⟪Deposit⟫ — fast jede Wallet hat das eingebaut.',
+    fundGen3:'Wählen Sie Münze, Netzwerk und Zahlungsart.',
+    fundBaseNote:'MetaMask führt Base nicht in seiner Kaufliste. Kaufen Sie ETH auf Ethereum und schicken Sie es per ⟪Bridge⟫ hinüber — oder nutzen Sie Trust Wallet bzw. Coinbase Wallet, die Base abdecken.',
+    fundOwn:'Oder anderswo kaufen und sich selbst schicken',
+    fundCopy:'Meine Adresse kopieren',
+    fundCopied:'Adresse kopiert',
+    fundNetNote:'Nur über das Netzwerk {N} senden. Über ein anderes Netzwerk gesendete Münzen sind verloren.',
+    fundGasNote:'Halten Sie etwas {G} bereit — damit wird die Netzwerkgebühr bezahlt.',
+    fundFeeNote:'Wallet und Zahlungsanbieter behalten je einen Anteil, Sie erhalten also etwas weniger als Sie zahlen.',
+    fundRegionNote:'Den Kartenkauf wickeln Ihre Wallet und deren Anbieter ab, nicht OpenGate. In manchen Ländern ist er nicht verfügbar.',
+    fundClose:'Verstanden',
     feed:'Feed', profile:'Profil', post:'Post', notifs:'Meldungen', more:'Menü',
     home:'Start', allPosts:'Alle Beiträge', following:'Folge ich',
     connectWallet:'Wallet verbinden', explore:'Entdecken', messages:'Nachrichten',
@@ -17512,7 +17878,7 @@ function applyLang(){
   const cb=document.getElementById('connectBtn');
   if(cb&&!cb.classList.contains('connected'))cb.innerHTML='<div class="w-dot"></div>'+t('connectWallet');
   // Drawer btns
-  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet'};
+  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet','drawer-fund':'fundBtn'};
   Object.keys(dm).forEach(function(id){
     const el=document.getElementById(id);if(!el)return;
     const ico=el.querySelector('.drawer-ico');const badge=el.querySelector('.drawer-badge');
