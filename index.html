@@ -390,6 +390,38 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 #fundNavBtn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;}
 @media(max-width:560px){#fundNavBtn{display:none;}}
 .fund-inline{background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;-webkit-tap-highlight-color:transparent;}
+.lot-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;}
+.lot-round-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;}
+.lot-round-no{font-size:18px;font-weight:800;}
+.lot-round-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.lot-timer-box{text-align:right;}
+.lot-timer{font-size:20px;font-weight:800;color:var(--gold);}
+.lot-pot-box{text-align:center;padding:18px 12px;background:var(--bg3);border-radius:14px;margin-bottom:14px;}
+.lot-pot-lbl{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
+.lot-pot{font-size:38px;font-weight:800;color:var(--gold);line-height:1.15;margin:4px 0 6px;}
+.lot-pot-note{font-size:11.5px;color:var(--muted);line-height:1.5;}
+.lot-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.lot-stat{background:var(--bg3);border-radius:11px;padding:11px 6px;text-align:center;}
+.lot-stat-v{font-size:19px;font-weight:800;}
+.lot-stat-l{font-size:10.5px;color:var(--muted);margin-top:2px;}
+.lot-h{font-size:14px;font-weight:700;margin-bottom:12px;}
+.lot-price-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:12px;}
+.lot-muted{color:var(--muted);font-size:12px;}
+.lot-qty{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.lot-qty-btn{width:44px;height:44px;border-radius:11px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:21px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.lot-qty-in{flex:1;height:44px;border-radius:11px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:17px;font-weight:700;text-align:center;}
+.lot-total{font-size:15px;font-weight:700;margin-bottom:12px;}
+.lot-buy{width:100%;padding:15px;border-radius:12px;background:var(--gold);color:#08090C;font-size:16px;font-weight:800;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.lot-buy:disabled{opacity:.45;cursor:not-allowed;}
+.lot-note{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:9px;}
+.lot-nums{display:flex;flex-wrap:wrap;gap:7px;}
+.lot-num{display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-family:'Space Mono',monospace;font-size:12.5px;color:var(--gold);}
+.lot-hist{margin-bottom:12px;}
+.lot-hist-h{font-size:11.5px;color:var(--muted);margin-bottom:6px;}
+.lot-hist-row{display:flex;align-items:center;gap:9px;font-size:12.5px;margin-bottom:5px;}
+.lot-hist-addr{font-family:'Space Mono',monospace;color:var(--muted);flex:1;overflow-wrap:break-word;}
+.lot-verify{text-align:center;font-size:11.5px;color:var(--muted);line-height:1.8;padding:6px 0 20px;}
+.lot-verify a{color:var(--gold);}
 .stale-bar{margin:12px 16px 0;padding:12px 14px;border-radius:12px;background:rgba(245,200,66,.07);border:1px solid rgba(245,200,66,.28);}
 .stale-txt{font-size:12.5px;line-height:1.55;color:var(--text);margin-bottom:10px;}
 .stale-btn{width:100%;padding:11px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--gold);font-size:13.5px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;}
@@ -1221,95 +1253,87 @@ async function smartConnectWallet(){
       </div>
       <div id="view-bnblottery" style="display:none;">
         <div class="feed-hdr">💰 BNB Lottery</div>
-        <div style="max-width:520px;margin:0 auto;padding:24px 16px;">
+        <div style="max-width:520px;margin:0 auto;padding:16px;">
 
-          <!-- Coming Soon Hero -->
-          <div style="text-align:center;padding:40px 20px;background:linear-gradient(135deg,rgba(245,200,66,0.08),rgba(38,217,138,0.04));border:1px solid rgba(245,200,66,0.25);border-radius:20px;margin-bottom:20px;">
-            <div style="font-size:64px;margin-bottom:16px;">💰</div>
-            <div style="font-size:24px;font-weight:800;margin-bottom:8px;">BNB Lottery</div>
-            <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:20px;letter-spacing:.05em;">COMING SOON</div>
-            <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">
-              The first real-money lottery on OpenGate.<br/>
-              Buy tickets with BNB or USDT. 10 winners.<br/>
-              Powered by <b style="color:var(--text);">Chainlink VRF</b> — provably fair.
+          <!-- Раунд -->
+          <div class="lot-card">
+            <div class="lot-round-top">
+              <div>
+                <div class="lot-round-no">Round <span id="lot-round">—</span></div>
+                <div class="lot-round-sub" id="lot-state">Loading…</div>
+              </div>
+              <div class="lot-timer-box">
+                <div class="lot-timer" id="lot-timer">—</div>
+                <div class="lot-round-sub">until the draw</div>
+              </div>
             </div>
-            <div style="font-size:13px;font-weight:700;color:var(--gold);">🔔 Stay tuned for the launch!</div>
-          </div>
 
-          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" class="help-toggle-btn" style="margin-bottom:16px;">❔ How will this work?</button>
-          <div id="lottohelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:20px;">
-            <div style="color:var(--muted);">
-              <b style="color:var(--text);">1.</b> Buy one or more tickets with BNB or USDT — <b style="color:var(--text);">$0.90 each</b>.<br>
-              <b style="color:var(--text);">2.</b> When the round ends, <b style="color:var(--text);">10 winners</b> are picked at random.<br>
-              <b style="color:var(--text);">3.</b> The draw uses <b style="color:var(--text);">Chainlink VRF</b> — a verifiable, tamper-proof random number source, so nobody (including us) can rig who wins.<br>
-              <b style="color:var(--text);">4.</b> Winnings are paid automatically to the winners' wallets — no claiming needed.<br><br>
-              Not live yet — this is a preview of how it will work once the round opens.
+            <div class="lot-pot-box">
+              <div class="lot-pot-lbl">Prize pool</div>
+              <div class="lot-pot" id="lot-pot">—</div>
+              <div class="lot-pot-note" id="lot-pot-note">90% goes to the winner, 10% is the platform fee</div>
             </div>
-          </div>
 
-          <!-- Features grid -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🎟️</div>
-              <div style="font-size:13px;font-weight:700;">$0.90 / ticket</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">BNB or USDT</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🏆</div>
-              <div style="font-size:13px;font-weight:700;">10 winners</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Different prize shares</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">⏱️</div>
-              <div style="font-size:13px;font-weight:700;">7 days / round</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Auto-starts next round</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🔐</div>
-              <div style="font-size:13px;font-weight:700;">Chainlink VRF</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">100% provably fair</div>
-            </div>
-          </div>
-
-          <!-- Prize distribution -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Prize Distribution</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥇 1st place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~30%</span>
+            <div class="lot-stats">
+              <div class="lot-stat">
+                <div class="lot-stat-v" id="lot-tickets">—</div>
+                <div class="lot-stat-l">Tickets sold</div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥈 2nd place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~20%</span>
+              <div class="lot-stat">
+                <div class="lot-stat-v" id="lot-people">—</div>
+                <div class="lot-stat-l">Players</div>
               </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥉 3rd place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~15%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;color:var(--muted);">4th–10th place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--muted);">~31%</span>
-              </div>
-              <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;color:var(--muted);">Platform fee</span>
-                <span style="font-size:12px;color:var(--muted);">10%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;color:var(--muted);">Next round seed</span>
-                <span style="font-size:12px;color:var(--muted);">4%</span>
+              <div class="lot-stat">
+                <div class="lot-stat-v" id="lot-mine">—</div>
+                <div class="lot-stat-l">Your tickets</div>
               </div>
             </div>
           </div>
 
-          <!-- Social links -->
-          <div style="text-align:center;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;">
-            <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Be the first to know when it launches:</div>
-            <a href="https://x.com/OpenGatelive" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;font-size:13px;font-weight:700;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              @OpenGatelive
-            </a>
+          <!-- Покупка -->
+          <div class="lot-card" id="lot-buy-card">
+            <div class="lot-h">Buy tickets</div>
+            <div class="lot-price-row">
+              <span id="lot-price">—</span>
+              <span class="lot-muted" id="lot-limit">max 5 per wallet</span>
+            </div>
+            <div class="lot-qty">
+              <button class="lot-qty-btn" onclick="lotQty(-1)">−</button>
+              <input class="lot-qty-in" id="lot-qty" type="number" min="1" max="5" value="1" oninput="lotUpdateTotal()"/>
+              <button class="lot-qty-btn" onclick="lotQty(1)">+</button>
+            </div>
+            <div class="lot-total" id="lot-total">Total: —</div>
+            <button class="lot-buy" id="lot-buy-btn" onclick="lotBuy()">Connect wallet</button>
+            <div class="lot-note" id="lot-buy-note"></div>
+          </div>
+
+          <!-- Мои билеты -->
+          <div class="lot-card" id="lot-my-card" style="display:none;">
+            <div class="lot-h">Your ticket numbers</div>
+            <div class="lot-nums" id="lot-my-nums"></div>
+            <div class="lot-note">Each number is a separate chance. Five tickets are five entries, not one.</div>
+          </div>
+
+          <!-- Как это работает -->
+          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" class="help-toggle-btn" style="margin-bottom:14px;">❔ How does this work?</button>
+          <div id="lottohelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.75;color:var(--muted);margin-bottom:14px;">
+            <b style="color:var(--text);">1.</b> Buy one or more tickets with USDT on BNB Chain. Up to <b style="color:var(--text);">5 tickets per wallet</b> — so nobody can buy the whole round.<br>
+            <b style="color:var(--text);">2.</b> Every ticket gets its own number. Buying five at once gives you five separate entries.<br>
+            <b style="color:var(--text);">3.</b> When the round ends, the winner is drawn with <b style="color:var(--text);">Chainlink VRF</b> — a random number that comes with cryptographic proof checked on the blockchain. Nobody can rig it, including us.<br>
+            <b style="color:var(--text);">4.</b> The prize is sent straight to the winner's wallet. Nothing to claim.<br>
+            <b style="color:var(--text);">5.</b> <b style="color:var(--text);">If only one wallet joined</b>, the round is void: that player gets every cent back, no platform fee, and we pay the network cost.<br>
+            <b style="color:var(--text);">6.</b> The OpenGate owner wallet cannot buy tickets. That is enforced by the contract itself.
+          </div>
+
+          <!-- Прошлые раунды -->
+          <div class="lot-card">
+            <div class="lot-h">Past winners</div>
+            <div id="lot-history" class="lot-muted" style="font-size:13px;">Loading…</div>
+          </div>
+
+          <div class="lot-verify">
+            <span>Draw powered by</span> <b>Chainlink VRF</b><br>
+            <a id="lot-scan" href="https://bscscan.com/address/0x2658676714d85cc0e2CdF791c84bF9CfBc9cbFd8" target="_blank" rel="noopener noreferrer">Check the contract on BscScan →</a>
           </div>
 
         </div>
@@ -2336,7 +2360,7 @@ async function smartConnectWallet(){
         <div id="gamesBnbSection" style="display:none;padding:16px;grid-template-columns:1fr 1fr;gap:12px;max-width:600px;margin:0 auto;">
           <!-- BNB Lottery — Coming Soon -->
           <div onclick="showTab('bnblottery')" style="background:linear-gradient(135deg,rgba(245,200,66,0.05),rgba(38,217,138,0.03));border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,200,66,0.3)'">
-            <div style="position:absolute;top:8px;right:8px;background:var(--gold);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">SOON</div>
+            <div style="position:absolute;top:8px;right:8px;background:var(--green,#26D98A);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">LIVE</div>
             <div style="font-size:36px;margin-bottom:8px;">💰</div>
             <div style="font-size:15px;font-weight:700;">BNB Lottery</div>
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">10 winners · 7 days</div>
@@ -10760,6 +10784,8 @@ function showTab(tab){
   document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
   document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
   document.getElementById('view-bnblottery').style.display=tab==='bnblottery'?'block':'none';
+  if(tab==='bnblottery') initBNBLottery();
+  if(tab!=='bnblottery' && typeof lotteryCleanup==='function') lotteryCleanup();
   document.getElementById('view-bnbbattle').style.display=tab==='bnbbattle'?'block':'none';
   if(tab==='bnbbattle') initBNBBattle();
   document.getElementById('view-goldbattle').style.display=tab==='goldbattle'?'block':'none';
@@ -17311,6 +17337,299 @@ async function ogRefundStale(pref, ev){
     else if(m.indexOf('not playing')>=0) showToast('This game is already finished','err');
     else showToast('Error: '+m.slice(0,40),'err');
   }
+}
+
+// ═══════════ BNB LOTTERY ═══════════
+// Розыгрыш проводит Chainlink VRF, контракт хранит билеты и платит сам.
+// Здесь только чтение состояния и покупка. Никакой логики выбора победителя
+// на стороне сайта нет и быть не может — она вся в контракте.
+
+var LOTTO_ADDR = '0x2658676714d85cc0e2CdF791c84bF9CfBc9cbFd8';
+
+var LOTTO_ABI = [
+  'function currentRound() view returns(uint256)',
+  'function rounds(uint256) view returns(uint64 startedAt,uint64 endsAt,uint256 pot,uint256 seed,uint256 requestId,uint8 state)',
+  'function ticketPrice() view returns(uint256)',
+  'function maxTicketsPerWallet() view returns(uint256)',
+  'function feeBps() view returns(uint16)',
+  'function seedBps() view returns(uint16)',
+  'function winnersCount() view returns(uint256)',
+  'function ticketCount(uint256) view returns(uint256)',
+  'function participantCount(uint256) view returns(uint256)',
+  'function ticketsOf(uint256,address) view returns(uint256)',
+  'function myTickets(uint256,address) view returns(uint256[])',
+  'function winnersOf(uint256) view returns(address[],uint256[],uint256[])',
+  'function timeLeft() view returns(uint256)',
+  'function buyTickets(uint256)'
+];
+
+var _lotState = null;      // последнее прочитанное состояние
+var _lotPollTimer = null;
+var _lotTickTimer = null;
+var _lotBusy = false;
+
+function lotRead(){
+  return new ethers.Contract(LOTTO_ADDR, LOTTO_ABI, getBNBBattleProvider());
+}
+async function lotWrite(){
+  await switchToBNB();
+  var p = new ethers.BrowserProvider(window.ethereum);
+  var s = await p.getSigner();
+  return new ethers.Contract(LOTTO_ADDR, LOTTO_ABI, s);
+}
+
+function lotFmt(v){
+  // USDT на BNB Chain — 18 знаков, как и BNB
+  var n = parseFloat(ethers.formatUnits(v, 18));
+  return '$' + (n >= 100 ? n.toFixed(0) : n.toFixed(2));
+}
+
+function lotHuman(sec){
+  sec = Number(sec);
+  if (sec <= 0) return 'drawing…';
+  var d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600),
+      m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  if (d > 0) return d + 'd ' + h + 'h';
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + s + 's';
+  return s + 's';
+}
+
+var LOT_STATE_TXT = ['Open — buy your tickets', 'Waiting for Chainlink', 'Random number received', 'Round closed'];
+
+async function lotRefresh(){
+  var c;
+  try { c = lotRead(); } catch(e){ return; }
+  try {
+    var round = await ogTimeout(c.currentRound(), 8000);
+    var res = await Promise.all([
+      ogTimeout(c.rounds(round), 8000),
+      ogTimeout(c.ticketPrice(), 8000),
+      ogTimeout(c.maxTicketsPerWallet(), 8000),
+      ogTimeout(c.ticketCount(round), 8000),
+      ogTimeout(c.participantCount(round), 8000),
+      ogTimeout(c.timeLeft(), 8000)
+    ]);
+    var r = res[0], price = res[1], maxT = res[2], tickets = res[3], people = res[4], left = res[5];
+
+    var mine = 0n;
+    if (typeof userAddr !== 'undefined' && userAddr) {
+      try { mine = await ogTimeout(c.ticketsOf(round, userAddr), 8000); } catch(e){}
+    }
+
+    _lotState = {
+      round: round, pot: r.pot, state: Number(r.state), price: price,
+      maxT: Number(maxT), tickets: Number(tickets), people: Number(people),
+      left: Number(left), mine: Number(mine), readAt: Date.now()
+    };
+    lotPaint();
+    if (typeof userAddr !== 'undefined' && userAddr && Number(mine) > 0) lotPaintMyNumbers(c, round);
+  } catch(e){ /* сеть моргнула — оставляем прошлые цифры на экране */ }
+}
+
+function lotPaint(){
+  var st = _lotState;
+  if (!st) return;
+  var set = function(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; };
+
+  set('lot-round', '#' + st.round.toString());
+  set('lot-state', LOT_STATE_TXT[st.state] || '—');
+  set('lot-pot', lotFmt(st.pot));
+  set('lot-tickets', st.tickets);
+  set('lot-people', st.people);
+  set('lot-mine', st.mine);
+  set('lot-price', lotFmt(st.price) + ' per ticket');
+  set('lot-limit', 'max ' + st.maxT + ' per wallet');
+
+  // Единственный участник — предупреждаем честно, до покупки
+  var note = document.getElementById('lot-pot-note');
+  if (note) {
+    if (st.people === 1 && st.mine > 0) {
+      note.textContent = 'You are the only player so far. If nobody else joins, the round is void and you get everything back.';
+    } else if (st.people === 1) {
+      note.textContent = 'One player so far. A round with a single wallet is refunded in full.';
+    } else {
+      note.textContent = '90% goes to the winner, 10% is the platform fee';
+    }
+  }
+
+  var myCard = document.getElementById('lot-my-card');
+  if (myCard) myCard.style.display = st.mine > 0 ? '' : 'none';
+
+  lotPaintTimer();
+  lotPaintBuy();
+  lotUpdateTotal();
+}
+
+function lotPaintTimer(){
+  var st = _lotState;
+  if (!st) return;
+  // Отсчёт крутим локально, без запросов к сети
+  var passed = Math.floor((Date.now() - st.readAt) / 1000);
+  var el = document.getElementById('lot-timer');
+  if (el) el.textContent = lotHuman(st.left - passed);
+}
+
+function lotPaintBuy(){
+  var st = _lotState;
+  var btn = document.getElementById('lot-buy-btn');
+  var qty = document.getElementById('lot-qty');
+  var note = document.getElementById('lot-buy-note');
+  if (!btn || !st) return;
+
+  var left = st.maxT - st.mine;
+  if (qty) { qty.max = Math.max(1, left); if (Number(qty.value) > left) qty.value = Math.max(1, left); }
+
+  if (typeof userAddr === 'undefined' || !userAddr) {
+    btn.disabled = false; btn.textContent = 'Connect wallet';
+    if (note) note.textContent = '';
+    return;
+  }
+  if (st.state !== 0) {
+    btn.disabled = true; btn.textContent = 'Round closed';
+    if (note) note.textContent = 'The draw is under way. The next round opens right after it.';
+    return;
+  }
+  var passed = Math.floor((Date.now() - st.readAt) / 1000);
+  if (st.left - passed <= 0) {
+    btn.disabled = true; btn.textContent = 'Round ended';
+    if (note) note.textContent = 'Waiting for the draw to be started.';
+    return;
+  }
+  if (left <= 0) {
+    btn.disabled = true; btn.textContent = 'Limit reached';
+    if (note) note.textContent = 'You already hold the maximum of ' + st.maxT + ' tickets in this round.';
+    return;
+  }
+  btn.disabled = false; btn.textContent = 'Buy tickets';
+  if (note) note.textContent = 'You can buy ' + left + ' more ticket(s) in this round.';
+}
+
+function lotUpdateTotal(){
+  var st = _lotState;
+  var el = document.getElementById('lot-total');
+  var qty = document.getElementById('lot-qty');
+  if (!el || !st || !qty) return;
+  var n = Math.max(1, Number(qty.value) || 1);
+  el.textContent = 'Total: ' + lotFmt(st.price * BigInt(n));
+}
+
+function lotQty(d){
+  var qty = document.getElementById('lot-qty');
+  if (!qty) return;
+  var max = Number(qty.max) || 5;
+  qty.value = Math.min(max, Math.max(1, (Number(qty.value) || 1) + d));
+  lotUpdateTotal();
+}
+
+async function lotPaintMyNumbers(c, round){
+  var box = document.getElementById('lot-my-nums');
+  if (!box) return;
+  // myTickets перебирает весь список билетов. На больших раундах такой
+  // вызов бессмысленно тяжёлый, поэтому номера показываем только пока
+  // раунд небольшой — количество билетов видно в любом случае.
+  if (_lotState && _lotState.tickets > 3000) {
+    box.innerHTML = '<span class="lot-muted">You hold ' + _lotState.mine + ' ticket(s) in this round.</span>';
+    return;
+  }
+  try {
+    var nums = await ogTimeout(c.myTickets(round, userAddr), 8000);
+    box.innerHTML = nums.map(function(n){ return '<span class="lot-num">#' + n.toString() + '</span>'; }).join('');
+  } catch(e){
+    box.innerHTML = '<span class="lot-muted">You hold ' + (_lotState ? _lotState.mine : '?') + ' ticket(s).</span>';
+  }
+}
+
+async function lotBuy(){
+  if (typeof userAddr === 'undefined' || !userAddr) { connectWallet(); return; }
+  if (_lotBusy) return;
+  var btn = document.getElementById('lot-buy-btn');
+  var qty = document.getElementById('lot-qty');
+  var n = Math.max(1, Number(qty && qty.value) || 1);
+  _lotBusy = true;
+  if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
+  try {
+    var need = _lotState.price * BigInt(n);
+    await switchToBNB();
+    var p = new ethers.BrowserProvider(window.ethereum);
+    var s = await p.getSigner();
+    var usdt = new ethers.Contract(USDT_BNB_ADDR, ERC20_SIMPLE_ABI, s);
+
+    var bal = await usdt.balanceOf(userAddr);
+    if (bal < need) {
+      showToast('Not enough USDT — you need ' + lotFmt(need), 'err');
+      ogFund('0x38', 'USDT');
+      return;
+    }
+    var allow = await usdt.allowance(userAddr, LOTTO_ADDR);
+    if (allow < need) {
+      if (btn) btn.textContent = 'Approving…';
+      var ta = await usdt.approve(LOTTO_ADDR, ethers.MaxUint256);
+      await ta.wait();
+    }
+    if (btn) btn.textContent = 'Buying…';
+    var c = new ethers.Contract(LOTTO_ADDR, LOTTO_ABI, s);
+    var tx = await c.buyTickets(n);
+    await tx.wait();
+    showToast(n + ' ticket(s) bought — good luck!', 'ok');
+    await lotRefresh();
+  } catch(e){
+    var m = (e && e.message) || '';
+    if (e && e.code === 4001) showToast('Cancelled', 'err');
+    else if (m.indexOf('wallet ticket limit') >= 0) showToast('You already hold the maximum for this round', 'err');
+    else if (m.indexOf('owner cannot play') >= 0) showToast('The owner wallet cannot buy tickets', 'err');
+    else if (m.indexOf('round ended') >= 0) showToast('This round has just ended', 'err');
+    else if (m.indexOf('round not open') >= 0) showToast('The draw is under way', 'err');
+    else showToast('Error: ' + m.slice(0, 60), 'err');
+  } finally {
+    _lotBusy = false;
+    lotPaintBuy();
+  }
+}
+
+async function lotHistory(){
+  var box = document.getElementById('lot-history');
+  if (!box) return;
+  try {
+    var c = lotRead();
+    var cur = Number(await ogTimeout(c.currentRound(), 8000));
+    var rows = [];
+    for (var r = cur - 1; r >= 1 && rows.length < 5; r--) {
+      var w = await ogTimeout(c.winnersOf(r), 8000);
+      if (!w[0] || w[0].length === 0) continue;
+      var parts = [];
+      for (var i = 0; i < w[0].length; i++) {
+        parts.push('<div class="lot-hist-row"><span class="lot-num">#' + w[2][i].toString() + '</span>'
+          + '<span class="lot-hist-addr">' + w[0][i].slice(0, 6) + '…' + w[0][i].slice(-4) + '</span>'
+          + '<b>' + lotFmt(w[1][i]) + '</b></div>');
+      }
+      rows.push('<div class="lot-hist"><div class="lot-hist-h">Round #' + r + '</div>' + parts.join('') + '</div>');
+    }
+    box.innerHTML = rows.length ? rows.join('') : 'No draws yet. This is the first round.';
+  } catch(e){
+    box.textContent = 'Could not load past rounds.';
+  }
+}
+
+function initBNBLottery(){
+  lotRefresh();
+  lotHistory();
+  if (_lotPollTimer) clearInterval(_lotPollTimer);
+  if (_lotTickTimer) clearInterval(_lotTickTimer);
+  // Отсчёт рисуем каждую секунду локально, а к сети ходим раз в 15 секунд
+  // и только пока вкладка открыта и видна — иначе при 100k игроков
+  // это положило бы узел.
+  _lotTickTimer = setInterval(lotPaintTimer, 1000);
+  _lotPollTimer = setInterval(function(){
+    var v = document.getElementById('view-bnblottery');
+    if (!v || v.style.display === 'none' || document.hidden) return;
+    lotRefresh();
+  }, 15000);
+}
+
+function lotteryCleanup(){
+  if (_lotPollTimer) { clearInterval(_lotPollTimer); _lotPollTimer = null; }
+  if (_lotTickTimer) { clearInterval(_lotTickTimer); _lotTickTimer = null; }
 }
 
 let toastT;
