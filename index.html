@@ -387,6 +387,9 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .fund-ol{margin:0;padding-left:20px;}
 .fund-ol li{font-size:14px;line-height:1.65;margin-bottom:9px;color:var(--text);}
 .fund-ol li:last-child{margin-bottom:0;}
+#fundNavBtn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;}
+@media(max-width:560px){#fundNavBtn{display:none;}}
+.fund-inline{background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;-webkit-tap-highlight-color:transparent;}
 .fund-key{font-family:'Space Mono',monospace;font-size:12.5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1px 6px;color:var(--gold);}
 .fund-addr{font-family:'Space Mono',monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;margin-bottom:10px;overflow-wrap:break-word;word-break:break-all;}
 .fund-copy{width:100%;padding:11px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;}
@@ -1102,6 +1105,7 @@ async function smartConnectWallet(){
       <button id="testnetHubBtn" onclick="showTab('testnet')" title="Everything for the zkLitVM testnet in one place">🧪 Testnet</button>
       <button class="new-post-nav-btn" id="newPostBtn" onclick="focusComposer()">✍️ Post</button>
       <button id="pwaInstallBtn" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="installPWA()">📲 Install</button>
+      <button id="fundNavBtn" onclick="openFundGeneric()" title="How to add funds">💳<span class="fund-nav-text"> Add funds</span></button>
       <button id="connectBtn" onclick="handleConnectClick()"><div class="w-dot"></div>Connect Wallet</button>
       <button class="app-nav-menu-btn" id="drawerOpenBtn" onclick="openDrawer()"><span id="drawerBtnContent">☰</span></button>
     </div>
@@ -1393,7 +1397,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="bnbbs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <span id="bnbbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x38',bnbbsToken)">💳</button>
                   <button onclick="bnbbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -1535,7 +1539,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="gbs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <span id="gbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x38',gbsToken)">💳</button>
                   <button onclick="gbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -1677,7 +1681,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="pbs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <span id="pbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x89',pbsToken)">💳</button>
                   <button onclick="pbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -1819,7 +1823,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="basebs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <span id="basebs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x2105',basebsToken)">💳</button>
                   <button onclick="basebsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -1963,7 +1967,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="gpbs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <span id="gpbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x89',gpbsToken)">💳</button>
                   <button onclick="gpbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -2107,7 +2111,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="gbbs-balance" style="font-size:11px;color:var(--muted);"></span>
+                  <span id="gbbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x2105',gbbsToken)">💳</button>
                   <button onclick="gbbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
