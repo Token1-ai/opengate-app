@@ -390,6 +390,9 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 #fundNavBtn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;}
 @media(max-width:560px){#fundNavBtn{display:none;}}
 .fund-inline{background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;-webkit-tap-highlight-color:transparent;}
+.stale-bar{margin:12px 16px 0;padding:12px 14px;border-radius:12px;background:rgba(245,200,66,.07);border:1px solid rgba(245,200,66,.28);}
+.stale-txt{font-size:12.5px;line-height:1.55;color:var(--text);margin-bottom:10px;}
+.stale-btn{width:100%;padding:11px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--gold);font-size:13.5px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .fund-key{font-family:'Space Mono',monospace;font-size:12.5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1px 6px;color:var(--gold);}
 .fund-addr{font-family:'Space Mono',monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;margin-bottom:10px;overflow-wrap:break-word;word-break:break-all;}
 .fund-copy{width:100%;padding:11px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;}
@@ -1407,6 +1410,7 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="bnbbs-gameboard" style="display:none;">
+            <div id="bnbbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('bnbbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
@@ -1549,6 +1553,7 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="gbs-gameboard" style="display:none;">
+            <div id="gbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('gbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbs-status">Placing ships...</span>
@@ -1691,6 +1696,7 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="pbs-gameboard" style="display:none;">
+            <div id="pbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('pbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="pbs-status">Placing ships...</span>
@@ -1833,6 +1839,7 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="basebs-gameboard" style="display:none;">
+            <div id="basebs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('basebs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="basebs-status">Placing ships...</span>
@@ -1977,6 +1984,7 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="gpbs-gameboard" style="display:none;">
+            <div id="gpbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('gpbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gpbs-status">Placing ships...</span>
@@ -2121,6 +2129,7 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="gbbs-gameboard" style="display:none;">
+            <div id="gbbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('gbbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbbs-status">Placing ships...</span>
@@ -4948,6 +4957,7 @@ var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
 var ORACLE_HDR='opengate-oracle-2026';
 var BNB_BATTLE_ABI=[
+  'function staleIn(uint256 gameId) view returns(uint256)',
   'function createGame(uint256 amount, uint8 token) returns(uint256)',
   'function joinGame(uint256 gameId)',
   'function cancelGame(uint256 gameId)',
@@ -6013,6 +6023,8 @@ var POLYGON_BATTLE_ADDR = '0x9E723b339dA57f046435239dac168003f90B1B20'; // v2 (�
 var POLYGON_OFFSET = 3000000000; // keeps this table's DB ids out of every other range
 var OG_PBS_BUILD = 'PBS-1';
 var POLYGON_BATTLE_ABI = [
+  'function staleIn(uint256 gameId) view returns(uint256)',
+  'function refundStale(uint256 gameId)',
   'function createGame(uint256 betAmount, address paymentToken, (uint8,uint256,bytes) voucher) returns(uint256)',
   'function joinGame(uint256 gameId, (uint8,uint256,bytes) voucher)',
   'function cancelUnmatchedGame(uint256 gameId)',
@@ -6913,6 +6925,8 @@ var BASE_BATTLE_ADDR = '0xc4844EBDACE533D7b98C730ad06aF57376eCbf12'; // v2 (ст
 var BASE_BS_OFFSET = 5000000000; // Base regular — out of BNB(0)/BNB Gold(2B)/Polygon(3B)/Polygon Gold(4B)
 var OG_BBS_BUILD = 'BBS-1';
 var BASE_BATTLE_ABI = [
+  'function staleIn(uint256 gameId) view returns(uint256)',
+  'function refundStale(uint256 gameId)',
   'function createGame(uint256 betAmount, address paymentToken, uint8 tier, uint256 expiry, bytes signature) returns(uint256)',
   'function joinGame(uint256 gameId, uint8 tier, uint256 expiry, bytes signature)',
   'function cancelUnmatchedGame(uint256 gameId)',
@@ -7801,6 +7815,8 @@ var POLYGON_GOLD_BATTLE_ADDR = '0xb21482cFd2b5A7a35A85fF4193501CDEDFDdB7dd'; // 
 var POLYGON_GOLD_OFFSET = 4000000000; // keeps this table's DB ids out of every other range
 var OG_GPBS_BUILD = 'GPBS-1';
 var POLYGON_GOLD_BATTLE_ABI = [
+  'function staleIn(uint256 gameId) view returns(uint256)',
+  'function refundStale(uint256 gameId)',
   'function createGame(uint256 betAmount, address paymentToken, (uint8,uint256,bytes) voucher) returns(uint256)',
   'function joinGame(uint256 gameId, (uint8,uint256,bytes) voucher)',
   'function cancelUnmatchedGame(uint256 gameId)',
@@ -8686,6 +8702,8 @@ var BASE_GOLD_BATTLE_ADDR = '0x2b7b9d98404Fa0b5F0ffcAB89387373B98268acE'; // v2 
 var BASE_GOLD_OFFSET = 6000000000; // Base Gold — out of BNB(0)/BNB Gold(2B)/Polygon(3B)/Polygon Gold(4B)/Base regular(5B)
 var OG_GBBS_BUILD = 'GBBS-1';
 var BASE_GOLD_BATTLE_ABI = [
+  'function staleIn(uint256 gameId) view returns(uint256)',
+  'function refundStale(uint256 gameId)',
   'function createGame(uint256 betAmount, address paymentToken, uint8 tier, uint256 expiry, bytes signature) returns(uint256)',
   'function joinGame(uint256 gameId, uint8 tier, uint256 expiry, bytes signature)',
   'function cancelUnmatchedGame(uint256 gameId)',
@@ -17226,6 +17244,73 @@ function openFundGeneric(){
   var cid = null;
   try{ cid = window.ethereum && window.ethereum.chainId; }catch(e){}
   openFundModal(cid || '0x38', null);
+}
+
+
+// ── Аварійне повернення ставок ──
+// Показуємо кнопку ЛИШЕ коли право вже настало. Доти на екрані нічого немає.
+var OG_STALE = {
+  bnbbs:  {addr:function(){return BNB_BATTLE_ADDR;},        abi:function(){return BNB_BATTLE_ABI;},
+           prov:function(){return getBNBBattleProvider();},  id:function(){return bnbbsGameId;}},
+  gbs:    {addr:function(){return GOLD_BATTLE_ADDR;},        abi:function(){return BNB_BATTLE_ABI;},
+           prov:function(){return getBNBBattleProvider();},  id:function(){return gbsGameId;}},
+  pbs:    {addr:function(){return POLYGON_BATTLE_ADDR;},     abi:function(){return POLYGON_BATTLE_ABI;},
+           prov:function(){return getPolygonReadProvider();},id:function(){return pbsGameId;}},
+  gpbs:   {addr:function(){return POLYGON_GOLD_BATTLE_ADDR;},abi:function(){return POLYGON_GOLD_BATTLE_ABI;},
+           prov:function(){return getPolygonReadProvider();},id:function(){return gpbsGameId;}},
+  basebs: {addr:function(){return BASE_BATTLE_ADDR;},        abi:function(){return BASE_BATTLE_ABI;},
+           prov:function(){return getBaseReadProvider();},   id:function(){return basebsGameId;}},
+  gbbs:   {addr:function(){return BASE_GOLD_BATTLE_ADDR;},   abi:function(){return BASE_GOLD_BATTLE_ABI;},
+           prov:function(){return getBaseReadProvider();},   id:function(){return gbbsGameId;}}
+};
+
+function ogStaleVisible(pref){
+  var b=document.getElementById(pref+'-gameboard');
+  return !!(b && b.style.display!=='none' && b.offsetParent!==null);
+}
+
+async function ogStaleCheck(pref){
+  var bar=document.getElementById(pref+'-stale');
+  if(!bar) return;
+  var cfg=OG_STALE[pref];
+  var id; try{ id=cfg.id(); }catch(e){ return; }
+  if(id===null||id===undefined||id==='') { bar.style.display='none'; return; }
+  try{
+    var c=new ethers.Contract(cfg.addr(),cfg.abi(),cfg.prov());
+    var left=await ogTimeout(c.staleIn(id),8000);
+    bar.style.display = (Number(left)===0) ? '' : 'none';
+  }catch(e){ /* мовчки: це лише підказка, а не хід гри */ }
+}
+
+// Раз на дві хвилини і тільки для видимого екрана — навантаження копійчане
+// навіть при десятках тисяч партій одночасно.
+function ogStaleTick(){
+  Object.keys(OG_STALE).forEach(function(p){ if(ogStaleVisible(p)) ogStaleCheck(p); });
+}
+setInterval(ogStaleTick, 120000);
+setTimeout(ogStaleTick, 15000);
+
+async function ogRefundStale(pref, ev){
+  var btn=ev&&ev.target;
+  var cfg=OG_STALE[pref];
+  var id; try{ id=cfg.id(); }catch(e){ return; }
+  if(id===null||id===undefined){ showToast('No active game','err'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='...'; }
+  try{
+    var w=await window[pref+'ContractWrite']();
+    var tx=await w.refundStale(id);
+    await tx.wait();
+    showToast('Both stakes returned','ok');
+    var bar=document.getElementById(pref+'-stale'); if(bar) bar.style.display='none';
+    setTimeout(function(){ location.reload(); }, 1200);
+  }catch(e){
+    if(btn){ btn.disabled=false; btn.textContent='Return both stakes'; }
+    var m=(e&&e.message)||'';
+    if(e&&e.code===4001) showToast('Cancelled','err');
+    else if(m.indexOf('not stale')>=0) showToast('Not yet — the waiting period is not over','err');
+    else if(m.indexOf('not playing')>=0) showToast('This game is already finished','err');
+    else showToast('Error: '+m.slice(0,40),'err');
+  }
 }
 
 let toastT;
