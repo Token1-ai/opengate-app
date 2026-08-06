@@ -5094,16 +5094,10 @@ var BNB_RPCS=[
   // resolve in DNS (confirmed via real browser console: ERR_NAME_NOT_RESOLVED).
 ];
 function getBNBBattleProvider(){
-  return new ethers.JsonRpcProvider(BNB_RPCS[0]);
+  return _rpcProvider(BNB_RPCS,'bnb');
 }
 async function bnbReadRetry(fn, attempts){
-  attempts = attempts || BNB_RPCS.length;
-  let lastErr;
-  for(let i=0;i<attempts;i++){
-    try{ return await ogTimeout(fn(new ethers.JsonRpcProvider(BNB_RPCS[i])), 8000); }
-    catch(e){ lastErr=e; }
-  }
-  throw lastErr;
+  return _rpcRetry(BNB_RPCS,'bnb',fn,attempts);
 }
 
 // Same pattern for Polygon — dedicated Alchemy key first, public nodes
@@ -5119,16 +5113,10 @@ var POLYGON_RPCS=[
   'https://rpc.ankr.com/polygon'
 ];
 function getPolygonReadProvider(){
-  return new ethers.JsonRpcProvider(POLYGON_RPCS[0]);
+  return _rpcProvider(POLYGON_RPCS,'polygon');
 }
 async function polygonReadRetry(fn, attempts){
-  attempts = attempts || POLYGON_RPCS.length;
-  let lastErr;
-  for(let i=0;i<attempts;i++){
-    try{ return await ogTimeout(fn(getPolygonReadProvider()), 8000); }
-    catch(e){ lastErr=e; }
-  }
-  throw lastErr;
+  return _rpcRetry(POLYGON_RPCS,'polygon',fn,attempts);
 }
 // Base RPC pool — Alchemy primary (domain-locked to opengate.bond), then
 // public nodes as ordered fallback. Same pattern as Polygon: Alchemy is
@@ -5147,30 +5135,43 @@ var ARB_RPCS=[
   'https://arbitrum.drpc.org'
 ];
 function getBaseReadProvider(){
-  return new ethers.JsonRpcProvider(BASE_RPCS[0]);
+  return _rpcProvider(BASE_RPCS,'base');
 }
 async function baseReadRetry(fn, attempts){
-  attempts = attempts || BASE_RPCS.length;
-  let lastErr;
-  for(let i=0;i<attempts;i++){
-    try{ return await ogTimeout(fn(new ethers.JsonRpcProvider(BASE_RPCS[i])), 8000); }
-    catch(e){ lastErr=e; }
-  }
-  throw lastErr;
+  return _rpcRetry(BASE_RPCS,'base',fn,attempts);
 }
 function getArbReadProvider(){
-  return new ethers.JsonRpcProvider(ARB_RPCS[0]);
+  return _rpcProvider(ARB_RPCS,'arb');
 }
 async function arbReadRetry(fn, attempts){
-  attempts = attempts || ARB_RPCS.length;
-  let lastErr;
-  for(let i=0;i<attempts;i++){
-    try{ return await ogTimeout(fn(new ethers.JsonRpcProvider(ARB_RPCS[i])), 8000); }
-    catch(e){ lastErr=e; }
+  return _rpcRetry(ARB_RPCS,'arb',fn,attempts);
+}
+// Таймаут для мережевих викликів: замість вічного зависання — чесна помилка
+
+// Індекс вузла, який востаннє відповів. Спільний для читання і для
+// перебору, тому вдалий вузол одразу починають використовувати всі.
+var _rpcOk = { bnb:0, polygon:0, base:0, arb:0 };
+function _rpcProvider(list, key){
+  return new ethers.JsonRpcProvider(list[_rpcOk[key] % list.length]);
+}
+async function _rpcRetry(list, key, fn, attempts){
+  var n = list.length;
+  attempts = attempts || n;
+  var start = _rpcOk[key] % n;
+  var lastErr;
+  for (var i = 0; i < attempts; i++){
+    var at = (start + i) % n;
+    try {
+      // Першу спробу обриваємо раніше: якщо основний вузол задумався,
+      // немає сенсу чекати вісім секунд, коли поруч є робочий.
+      var res = await ogTimeout(fn(new ethers.JsonRpcProvider(list[at])), i === 0 ? 5000 : 8000);
+      _rpcOk[key] = at;
+      return res;
+    } catch(e){ lastErr = e; }
   }
   throw lastErr;
 }
-// Таймаут для мережевих викликів: замість вічного зависання — чесна помилка
+
 function ogTimeout(promise,ms){
   return Promise.race([
     promise,
