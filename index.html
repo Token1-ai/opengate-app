@@ -44,6 +44,36 @@ window.process=window.process||{env:{NODE_ENV:'production'},browser:true,version
      скрипта не создаём: раньше такие блокировались молча. -->
 <script defer id="wc-umd"></script>
 <script>
+// Ранній перехоплювач кліків. Стоїть ДО завантаження бібліотек, тому
+// ловить натискання в проміжку між появою сторінки та готовністю коду.
+(function(){
+  var pending = null;
+  window.__ogReady = false;
+  document.addEventListener('click', function(e){
+    if (window.__ogReady) return;
+    var el = e.target && e.target.closest ? e.target.closest('[onclick]') : null;
+    if (!el) return;
+    var code = el.getAttribute('onclick') || '';
+    var m = /^\s*([A-Za-z_$][\w$]*)\s*\(/.exec(code);
+    if (!m) return;
+    if (typeof window[m[1]] === 'function') return;   // обробник уже є
+    e.preventDefault();
+    e.stopPropagation();
+    pending = el;
+    document.documentElement.classList.add('og-warmup');
+  }, true);
+  // Викликається наприкінці головного блоку коду
+  window.__ogFlushPending = function(){
+    window.__ogReady = true;
+    document.documentElement.classList.remove('og-warmup');
+    if (pending) {
+      var el = pending; pending = null;
+      setTimeout(function(){ try{ el.click(); }catch(_){} }, 0);
+    }
+  };
+})();
+</script>
+<script>
 // Ловимо будь-яку помилку виконання саме з wc.js — щоб побачити РЕАЛЬНУ
 // причину, якщо бібліотека завантажилась, але впала під час запуску.
 window._wcScriptError=null;
@@ -390,6 +420,7 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 #fundNavBtn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;}
 @media(max-width:560px){#fundNavBtn{display:none;}}
 .fund-inline{background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;-webkit-tap-highlight-color:transparent;}
+html.og-warmup, html.og-warmup *{cursor:progress!important;}
 .nft-hub-card{display:flex;align-items:center;gap:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;cursor:pointer;transition:border-color .2s;-webkit-tap-highlight-color:transparent;}
 .nft-hub-card:active{border-color:var(--gold);}
 .nft-hub-ico{font-size:34px;flex-shrink:0;}
@@ -19004,6 +19035,9 @@ if('serviceWorker' in navigator){
     })
     .catch(e=>console.log('[PWA] SW registration failed:',e.message));
 }
+
+// Код готовий — повторюємо клік, якщо людина натиснула зарано.
+try{ if(window.__ogFlushPending) window.__ogFlushPending(); }catch(e){}
 </script>
 </body>
 </html>
