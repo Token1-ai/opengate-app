@@ -4326,8 +4326,13 @@ const GOLD_PASS  = '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
 const SILVER_PASS= '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
 const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
-var LITVM_RPCS = ['https://liteforge.rpc.caldera.xyz/http',
-                  'https://liteforge.rpc.caldera.xyz/infra-partner-http',
+// Першим стоїть /infra-partner-http, а не /http з документації.
+// Причина: MetaMask бере ПЕРШУ адресу зі списку, коли додає мережу
+// собі, і далі сам опитує її заради балансу — якщо там млявий вузол,
+// гальмує сам гаманець, і наш перебір цьому не допоможе.
+// /infra-partner-http використовують інші проєкти на цій мережі.
+var LITVM_RPCS = ['https://liteforge.rpc.caldera.xyz/infra-partner-http',
+                  'https://liteforge.rpc.caldera.xyz/http',
                   'https://rpc-litvm.pro'];
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:LITVM_RPCS,blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const POLYGON_ID = '0x89';
