@@ -4326,7 +4326,10 @@ const GOLD_PASS  = '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
 const SILVER_PASS= '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
 const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
-const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
+var LITVM_RPCS = ['https://liteforge.rpc.caldera.xyz/http',
+                  'https://liteforge.rpc.caldera.xyz/infra-partner-http',
+                  'https://rpc-litvm.pro'];
+const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:LITVM_RPCS,blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const POLYGON_ID = '0x89';
 const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
 const BASE_ID    = '0x2105'; // 8453
@@ -4761,7 +4764,12 @@ function getReadProvider(){
   // РЕАЛЬНО на LitVM (0x1159). Якщо користувач на BNB (грає в Battleship),
   // читаємо через публічний RPC LitVM — інакше баланси/стейкінг ламались.
   if(provider && window._ogChainId==='0x1159') return provider;
-  return new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+  return _rpcProvider(LITVM_RPCS, 'litvm');
+}
+// Читання LitVM з перебором вузлів. Не відповів один — одразу наступний,
+// і далі всі звернення йдуть у той, що працює.
+async function litvmReadRetry(fn, attempts){
+  return _rpcRetry(LITVM_RPCS, 'litvm', fn, attempts);
 }
 function getBNBProvider(){
   // BNB reads always use public RPC (not LitVM) — shares the same rotating pool as Battleship
@@ -4959,7 +4967,7 @@ async function connectViaWalletConnect(triedIds){
       methods: ['eth_sendTransaction','eth_signTransaction','eth_sign','personal_sign','eth_signTypedData','wallet_switchEthereumChain','wallet_addEthereumChain'],
       events: ['chainChanged','accountsChanged'],
       rpcMap: {
-        4441: 'https://liteforge.rpc.caldera.xyz/http',
+        4441: 'https://liteforge.rpc.caldera.xyz/infra-partner-http',
         56: 'https://bsc-dataseed.binance.org/'
       },
       metadata: {
@@ -5150,7 +5158,7 @@ async function arbReadRetry(fn, attempts){
 
 // Індекс вузла, який востаннє відповів. Спільний для читання і для
 // перебору, тому вдалий вузол одразу починають використовувати всі.
-var _rpcOk = { bnb:0, polygon:0, base:0, arb:0 };
+var _rpcOk = { bnb:0, polygon:0, base:0, arb:0, litvm:0 };
 function _rpcProvider(list, key){
   return new ethers.JsonRpcProvider(list[_rpcOk[key] % list.length]);
 }
