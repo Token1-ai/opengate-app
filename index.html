@@ -2580,30 +2580,28 @@ async function smartConnectWallet(){
         </div>
       </div>
       <div id="view-lottery" style="display:none;">
-        <div class="feed-hdr">🎰 Lottery</div>
+        <div class="feed-hdr">🎰 GATE Lottery</div>
         <div style="padding:20px;max-width:560px;margin:0 auto;">
 
           <!-- Current Round -->
           <div style="background:linear-gradient(145deg,rgba(245,200,66,0.09),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:24px;margin-bottom:16px;text-align:center;">
             <div style="font-size:13px;color:var(--muted);margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Round #<span id="lotteryRound">—</span></div>
-            <div style="font-size:48px;font-weight:700;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:4px;" id="lotteryPot">— USDT</div>
+            <div style="font-size:48px;font-weight:700;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:4px;" id="lotteryPot">— GATE</div>
             <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Current Prize Pool</div>
 
-            <!-- Round progress -->
+            <!-- Players progress -->
             <div style="margin-bottom:12px;">
               <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
                 <span>Players</span>
-                <span id="lotteryPlayers">0</span>
+                <span><span id="lotteryPlayers">0</span> / 20</span>
               </div>
               <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
                 <div id="lotteryBar" style="height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:4px;width:0%;transition:width .8s ease;"></div>
               </div>
             </div>
 
-            <!-- Round status / time left -->
+            <!-- Round status -->
             <div id="lotteryStatusBox" style="font-size:12px;color:var(--muted);margin-bottom:16px;">—</div>
-            <button onclick="closeLotteryRound()" id="lotteryCloseBtn" style="display:none;width:100%;padding:11px;border-radius:10px;background:var(--bg3);border:1px solid var(--gold);color:var(--gold);font-size:13px;font-weight:700;margin-bottom:12px;cursor:pointer;">🔔 Close round & start draw</button>
-            <button onclick="settleLotteryRound()" id="lotterySettleBtn" style="display:none;width:100%;padding:11px;border-radius:10px;background:var(--bg3);border:1px solid var(--green);color:var(--green);font-size:13px;font-weight:700;margin-bottom:12px;cursor:pointer;">🏆 Settle & pay winner</button>
 
             <!-- My tickets -->
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:20px;">
@@ -2613,14 +2611,14 @@ async function smartConnectWallet(){
 
             <!-- Buy tickets -->
             <div style="margin-bottom:12px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many tickets? (max 5 per wallet)</div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many tickets? (1-5 per tx, 10 GATE each)</div>
               <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
                 <button onclick="setLotteryQty(1)" id="lqty1" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:16px;font-weight:700;cursor:pointer;">1</button>
                 <button onclick="setLotteryQty(2)" id="lqty2" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">2</button>
                 <button onclick="setLotteryQty(3)" id="lqty3" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">3</button>
                 <button onclick="setLotteryQty(5)" id="lqty5" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">5</button>
               </div>
-              <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cost: <span id="lotteryCost" style="color:var(--gold);font-weight:700;">— USDT</span></div>
+              <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cost: <span id="lotteryCost" style="color:var(--gold);font-weight:700;">10 GATE</span></div>
               <button onclick="buyLotteryTicket()" id="buyTicketBtn"
                 style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;transition:all .2s;"
                 onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
@@ -2632,11 +2630,11 @@ async function smartConnectWallet(){
           <!-- Rules -->
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">How it works</div>
-            <div class="w-row"><span class="w-lbl">Ticket price</span><span class="w-val" style="color:var(--gold);" id="lotteryTicketPriceRule">1 USDT</span></div>
-            <div class="w-row"><span class="w-lbl">Max tickets / wallet</span><span class="w-val">5</span></div>
-            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">90% of pot, single winner</span></div>
-            <div class="w-row"><span class="w-lbl">Platform fee</span><span class="w-val">10%</span></div>
-            <div class="w-row"><span class="w-lbl">Draw</span><span class="w-val">Every 5 days, picked by Chainlink VRF</span></div>
+            <div class="w-row"><span class="w-lbl">Ticket price</span><span class="w-val" style="color:var(--gold);">10 GATE</span></div>
+            <div class="w-row"><span class="w-lbl">Max players</span><span class="w-val">20</span></div>
+            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">95% of pot</span></div>
+            <div class="w-row"><span class="w-lbl">Platform fee</span><span class="w-val">5%</span></div>
+            <div class="w-row"><span class="w-lbl">Draw</span><span class="w-val">Auto when full</span></div>
           </div>
 
           <!-- Past rounds -->
@@ -4232,6 +4230,38 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
     return _origSend.call(this, tx);
   };
 })();
+// ── zkLitVM read-retry fix ("тестнет time from time не працює") ──
+// LitVM has exactly one public RPC (liteforge.rpc.caldera.xyz) — unlike
+// BNB/Polygon/Base there is no fallback list to rotate through (checked
+// chainlist.org: this is the only endpoint that exists for this chain).
+// So every faucet/lottery/balance/NFT read that goes through
+// getReadProvider() is a single point of failure: one slow response or
+// a transient 429/timeout from that one host and the read just fails —
+// which is exactly what "works time from time" looks like from outside.
+// Fix: patch JsonRpcProvider.send() to transparently retry a few times
+// (short backoff) whenever the request is going to that specific host,
+// before giving up. Every other network's providers use different hosts
+// and are unaffected.
+(function(){
+  var _origProviderSend = ethers.JsonRpcProvider.prototype.send;
+  ethers.JsonRpcProvider.prototype.send = async function(method, params){
+    var url;
+    try{ url = this._getConnection().url; }catch(e){}
+    if(!url || url.indexOf('caldera.xyz') === -1){
+      return _origProviderSend.call(this, method, params);
+    }
+    var attempts = 3, delays = [300, 900];
+    var lastErr;
+    for(var i=0;i<attempts;i++){
+      try{ return await _origProviderSend.call(this, method, params); }
+      catch(e){
+        lastErr = e;
+        if(i < attempts-1) await new Promise(function(r){ setTimeout(r, delays[i]||900); });
+      }
+    }
+    throw lastErr;
+  };
+})();
 const POLYGON_ID = '0x89';
 const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
 const BASE_ID    = '0x2105'; // 8453
@@ -4304,21 +4334,25 @@ const DICE_ABI        = [
   'function playerWins(address) view returns(uint256)',
   'function playerLosses(address) view returns(uint256)',
 ];
-// Matches the deployed OpenGateLottery.sol on BNB Chain (USDT, Chainlink VRF) —
-// NOT the old GATE/zkLitVM lottery this ABI used to describe. See "Чому лотерея
-// не працювала" note near loadLottery() below.
+// ВИПРАВЛЕНО (я помилився раніше): цей контракт реально живе на zkLitVM,
+// не на BNB — на BNB за цією ж адресою коду взагалі нема (eth_getCode = "0x").
+// Перевірено напряму по байткоду на zkLitVM: селектори збігаються 1:1 зі
+// старим ABI нижче (buyTicket/getCurrentRound/getMyTickets/rounds/TICKET_PRICE/
+// MAX_PLAYERS/draw), і currentRound() на ланцюгу зараз повертає 97 — точнісінько
+// як на скріні. Тобто оригінальний ABI був правильний, купівля білетів і
+// раніше не працювала не через баг фронта, а тому що сам раунд #97 реально
+// неактивний (isActive=false) — контракт коректно відхиляє купівлю.
 const LOTTERY_ABI     = [
-  'function buyTickets(uint256 count)',
-  'function closeRound()',
-  'function settle()',
+  'function buyTicket(uint256)',
+  'function draw()',
+  'function getCurrentRound() view returns(uint256,uint256,uint256,bool)',
+  'function getRoundPlayers(uint256) view returns(address[])',
+  'function getMyTickets(uint256) view returns(uint256)',
+  'function rounds(uint256) view returns(uint256,address[],address,uint256,bool,uint256)',
   'function currentRound() view returns(uint256)',
-  'function rounds(uint256) view returns(uint64 startedAt,uint64 endsAt,uint256 pot,uint256 seed,uint256 requestId,uint8 state)',
-  'function ticketPrice() view returns(uint256)',
-  'function maxTicketsPerWallet() view returns(uint256)',
-  'function participantCount(uint256) view returns(uint256)',
-  'function ticketsOf(uint256,address) view returns(uint256)',
-  'function winnersOf(uint256) view returns(address[],uint256[],uint256[])',
-  'function timeLeft() view returns(uint256)',
+  'function TICKET_PRICE() view returns(uint256)',
+  'function MAX_PLAYERS() view returns(uint256)',
+  'function owner() view returns(address)',
 ];
 const DAO_ABI         = [
   'function createProposal(string,string) returns(uint256)',
@@ -13655,133 +13689,57 @@ async function rollDice(){
 }
 
 // ── LOTTERY ──
-// Чому лотерея не працювала: ця сторінка була написана під СТАРУ лотерею
-// (GATE-токен, zkLitVM, ліміт 20 гравців, авто-розіграш). Реально задеплоєний
-// контракт (GATE_LOTTERY, той самий адрес) — зовсім інший: він на BNB Chain,
-// білет коштує ticketPrice() у USDT, купівля йде через buyTickets(count) (не
-// buyTicket), і в нього немає getCurrentRound()/getMyTickets() — звідси й
-// "Round expired"/помилки: фронт стукався у функції, яких у контракті просто
-// нема. Раунд закривається не автоматично при заповненні, а по часу
-// (roundDuration, зараз 5 днів) — після дедлайну хтось повинен викликати
-// closeRound(), а після розіграшу Chainlink VRF — settle(). Це може зробити
-// будь-хто (не тільки власник), тому нижче на сторінці ці дві кнопки
-// з'являються самі, коли настає момент — не потрібен окремий бекенд-бот.
+// ВИПРАВЛЕНО: лотерея реально живе на zkLitVM (GATE-токен, ліміт 20 гравців,
+// авто-розіграш при заповненні), а не на BNB/USDT з Chainlink VRF — та версія
+// була моєю помилкою і зняла зі стрічки, тому кнопка "Купити білет" не
+// працювала. Перевірено напряму по байткоду й живих getCurrentRound()/
+// currentRound() викликах на zkLitVM. Раунд #97 зараз isActive=false —
+// це не баг, контракт коректно блокує купівлю, поки new draw не запущено;
+// draw() власницька (onlyOwner) і власник контракту — не поточний гаманець
+// власника сайту, тому кнопки "розіграти" тут немає (вона б все одно
+// відхилялась). Нижче лише статус-повідомлення для гравців.
 let lotteryQty = 1;
-let lotteryTicketPriceRaw = 0n;
-let lotteryMaxPerWallet = 5;
-const LOTTERY_OWNER = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
-
-function lotteryFmtUSDT(raw){ return parseFloat(ethers.formatUnits(raw||0n,18)).toFixed(2); }
-
-function setLotteryQty(qty){
-  lotteryQty=qty;
-  [1,2,3,5].forEach(q=>{const btn=document.getElementById('lqty'+q);if(!btn)return;if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});
-  const costEl=document.getElementById('lotteryCost');
-  if(costEl) costEl.textContent=lotteryFmtUSDT(lotteryTicketPriceRaw*BigInt(qty))+' USDT';
-}
-
+function setLotteryQty(qty){lotteryQty=qty;[1,2,3,5].forEach(q=>{const btn=document.getElementById('lqty'+q);if(!btn)return;if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});document.getElementById('lotteryCost').textContent=(qty*10)+' GATE';}
 async function loadLottery(){
   try{
-    const roundId=Number(await bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).currentRound()));
-    const [r, players, price, maxPerWallet] = await Promise.all([
-      bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).rounds(roundId)),
-      bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).participantCount(roundId)),
-      bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).ticketPrice()),
-      bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).maxTicketsPerWallet()),
-    ]);
-    lotteryTicketPriceRaw=price;
-    lotteryMaxPerWallet=Number(maxPerWallet)||5;
-    setLotteryQty(lotteryQty);
-    const priceRuleEl=document.getElementById('lotteryTicketPriceRule');
-    if(priceRuleEl) priceRuleEl.textContent=lotteryFmtUSDT(price)+' USDT';
-
+    const p=getReadProvider();
+    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
+    // getCurrentRound() returns (roundId, playerCount, pot, isActive)
+    const round=await lottery.getCurrentRound();
+    const roundId=Number(round[0]);
+    const playerCount=Number(round[1]);
+    const pot=round[2];
+    const isActive=round[3];
     document.getElementById('lotteryRound').textContent=roundId.toString();
-    document.getElementById('lotteryPot').textContent=lotteryFmtUSDT(r.pot)+' USDT';
-    document.getElementById('lotteryPlayers').textContent=players.toString();
+    document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';
+    document.getElementById('lotteryPlayers').textContent=playerCount.toString();
+    document.getElementById('lotteryBar').style.width=(playerCount*100/20)+'%';
 
-    const now=Math.floor(Date.now()/1000);
-    const startedAt=Number(r.startedAt), endsAt=Number(r.endsAt), state=Number(r.state);
-    const dur=Math.max(1, endsAt-startedAt);
-    const elapsedPct=state===0 ? Math.min(100, Math.max(0,(now-startedAt)*100/dur)) : 100;
-    document.getElementById('lotteryBar').style.width=elapsedPct+'%';
-
-    renderLotteryStatus(state, endsAt, now, Number(players));
+    const statusBox=document.getElementById('lotteryStatusBox');
+    const buyBtn=document.getElementById('buyTicketBtn');
+    if(statusBox&&buyBtn){
+      if(isActive){
+        statusBox.textContent=playerCount+' / 20 players — round is open, draw fires automatically when full.';
+        buyBtn.disabled=false; buyBtn.style.opacity='1'; buyBtn.style.cursor='pointer';
+      }else{
+        statusBox.textContent='This round has ended and is waiting to be drawn. Buying is paused until the next round opens.';
+        buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
+      }
+    }
 
     if(userAddr){
       try{
-        const myT=await bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).ticketsOf(roundId,userAddr));
+        const myT=await lottery.getMyTickets(roundId);
         document.getElementById('myLotteryTickets').textContent=myT.toString();
       }catch(e){}
     }
-    loadLotteryWinners(roundId);
+    loadLotteryWinners(lottery, roundId);
   }catch(e){
     document.getElementById('pastLotteryRounds').innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load lottery</div>';
   }
 }
 
-// Стан раунду: 0 Open, 1 Drawing (чекаємо Chainlink), 2 Drawn (готово до
-// settle), 3 Closed (щойно закрився — currentRound() вже вказує на новий).
-function renderLotteryStatus(state, endsAt, now, playerCount){
-  const box=document.getElementById('lotteryStatusBox');
-  const buyBtn=document.getElementById('buyTicketBtn');
-  const closeBtn=document.getElementById('lotteryCloseBtn');
-  const settleBtn=document.getElementById('lotterySettleBtn');
-  if(!box||!buyBtn||!closeBtn||!settleBtn) return;
-  closeBtn.style.display='none';
-  settleBtn.style.display='none';
-  if(state===0 && now<endsAt){
-    const secsLeft=endsAt-now;
-    const d=Math.floor(secsLeft/86400), h=Math.floor((secsLeft%86400)/3600), m=Math.floor((secsLeft%3600)/60);
-    box.textContent=(d>0?d+'d ':'')+(d>0||h>0?h+'h ':'')+m+'m left in this round';
-    buyBtn.disabled=false; buyBtn.style.opacity='1'; buyBtn.style.cursor='pointer';
-  } else if(state===0 && now>=endsAt){
-    box.textContent='This round has ended — waiting for someone to close it and start the draw.';
-    buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
-    closeBtn.style.display='block';
-  } else if(state===1){
-    box.textContent='Drawing the winner (waiting on Chainlink VRF) — check back in a minute.';
-    buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
-  } else if(state===2){
-    box.textContent='Winner picked — waiting for the payout to be settled.';
-    buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
-    settleBtn.style.display='block';
-  } else {
-    box.textContent='Starting the next round...';
-    buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
-  }
-}
-
-async function closeLotteryRound(){
-  const btn=document.getElementById('lotteryCloseBtn');
-  if(!userAddr){showToast('Connect wallet first','err');return;}
-  btn.disabled=true; btn.textContent='Closing...';
-  try{
-    await switchToBNB();
-    const freshSigner=await provider.getSigner();
-    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
-    await (await lottery.closeRound()).wait();
-    showToast('Round closed!','ok');
-    loadLottery();
-  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
-  btn.disabled=false; btn.textContent='🔔 Close round & start draw';
-}
-
-async function settleLotteryRound(){
-  const btn=document.getElementById('lotterySettleBtn');
-  if(!userAddr){showToast('Connect wallet first','err');return;}
-  btn.disabled=true; btn.textContent='Settling...';
-  try{
-    await switchToBNB();
-    const freshSigner=await provider.getSigner();
-    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
-    await (await lottery.settle()).wait();
-    showToast('Winner paid! 🎉','ok');
-    loadLottery();
-  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
-  btn.disabled=false; btn.textContent='🏆 Settle & pay winner';
-}
-
-async function loadLotteryWinners(currentRoundId){
+async function loadLotteryWinners(lottery, currentRoundId){
   const el=document.getElementById('pastLotteryRounds');
   if(!el) return;
   if(currentRoundId<=1){
@@ -13795,10 +13753,25 @@ async function loadLotteryWinners(currentRoundId){
     for(let i=currentRoundId-1;i>=from;i--){
       promises.push((async(roundNum)=>{
         try{
-          const [winners, prizes] = await bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).winnersOf(roundNum));
-          if(!winners || winners.length===0) return null;
-          const playerCount = await bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).participantCount(roundNum));
-          return { roundNum, winner: winners[0], prize: prizes[0], players: Number(playerCount) };
+          // rounds(uint256) returns: (uint256 pot, address[] players, address winner, uint256 ticketPrice, bool drawn, uint256 timestamp)
+          const r=await lottery.rounds(roundNum);
+          const pot=r[0];
+          const players=r[1];
+          const winner=r[2];
+          const drawn=r[4];
+          // Also try by name in case ethers returns object
+          const potVal=r.pot??pot??0n;
+          const winnderVal=r.winner??winner??'';
+          const drawnVal=r.drawn??drawn??false;
+          const playersVal=r.players??players??[];
+          const zeroAddr='0x0000000000000000000000000000000000000000';
+          if(!drawnVal||!winnderVal||winnderVal===zeroAddr) return null;
+          return {
+            roundNum,
+            pot: potVal,
+            winner: winnderVal,
+            players: Array.isArray(playersVal)?playersVal.length:Number(playersVal)||0
+          };
         }catch(e){ return null; }
       })(i));
     }
@@ -13809,16 +13782,17 @@ async function loadLotteryWinners(currentRoundId){
     }
     let html='';
     results.forEach(r=>{
-      const prize=lotteryFmtUSDT(r.prize);
+      const potGate=parseFloat(ethers.formatEther(r.pot)).toFixed(0);
+      const prize=(parseFloat(ethers.formatEther(r.pot))*0.95).toFixed(0);
       const winnerShort=r.winner.slice(0,6)+'...'+r.winner.slice(-4);
       const isMe=userAddr&&r.winner.toLowerCase()===userAddr.toLowerCase();
       html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
         <div>
           <div style="font-size:13px;font-weight:700;">Round #${r.roundNum} ${isMe?'🎉 You won!':''}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.players} players</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.players} players · ${potGate} GATE pot</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:12px;font-weight:700;color:var(--green);">🏆 ${prize} USDT</div>
+          <div style="font-size:12px;font-weight:700;color:var(--green);">🏆 ${prize} GATE</div>
           <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;cursor:pointer;"
             onclick="cpText('${r.winner}');showToast('Copied!','ok')" title="${r.winner}">${winnerShort} ⧉</div>
         </div>
@@ -13829,30 +13803,20 @@ async function loadLotteryWinners(currentRoundId){
     el.innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load past rounds</div>';
   }
 }
-
 async function buyLotteryTicket(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
-  if(userAddr.toLowerCase()===LOTTERY_OWNER){showToast("Owner wallet doesn't play the lottery","err");return;}
   const btn=document.getElementById('buyTicketBtn');
   btn.textContent='⏳ Checking...';btn.disabled=true;
   try{
-    await switchToBNB();
+    await switchToLitVM();
     const freshSigner=await provider.getSigner();
-    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
-    const price=await lottery.ticketPrice();
-    const cost=price*BigInt(lotteryQty);
-    const usdt=new ethers.Contract(USDT_BNB_ADDR,ERC20_SIMPLE_ABI,freshSigner);
-    const bal=await usdt.balanceOf(userAddr);
-    if(bal<cost){showToast('Insufficient USDT. Need '+lotteryFmtUSDT(cost),'err');btn.textContent='🎟️ Buy Ticket';btn.disabled=false;return;}
-    const allowance=await usdt.allowance(userAddr,GATE_LOTTERY);
-    if(allowance<cost){
-      showToast('Approving USDT...','ok');
-      await (await usdt.approve(GATE_LOTTERY,cost)).wait();
-    }
+    const amount=ethers.parseEther((lotteryQty*10).toString());
+    await smartApprove(GATE_LOTTERY, amount, freshSigner);
     btn.textContent='🎟️ Buying...';
-    const tx=await lottery.buyTickets(BigInt(lotteryQty));
+    const LOTTERY_IFACE=new ethers.Interface(['function buyTicket(uint256 qty)']);
+    const tx=await freshSigner.sendTransaction({to:GATE_LOTTERY,data:LOTTERY_IFACE.encodeFunctionData('buyTicket',[BigInt(lotteryQty)])});
     await tx.wait();
-    showToast('🎟️ Ticket bought!','ok');loadLottery();
+    showToast('🎟️ Ticket bought!','ok');loadLottery();loadGateBal();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
   btn.textContent='🎟️ Buy Ticket';btn.disabled=false;
 }
@@ -18256,8 +18220,46 @@ if('serviceWorker' in navigator){
     .then(reg=>{
       console.log('[PWA] SW registered:',reg.scope);
       reg.update().catch(function(){}); // форсуємо перевірку свіжої версії sw.js
+      // Re-check for a newer sw.js every 5 min while the tab is open/visible —
+      // otherwise a tab left open for hours only ever sees the version that
+      // was live at page load, even though sw.js already does skipWaiting()
+      // + clients.claim() as soon as it notices a new deploy.
+      setInterval(function(){
+        if(document.visibilityState==='visible') reg.update().catch(function(){});
+      }, 5*60*1000);
+      document.addEventListener('visibilitychange', function(){
+        if(document.visibilityState==='visible') reg.update().catch(function(){});
+      });
     })
     .catch(e=>console.log('[PWA] SW registration failed:',e.message));
+
+  // ── Auto-update other users when Igor pushes a new deploy ──
+  // sw.js already activates a new version immediately (skipWaiting +
+  // clients.claim), but that alone only means the NEXT network request
+  // is served fresh — a tab that's already open keeps running the OLD
+  // JS in memory until it's actually reloaded. This is that missing
+  // last step: when a new service worker takes control of this tab,
+  // reload once to pick up the new index.html/JS. If the person is in
+  // the middle of typing something (a post, a form) or has a modal
+  // open, don't yank the page out from under them — show a small
+  // "tap to refresh" pill instead and let them do it when ready.
+  let _ogSwReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    if(_ogSwReloaded) return;
+    _ogSwReloaded=true;
+    const active=document.activeElement;
+    const isTyping=active&&(active.tagName==='TEXTAREA'||active.tagName==='INPUT')&&active.value;
+    const hasOpenModal=!!document.querySelector('.modal-overlay.open');
+    if(isTyping||hasOpenModal){
+      const pill=document.createElement('div');
+      pill.textContent='🔄 New version available — tap to refresh';
+      pill.style.cssText='position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:99999;background:var(--gold,#f5c842);color:#08090C;font-size:13px;font-weight:700;padding:10px 18px;border-radius:100px;box-shadow:0 4px 20px rgba(0,0,0,.3);cursor:pointer;';
+      pill.onclick=function(){location.reload();};
+      document.body.appendChild(pill);
+    } else {
+      location.reload();
+    }
+  });
 }
 </script>
 </body>
