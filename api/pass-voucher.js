@@ -20,6 +20,19 @@
  *   ATTESTOR_PRIVATE_KEY — the private key of the attestor wallet
  *   (0x84E3A898DA90419795e3b276A302068845754806). This wallet holds no
  *   funds and never sends transactions — it only signs messages.
+ *
+ * --- Open-table override (added) -----------------------------------
+ * The regular (non-VIP) Battleship tables on Polygon and Base used to
+ * require a real Silver/Gold Pass because their contracts enforce
+ * `tier >= minPassTier(1)` on-chain via this voucher. Per product
+ * decision, those two tables are now open to any connected wallet —
+ * so for JUST those two contract addresses we floor the issued tier
+ * to 1 (Silver) regardless of actual NFT ownership. Every other
+ * contract that asks this endpoint for a voucher (Gold VIP Battleship
+ * tables, NFT/launchpad pass discounts, etc.) still gets the wallet's
+ * real, on-chain-verified tier — nothing else on the platform is
+ * affected.
+ * ---------------------------------------------------------------------
  */
 
 const { ethers } = require('ethers');
@@ -33,6 +46,13 @@ const BNB_RPCS = [
 ];
 const NFT_MIN_ABI = ['function balanceOf(address) view returns(uint256)'];
 const VOUCHER_TTL_SECONDS = 600; // 10 minutes
+
+// Regular (non-VIP) Battleship tables that no longer require a real pass.
+// Everyone gets at least tier 1 (Silver) for these two contracts only.
+const OPEN_BATTLESHIP_CONTRACTS = new Set([
+  '0x9e723b339da57f046435239dac168003f90b1b20', // Polygon Battleship (regular table)
+  '0xc4844ebdace533d7b98c730ad06af57376ecbf12', // Base Battleship (regular table)
+]);
 
 async function getPassTier(wallet) {
   let lastErr;
@@ -80,7 +100,13 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    const tier = await getPassTier(wallet);
+    let tier = await getPassTier(wallet);
+
+    // Open-table override: regular Polygon/Base Battleship no longer needs a real pass.
+    if (OPEN_BATTLESHIP_CONTRACTS.has(contractAddress.toLowerCase()) && tier < 1) {
+      tier = 1;
+    }
+
     const expiry = Math.floor(Date.now() / 1000) + VOUCHER_TTL_SECONDS;
 
     // Must match EXACTLY what the Solidity contract reconstructs:
