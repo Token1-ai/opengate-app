@@ -4297,12 +4297,18 @@ const GATE_LOTTERY    = '0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035';
 const GATE_DICE         = '0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855';
 const BATTLESHIP_ADDR   = '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143';
 const GATE_LENDING      = '0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6';
-const GATE_FAUCET       = '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74';
+// GateFaucetV2 — деплоєно 05.09.2026, 5-денний кулдаун, owner = поточний
+// гаманець 0xC85b...3108 (перевірено напряму по блокчейну).
+const GATE_FAUCET       = '0xCF2B61D76F2140D8270e612918DEE1501EcC637C';
 const FAUCET_ABI        = [
   'function claim()',
   'function hasClaimed(address) view returns(bool)',
   'function faucetBalance() view returns(uint256)',
   'function claimCount() view returns(uint256)',
+  // GateFaucetV2 only (safe no-ops against the old contract — just unused until you swap the address above):
+  'function canClaim(address) view returns(bool)',
+  'function nextClaimAt(address) view returns(uint256)',
+  'function COOLDOWN() view returns(uint256)',
 ];
 const LENDING_ABI       = [
   'function borrowGateWithZk() payable',
@@ -12421,6 +12427,18 @@ async function executeMint(){
 }
 
 // ── FAUCET ──
+// GateFaucetV2 (once deployed and its address swapped in above) lets a
+// wallet claim again every 5 days instead of only once ever — canClaim()/
+// nextClaimAt() are the new-contract-only calls, so we probe them first
+// and fall back to the old one-time hasClaimed() when they're missing
+// (i.e. GATE_FAUCET still points at the old contract).
+function fmtCooldown(secs){
+  if(secs<=0) return 'now';
+  const d=Math.floor(secs/86400), h=Math.floor((secs%86400)/3600), m=Math.floor((secs%3600)/60);
+  if(d>0) return d+'d '+h+'h';
+  if(h>0) return h+'h '+m+'m';
+  return Math.max(1,m)+'m';
+}
 async function loadFaucet(){
   try{
     const p=getReadProvider();
@@ -12429,22 +12447,32 @@ async function loadFaucet(){
     document.getElementById('faucetBalance').textContent=parseFloat(ethers.formatEther(bal)).toFixed(0);
     document.getElementById('faucetClaimCount').textContent=count.toString();
     if(userAddr){
-      const hasClaimed=await faucet.hasClaimed(userAddr);
       const statusBox=document.getElementById('faucetStatusBox');
       const btn=document.getElementById('claimFaucetBtn');
-      if(hasClaimed){
+      let nextAt=null; // ms timestamp of next eligible claim, or 0/null if claimable now
+      try{
+        nextAt=Number(await faucet.nextClaimAt(userAddr))*1000; // GateFaucetV2
+      }catch(e){
+        // Old one-time faucet — no cooldown concept, just claimed-or-not.
+        const hasClaimed=await faucet.hasClaimed(userAddr);
+        nextAt=hasClaimed?-1:0; // -1 = permanently claimed (old contract), 0 = eligible
+      }
+      const now=Date.now();
+      if(nextAt===-1){
         statusBox.innerHTML='<span style="color:var(--green);">✓ You already claimed your 100 GATE!</span>';
         statusBox.style.borderColor='rgba(38,217,138,0.3)';
-        btn.disabled=true;
-        btn.style.opacity='.4';
-        btn.style.cursor='not-allowed';
+        btn.disabled=true; btn.style.opacity='.4'; btn.style.cursor='not-allowed';
         btn.textContent='Already Claimed ✓';
+      } else if(nextAt && nextAt>now){
+        const left=fmtCooldown(Math.ceil((nextAt-now)/1000));
+        statusBox.innerHTML='<span style="color:var(--muted);">⏳ Next claim available in '+left+'</span>';
+        statusBox.style.borderColor='var(--border)';
+        btn.disabled=true; btn.style.opacity='.4'; btn.style.cursor='not-allowed';
+        btn.textContent='⏳ '+left+' left';
       } else {
         statusBox.innerHTML='<span style="color:var(--green);">✓ You are eligible to claim 100 GATE!</span>';
         statusBox.style.borderColor='rgba(38,217,138,0.3)';
-        btn.disabled=false;
-        btn.style.opacity='1';
-        btn.style.cursor='pointer';
+        btn.disabled=false; btn.style.opacity='1'; btn.style.cursor='pointer';
         btn.textContent='🚰 Claim 100 GATE';
       }
     }
@@ -12465,15 +12493,14 @@ async function claimFaucet(){
     const tx=await faucet.claim();
     btn.textContent='Waiting...';
     await tx.wait();
-    showToast('🎉 100 GATE claimed! Welcome to OpenGate!','ok');
+    showToast('🎉 100 GATE claimed! Come back in 5 days for more.','ok');
     loadFaucet();
     loadGateBal();
-    btn.textContent='Already Claimed ✓';
   }catch(e){
     const msg=(e.reason||e.message||'Failed');
-    if(msg.includes('Already claimed')){
-      showToast('Already claimed!','err');
-      btn.textContent='Already Claimed ✓';
+    if(msg.includes('Already claimed')||msg.includes('Cooldown active')){
+      showToast(msg.includes('Cooldown active')?'Cooldown still active':'Already claimed!','err');
+      loadFaucet(); // repaint the countdown/disabled state instead of a stale button
     } else {
       showToast(msg.slice(0,60),'err');
       btn.disabled=false;
