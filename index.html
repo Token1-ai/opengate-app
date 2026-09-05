@@ -44,36 +44,6 @@ window.process=window.process||{env:{NODE_ENV:'production'},browser:true,version
      скрипта не создаём: раньше такие блокировались молча. -->
 <script defer id="wc-umd"></script>
 <script>
-// Ранній перехоплювач кліків. Стоїть ДО завантаження бібліотек, тому
-// ловить натискання в проміжку між появою сторінки та готовністю коду.
-(function(){
-  var pending = null;
-  window.__ogReady = false;
-  document.addEventListener('click', function(e){
-    if (window.__ogReady) return;
-    var el = e.target && e.target.closest ? e.target.closest('[onclick]') : null;
-    if (!el) return;
-    var code = el.getAttribute('onclick') || '';
-    var m = /^\s*([A-Za-z_$][\w$]*)\s*\(/.exec(code);
-    if (!m) return;
-    if (typeof window[m[1]] === 'function') return;   // обробник уже є
-    e.preventDefault();
-    e.stopPropagation();
-    pending = el;
-    document.documentElement.classList.add('og-warmup');
-  }, true);
-  // Викликається наприкінці головного блоку коду
-  window.__ogFlushPending = function(){
-    window.__ogReady = true;
-    document.documentElement.classList.remove('og-warmup');
-    if (pending) {
-      var el = pending; pending = null;
-      setTimeout(function(){ try{ el.click(); }catch(_){} }, 0);
-    }
-  };
-})();
-</script>
-<script>
 // Ловимо будь-яку помилку виконання саме з wc.js — щоб побачити РЕАЛЬНУ
 // причину, якщо бібліотека завантажилась, але впала під час запуску.
 window._wcScriptError=null;
@@ -409,71 +379,6 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .modal-exec-btn.gold-btn{background:var(--gold);color:#08090C;}
 .modal-exec-btn.silver-btn{background:var(--silver);color:#08090C;}
 .modal-exec-btn:disabled{opacity:.5;cursor:not-allowed;}
-/* ── Поповнення гаманця ── */
-.fund-h{font-size:20px;font-weight:700;margin-bottom:6px;padding-right:36px;}
-.fund-sub{font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
-.fund-card{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:14px;}
-.fund-card-t{font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px;letter-spacing:.02em;}
-.fund-ol{margin:0;padding-left:20px;}
-.fund-ol li{font-size:14px;line-height:1.65;margin-bottom:9px;color:var(--text);}
-.fund-ol li:last-child{margin-bottom:0;}
-#fundNavBtn{background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;}
-@media(max-width:560px){#fundNavBtn{display:none;}}
-.fund-inline{background:none;border:none;color:var(--gold);font-size:13px;cursor:pointer;padding:0 2px;line-height:1;-webkit-tap-highlight-color:transparent;}
-html.og-warmup, html.og-warmup *{cursor:progress!important;}
-.nft-hub-card{display:flex;align-items:center;gap:14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;cursor:pointer;transition:border-color .2s;-webkit-tap-highlight-color:transparent;}
-.nft-hub-card:active{border-color:var(--gold);}
-.nft-hub-ico{font-size:34px;flex-shrink:0;}
-.nft-hub-body{flex:1;min-width:0;}
-.nft-hub-t{font-size:16px;font-weight:800;margin-bottom:5px;}
-.nft-hub-d{font-size:12.5px;line-height:1.6;color:var(--muted);}
-.nft-hub-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
-.nft-hub-tags span{font-size:10.5px;color:var(--gold);background:var(--bg3);border:1px solid var(--border);border-radius:100px;padding:3px 9px;}
-.nft-hub-arrow{font-size:19px;color:var(--muted);flex-shrink:0;}
-.nft-hub-note{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;padding:6px 8px 20px;}
-.nft-back{background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0 0 0 2px;-webkit-tap-highlight-color:transparent;}
-.lot-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:14px;}
-.lot-round-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px;}
-.lot-round-no{font-size:18px;font-weight:800;}
-.lot-round-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
-.lot-timer-box{text-align:right;}
-.lot-timer{font-size:20px;font-weight:800;color:var(--gold);}
-.lot-pot-box{text-align:center;padding:18px 12px;background:var(--bg3);border-radius:14px;margin-bottom:14px;}
-.lot-pot-lbl{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;}
-.lot-pot{font-size:38px;font-weight:800;color:var(--gold);line-height:1.15;margin:4px 0 6px;}
-.lot-pot-note{font-size:11.5px;color:var(--muted);line-height:1.5;}
-.lot-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-.lot-stat{background:var(--bg3);border-radius:11px;padding:11px 6px;text-align:center;}
-.lot-stat-v{font-size:19px;font-weight:800;}
-.lot-stat-l{font-size:10.5px;color:var(--muted);margin-top:2px;}
-.lot-h{font-size:14px;font-weight:700;margin-bottom:12px;}
-.lot-price-row{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:12px;}
-.lot-muted{color:var(--muted);font-size:12px;}
-.lot-qty{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.lot-qty-btn{width:44px;height:44px;border-radius:11px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:21px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.lot-qty-in{flex:1;height:44px;border-radius:11px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:17px;font-weight:700;text-align:center;}
-.lot-total{font-size:15px;font-weight:700;margin-bottom:12px;}
-.lot-buy{width:100%;padding:15px;border-radius:12px;background:var(--gold);color:#08090C;font-size:16px;font-weight:800;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.lot-buy:disabled{opacity:.45;cursor:not-allowed;}
-.lot-note{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:9px;}
-.lot-nums{display:flex;flex-wrap:wrap;gap:7px;}
-.lot-num{display:inline-block;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-family:'Space Mono',monospace;font-size:12.5px;color:var(--gold);}
-.lot-hist{margin-bottom:12px;}
-.lot-hist-h{font-size:11.5px;color:var(--muted);margin-bottom:6px;}
-.lot-hist-row{display:flex;align-items:center;gap:9px;font-size:12.5px;margin-bottom:5px;}
-.lot-hist-addr{font-family:'Space Mono',monospace;color:var(--muted);flex:1;overflow-wrap:break-word;}
-.lot-verify{text-align:center;font-size:11.5px;color:var(--muted);line-height:1.8;padding:6px 0 20px;}
-.lot-verify a{color:var(--gold);}
-.stale-bar{margin:12px 16px 0;padding:12px 14px;border-radius:12px;background:rgba(245,200,66,.07);border:1px solid rgba(245,200,66,.28);}
-.stale-txt{font-size:12.5px;line-height:1.55;color:var(--text);margin-bottom:10px;}
-.stale-btn{width:100%;padding:11px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--gold);font-size:13.5px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.fund-key{font-family:'Space Mono',monospace;font-size:12.5px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1px 6px;color:var(--gold);}
-.fund-addr{font-family:'Space Mono',monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:11px 12px;margin-bottom:10px;overflow-wrap:break-word;word-break:break-all;}
-.fund-copy{width:100%;padding:11px;border-radius:10px;background:var(--bg2);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-.fund-warn{font-size:12.5px;line-height:1.6;color:var(--muted);background:rgba(245,200,66,0.07);border:1px solid rgba(245,200,66,0.18);border-radius:10px;padding:10px 12px;margin-top:10px;}
-.fund-notes{margin:0 0 18px;padding-left:18px;}
-.fund-notes li{font-size:12.5px;line-height:1.6;color:var(--muted);margin-bottom:7px;}
-.fund-ok{width:100%;padding:15px;border-radius:12px;background:var(--gold);color:#08090C;font-size:16px;font-weight:700;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 
 /* TOAST */
 #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 20px;font-size:13px;font-weight:500;z-index:999;transition:transform .3s;white-space:nowrap;}
@@ -846,10 +751,6 @@ textarea.form-inp{resize:vertical;min-height:80px;}
 </div>
 
 <!-- WALLET SELECTION MODAL -->
-<div class="modal-overlay" id="fundModal">
-  <div id="fundModalBody" style="background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:28px 24px 32px;width:100%;max-width:460px;position:relative;max-height:88vh;overflow-y:auto;"></div>
-</div>
-
 <div class="modal-overlay" id="walletModal">
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:32px 24px 40px;width:100%;max-width:480px;position:relative;">
     <button class="modal-close-btn" onclick="document.getElementById('walletModal').classList.remove('open')">✕</button>
@@ -1182,7 +1083,6 @@ async function smartConnectWallet(){
       <button id="testnetHubBtn" onclick="showTab('testnet')" title="Everything for the zkLitVM testnet in one place">🧪 Testnet</button>
       <button class="new-post-nav-btn" id="newPostBtn" onclick="focusComposer()">✍️ Post</button>
       <button id="pwaInstallBtn" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:6px 12px;font-size:12px;cursor:pointer;" onclick="installPWA()">📲 Install</button>
-      <button id="fundNavBtn" onclick="openFundGeneric()" title="How to add funds">💳<span class="fund-nav-text"> Add funds</span></button>
       <button id="connectBtn" onclick="handleConnectClick()"><div class="w-dot"></div>Connect Wallet</button>
       <button class="app-nav-menu-btn" id="drawerOpenBtn" onclick="openDrawer()"><span id="drawerBtnContent">☰</span></button>
     </div>
@@ -1204,7 +1104,8 @@ async function smartConnectWallet(){
         
         
 
-        <button class="side-btn" id="tab-nfthub" onclick="showTab('nfthub')"><span class="side-ico">🖼️</span>NFT</button>
+        <button class="side-btn" id="tab-market" onclick="showTab('market')"><span class="side-ico">🛒</span>NFT Market</button>
+        <button class="side-btn" id="tab-nftstudio" onclick="showTab('nftstudio')"><span class="side-ico">🎨</span>NFT Studio</button>
         <button class="side-btn" id="tab-explore" onclick="showTab('explore')"><span class="side-ico">🔍</span>Explore</button>
         <button class="side-btn" id="tab-notifs" onclick="showTab('notifs')"><span class="side-ico">🔔</span>Notifications<span id="notifBadge" style="display:none;background:var(--red);color:#fff;font-size:10px;padding:1px 6px;border-radius:100px;margin-left:6px;"></span></button>
         <button class="side-btn" id="tab-launchpad" onclick="showTab('launchpad')"><span class="side-ico">🚀</span>Create Token</button>
@@ -1294,87 +1195,95 @@ async function smartConnectWallet(){
       </div>
       <div id="view-bnblottery" style="display:none;">
         <div class="feed-hdr">💰 BNB Lottery</div>
-        <div style="max-width:520px;margin:0 auto;padding:16px;">
+        <div style="max-width:520px;margin:0 auto;padding:24px 16px;">
 
-          <!-- Раунд -->
-          <div class="lot-card">
-            <div class="lot-round-top">
-              <div>
-                <div class="lot-round-no">Round <span id="lot-round">—</span></div>
-                <div class="lot-round-sub" id="lot-state">Loading…</div>
-              </div>
-              <div class="lot-timer-box">
-                <div class="lot-timer" id="lot-timer">—</div>
-                <div class="lot-round-sub">until the draw</div>
-              </div>
+          <!-- Coming Soon Hero -->
+          <div style="text-align:center;padding:40px 20px;background:linear-gradient(135deg,rgba(245,200,66,0.08),rgba(38,217,138,0.04));border:1px solid rgba(245,200,66,0.25);border-radius:20px;margin-bottom:20px;">
+            <div style="font-size:64px;margin-bottom:16px;">💰</div>
+            <div style="font-size:24px;font-weight:800;margin-bottom:8px;">BNB Lottery</div>
+            <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:20px;letter-spacing:.05em;">COMING SOON</div>
+            <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">
+              The first real-money lottery on OpenGate.<br/>
+              Buy tickets with BNB or USDT. 10 winners.<br/>
+              Powered by <b style="color:var(--text);">Chainlink VRF</b> — provably fair.
             </div>
+            <div style="font-size:13px;font-weight:700;color:var(--gold);">🔔 Stay tuned for the launch!</div>
+          </div>
 
-            <div class="lot-pot-box">
-              <div class="lot-pot-lbl">Prize pool</div>
-              <div class="lot-pot" id="lot-pot">—</div>
-              <div class="lot-pot-note" id="lot-pot-note">90% goes to the winner, 10% is the platform fee</div>
+          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" class="help-toggle-btn" style="margin-bottom:16px;">❔ How will this work?</button>
+          <div id="lottohelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:20px;">
+            <div style="color:var(--muted);">
+              <b style="color:var(--text);">1.</b> Buy one or more tickets with BNB or USDT — <b style="color:var(--text);">$0.90 each</b>.<br>
+              <b style="color:var(--text);">2.</b> When the round ends, <b style="color:var(--text);">10 winners</b> are picked at random.<br>
+              <b style="color:var(--text);">3.</b> The draw uses <b style="color:var(--text);">Chainlink VRF</b> — a verifiable, tamper-proof random number source, so nobody (including us) can rig who wins.<br>
+              <b style="color:var(--text);">4.</b> Winnings are paid automatically to the winners' wallets — no claiming needed.<br><br>
+              Not live yet — this is a preview of how it will work once the round opens.
             </div>
+          </div>
 
-            <div class="lot-stats">
-              <div class="lot-stat">
-                <div class="lot-stat-v" id="lot-tickets">—</div>
-                <div class="lot-stat-l">Tickets sold</div>
+          <!-- Features grid -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">🎟️</div>
+              <div style="font-size:13px;font-weight:700;">$0.90 / ticket</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">BNB or USDT</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">🏆</div>
+              <div style="font-size:13px;font-weight:700;">10 winners</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Different prize shares</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">⏱️</div>
+              <div style="font-size:13px;font-weight:700;">7 days / round</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Auto-starts next round</div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+              <div style="font-size:24px;margin-bottom:6px;">🔐</div>
+              <div style="font-size:13px;font-weight:700;">Chainlink VRF</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;">100% provably fair</div>
+            </div>
+          </div>
+
+          <!-- Prize distribution -->
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Prize Distribution</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;">🥇 1st place</span>
+                <span style="font-size:13px;font-weight:700;color:var(--gold);">~30%</span>
               </div>
-              <div class="lot-stat">
-                <div class="lot-stat-v" id="lot-people">—</div>
-                <div class="lot-stat-l">Players</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;">🥈 2nd place</span>
+                <span style="font-size:13px;font-weight:700;color:var(--gold);">~20%</span>
               </div>
-              <div class="lot-stat">
-                <div class="lot-stat-v" id="lot-mine">—</div>
-                <div class="lot-stat-l">Your tickets</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;">🥉 3rd place</span>
+                <span style="font-size:13px;font-weight:700;color:var(--gold);">~15%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:13px;color:var(--muted);">4th–10th place</span>
+                <span style="font-size:13px;font-weight:700;color:var(--muted);">~31%</span>
+              </div>
+              <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;color:var(--muted);">Platform fee</span>
+                <span style="font-size:12px;color:var(--muted);">10%</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12px;color:var(--muted);">Next round seed</span>
+                <span style="font-size:12px;color:var(--muted);">4%</span>
               </div>
             </div>
           </div>
 
-          <!-- Покупка -->
-          <div class="lot-card" id="lot-buy-card">
-            <div class="lot-h">Buy tickets</div>
-            <div class="lot-price-row">
-              <span id="lot-price">—</span>
-              <span class="lot-muted" id="lot-limit">max 5 per wallet</span>
-            </div>
-            <div class="lot-qty">
-              <button class="lot-qty-btn" onclick="lotQty(-1)">−</button>
-              <input class="lot-qty-in" id="lot-qty" type="number" min="1" max="5" value="1" oninput="lotUpdateTotal()"/>
-              <button class="lot-qty-btn" onclick="lotQty(1)">+</button>
-            </div>
-            <div class="lot-total" id="lot-total">Total: —</div>
-            <button class="lot-buy" id="lot-buy-btn" onclick="lotBuy()">Connect wallet</button>
-            <div class="lot-note" id="lot-buy-note"></div>
-          </div>
-
-          <!-- Мои билеты -->
-          <div class="lot-card" id="lot-my-card" style="display:none;">
-            <div class="lot-h">Your ticket numbers</div>
-            <div class="lot-nums" id="lot-my-nums"></div>
-            <div class="lot-note">Each number is a separate chance. Five tickets are five entries, not one.</div>
-          </div>
-
-          <!-- Как это работает -->
-          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" class="help-toggle-btn" style="margin-bottom:14px;">❔ How does this work?</button>
-          <div id="lottohelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.75;color:var(--muted);margin-bottom:14px;">
-            <b style="color:var(--text);">1.</b> Buy one or more tickets with USDT on BNB Chain. Up to <b style="color:var(--text);">5 tickets per wallet</b> — so nobody can buy the whole round.<br>
-            <b style="color:var(--text);">2.</b> Every ticket gets its own number. Buying five at once gives you five separate entries.<br>
-            <b style="color:var(--text);">3.</b> When the round ends, the winner is drawn with <b style="color:var(--text);">Chainlink VRF</b> — a random number that comes with cryptographic proof checked on the blockchain. Nobody can rig it, including us.<br>
-            <b style="color:var(--text);">4.</b> The prize is sent straight to the winner's wallet. Nothing to claim.<br>
-            <b style="color:var(--text);">5.</b> <b style="color:var(--text);">If only one wallet joined</b>, the round is void: that player gets every cent back, no platform fee, and we pay the network cost.<br>
-            <b style="color:var(--text);">6.</b> The OpenGate owner wallet cannot buy tickets. That is enforced by the contract itself.
-          </div>
-
-          <!-- Прошлые раунды -->
-          <div class="lot-card">
-            <div class="lot-h">Past winners</div>
-            <div id="lot-history" class="lot-muted" style="font-size:13px;">Loading…</div>
-          </div>
-
-          <div class="lot-verify">
-            <span>Draw powered by</span> <b>Chainlink VRF</b><br>
-            <a id="lot-scan" href="https://bscscan.com/address/0x2658676714d85cc0e2CdF791c84bF9CfBc9cbFd8" target="_blank" rel="noopener noreferrer">Check the contract on BscScan →</a>
+          <!-- Social links -->
+          <div style="text-align:center;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;">
+            <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Be the first to know when it launches:</div>
+            <a href="https://x.com/OpenGatelive" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;font-size:13px;font-weight:700;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              @OpenGatelive
+            </a>
           </div>
 
         </div>
@@ -1416,12 +1325,11 @@ async function smartConnectWallet(){
                 <button id="bshelp-regular-btn" onclick="toggleHelpBox('bshelp-regular')" class="help-toggle-btn" style="margin-bottom:12px;">❔ How does this work?</button>
                 <div id="bshelp-regular" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
                   <div style="color:var(--muted);">
-                    <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — get one from the <b style="color:var(--text);">Passes</b> section on the landing page if you don't have one yet.<br>
-                    <b style="color:var(--text);">2.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
-                    <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
-                    <b style="color:var(--text);">4.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
-                    <b style="color:var(--text);">5.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
-                    <b style="color:var(--text);">6.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.
+                    <b style="color:var(--text);">1.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
+                    <b style="color:var(--text);">2.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
+                    <b style="color:var(--text);">3.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
+                    <b style="color:var(--text);">4.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
+                    <b style="color:var(--text);">5.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.
                   </div>
                 </div>
 
@@ -1465,7 +1373,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="bnbbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x38',bnbbsToken)">💳</button>
+                  <span id="bnbbs-balance" style="font-size:11px;color:var(--muted);"></span>
                   <button onclick="bnbbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -1475,7 +1383,6 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="bnbbs-gameboard" style="display:none;">
-            <div id="bnbbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('bnbbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="bnbbs-status">Placing ships...</span>
@@ -1608,7 +1515,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="gbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x38',gbsToken)">💳</button>
+                  <span id="gbs-balance" style="font-size:11px;color:var(--muted);"></span>
                   <button onclick="gbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -1618,7 +1525,6 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="gbs-gameboard" style="display:none;">
-            <div id="gbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('gbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbs-status">Placing ships...</span>
@@ -1701,13 +1607,12 @@ async function smartConnectWallet(){
                 <button id="bshelp-polygon-btn" onclick="toggleHelpBox('bshelp-polygon')" class="help-toggle-btn" style="margin-bottom:12px;">❔ How does this work?</button>
                 <div id="bshelp-polygon" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
                   <div style="color:var(--muted);">
-                    <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — get one from the <b style="color:var(--text);">Passes</b> section on the landing page if you don't have one yet.<br>
-                    <b style="color:var(--text);">2.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
-                    <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
-                    <b style="color:var(--text);">4.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
-                    <b style="color:var(--text);">5.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
-                    <b style="color:var(--text);">6.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.<br>
-                    <b style="color:var(--text);">7.</b> Changed your mind before anyone joined? Hit <b style="color:var(--text);">Cancel</b> on your own room any time to get your stake back — no waiting required.
+                    <b style="color:var(--text);">1.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
+                    <b style="color:var(--text);">2.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
+                    <b style="color:var(--text);">3.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
+                    <b style="color:var(--text);">4.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
+                    <b style="color:var(--text);">5.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.<br>
+                    <b style="color:var(--text);">6.</b> Changed your mind before anyone joined? Hit <b style="color:var(--text);">Cancel</b> on your own room any time to get your stake back — no waiting required.
                   </div>
                 </div>
 
@@ -1751,7 +1656,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="pbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x89',pbsToken)">💳</button>
+                  <span id="pbs-balance" style="font-size:11px;color:var(--muted);"></span>
                   <button onclick="pbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -1761,7 +1666,6 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="pbs-gameboard" style="display:none;">
-            <div id="pbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('pbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="pbs-status">Placing ships...</span>
@@ -1844,13 +1748,12 @@ async function smartConnectWallet(){
                 <button id="bshelp-base-btn" onclick="toggleHelpBox('bshelp-base')" class="help-toggle-btn" style="margin-bottom:12px;">❔ How does this work?</button>
                 <div id="bshelp-base" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:16px;">
                   <div style="color:var(--muted);">
-                    <b style="color:var(--text);">1.</b> You need a <b style="color:var(--text);">Silver or Gold Pass</b> to play — get one from the <b style="color:var(--text);">Passes</b> section on the landing page if you don't have one yet.<br>
-                    <b style="color:var(--text);">2.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
-                    <b style="color:var(--text);">3.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
-                    <b style="color:var(--text);">4.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
-                    <b style="color:var(--text);">5.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
-                    <b style="color:var(--text);">6.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.<br>
-                    <b style="color:var(--text);">7.</b> Changed your mind before anyone joined? Hit <b style="color:var(--text);">Cancel</b> on your own room any time to get your stake back — no waiting required.
+                    <b style="color:var(--text);">1.</b> Pick a currency (USDT or USDC) and how much you want to stake — from <b style="color:var(--text);">$0.10 up to $50</b>.<br>
+                    <b style="color:var(--text);">2.</b> Hit <b style="color:var(--text);">"Create Game"</b> to open a new room, or <b style="color:var(--text);">"Find Game"</b> to instantly join someone else's room with the same stake.<br>
+                    <b style="color:var(--text);">3.</b> When an opponent shows up, you'll both get a short countdown to confirm you're ready — your money is only locked in once you both accept.<br>
+                    <b style="color:var(--text);">4.</b> Place your ships, take turns firing, sink the other player's fleet first to win.<br>
+                    <b style="color:var(--text);">5.</b> The winner automatically receives <b style="color:var(--text);">90% of the total stake</b> (10% platform fee) — paid straight to their wallet, no claiming needed.<br>
+                    <b style="color:var(--text);">6.</b> Changed your mind before anyone joined? Hit <b style="color:var(--text);">Cancel</b> on your own room any time to get your stake back — no waiting required.
                   </div>
                 </div>
 
@@ -1894,7 +1797,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="basebs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x2105',basebsToken)">💳</button>
+                  <span id="basebs-balance" style="font-size:11px;color:var(--muted);"></span>
                   <button onclick="basebsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -1904,7 +1807,6 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="basebs-gameboard" style="display:none;">
-            <div id="basebs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('basebs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="basebs-status">Placing ships...</span>
@@ -2039,7 +1941,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="gpbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x89',gpbsToken)">💳</button>
+                  <span id="gpbs-balance" style="font-size:11px;color:var(--muted);"></span>
                   <button onclick="gpbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -2049,7 +1951,6 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="gpbs-gameboard" style="display:none;">
-            <div id="gpbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('gpbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gpbs-status">Placing ships...</span>
@@ -2184,7 +2085,7 @@ async function smartConnectWallet(){
               <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
                 <span>🔍 Open Rooms</span>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <span id="gbbs-balance" style="font-size:11px;color:var(--muted);"></span><button class="fund-inline" onclick="ogFund('0x2105',gbbsToken)">💳</button>
+                  <span id="gbbs-balance" style="font-size:11px;color:var(--muted);"></span>
                   <button onclick="gbbsLoadRooms()" style="background:none;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;cursor:pointer;">Refresh</button>
                 </div>
               </div>
@@ -2194,7 +2095,6 @@ async function smartConnectWallet(){
 
           <!-- GAME (same layout as testnet — boards side by side) -->
           <div id="gbbs-gameboard" style="display:none;">
-            <div id="gbbs-stale" class="stale-bar" style="display:none;"><div class="stale-txt"><b>This game is stuck.</b> The referee has not answered for over 7 days. Both stakes go back to their owners — yours and your opponent’s.</div><button class="stale-btn" onclick="ogRefundStale('gbbs',event)">Return both stakes</button></div>
             <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
               <div>
                 <span style="font-size:14px;font-weight:700;" id="gbbs-status">Placing ships...</span>
@@ -2399,13 +2299,13 @@ async function smartConnectWallet(){
 
         <!-- BNB Chain games -->
         <div id="gamesBnbSection" style="display:none;padding:16px;grid-template-columns:1fr 1fr;gap:12px;max-width:600px;margin:0 auto;">
-          <!-- BNB Lottery -->
+          <!-- BNB Lottery — Coming Soon -->
           <div onclick="showTab('bnblottery')" style="background:linear-gradient(135deg,rgba(245,200,66,0.05),rgba(38,217,138,0.03));border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,200,66,0.3)'">
-            <div style="position:absolute;top:8px;right:8px;background:var(--green,#26D98A);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">LIVE</div>
+            <div style="position:absolute;top:8px;right:8px;background:var(--gold);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">SOON</div>
             <div style="font-size:36px;margin-bottom:8px;">💰</div>
             <div style="font-size:15px;font-weight:700;">BNB Lottery</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;">One winner · 5 days</div>
-            <div style="font-size:11px;color:var(--gold);margin-top:6px;">$1 per ticket · USDT</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:4px;">10 winners · 7 days</div>
+            <div style="font-size:11px;color:var(--gold);margin-top:6px;">$0.90 · BNB or USDT</div>
           </div>
           <!-- BNB Battleship — LIVE -->
           <div onclick="showTab('bnbbattle')" style="background:linear-gradient(135deg,rgba(59,130,246,0.05),rgba(38,217,138,0.03));border:1px solid rgba(59,130,246,0.3);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='#3B82F6'" onmouseout="this.style.borderColor='rgba(59,130,246,0.3)'">
@@ -2793,37 +2693,9 @@ async function smartConnectWallet(){
         </div>
       </div>
 
-      <div id="view-nfthub" style="display:none;">
-        <div class="feed-hdr">🖼️ NFT</div>
-        <div style="max-width:520px;margin:0 auto;padding:16px;">
-
-          <div class="nft-hub-card" onclick="showTab('nftstudio')">
-            <div class="nft-hub-ico">🎨</div>
-            <div class="nft-hub-body">
-              <div class="nft-hub-t">NFT Studio</div>
-              <div class="nft-hub-d">Make your own collection. Upload the art, set the name and supply, and it is minted on the network you choose.</div>
-              <div class="nft-hub-tags"><span>Create</span><span>Mint</span><span>Your own art</span></div>
-            </div>
-            <div class="nft-hub-arrow">→</div>
-          </div>
-
-          <div class="nft-hub-card" onclick="showTab('market')">
-            <div class="nft-hub-ico">🛒</div>
-            <div class="nft-hub-body">
-              <div class="nft-hub-t">NFT Marketplace</div>
-              <div class="nft-hub-d">Buy and sell NFTs that already exist — yours, other people’s, and the Gold and Silver Passes.</div>
-              <div class="nft-hub-tags"><span>Buy</span><span>Sell</span><span>Passes</span></div>
-            </div>
-            <div class="nft-hub-arrow">→</div>
-          </div>
-
-          <div class="nft-hub-note">New here? Start with the Studio if you want to make something, or the Marketplace if you want to buy something.</div>
-        </div>
-      </div>
-
       <div id="view-market" style="display:none;">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="display:flex;align-items:center;gap:10px;"><button class="nft-back" onclick="showTab('nfthub')">←</button>🛒 NFT Marketplace</span>
+          <span>🛒 NFT Marketplace</span>
           <button id="mktListBtn" onclick="openListModal()" style="background:var(--gold);color:#08090C;border-radius:9px;padding:6px 14px;font-size:13px;font-weight:700;">+ Add NFT</button>
         </div>
 
@@ -3286,10 +3158,7 @@ async function smartConnectWallet(){
       </div>
 
       <div id="view-nftstudio" style="display:none;">
-        <div class="feed-hdr" style="display:flex;align-items:center;gap:10px;">
-          <button class="nft-back" onclick="showTab('nfthub')">←</button>
-          <span>🎨 NFT Studio</span>
-        </div>
+        <div class="feed-hdr">🎨 NFT Studio</div>
 
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;">
           <button id="studioChainLitvm" onclick="nftStudioSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
@@ -4248,10 +4117,10 @@ async function smartConnectWallet(){
       <button class="drawer-btn" id="drawer-lottery" onclick="closeDrawer();showTab('lottery')"><span class="drawer-ico">🎰</span>Lottery</button>
 
       <div class="drawer-lbl">More</div>
-      <button class="drawer-btn" id="drawer-nfthub" onclick="closeDrawer();showTab('nfthub')"><span class="drawer-ico">🖼️</span>NFT</button>
+      <button class="drawer-btn" id="drawer-market" onclick="closeDrawer();showTab('market')"><span class="drawer-ico">🛒</span>NFT Market</button>
+      <button class="drawer-btn" id="drawer-nftstudio" onclick="closeDrawer();showTab('nftstudio')"><span class="drawer-ico">🎨</span>NFT Studio</button>
       <button class="drawer-btn" id="drawer-launchpad" onclick="closeDrawer();showTab('launchpad')"><span class="drawer-ico">🚀</span>Create Token</button>
       <button class="drawer-btn" id="drawer-faucet" onclick="closeDrawer();showTab('faucet')"><span class="drawer-ico">🚰</span>Faucet</button>
-      <button class="drawer-btn" id="drawer-fund" onclick="closeDrawer();openFundGeneric()"><span class="drawer-ico">💳</span>Add funds</button>
 
       <div style="padding:16px 12px 8px;">
         <button onclick="closeDrawer();goLanding()" style="width:100%;padding:10px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);color:var(--muted);font-size:13px;font-weight:600;cursor:pointer;">← Landing Page</button>
@@ -4326,15 +4195,7 @@ const GOLD_PASS  = '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
 const SILVER_PASS= '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
 const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
-// Першим стоїть /infra-partner-http, а не /http з документації.
-// Причина: MetaMask бере ПЕРШУ адресу зі списку, коли додає мережу
-// собі, і далі сам опитує її заради балансу — якщо там млявий вузол,
-// гальмує сам гаманець, і наш перебір цьому не допоможе.
-// /infra-partner-http використовують інші проєкти на цій мережі.
-var LITVM_RPCS = ['https://liteforge.rpc.caldera.xyz/infra-partner-http',
-                  'https://liteforge.rpc.caldera.xyz/http',
-                  'https://rpc-litvm.pro'];
-const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:LITVM_RPCS,blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
+const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
 const POLYGON_ID = '0x89';
 const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
 const BASE_ID    = '0x2105'; // 8453
@@ -4769,12 +4630,7 @@ function getReadProvider(){
   // РЕАЛЬНО на LitVM (0x1159). Якщо користувач на BNB (грає в Battleship),
   // читаємо через публічний RPC LitVM — інакше баланси/стейкінг ламались.
   if(provider && window._ogChainId==='0x1159') return provider;
-  return _rpcProvider(LITVM_RPCS, 'litvm');
-}
-// Читання LitVM з перебором вузлів. Не відповів один — одразу наступний,
-// і далі всі звернення йдуть у той, що працює.
-async function litvmReadRetry(fn, attempts){
-  return _rpcRetry(LITVM_RPCS, 'litvm', fn, attempts);
+  return new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
 }
 function getBNBProvider(){
   // BNB reads always use public RPC (not LitVM) — shares the same rotating pool as Battleship
@@ -4972,7 +4828,7 @@ async function connectViaWalletConnect(triedIds){
       methods: ['eth_sendTransaction','eth_signTransaction','eth_sign','personal_sign','eth_signTypedData','wallet_switchEthereumChain','wallet_addEthereumChain'],
       events: ['chainChanged','accountsChanged'],
       rpcMap: {
-        4441: 'https://liteforge.rpc.caldera.xyz/infra-partner-http',
+        4441: 'https://liteforge.rpc.caldera.xyz/http',
         56: 'https://bsc-dataseed.binance.org/'
       },
       metadata: {
@@ -5065,7 +4921,6 @@ var USDT_BNB_ADDR='0x55d398326f99059fF775485246999027B3197955';
 var USDC_BNB_ADDR='0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d';
 var ORACLE_HDR='opengate-oracle-2026';
 var BNB_BATTLE_ABI=[
-  'function staleIn(uint256 gameId) view returns(uint256)',
   'function createGame(uint256 amount, uint8 token) returns(uint256)',
   'function joinGame(uint256 gameId)',
   'function cancelGame(uint256 gameId)',
@@ -5107,10 +4962,16 @@ var BNB_RPCS=[
   // resolve in DNS (confirmed via real browser console: ERR_NAME_NOT_RESOLVED).
 ];
 function getBNBBattleProvider(){
-  return _rpcProvider(BNB_RPCS,'bnb');
+  return new ethers.JsonRpcProvider(BNB_RPCS[0]);
 }
 async function bnbReadRetry(fn, attempts){
-  return _rpcRetry(BNB_RPCS,'bnb',fn,attempts);
+  attempts = attempts || BNB_RPCS.length;
+  let lastErr;
+  for(let i=0;i<attempts;i++){
+    try{ return await ogTimeout(fn(new ethers.JsonRpcProvider(BNB_RPCS[i])), 8000); }
+    catch(e){ lastErr=e; }
+  }
+  throw lastErr;
 }
 
 // Same pattern for Polygon — dedicated Alchemy key first, public nodes
@@ -5126,10 +4987,16 @@ var POLYGON_RPCS=[
   'https://rpc.ankr.com/polygon'
 ];
 function getPolygonReadProvider(){
-  return _rpcProvider(POLYGON_RPCS,'polygon');
+  return new ethers.JsonRpcProvider(POLYGON_RPCS[0]);
 }
 async function polygonReadRetry(fn, attempts){
-  return _rpcRetry(POLYGON_RPCS,'polygon',fn,attempts);
+  attempts = attempts || POLYGON_RPCS.length;
+  let lastErr;
+  for(let i=0;i<attempts;i++){
+    try{ return await ogTimeout(fn(getPolygonReadProvider()), 8000); }
+    catch(e){ lastErr=e; }
+  }
+  throw lastErr;
 }
 // Base RPC pool — Alchemy primary (domain-locked to opengate.bond), then
 // public nodes as ordered fallback. Same pattern as Polygon: Alchemy is
@@ -5148,43 +5015,30 @@ var ARB_RPCS=[
   'https://arbitrum.drpc.org'
 ];
 function getBaseReadProvider(){
-  return _rpcProvider(BASE_RPCS,'base');
+  return new ethers.JsonRpcProvider(BASE_RPCS[0]);
 }
 async function baseReadRetry(fn, attempts){
-  return _rpcRetry(BASE_RPCS,'base',fn,attempts);
-}
-function getArbReadProvider(){
-  return _rpcProvider(ARB_RPCS,'arb');
-}
-async function arbReadRetry(fn, attempts){
-  return _rpcRetry(ARB_RPCS,'arb',fn,attempts);
-}
-// Таймаут для мережевих викликів: замість вічного зависання — чесна помилка
-
-// Індекс вузла, який востаннє відповів. Спільний для читання і для
-// перебору, тому вдалий вузол одразу починають використовувати всі.
-var _rpcOk = { bnb:0, polygon:0, base:0, arb:0, litvm:0 };
-function _rpcProvider(list, key){
-  return new ethers.JsonRpcProvider(list[_rpcOk[key] % list.length]);
-}
-async function _rpcRetry(list, key, fn, attempts){
-  var n = list.length;
-  attempts = attempts || n;
-  var start = _rpcOk[key] % n;
-  var lastErr;
-  for (var i = 0; i < attempts; i++){
-    var at = (start + i) % n;
-    try {
-      // Першу спробу обриваємо раніше: якщо основний вузол задумався,
-      // немає сенсу чекати вісім секунд, коли поруч є робочий.
-      var res = await ogTimeout(fn(new ethers.JsonRpcProvider(list[at])), i === 0 ? 5000 : 8000);
-      _rpcOk[key] = at;
-      return res;
-    } catch(e){ lastErr = e; }
+  attempts = attempts || BASE_RPCS.length;
+  let lastErr;
+  for(let i=0;i<attempts;i++){
+    try{ return await ogTimeout(fn(new ethers.JsonRpcProvider(BASE_RPCS[i])), 8000); }
+    catch(e){ lastErr=e; }
   }
   throw lastErr;
 }
-
+function getArbReadProvider(){
+  return new ethers.JsonRpcProvider(ARB_RPCS[0]);
+}
+async function arbReadRetry(fn, attempts){
+  attempts = attempts || ARB_RPCS.length;
+  let lastErr;
+  for(let i=0;i<attempts;i++){
+    try{ return await ogTimeout(fn(new ethers.JsonRpcProvider(ARB_RPCS[i])), 8000); }
+    catch(e){ lastErr=e; }
+  }
+  throw lastErr;
+}
+// Таймаут для мережевих викликів: замість вічного зависання — чесна помилка
 function ogTimeout(promise,ms){
   return Promise.race([
     promise,
@@ -5262,25 +5116,7 @@ async function initBNBBattle(){
     document.getElementById('bnbbs-main').style.display='none';
     return;
   }
-  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
-  var isOwner=userAddr.toLowerCase()===OWNER;
-  var pass=currentUser&&currentUser.pass_type;
-  if(!isOwner&&(!pass||pass==='free')){
-    try{
-      var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
-      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
-      if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
-    }catch(e){}
-  }
-  if(!isOwner&&(!pass||pass==='free')){
-    document.getElementById('bnbbs-noconn').style.display='none';
-    document.getElementById('bnbbs-nopass').style.display='block';
-    document.getElementById('bnbbs-main').style.display='none';
-    return;
-  }
+  // Open to everyone with a connected wallet — Silver Pass requirement removed (Gold VIP table is separate and untouched).
   document.getElementById('bnbbs-noconn').style.display='none';
   document.getElementById('bnbbs-nopass').style.display='none';
   document.getElementById('bnbbs-main').style.display='block';
@@ -5457,7 +5293,7 @@ async function bnbbsCreate(){
     var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+bnbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');ogFund('0x38',bnbbsToken);return;}
+    if(bal<amountRaw){showToast('Insufficient '+bnbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
     showToast('Approving '+bnbbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,BNB_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -5552,7 +5388,7 @@ async function bnbbsJoin(gameId){
     var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');ogFund('0x38',tokenName);return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,BNB_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -6132,8 +5968,6 @@ var POLYGON_BATTLE_ADDR = '0x9E723b339dA57f046435239dac168003f90B1B20'; // v2 (�
 var POLYGON_OFFSET = 3000000000; // keeps this table's DB ids out of every other range
 var OG_PBS_BUILD = 'PBS-1';
 var POLYGON_BATTLE_ABI = [
-  'function staleIn(uint256 gameId) view returns(uint256)',
-  'function refundStale(uint256 gameId)',
   'function createGame(uint256 betAmount, address paymentToken, (uint8,uint256,bytes) voucher) returns(uint256)',
   'function joinGame(uint256 gameId, (uint8,uint256,bytes) voucher)',
   'function cancelUnmatchedGame(uint256 gameId)',
@@ -6221,25 +6055,7 @@ async function initPolygonBattle(){
     document.getElementById('pbs-main').style.display='none';
     return;
   }
-  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
-  var isOwner=userAddr.toLowerCase()===OWNER;
-  var pass=currentUser&&currentUser.pass_type;
-  if(!isOwner&&(!pass||pass==='free')){
-    try{
-      var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
-      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
-      if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
-    }catch(e){}
-  }
-  if(!isOwner&&(!pass||pass==='free')){
-    document.getElementById('pbs-noconn').style.display='none';
-    document.getElementById('pbs-nopass').style.display='block';
-    document.getElementById('pbs-main').style.display='none';
-    return;
-  }
+  // Open to everyone with a connected wallet — Silver Pass requirement removed (Gold VIP table is separate and untouched).
   document.getElementById('pbs-noconn').style.display='none';
   document.getElementById('pbs-nopass').style.display='none';
   document.getElementById('pbs-main').style.display='block';
@@ -6406,7 +6222,7 @@ async function pbsCreate(){
     var tokenAddr=pbsCurrencyAddr();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+pbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x89',pbsToken);return;}
+    if(bal<amountRaw){showToast('Insufficient '+pbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
     showToast('Approving '+pbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,POLYGON_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -6482,7 +6298,7 @@ async function pbsJoin(gameId){
     var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x89',tokenName);return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,POLYGON_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -7034,8 +6850,6 @@ var BASE_BATTLE_ADDR = '0xc4844EBDACE533D7b98C730ad06aF57376eCbf12'; // v2 (ст
 var BASE_BS_OFFSET = 5000000000; // Base regular — out of BNB(0)/BNB Gold(2B)/Polygon(3B)/Polygon Gold(4B)
 var OG_BBS_BUILD = 'BBS-1';
 var BASE_BATTLE_ABI = [
-  'function staleIn(uint256 gameId) view returns(uint256)',
-  'function refundStale(uint256 gameId)',
   'function createGame(uint256 betAmount, address paymentToken, uint8 tier, uint256 expiry, bytes signature) returns(uint256)',
   'function joinGame(uint256 gameId, uint8 tier, uint256 expiry, bytes signature)',
   'function cancelUnmatchedGame(uint256 gameId)',
@@ -7123,25 +6937,7 @@ async function initBaseBattle(){
     document.getElementById('basebs-main').style.display='none';
     return;
   }
-  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
-  var isOwner=userAddr.toLowerCase()===OWNER;
-  var pass=currentUser&&currentUser.pass_type;
-  if(!isOwner&&(!pass||pass==='free')){
-    try{
-      var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
-      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
-      if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
-    }catch(e){}
-  }
-  if(!isOwner&&(!pass||pass==='free')){
-    document.getElementById('basebs-noconn').style.display='none';
-    document.getElementById('basebs-nopass').style.display='block';
-    document.getElementById('basebs-main').style.display='none';
-    return;
-  }
+  // Open to everyone with a connected wallet — Silver Pass requirement removed (Gold VIP table is separate and untouched).
   document.getElementById('basebs-noconn').style.display='none';
   document.getElementById('basebs-nopass').style.display='none';
   document.getElementById('basebs-main').style.display='block';
@@ -7308,7 +7104,7 @@ async function basebsCreate(){
     var tokenAddr=basebsCurrencyAddr();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+basebsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x2105',basebsToken);return;}
+    if(bal<amountRaw){showToast('Insufficient '+basebsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
     showToast('Approving '+basebsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,BASE_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -7384,7 +7180,7 @@ async function basebsJoin(gameId){
     var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x2105',tokenName);return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,BASE_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -7924,8 +7720,6 @@ var POLYGON_GOLD_BATTLE_ADDR = '0xb21482cFd2b5A7a35A85fF4193501CDEDFDdB7dd'; // 
 var POLYGON_GOLD_OFFSET = 4000000000; // keeps this table's DB ids out of every other range
 var OG_GPBS_BUILD = 'GPBS-1';
 var POLYGON_GOLD_BATTLE_ABI = [
-  'function staleIn(uint256 gameId) view returns(uint256)',
-  'function refundStale(uint256 gameId)',
   'function createGame(uint256 betAmount, address paymentToken, (uint8,uint256,bytes) voucher) returns(uint256)',
   'function joinGame(uint256 gameId, (uint8,uint256,bytes) voucher)',
   'function cancelUnmatchedGame(uint256 gameId)',
@@ -8196,7 +7990,7 @@ async function gpbsCreate(){
     var tokenAddr=gpbsCurrencyAddr();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+gpbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x89',gpbsToken);return;}
+    if(bal<amountRaw){showToast('Insufficient '+gpbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
     showToast('Approving '+gpbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,POLYGON_GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -8272,7 +8066,7 @@ async function gpbsJoin(gameId){
     var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x89',tokenName);return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,POLYGON_GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -8811,8 +8605,6 @@ var BASE_GOLD_BATTLE_ADDR = '0x2b7b9d98404Fa0b5F0ffcAB89387373B98268acE'; // v2 
 var BASE_GOLD_OFFSET = 6000000000; // Base Gold — out of BNB(0)/BNB Gold(2B)/Polygon(3B)/Polygon Gold(4B)/Base regular(5B)
 var OG_GBBS_BUILD = 'GBBS-1';
 var BASE_GOLD_BATTLE_ABI = [
-  'function staleIn(uint256 gameId) view returns(uint256)',
-  'function refundStale(uint256 gameId)',
   'function createGame(uint256 betAmount, address paymentToken, uint8 tier, uint256 expiry, bytes signature) returns(uint256)',
   'function joinGame(uint256 gameId, uint8 tier, uint256 expiry, bytes signature)',
   'function cancelUnmatchedGame(uint256 gameId)',
@@ -9083,7 +8875,7 @@ async function gbbsCreate(){
     var tokenAddr=gbbsCurrencyAddr();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+gbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x2105',gbbsToken);return;}
+    if(bal<amountRaw){showToast('Insufficient '+gbbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
     showToast('Approving '+gbbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,BASE_GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -9159,7 +8951,7 @@ async function gbbsJoin(gameId){
     var freshSigner=await (new ethers.BrowserProvider(window.ethereum)).getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_MIN_ABI,freshSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');ogFund('0x2105',tokenName);return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,6)).toFixed(2),'err');return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,BASE_GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -9991,7 +9783,7 @@ async function gbsCreate(){
     var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+gbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');ogFund('0x38',gbsToken);return;}
+    if(bal<amountRaw){showToast('Insufficient '+gbsToken+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
     showToast('Approving '+gbsToken+'...','ok');
     var allowance=await tok.allowance(userAddr,GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -10086,7 +9878,7 @@ async function gbsJoin(gameId){
     var bnbSigner=await bnbProv.getSigner();
     var tok=new ethers.Contract(tokenAddr,ERC20_SIMPLE_ABI,bnbSigner);
     var bal=await tok.balanceOf(userAddr);
-    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');ogFund('0x38',tokenName);return;}
+    if(bal<amountRaw){showToast('Insufficient '+tokenName+'. Have $'+parseFloat(ethers.formatUnits(bal,18)).toFixed(2),'err');return;}
     showToast('Approving...','ok');
     var allowance=await tok.allowance(userAddr,GOLD_BATTLE_ADDR);
     if(allowance<amountRaw){
@@ -10856,7 +10648,6 @@ function showTab(tab){
   if(tab!=='launchpad'){ tokStopPriceAutoRefresh(); }
   document.getElementById('view-notifs').style.display=tab==='notifs'?'block':'none';
   document.getElementById('view-explore').style.display=tab==='explore'?'block':'none';
-  document.getElementById('view-nfthub').style.display=tab==='nfthub'?'block':'none';
   document.getElementById('view-market').style.display=tab==='market'?'block':'none';
   document.getElementById('view-nftstudio').style.display=tab==='nftstudio'?'block':'none';
   document.getElementById('view-dao').style.display=tab==='dao'?'block':'none';
@@ -10870,8 +10661,6 @@ function showTab(tab){
   document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
   document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
   document.getElementById('view-bnblottery').style.display=tab==='bnblottery'?'block':'none';
-  if(tab==='bnblottery') initBNBLottery();
-  if(tab!=='bnblottery' && typeof lotteryCleanup==='function') lotteryCleanup();
   document.getElementById('view-bnbbattle').style.display=tab==='bnbbattle'?'block':'none';
   if(tab==='bnbbattle') initBNBBattle();
   document.getElementById('view-goldbattle').style.display=tab==='goldbattle'?'block':'none';
@@ -17229,495 +17018,6 @@ async function smartApprove(spender, amount, signerToUse){
   showToast('Approving GATE (one time only)...','ok');
   await (await gate.approve(spender, MAX_UINT)).wait();
 }
-// ── ПОПОЛНЕННЯ ГАМАНЦЯ (fiat on-ramp підказка) ──
-// Ми НЕ продаємо крипту і не приймаємо карти. Гроші не проходять через OpenGate.
-// Тут лише пояснення, де в самому гаманці людини лежить кнопка «Buy»,
-// плюс її власна адреса, щоб купити будь-де і надіслати собі.
-var OG_FUND_NET = {
-  '0x38':   {name:'BNB Smart Chain', native:'BNB',  buyOK:true},
-  '0x89':   {name:'Polygon',         native:'POL',  buyOK:true},
-  '0x2105': {name:'Base',            native:'ETH',  buyOK:false},
-  '0xa4b1': {name:'Arbitrum One',    native:'ETH',  buyOK:true},
-  '0x1':    {name:'Ethereum',        native:'ETH',  buyOK:true}
-};
-
-function ogWalletInfo(){
-  var e = window.ethereum || {};
-  var ps = Array.isArray(e.providers) ? e.providers : [];
-  function any(f){
-    try{ if(f(e)) return true; }catch(_){}
-    for(var i=0;i<ps.length;i++){ try{ if(f(ps[i])) return true; }catch(_){} }
-    return false;
-  }
-  // MetaMask перевіряємо ОСТАННІМ: багато гаманців ставлять isMetaMask=true
-  // заради сумісності, тож інакше вони всі визначались би як MetaMask.
-  if(window.trustwallet || any(function(p){return p.isTrust||p.isTrustWallet;})) return {k:'trust',n:'Trust Wallet'};
-  if(any(function(p){return p.isCoinbaseWallet||p.isCoinbaseBrowser;}))          return {k:'coinbase',n:'Coinbase Wallet'};
-  if(window.okxwallet || any(function(p){return p.isOkxWallet||p.isOKExWallet;}))return {k:'okx',n:'OKX Wallet'};
-  if(window.bitkeep || any(function(p){return p.isBitKeep||p.isBitget;}))        return {k:'bitget',n:'Bitget Wallet'};
-  if(window.BinanceChain || any(function(p){return p.isBinance;}))               return {k:'binance',n:'Binance Wallet'};
-  if(any(function(p){return p.isTokenPocket;}))                                 return {k:'tokenpocket',n:'TokenPocket'};
-  if(any(function(p){return p.isSafePal;}))                                     return {k:'safepal',n:'SafePal'};
-  if(any(function(p){return p.isRabby;}))                                       return {k:'rabby',n:'Rabby'};
-  if(any(function(p){return p.isBraveWallet;}))                                 return {k:'brave',n:'Brave Wallet'};
-  if(any(function(p){return p.isMetaMask;}))                                    return {k:'metamask',n:'MetaMask'};
-  return {k:'unknown',n:''};
-}
-
-function fundEsc(s){
-  // Назви кнопок гаманця в \u27ea...\u27eb лишаємо неперекладними:
-  // Google Translate інакше перекладе «Buy», і людина не знайде її на екрані.
-  return esc(s||'').replace(/\u27EA(.+?)\u27EB/g,'<span class="fund-key notranslate" translate="no">$1</span>');
-}
-
-function ogFundSteps(wk, isMob){
-  // Кроки взято з довідки самих гаманців. Назви кнопок лишаємо
-  // англійською в лапках — саме так вони підписані в інтерфейсі.
-  if(wk==='metamask'){
-    if(isMob) return [t('fundMM1'), t('fundMM2'), t('fundMM3'), t('fundMM4'), t('fundMM5')];
-    return [t('fundMMD1'), t('fundMM2'), t('fundMM3'), t('fundMM4'), t('fundMM5')];
-  }
-  if(wk==='trust')    return [t('fundTW1'), t('fundTW2'), t('fundTW3'), t('fundTW4')];
-  if(wk==='coinbase') return [t('fundCB1'), t('fundCB2'), t('fundCB3')];
-  return [t('fundGen1'), t('fundGen2'), t('fundGen3')];
-}
-
-var _ogFundLast = null;
-function ogFund(chainId, symbol){
-  _ogFundLast = {chainId:chainId, symbol:symbol};
-  try{ openFundModal(chainId, symbol); }catch(e){ console.warn('[fund]', e); }
-}
-
-function openFundModal(chainId, symbol){
-  var net  = OG_FUND_NET[chainId] || {name:'', native:'', buyOK:true};
-  var w    = ogWalletInfo();
-  var isMob= /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  var sym  = symbol || net.native || '';
-  var body = document.getElementById('fundModalBody');
-  if(!body) return;
-
-  var h = '';
-  h += '<button class="modal-close-btn" onclick="closeFundModal()">&#10005;</button>';
-  h += '<div class="fund-h">'+fundEsc(t('fundTitle'))+'</div>';
-  if(sym && net.name){
-    h += '<div class="fund-sub">'+fundEsc(t('fundSub').replace('{T}',sym).replace('{N}',net.name))+'</div>';
-  }
-
-  // ── Кроки в гаманці ──
-  h += '<div class="fund-card">';
-  h += '<div class="fund-card-t">'+fundEsc(w.n ? t('fundIn').replace('{W}',w.n) : t('fundInGeneric'))+'</div>';
-  h += '<ol class="fund-ol">';
-  ogFundSteps(w.k, isMob).forEach(function(s){ h += '<li>'+fundEsc(s)+'</li>'; });
-  h += '</ol>';
-  h += '</div>';
-
-  // ── Base не в списку MetaMask ──
-  if(!net.buyOK && (w.k==='metamask'||w.k==='unknown')){
-    h += '<div class="fund-warn">'+fundEsc(t('fundBaseNote'))+'</div>';
-  }
-
-  // ── Своя адреса: купити будь-де і надіслати собі ──
-  if(typeof userAddr!=='undefined' && userAddr){
-    h += '<div class="fund-card">';
-    h += '<div class="fund-card-t">'+fundEsc(t('fundOwn'))+'</div>';
-    h += '<div class="fund-addr" id="fundAddr">'+esc(userAddr)+'</div>';
-    h += '<button class="fund-copy" onclick="fundCopyAddr()">'+fundEsc(t('fundCopy'))+'</button>';
-    if(net.name) h += '<div class="fund-warn">'+fundEsc(t('fundNetNote').replace('{N}',net.name))+'</div>';
-    h += '</div>';
-  }
-
-  // ── Чесні застереження ──
-  h += '<ul class="fund-notes">';
-  if(net.native && sym!==net.native) h += '<li>'+fundEsc(t('fundGasNote').replace('{G}',net.native))+'</li>';
-  h += '<li>'+fundEsc(t('fundFeeNote'))+'</li>';
-  h += '<li>'+fundEsc(t('fundRegionNote'))+'</li>';
-  h += '</ul>';
-
-  h += '<button class="fund-ok" onclick="closeFundModal()">'+fundEsc(t('fundClose'))+'</button>';
-
-  body.innerHTML = h;
-  document.getElementById('fundModal').classList.add('open');
-}
-
-function closeFundModal(){
-  var m=document.getElementById('fundModal');
-  if(m) m.classList.remove('open');
-}
-
-function fundCopyAddr(){
-  var a=document.getElementById('fundAddr');
-  if(!a) return;
-  try{ navigator.clipboard.writeText(a.textContent.trim()); showToast(t('fundCopied'),'ok'); }
-  catch(e){ showToast(t('fundCopied'),'ok'); }
-}
-
-// Пункт меню — працює і без підключеного гаманця
-function openFundGeneric(){
-  var cid = null;
-  try{ cid = window.ethereum && window.ethereum.chainId; }catch(e){}
-  openFundModal(cid || '0x38', null);
-}
-
-
-// ── Аварійне повернення ставок ──
-// Показуємо кнопку ЛИШЕ коли право вже настало. Доти на екрані нічого немає.
-var OG_STALE = {
-  bnbbs:  {addr:function(){return BNB_BATTLE_ADDR;},        abi:function(){return BNB_BATTLE_ABI;},
-           prov:function(){return getBNBBattleProvider();},  id:function(){return bnbbsGameId;}},
-  gbs:    {addr:function(){return GOLD_BATTLE_ADDR;},        abi:function(){return BNB_BATTLE_ABI;},
-           prov:function(){return getBNBBattleProvider();},  id:function(){return gbsGameId;}},
-  pbs:    {addr:function(){return POLYGON_BATTLE_ADDR;},     abi:function(){return POLYGON_BATTLE_ABI;},
-           prov:function(){return getPolygonReadProvider();},id:function(){return pbsGameId;}},
-  gpbs:   {addr:function(){return POLYGON_GOLD_BATTLE_ADDR;},abi:function(){return POLYGON_GOLD_BATTLE_ABI;},
-           prov:function(){return getPolygonReadProvider();},id:function(){return gpbsGameId;}},
-  basebs: {addr:function(){return BASE_BATTLE_ADDR;},        abi:function(){return BASE_BATTLE_ABI;},
-           prov:function(){return getBaseReadProvider();},   id:function(){return basebsGameId;}},
-  gbbs:   {addr:function(){return BASE_GOLD_BATTLE_ADDR;},   abi:function(){return BASE_GOLD_BATTLE_ABI;},
-           prov:function(){return getBaseReadProvider();},   id:function(){return gbbsGameId;}}
-};
-
-function ogStaleVisible(pref){
-  var b=document.getElementById(pref+'-gameboard');
-  return !!(b && b.style.display!=='none' && b.offsetParent!==null);
-}
-
-async function ogStaleCheck(pref){
-  var bar=document.getElementById(pref+'-stale');
-  if(!bar) return;
-  var cfg=OG_STALE[pref];
-  var id; try{ id=cfg.id(); }catch(e){ return; }
-  if(id===null||id===undefined||id==='') { bar.style.display='none'; return; }
-  try{
-    var c=new ethers.Contract(cfg.addr(),cfg.abi(),cfg.prov());
-    var left=await ogTimeout(c.staleIn(id),8000);
-    bar.style.display = (Number(left)===0) ? '' : 'none';
-  }catch(e){ /* мовчки: це лише підказка, а не хід гри */ }
-}
-
-// Раз на дві хвилини і тільки для видимого екрана — навантаження копійчане
-// навіть при десятках тисяч партій одночасно.
-function ogStaleTick(){
-  Object.keys(OG_STALE).forEach(function(p){ if(ogStaleVisible(p)) ogStaleCheck(p); });
-}
-setInterval(ogStaleTick, 120000);
-setTimeout(ogStaleTick, 15000);
-
-async function ogRefundStale(pref, ev){
-  var btn=ev&&ev.target;
-  var cfg=OG_STALE[pref];
-  var id; try{ id=cfg.id(); }catch(e){ return; }
-  if(id===null||id===undefined){ showToast('No active game','err'); return; }
-  if(btn){ btn.disabled=true; btn.textContent='...'; }
-  try{
-    var w=await window[pref+'ContractWrite']();
-    var tx=await w.refundStale(id);
-    await tx.wait();
-    showToast('Both stakes returned','ok');
-    var bar=document.getElementById(pref+'-stale'); if(bar) bar.style.display='none';
-    setTimeout(function(){ location.reload(); }, 1200);
-  }catch(e){
-    if(btn){ btn.disabled=false; btn.textContent='Return both stakes'; }
-    var m=(e&&e.message)||'';
-    if(e&&e.code===4001) showToast('Cancelled','err');
-    else if(m.indexOf('not stale')>=0) showToast('Not yet — the waiting period is not over','err');
-    else if(m.indexOf('not playing')>=0) showToast('This game is already finished','err');
-    else showToast('Error: '+m.slice(0,40),'err');
-  }
-}
-
-// ═══════════ BNB LOTTERY ═══════════
-// Розыгрыш проводит Chainlink VRF, контракт хранит билеты и платит сам.
-// Здесь только чтение состояния и покупка. Никакой логики выбора победителя
-// на стороне сайта нет и быть не может — она вся в контракте.
-
-var LOTTO_ADDR = '0x2658676714d85cc0e2CdF791c84bF9CfBc9cbFd8';
-
-var LOTTO_ABI = [
-  'function currentRound() view returns(uint256)',
-  'function rounds(uint256) view returns(uint64 startedAt,uint64 endsAt,uint256 pot,uint256 seed,uint256 requestId,uint8 state)',
-  'function ticketPrice() view returns(uint256)',
-  'function maxTicketsPerWallet() view returns(uint256)',
-  'function feeBps() view returns(uint16)',
-  'function seedBps() view returns(uint16)',
-  'function winnersCount() view returns(uint256)',
-  'function ticketCount(uint256) view returns(uint256)',
-  'function participantCount(uint256) view returns(uint256)',
-  'function ticketsOf(uint256,address) view returns(uint256)',
-  'function myTickets(uint256,address) view returns(uint256[])',
-  'function winnersOf(uint256) view returns(address[],uint256[],uint256[])',
-  'function timeLeft() view returns(uint256)',
-  'function buyTickets(uint256)'
-];
-
-var _lotState = null;      // последнее прочитанное состояние
-var _lotPollTimer = null;
-var _lotTickTimer = null;
-var _lotBusy = false;
-
-function lotRead(){
-  return new ethers.Contract(LOTTO_ADDR, LOTTO_ABI, getBNBBattleProvider());
-}
-async function lotWrite(){
-  await switchToBNB();
-  var p = new ethers.BrowserProvider(window.ethereum);
-  var s = await p.getSigner();
-  return new ethers.Contract(LOTTO_ADDR, LOTTO_ABI, s);
-}
-
-function lotFmt(v){
-  // USDT на BNB Chain — 18 знаков, как и BNB
-  var n = parseFloat(ethers.formatUnits(v, 18));
-  return '$' + (n >= 100 ? n.toFixed(0) : n.toFixed(2));
-}
-
-function lotHuman(sec){
-  sec = Number(sec);
-  if (sec <= 0) return 'drawing…';
-  var d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600),
-      m = Math.floor((sec % 3600) / 60), s = sec % 60;
-  if (d > 0) return d + 'd ' + h + 'h';
-  if (h > 0) return h + 'h ' + m + 'm';
-  if (m > 0) return m + 'm ' + s + 's';
-  return s + 's';
-}
-
-var LOT_STATE_TXT = ['Open — buy your tickets', 'Waiting for Chainlink', 'Random number received', 'Round closed'];
-
-async function lotRefresh(){
-  var c;
-  try { c = lotRead(); } catch(e){ return; }
-  try {
-    var round = await ogTimeout(c.currentRound(), 8000);
-    var res = await Promise.all([
-      ogTimeout(c.rounds(round), 8000),
-      ogTimeout(c.ticketPrice(), 8000),
-      ogTimeout(c.maxTicketsPerWallet(), 8000),
-      ogTimeout(c.ticketCount(round), 8000),
-      ogTimeout(c.participantCount(round), 8000),
-      ogTimeout(c.timeLeft(), 8000)
-    ]);
-    var r = res[0], price = res[1], maxT = res[2], tickets = res[3], people = res[4], left = res[5];
-
-    var mine = 0n;
-    if (typeof userAddr !== 'undefined' && userAddr) {
-      try { mine = await ogTimeout(c.ticketsOf(round, userAddr), 8000); } catch(e){}
-    }
-
-    _lotState = {
-      round: round, pot: r.pot, state: Number(r.state), price: price,
-      maxT: Number(maxT), tickets: Number(tickets), people: Number(people),
-      left: Number(left), mine: Number(mine), readAt: Date.now()
-    };
-    lotPaint();
-    if (typeof userAddr !== 'undefined' && userAddr && Number(mine) > 0) lotPaintMyNumbers(c, round);
-  } catch(e){ /* сеть моргнула — оставляем прошлые цифры на экране */ }
-}
-
-function lotPaint(){
-  var st = _lotState;
-  if (!st) return;
-  var set = function(id, v){ var el = document.getElementById(id); if (el) el.textContent = v; };
-
-  set('lot-round', '#' + st.round.toString());
-  set('lot-state', LOT_STATE_TXT[st.state] || '—');
-  set('lot-pot', lotFmt(st.pot));
-  set('lot-tickets', st.tickets);
-  set('lot-people', st.people);
-  set('lot-mine', st.mine);
-  set('lot-price', lotFmt(st.price) + ' per ticket');
-  set('lot-limit', 'max ' + st.maxT + ' per wallet');
-
-  // Единственный участник — предупреждаем честно, до покупки
-  var note = document.getElementById('lot-pot-note');
-  if (note) {
-    if (st.people === 1 && st.mine > 0) {
-      note.textContent = 'You are the only player so far. If nobody else joins, the round is void and you get everything back.';
-    } else if (st.people === 1) {
-      note.textContent = 'One player so far. A round with a single wallet is refunded in full.';
-    } else {
-      note.textContent = '90% goes to the winner, 10% is the platform fee';
-    }
-  }
-
-  var myCard = document.getElementById('lot-my-card');
-  if (myCard) myCard.style.display = st.mine > 0 ? '' : 'none';
-
-  lotPaintTimer();
-  lotPaintBuy();
-  lotUpdateTotal();
-}
-
-function lotPaintTimer(){
-  var st = _lotState;
-  if (!st) return;
-  // Отсчёт крутим локально, без запросов к сети
-  var passed = Math.floor((Date.now() - st.readAt) / 1000);
-  var el = document.getElementById('lot-timer');
-  if (el) el.textContent = lotHuman(st.left - passed);
-}
-
-function lotPaintBuy(){
-  var st = _lotState;
-  var btn = document.getElementById('lot-buy-btn');
-  var qty = document.getElementById('lot-qty');
-  var note = document.getElementById('lot-buy-note');
-  if (!btn || !st) return;
-
-  var left = st.maxT - st.mine;
-  if (qty) { qty.max = Math.max(1, left); if (Number(qty.value) > left) qty.value = Math.max(1, left); }
-
-  if (typeof userAddr === 'undefined' || !userAddr) {
-    btn.disabled = false; btn.textContent = 'Connect wallet';
-    if (note) note.textContent = '';
-    return;
-  }
-  if (st.state !== 0) {
-    btn.disabled = true; btn.textContent = 'Round closed';
-    if (note) note.textContent = 'The draw is under way. The next round opens right after it.';
-    return;
-  }
-  var passed = Math.floor((Date.now() - st.readAt) / 1000);
-  if (st.left - passed <= 0) {
-    btn.disabled = true; btn.textContent = 'Round ended';
-    if (note) note.textContent = 'Waiting for the draw to be started.';
-    return;
-  }
-  if (left <= 0) {
-    btn.disabled = true; btn.textContent = 'Limit reached';
-    if (note) note.textContent = 'You already hold the maximum of ' + st.maxT + ' tickets in this round.';
-    return;
-  }
-  btn.disabled = false; btn.textContent = 'Buy tickets';
-  if (note) note.textContent = 'You can buy ' + left + ' more ticket(s) in this round.';
-}
-
-function lotUpdateTotal(){
-  var st = _lotState;
-  var el = document.getElementById('lot-total');
-  var qty = document.getElementById('lot-qty');
-  if (!el || !st || !qty) return;
-  var n = Math.max(1, Number(qty.value) || 1);
-  el.textContent = 'Total: ' + lotFmt(st.price * BigInt(n));
-}
-
-function lotQty(d){
-  var qty = document.getElementById('lot-qty');
-  if (!qty) return;
-  var max = Number(qty.max) || 5;
-  qty.value = Math.min(max, Math.max(1, (Number(qty.value) || 1) + d));
-  lotUpdateTotal();
-}
-
-async function lotPaintMyNumbers(c, round){
-  var box = document.getElementById('lot-my-nums');
-  if (!box) return;
-  // myTickets перебирает весь список билетов. На больших раундах такой
-  // вызов бессмысленно тяжёлый, поэтому номера показываем только пока
-  // раунд небольшой — количество билетов видно в любом случае.
-  if (_lotState && _lotState.tickets > 3000) {
-    box.innerHTML = '<span class="lot-muted">You hold ' + _lotState.mine + ' ticket(s) in this round.</span>';
-    return;
-  }
-  try {
-    var nums = await ogTimeout(c.myTickets(round, userAddr), 8000);
-    box.innerHTML = nums.map(function(n){ return '<span class="lot-num">#' + n.toString() + '</span>'; }).join('');
-  } catch(e){
-    box.innerHTML = '<span class="lot-muted">You hold ' + (_lotState ? _lotState.mine : '?') + ' ticket(s).</span>';
-  }
-}
-
-async function lotBuy(){
-  if (typeof userAddr === 'undefined' || !userAddr) { connectWallet(); return; }
-  if (_lotBusy) return;
-  var btn = document.getElementById('lot-buy-btn');
-  var qty = document.getElementById('lot-qty');
-  var n = Math.max(1, Number(qty && qty.value) || 1);
-  _lotBusy = true;
-  if (btn) { btn.disabled = true; btn.textContent = 'Checking…'; }
-  try {
-    var need = _lotState.price * BigInt(n);
-    await switchToBNB();
-    var p = new ethers.BrowserProvider(window.ethereum);
-    var s = await p.getSigner();
-    var usdt = new ethers.Contract(USDT_BNB_ADDR, ERC20_SIMPLE_ABI, s);
-
-    var bal = await usdt.balanceOf(userAddr);
-    if (bal < need) {
-      showToast('Not enough USDT — you need ' + lotFmt(need), 'err');
-      ogFund('0x38', 'USDT');
-      return;
-    }
-    var allow = await usdt.allowance(userAddr, LOTTO_ADDR);
-    if (allow < need) {
-      if (btn) btn.textContent = 'Approving…';
-      var ta = await usdt.approve(LOTTO_ADDR, ethers.MaxUint256);
-      await ta.wait();
-    }
-    if (btn) btn.textContent = 'Buying…';
-    var c = new ethers.Contract(LOTTO_ADDR, LOTTO_ABI, s);
-    var tx = await c.buyTickets(n);
-    await tx.wait();
-    showToast(n + ' ticket(s) bought — good luck!', 'ok');
-    await lotRefresh();
-  } catch(e){
-    var m = (e && e.message) || '';
-    if (e && e.code === 4001) showToast('Cancelled', 'err');
-    else if (m.indexOf('wallet ticket limit') >= 0) showToast('You already hold the maximum for this round', 'err');
-    else if (m.indexOf('owner cannot play') >= 0) showToast('The owner wallet cannot buy tickets', 'err');
-    else if (m.indexOf('round ended') >= 0) showToast('This round has just ended', 'err');
-    else if (m.indexOf('round not open') >= 0) showToast('The draw is under way', 'err');
-    else showToast('Error: ' + m.slice(0, 60), 'err');
-  } finally {
-    _lotBusy = false;
-    lotPaintBuy();
-  }
-}
-
-async function lotHistory(){
-  var box = document.getElementById('lot-history');
-  if (!box) return;
-  try {
-    var c = lotRead();
-    var cur = Number(await ogTimeout(c.currentRound(), 8000));
-    var rows = [];
-    for (var r = cur - 1; r >= 1 && rows.length < 5; r--) {
-      var w = await ogTimeout(c.winnersOf(r), 8000);
-      if (!w[0] || w[0].length === 0) continue;
-      var parts = [];
-      for (var i = 0; i < w[0].length; i++) {
-        parts.push('<div class="lot-hist-row"><span class="lot-num">#' + w[2][i].toString() + '</span>'
-          + '<span class="lot-hist-addr">' + w[0][i].slice(0, 6) + '…' + w[0][i].slice(-4) + '</span>'
-          + '<b>' + lotFmt(w[1][i]) + '</b></div>');
-      }
-      rows.push('<div class="lot-hist"><div class="lot-hist-h">Round #' + r + '</div>' + parts.join('') + '</div>');
-    }
-    box.innerHTML = rows.length ? rows.join('') : 'No draws yet. This is the first round.';
-  } catch(e){
-    box.textContent = 'Could not load past rounds.';
-  }
-}
-
-function initBNBLottery(){
-  lotRefresh();
-  lotHistory();
-  if (_lotPollTimer) clearInterval(_lotPollTimer);
-  if (_lotTickTimer) clearInterval(_lotTickTimer);
-  // Отсчёт рисуем каждую секунду локально, а к сети ходим раз в 15 секунд
-  // и только пока вкладка открыта и видна — иначе при 100k игроков
-  // это положило бы узел.
-  _lotTickTimer = setInterval(lotPaintTimer, 1000);
-  _lotPollTimer = setInterval(function(){
-    var v = document.getElementById('view-bnblottery');
-    if (!v || v.style.display === 'none' || document.hidden) return;
-    lotRefresh();
-  }, 15000);
-}
-
-function lotteryCleanup(){
-  if (_lotPollTimer) { clearInterval(_lotPollTimer); _lotPollTimer = null; }
-  if (_lotTickTimer) { clearInterval(_lotTickTimer); _lotTickTimer = null; }
-}
-
 let toastT;
 function showToast(msg,type='ok'){
   // Filter wallet-level errors that confuse users
@@ -17906,38 +17206,6 @@ function handleConnectClick(){
 // ── i18n ──
 const LANGS = {
   en: {
-    // Поповнення гаманця
-    nfthub:'NFT',
-    fundBtn:'Add funds',
-    fundTitle:'How to add funds',
-    fundSub:'You need {T} on the {N} network',
-    fundIn:'In {W}',
-    fundInGeneric:'In your wallet app',
-    fundMM1:'Open MetaMask and tap ⟪Buy⟫ under your balance.',
-    fundMMD1:'In the MetaMask extension click ⟪Buy/Sell⟫ — it opens MetaMask Portfolio in a new tab.',
-    fundMM2:'Choose the token you need and the network it sits on.',
-    fundMM3:'Enter the amount and pick a payment method — card, bank transfer, Apple Pay or Google Pay.',
-    fundMM4:'On a first purchase the provider asks you to verify your identity.',
-    fundMM5:'Confirm the order. The coins land in this same wallet.',
-    fundTW1:'Open Trust Wallet and tap ⟪Buy⟫.',
-    fundTW2:'Choose the token. Card purchases cover BNB Chain, Base and Solana.',
-    fundTW3:'Enter the amount and pick a payment method.',
-    fundTW4:'Confirm the order.',
-    fundCB1:'Open Coinbase Wallet and tap ⟪Buy⟫.',
-    fundCB2:'Choose the token and the network.',
-    fundCB3:'Pay by card or from a linked Coinbase account.',
-    fundGen1:'Open your wallet app.',
-    fundGen2:'Look for ⟪Buy⟫ or ⟪Deposit⟫ on the main screen — most wallets have it built in.',
-    fundGen3:'Choose the token, the network and a payment method.',
-    fundBaseNote:'MetaMask does not list Base among the networks it sells on. Buy ETH on Ethereum and move it over with ⟪Bridge⟫, or use Trust Wallet or Coinbase Wallet, which do cover Base.',
-    fundOwn:'Or buy anywhere and send it to yourself',
-    fundCopy:'Copy my address',
-    fundCopied:'Address copied',
-    fundNetNote:'Send on the {N} network only. Coins sent on a different network are lost.',
-    fundGasNote:'Keep a little {G} as well — the network fee is paid in it.',
-    fundFeeNote:'The wallet and the payment provider each take a cut, so you receive slightly less than you pay.',
-    fundRegionNote:'Card purchases are handled by your wallet and its providers, not by OpenGate, and are unavailable in some countries.',
-    fundClose:'Got it',
     feed:'Feed', profile:'Profile', post:'Post', notifs:'Notifs', more:'More',
     home:'Home', allPosts:'All Posts', following:'Following',
     connectWallet:'Connect Wallet', explore:'Explore', messages:'Messages',
@@ -17974,38 +17242,6 @@ const LANGS = {
     connectTitle:'Connect Wallet', connectSub:'Choose your connection method',
   },
   ru: {
-    // Поповнення гаманця
-    nfthub:'NFT',
-    fundBtn:'Пополнить кошелёк',
-    fundTitle:'Как пополнить кошелёк',
-    fundSub:'Нужен {T} в сети {N}',
-    fundIn:'В приложении {W}',
-    fundInGeneric:'В приложении вашего кошелька',
-    fundMM1:'Откройте MetaMask и нажмите ⟪Buy⟫ под балансом.',
-    fundMMD1:'В расширении MetaMask нажмите ⟪Buy/Sell⟫ — откроется MetaMask Portfolio в новой вкладке.',
-    fundMM2:'Выберите нужную монету и сеть, в которой она вам нужна.',
-    fundMM3:'Введите сумму и выберите способ оплаты — карта, банковский перевод, Apple Pay или Google Pay.',
-    fundMM4:'При первой покупке сервис попросит подтвердить личность.',
-    fundMM5:'Подтвердите заказ. Монеты придут на этот же кошелёк.',
-    fundTW1:'Откройте Trust Wallet и нажмите ⟪Buy⟫.',
-    fundTW2:'Выберите монету. Покупка картой работает для BNB Chain, Base и Solana.',
-    fundTW3:'Введите сумму и выберите способ оплаты.',
-    fundTW4:'Подтвердите заказ.',
-    fundCB1:'Откройте Coinbase Wallet и нажмите ⟪Buy⟫.',
-    fundCB2:'Выберите монету и сеть.',
-    fundCB3:'Оплатите картой или со связанного счёта Coinbase.',
-    fundGen1:'Откройте приложение своего кошелька.',
-    fundGen2:'Найдите на главном экране ⟪Buy⟫ или ⟪Deposit⟫ — почти во всех кошельках это уже встроено.',
-    fundGen3:'Выберите монету, сеть и способ оплаты.',
-    fundBaseNote:'У MetaMask сети Base нет в списке для покупки. Купите ETH в сети Ethereum и переведите через ⟪Bridge⟫ — либо возьмите Trust Wallet или Coinbase Wallet, они Base поддерживают.',
-    fundOwn:'Или купите где угодно и пришлите себе',
-    fundCopy:'Скопировать мой адрес',
-    fundCopied:'Адрес скопирован',
-    fundNetNote:'Присылайте только по сети {N}. Монеты, отправленные по другой сети, пропадут.',
-    fundGasNote:'Держите немного {G} — из него платится комиссия сети.',
-    fundFeeNote:'Кошелёк и платёжный сервис берут свою долю, поэтому придёт чуть меньше, чем вы заплатите.',
-    fundRegionNote:'Покупку картой проводит ваш кошелёк и его сервисы, а не OpenGate. В некоторых странах она недоступна.',
-    fundClose:'Понятно',
     feed:'Лента', profile:'Профиль', post:'Пост', notifs:'Уведомл.', more:'Меню',
     home:'Главная', allPosts:'Все посты', following:'Подписки',
     connectWallet:'Подключить кошелёк', explore:'Поиск', messages:'Сообщения',
@@ -18034,38 +17270,6 @@ const LANGS = {
     connectTitle:'Подключить кошелёк', connectSub:'Выбери способ подключения',
   },
   uk: {
-    // Поповнення гаманця
-    nfthub:'NFT',
-    fundBtn:'Поповнити гаманець',
-    fundTitle:'Як поповнити гаманець',
-    fundSub:'Потрібен {T} у мережі {N}',
-    fundIn:'У застосунку {W}',
-    fundInGeneric:'У застосунку вашого гаманця',
-    fundMM1:'Відкрийте MetaMask і натисніть ⟪Buy⟫ під балансом.',
-    fundMMD1:'У розширенні MetaMask натисніть ⟪Buy/Sell⟫ — відкриється MetaMask Portfolio у новій вкладці.',
-    fundMM2:'Оберіть потрібну монету і мережу, у якій вона вам потрібна.',
-    fundMM3:'Введіть суму й оберіть спосіб оплати — картка, банківський переказ, Apple Pay або Google Pay.',
-    fundMM4:'Під час першої покупки сервіс попросить підтвердити особу.',
-    fundMM5:'Підтвердьте замовлення. Монети надійдуть на цей самий гаманець.',
-    fundTW1:'Відкрийте Trust Wallet і натисніть ⟪Buy⟫.',
-    fundTW2:'Оберіть монету. Купівля карткою працює для BNB Chain, Base і Solana.',
-    fundTW3:'Введіть суму й оберіть спосіб оплати.',
-    fundTW4:'Підтвердьте замовлення.',
-    fundCB1:'Відкрийте Coinbase Wallet і натисніть ⟪Buy⟫.',
-    fundCB2:'Оберіть монету і мережу.',
-    fundCB3:'Сплатіть карткою або з пов’язаного рахунку Coinbase.',
-    fundGen1:'Відкрийте застосунок свого гаманця.',
-    fundGen2:'Знайдіть на головному екрані ⟪Buy⟫ або ⟪Deposit⟫ — майже в усіх гаманцях це вже вбудовано.',
-    fundGen3:'Оберіть монету, мережу і спосіб оплати.',
-    fundBaseNote:'У MetaMask мережі Base немає в списку для купівлі. Купіть ETH у мережі Ethereum і перекиньте через ⟪Bridge⟫ — або візьміть Trust Wallet чи Coinbase Wallet, вони Base підтримують.',
-    fundOwn:'Або купіть будь-де і надішліть собі',
-    fundCopy:'Скопіювати мою адресу',
-    fundCopied:'Адресу скопійовано',
-    fundNetNote:'Надсилайте лише мережею {N}. Монети, надіслані іншою мережею, зникнуть.',
-    fundGasNote:'Тримайте трохи {G} — з нього сплачується комісія мережі.',
-    fundFeeNote:'Гаманець і платіжний сервіс беруть свою частку, тож надійде трохи менше, ніж ви заплатите.',
-    fundRegionNote:'Купівлю карткою проводить ваш гаманець і його сервіси, а не OpenGate. У деяких країнах вона недоступна.',
-    fundClose:'Зрозуміло',
     feed:'Стрічка', profile:'Профіль', post:'Пост', notifs:'Сповіщ.', more:'Меню',
     home:'Головна', allPosts:'Всі пости', following:'Підписки',
     connectWallet:'Підключити гаманець', explore:'Пошук', messages:'Повідомлення',
@@ -18094,38 +17298,6 @@ const LANGS = {
     connectTitle:'Підключити гаманець', connectSub:'Обери спосіб підключення',
   },
   hi: {
-    // Поповнення гаманця
-    nfthub:'NFT',
-    fundBtn:'वॉलेट में पैसे जोड़ें',
-    fundTitle:'वॉलेट में पैसे कैसे जोड़ें',
-    fundSub:'{N} नेटवर्क पर {T} चाहिए',
-    fundIn:'{W} ऐप में',
-    fundInGeneric:'अपने वॉलेट ऐप में',
-    fundMM1:'MetaMask खोलें और बैलेंस के नीचे ⟪Buy⟫ दबाएँ।',
-    fundMMD1:'MetaMask एक्सटेंशन में ⟪Buy/Sell⟫ दबाएँ — नए टैब में MetaMask Portfolio खुलेगा।',
-    fundMM2:'जो सिक्का चाहिए उसे और उसका नेटवर्क चुनें।',
-    fundMM3:'रकम डालें और भुगतान का तरीका चुनें — कार्ड, बैंक ट्रांसफ़र, Apple Pay या Google Pay।',
-    fundMM4:'पहली खरीद पर सेवा पहचान की पुष्टि माँगती है।',
-    fundMM5:'ऑर्डर पक्का करें। सिक्के इसी वॉलेट में आ जाएँगे।',
-    fundTW1:'Trust Wallet खोलें और ⟪Buy⟫ दबाएँ।',
-    fundTW2:'सिक्का चुनें। कार्ड से खरीद BNB Chain, Base और Solana पर चलती है।',
-    fundTW3:'रकम डालें और भुगतान का तरीका चुनें।',
-    fundTW4:'ऑर्डर पक्का करें।',
-    fundCB1:'Coinbase Wallet खोलें और ⟪Buy⟫ दबाएँ।',
-    fundCB2:'सिक्का और नेटवर्क चुनें।',
-    fundCB3:'कार्ड से या जुड़े Coinbase खाते से भुगतान करें।',
-    fundGen1:'अपना वॉलेट ऐप खोलें।',
-    fundGen2:'मुख्य स्क्रीन पर ⟪Buy⟫ या ⟪Deposit⟫ ढूँढें — लगभग हर वॉलेट में यह पहले से होता है।',
-    fundGen3:'सिक्का, नेटवर्क और भुगतान का तरीका चुनें।',
-    fundBaseNote:'MetaMask की खरीद सूची में Base नहीं है। Ethereum पर ETH खरीदकर ⟪Bridge⟫ से भेजें, या Trust Wallet अथवा Coinbase Wallet इस्तेमाल करें — उनमें Base है।',
-    fundOwn:'या कहीं से भी खरीदकर खुद को भेजें',
-    fundCopy:'मेरा पता कॉपी करें',
-    fundCopied:'पता कॉपी हो गया',
-    fundNetNote:'केवल {N} नेटवर्क से भेजें। दूसरे नेटवर्क से भेजे सिक्के खो जाते हैं।',
-    fundGasNote:'थोड़ा {G} रखें — नेटवर्क शुल्क उसी से कटता है।',
-    fundFeeNote:'वॉलेट और भुगतान सेवा दोनों अपना हिस्सा लेते हैं, इसलिए भुगतान से थोड़ा कम मिलता है।',
-    fundRegionNote:'कार्ड से खरीद आपका वॉलेट और उसकी सेवाएँ करती हैं, OpenGate नहीं। कुछ देशों में यह उपलब्ध नहीं है।',
-    fundClose:'समझ गया',
     feed:'फीड', profile:'प्रोफाइल', post:'पोस्ट', notifs:'सूचना', more:'मेनू',
     home:'होम', allPosts:'सभी पोस्ट', following:'फ़ॉलोइंग',
     connectWallet:'वॉलेट जोड़ें', explore:'खोजें', messages:'संदेश',
@@ -18154,38 +17326,6 @@ const LANGS = {
     connectTitle:'वॉलेट जोड़ें', connectSub:'कनेक्शन का तरीका चुनें',
   },
   zh: {
-    // Поповнення гаманця
-    nfthub:'NFT',
-    fundBtn:'为钱包充值',
-    fundTitle:'如何为钱包充值',
-    fundSub:'需要 {N} 网络上的 {T}',
-    fundIn:'在 {W} 中',
-    fundInGeneric:'在你的钱包应用中',
-    fundMM1:'打开 MetaMask，点击余额下方的 ⟪Buy⟫。',
-    fundMMD1:'在 MetaMask 扩展中点击 ⟪Buy/Sell⟫ — 会在新标签页打开 MetaMask Portfolio。',
-    fundMM2:'选择你需要的币种和它所在的网络。',
-    fundMM3:'输入金额并选择支付方式 — 银行卡、转账、Apple Pay 或 Google Pay。',
-    fundMM4:'首次购买时，服务商会要求验证身份。',
-    fundMM5:'确认订单。币会到达同一个钱包。',
-    fundTW1:'打开 Trust Wallet，点击 ⟪Buy⟫。',
-    fundTW2:'选择币种。刷卡购买覆盖 BNB Chain、Base 和 Solana。',
-    fundTW3:'输入金额并选择支付方式。',
-    fundTW4:'确认订单。',
-    fundCB1:'打开 Coinbase Wallet，点击 ⟪Buy⟫。',
-    fundCB2:'选择币种和网络。',
-    fundCB3:'用银行卡或已关联的 Coinbase 账户支付。',
-    fundGen1:'打开你的钱包应用。',
-    fundGen2:'在主界面找 ⟪Buy⟫ 或 ⟪Deposit⟫ — 几乎所有钱包都内置了。',
-    fundGen3:'选择币种、网络和支付方式。',
-    fundBaseNote:'MetaMask 的购买网络列表中没有 Base。可在 Ethereum 上买 ETH 再用 ⟪Bridge⟫ 转过去，或改用支持 Base 的 Trust Wallet、Coinbase Wallet。',
-    fundOwn:'或者在任何地方购买后转给自己',
-    fundCopy:'复制我的地址',
-    fundCopied:'地址已复制',
-    fundNetNote:'只能通过 {N} 网络转入。用其他网络转入的币会丢失。',
-    fundGasNote:'另外留一点 {G} — 网络手续费用它支付。',
-    fundFeeNote:'钱包和支付服务商各收一部分，所以到账会比你支付的略少。',
-    fundRegionNote:'刷卡购买由你的钱包及其服务商处理，与 OpenGate 无关，部分国家无法使用。',
-    fundClose:'明白了',
     feed:'动态', profile:'我的', post:'发帖', notifs:'通知', more:'更多',
     home:'主页', allPosts:'全部帖子', following:'关注',
     connectWallet:'连接钱包', explore:'探索', messages:'消息',
@@ -18214,38 +17354,6 @@ const LANGS = {
     connectTitle:'连接钱包', connectSub:'选择连接方式',
   },
   tr: {
-    // Поповнення гаманця
-    nfthub:'NFT',
-    fundBtn:'Cüzdana para ekle',
-    fundTitle:'Cüzdanınıza para nasıl eklenir',
-    fundSub:'{N} ağında {T} gerekiyor',
-    fundIn:'{W} uygulamasında',
-    fundInGeneric:'Cüzdan uygulamanızda',
-    fundMM1:'MetaMask’i açın ve bakiyenizin altındaki ⟪Buy⟫ düğmesine dokunun.',
-    fundMMD1:'MetaMask eklentisinde ⟪Buy/Sell⟫ düğmesine tıklayın — MetaMask Portfolio yeni sekmede açılır.',
-    fundMM2:'İhtiyacınız olan coini ve bulunduğu ağı seçin.',
-    fundMM3:'Tutarı girin ve ödeme yöntemini seçin — kart, banka havalesi, Apple Pay veya Google Pay.',
-    fundMM4:'İlk alımda sağlayıcı kimlik doğrulaması ister.',
-    fundMM5:'Siparişi onaylayın. Coinler aynı cüzdana gelir.',
-    fundTW1:'Trust Wallet’i açın ve ⟪Buy⟫ düğmesine dokunun.',
-    fundTW2:'Coini seçin. Kartla alım BNB Chain, Base ve Solana için geçerli.',
-    fundTW3:'Tutarı girin ve ödeme yöntemini seçin.',
-    fundTW4:'Siparişi onaylayın.',
-    fundCB1:'Coinbase Wallet’i açın ve ⟪Buy⟫ düğmesine dokunun.',
-    fundCB2:'Coini ve ağı seçin.',
-    fundCB3:'Kartla veya bağlı Coinbase hesabınızdan ödeyin.',
-    fundGen1:'Cüzdan uygulamanızı açın.',
-    fundGen2:'Ana ekranda ⟪Buy⟫ ya da ⟪Deposit⟫ arayın — neredeyse her cüzdanda hazır gelir.',
-    fundGen3:'Coini, ağı ve ödeme yöntemini seçin.',
-    fundBaseNote:'MetaMask satın alma listesinde Base yok. Ethereum ağında ETH alıp ⟪Bridge⟫ ile aktarın ya da Base’i destekleyen Trust Wallet veya Coinbase Wallet kullanın.',
-    fundOwn:'Ya da istediğiniz yerden alıp kendinize gönderin',
-    fundCopy:'Adresimi kopyala',
-    fundCopied:'Adres kopyalandı',
-    fundNetNote:'Yalnızca {N} ağı üzerinden gönderin. Başka ağdan gönderilen coinler kaybolur.',
-    fundGasNote:'Biraz {G} bulundurun — ağ ücreti bununla ödenir.',
-    fundFeeNote:'Cüzdan ve ödeme sağlayıcısı pay alır, bu yüzden ödediğinizden biraz azını alırsınız.',
-    fundRegionNote:'Kartla alımı OpenGate değil, cüzdanınız ve sağlayıcıları yürütür. Bazı ülkelerde kullanılamaz.',
-    fundClose:'Anladım',
     feed:'Akış', profile:'Profil', post:'Gönderi', notifs:'Bildirim', more:'Menü',
     home:'Ana Sayfa', allPosts:'Tüm Gönderiler', following:'Takip',
     connectWallet:'Cüzdan Bağla', explore:'Keşfet', messages:'Mesajlar',
@@ -18274,38 +17382,6 @@ const LANGS = {
     connectTitle:'Cüzdan Bağla', connectSub:'Bağlantı yöntemini seç',
   },
   de: {
-    // Поповнення гаманця
-    nfthub:'NFT',
-    fundBtn:'Guthaben aufladen',
-    fundTitle:'So laden Sie Ihre Wallet auf',
-    fundSub:'Sie brauchen {T} im Netzwerk {N}',
-    fundIn:'In {W}',
-    fundInGeneric:'In Ihrer Wallet-App',
-    fundMM1:'Öffnen Sie MetaMask und tippen Sie unter Ihrem Guthaben auf ⟪Buy⟫.',
-    fundMMD1:'Klicken Sie in der MetaMask-Erweiterung auf ⟪Buy/Sell⟫ — MetaMask Portfolio öffnet sich in einem neuen Tab.',
-    fundMM2:'Wählen Sie die gewünschte Münze und das passende Netzwerk.',
-    fundMM3:'Geben Sie den Betrag ein und wählen Sie eine Zahlungsart — Karte, Überweisung, Apple Pay oder Google Pay.',
-    fundMM4:'Beim ersten Kauf verlangt der Anbieter eine Identitätsprüfung.',
-    fundMM5:'Bestätigen Sie die Bestellung. Die Münzen kommen in dieselbe Wallet.',
-    fundTW1:'Öffnen Sie Trust Wallet und tippen Sie auf ⟪Buy⟫.',
-    fundTW2:'Wählen Sie die Münze. Kartenkauf gilt für BNB Chain, Base und Solana.',
-    fundTW3:'Geben Sie den Betrag ein und wählen Sie eine Zahlungsart.',
-    fundTW4:'Bestätigen Sie die Bestellung.',
-    fundCB1:'Öffnen Sie Coinbase Wallet und tippen Sie auf ⟪Buy⟫.',
-    fundCB2:'Wählen Sie Münze und Netzwerk.',
-    fundCB3:'Zahlen Sie per Karte oder über Ihr verknüpftes Coinbase-Konto.',
-    fundGen1:'Öffnen Sie Ihre Wallet-App.',
-    fundGen2:'Suchen Sie auf dem Hauptbildschirm ⟪Buy⟫ oder ⟪Deposit⟫ — fast jede Wallet hat das eingebaut.',
-    fundGen3:'Wählen Sie Münze, Netzwerk und Zahlungsart.',
-    fundBaseNote:'MetaMask führt Base nicht in seiner Kaufliste. Kaufen Sie ETH auf Ethereum und schicken Sie es per ⟪Bridge⟫ hinüber — oder nutzen Sie Trust Wallet bzw. Coinbase Wallet, die Base abdecken.',
-    fundOwn:'Oder anderswo kaufen und sich selbst schicken',
-    fundCopy:'Meine Adresse kopieren',
-    fundCopied:'Adresse kopiert',
-    fundNetNote:'Nur über das Netzwerk {N} senden. Über ein anderes Netzwerk gesendete Münzen sind verloren.',
-    fundGasNote:'Halten Sie etwas {G} bereit — damit wird die Netzwerkgebühr bezahlt.',
-    fundFeeNote:'Wallet und Zahlungsanbieter behalten je einen Anteil, Sie erhalten also etwas weniger als Sie zahlen.',
-    fundRegionNote:'Den Kartenkauf wickeln Ihre Wallet und deren Anbieter ab, nicht OpenGate. In manchen Ländern ist er nicht verfügbar.',
-    fundClose:'Verstanden',
     feed:'Feed', profile:'Profil', post:'Post', notifs:'Meldungen', more:'Menü',
     home:'Start', allPosts:'Alle Beiträge', following:'Folge ich',
     connectWallet:'Wallet verbinden', explore:'Entdecken', messages:'Nachrichten',
@@ -18379,7 +17455,7 @@ function applyLang(){
   const cb=document.getElementById('connectBtn');
   if(cb&&!cb.classList.contains('connected'))cb.innerHTML='<div class="w-dot"></div>'+t('connectWallet');
   // Drawer btns
-  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-nfthub':'nfthub','drawer-launchpad':'launchpad','drawer-faucet':'faucet','drawer-fund':'fundBtn'};
+  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet'};
   Object.keys(dm).forEach(function(id){
     const el=document.getElementById(id);if(!el)return;
     const ico=el.querySelector('.drawer-ico');const badge=el.querySelector('.drawer-badge');
@@ -19049,9 +18125,6 @@ if('serviceWorker' in navigator){
     })
     .catch(e=>console.log('[PWA] SW registration failed:',e.message));
 }
-
-// Код готовий — повторюємо клік, якщо людина натиснула зарано.
-try{ if(window.__ogFlushPending) window.__ogFlushPending(); }catch(e){}
 </script>
 </body>
 </html>
