@@ -79,8 +79,7 @@ html{scroll-behavior:smooth;}
 body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 .help-toggle-btn{position:relative;background:var(--gold);border:none;color:#08090C;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:800;cursor:pointer;}
 .help-toggle-btn::after{content:'';position:absolute;top:0;right:0;bottom:0;left:0;inset:0;border-radius:8px;
-  pointer-events:none;background:rgba(245,200,66,.32);opacity:0;
-  animation:helpPulse 1.8s ease-in-out infinite;}
+  pointer-events:none;background:rgba(245,200,66,.32);opacity:0;}
 /* Пульсация через прозрачность готового слоя: считает видеокарта.
    Раньше здесь анимировалась box-shadow — она заставляет браузер
    перерисовывать кнопку в каждом кадре, а таких кнопок на странице 22. */
@@ -104,14 +103,12 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
   position:relative;z-index:2;background:#08090C;}
 .launchlab-nav-btn span{position:relative;z-index:2;white-space:nowrap;}
 .launchlab-nav-btn::after{content:'';position:absolute;top:0;right:0;bottom:0;left:0;inset:0;
-  pointer-events:none;z-index:1;background:#FFF3C4;opacity:0;will-change:opacity;
-  animation:llPulse 1.6s ease-in-out infinite;}
+  pointer-events:none;z-index:1;background:#FFF3C4;opacity:0;will-change:opacity;}
 @keyframes llPulse{0%,100%{opacity:0;}50%{opacity:.55;}}
 /* Блик, пробегающий по кнопке: сдвиг готового слоя, самая дешёвая анимация */
 .launchlab-nav-btn::before{content:'';position:absolute;top:0;bottom:0;left:-60%;width:45%;
   pointer-events:none;z-index:1;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);
-  will-change:transform;-webkit-transform:translateZ(0);transform:translateZ(0);
-  animation:llSweep 3.2s ease-in-out infinite;}
+  will-change:transform;-webkit-transform:translateZ(0);transform:translateZ(0);}
 @keyframes llSweep{0%{-webkit-transform:translateX(0);transform:translateX(0);}
   55%,100%{-webkit-transform:translateX(400%);transform:translateX(400%);}}
 
@@ -119,7 +116,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .side-btn-ll,.drawer-btn-ll{position:relative;overflow:hidden;}
 .side-btn-ll::after,.drawer-btn-ll::after{content:'';position:absolute;top:0;right:0;bottom:0;left:0;inset:0;
   pointer-events:none;border-radius:inherit;background:rgba(245,200,66,.16);opacity:0;
-  will-change:opacity;animation:llPulse 1.6s ease-in-out infinite;}
+  will-change:opacity;}
 .side-btn-ll>*,.drawer-btn-ll>*{position:relative;z-index:2;}
 
 @media(max-width:680px){
@@ -407,8 +404,7 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 #connectBtn{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:9px;padding:7px 16px;font-size:13px;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:7px;}
 #testnetHubBtn{background:linear-gradient(135deg,#F5C842,#E0A82E);color:#08090C;border:none;border-radius:9px;padding:7px 16px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 0 0 0 rgba(245,200,66,0.7);white-space:nowrap;position:relative;}
 #testnetHubBtn::after{content:'';position:absolute;top:0;right:0;bottom:0;left:0;inset:0;border-radius:9px;
-  pointer-events:none;background:rgba(245,200,66,.5);opacity:0;
-  animation:testnetPulse 1.4s ease-in-out infinite;}
+  pointer-events:none;background:rgba(245,200,66,.5);opacity:0;}
 #testnetHubBtn:hover{filter:brightness(1.08);}
 @keyframes testnetPulse{0%{opacity:.55;transform:scale(1);}70%{opacity:0;transform:scale(1.55);}100%{opacity:0;transform:scale(1.55);}}
 .tn-card:hover{border-color:var(--gold)!important;transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.25);}
@@ -2584,25 +2580,30 @@ async function smartConnectWallet(){
         </div>
       </div>
       <div id="view-lottery" style="display:none;">
-        <div class="feed-hdr">🎰 GATE Lottery</div>
+        <div class="feed-hdr">🎰 Lottery</div>
         <div style="padding:20px;max-width:560px;margin:0 auto;">
 
           <!-- Current Round -->
           <div style="background:linear-gradient(145deg,rgba(245,200,66,0.09),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:24px;margin-bottom:16px;text-align:center;">
             <div style="font-size:13px;color:var(--muted);margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Round #<span id="lotteryRound">—</span></div>
-            <div style="font-size:48px;font-weight:700;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:4px;" id="lotteryPot">— GATE</div>
+            <div style="font-size:48px;font-weight:700;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:4px;" id="lotteryPot">— USDT</div>
             <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Current Prize Pool</div>
 
-            <!-- Players progress -->
-            <div style="margin-bottom:20px;">
+            <!-- Round progress -->
+            <div style="margin-bottom:12px;">
               <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
                 <span>Players</span>
-                <span><span id="lotteryPlayers">0</span> / 20</span>
+                <span id="lotteryPlayers">0</span>
               </div>
               <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
                 <div id="lotteryBar" style="height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:4px;width:0%;transition:width .8s ease;"></div>
               </div>
             </div>
+
+            <!-- Round status / time left -->
+            <div id="lotteryStatusBox" style="font-size:12px;color:var(--muted);margin-bottom:16px;">—</div>
+            <button onclick="closeLotteryRound()" id="lotteryCloseBtn" style="display:none;width:100%;padding:11px;border-radius:10px;background:var(--bg3);border:1px solid var(--gold);color:var(--gold);font-size:13px;font-weight:700;margin-bottom:12px;cursor:pointer;">🔔 Close round & start draw</button>
+            <button onclick="settleLotteryRound()" id="lotterySettleBtn" style="display:none;width:100%;padding:11px;border-radius:10px;background:var(--bg3);border:1px solid var(--green);color:var(--green);font-size:13px;font-weight:700;margin-bottom:12px;cursor:pointer;">🏆 Settle & pay winner</button>
 
             <!-- My tickets -->
             <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:20px;">
@@ -2612,14 +2613,14 @@ async function smartConnectWallet(){
 
             <!-- Buy tickets -->
             <div style="margin-bottom:12px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many tickets? (1-5 per tx, 10 GATE each)</div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many tickets? (max 5 per wallet)</div>
               <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
                 <button onclick="setLotteryQty(1)" id="lqty1" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:16px;font-weight:700;cursor:pointer;">1</button>
                 <button onclick="setLotteryQty(2)" id="lqty2" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">2</button>
                 <button onclick="setLotteryQty(3)" id="lqty3" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">3</button>
                 <button onclick="setLotteryQty(5)" id="lqty5" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">5</button>
               </div>
-              <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cost: <span id="lotteryCost" style="color:var(--gold);font-weight:700;">10 GATE</span></div>
+              <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cost: <span id="lotteryCost" style="color:var(--gold);font-weight:700;">— USDT</span></div>
               <button onclick="buyLotteryTicket()" id="buyTicketBtn"
                 style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;transition:all .2s;"
                 onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
@@ -2631,11 +2632,11 @@ async function smartConnectWallet(){
           <!-- Rules -->
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">How it works</div>
-            <div class="w-row"><span class="w-lbl">Ticket price</span><span class="w-val" style="color:var(--gold);">10 GATE</span></div>
-            <div class="w-row"><span class="w-lbl">Max players</span><span class="w-val">20</span></div>
-            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">95% of pot</span></div>
-            <div class="w-row"><span class="w-lbl">Platform fee</span><span class="w-val">5%</span></div>
-            <div class="w-row"><span class="w-lbl">Draw</span><span class="w-val">Auto when full</span></div>
+            <div class="w-row"><span class="w-lbl">Ticket price</span><span class="w-val" style="color:var(--gold);" id="lotteryTicketPriceRule">1 USDT</span></div>
+            <div class="w-row"><span class="w-lbl">Max tickets / wallet</span><span class="w-val">5</span></div>
+            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">90% of pot, single winner</span></div>
+            <div class="w-row"><span class="w-lbl">Platform fee</span><span class="w-val">10%</span></div>
+            <div class="w-row"><span class="w-lbl">Draw</span><span class="w-val">Every 5 days, picked by Chainlink VRF</span></div>
           </div>
 
           <!-- Past rounds -->
@@ -4196,6 +4197,41 @@ const SILVER_PASS= '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
 const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
+// ── zkLitVM gas-fee fix ("max fee per gas less than block base fee") ──
+// LitVM (Caldera rollup) base fee can move between the moment MetaMask
+// estimates a transaction and the moment the user confirms it, so the
+// wallet's own maxFeePerGas guess sometimes falls under the real base fee
+// by send time — the tx is rejected before it even leaves the wallet, and
+// since it's timing-dependent it looks like the testnet "sometimes just
+// doesn't work". Every LitVM transaction (faucet claim, token deploy,
+// presale, staking, lending, NFT, ...) ends up calling a JsonRpcSigner's
+// sendTransaction() — directly, or through a Contract instance built on
+// that signer — so patching this one method fixes every call site at once
+// instead of repeating the same fix ~20 times through the file: right
+// before sending, we fetch a FRESH fee quote straight from the LitVM RPC
+// and pad it generously, only when the wallet is actually on LitVM and
+// didn't already specify its own gas price.
+(function(){
+  var _origSend = ethers.JsonRpcSigner.prototype.sendTransaction;
+  ethers.JsonRpcSigner.prototype.sendTransaction = async function(tx){
+    try{
+      var net = await this.provider.getNetwork();
+      if(Number(net.chainId) === 4441 && tx && !tx.gasPrice && !tx.maxFeePerGas){
+        var litP = new ethers.JsonRpcProvider(LITVM.rpcUrls[0]);
+        var fee = await litP.getFeeData();
+        if(fee.maxFeePerGas){
+          tx = Object.assign({}, tx, {
+            maxFeePerGas: fee.maxFeePerGas * 3n,
+            maxPriorityFeePerGas: (fee.maxPriorityFeePerGas && fee.maxPriorityFeePerGas>0n ? fee.maxPriorityFeePerGas : fee.maxFeePerGas) * 2n
+          });
+        } else if(fee.gasPrice){
+          tx = Object.assign({}, tx, { gasPrice: fee.gasPrice * 3n });
+        }
+      }
+    }catch(e){ /* any problem here — just fall through to normal wallet behaviour */ }
+    return _origSend.call(this, tx);
+  };
+})();
 const POLYGON_ID = '0x89';
 const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
 const BASE_ID    = '0x2105'; // 8453
@@ -4268,16 +4304,21 @@ const DICE_ABI        = [
   'function playerWins(address) view returns(uint256)',
   'function playerLosses(address) view returns(uint256)',
 ];
+// Matches the deployed OpenGateLottery.sol on BNB Chain (USDT, Chainlink VRF) —
+// NOT the old GATE/zkLitVM lottery this ABI used to describe. See "Чому лотерея
+// не працювала" note near loadLottery() below.
 const LOTTERY_ABI     = [
-  'function buyTicket(uint256)',
-  'function draw()',
-  'function getCurrentRound() view returns(uint256,uint256,uint256,bool)',
-  'function getRoundPlayers(uint256) view returns(address[])',
-  'function getMyTickets(uint256) view returns(uint256)',
-  'function rounds(uint256) view returns(uint256,address[],address,uint256,bool,uint256)',
+  'function buyTickets(uint256 count)',
+  'function closeRound()',
+  'function settle()',
   'function currentRound() view returns(uint256)',
-  'function TICKET_PRICE() view returns(uint256)',
-  'function MAX_PLAYERS() view returns(uint256)',
+  'function rounds(uint256) view returns(uint64 startedAt,uint64 endsAt,uint256 pot,uint256 seed,uint256 requestId,uint8 state)',
+  'function ticketPrice() view returns(uint256)',
+  'function maxTicketsPerWallet() view returns(uint256)',
+  'function participantCount(uint256) view returns(uint256)',
+  'function ticketsOf(uint256,address) view returns(uint256)',
+  'function winnersOf(uint256) view returns(address[],uint256[],uint256[])',
+  'function timeLeft() view returns(uint256)',
 ];
 const DAO_ABI         = [
   'function createProposal(string,string) returns(uint256)',
@@ -13614,34 +13655,133 @@ async function rollDice(){
 }
 
 // ── LOTTERY ──
+// Чому лотерея не працювала: ця сторінка була написана під СТАРУ лотерею
+// (GATE-токен, zkLitVM, ліміт 20 гравців, авто-розіграш). Реально задеплоєний
+// контракт (GATE_LOTTERY, той самий адрес) — зовсім інший: він на BNB Chain,
+// білет коштує ticketPrice() у USDT, купівля йде через buyTickets(count) (не
+// buyTicket), і в нього немає getCurrentRound()/getMyTickets() — звідси й
+// "Round expired"/помилки: фронт стукався у функції, яких у контракті просто
+// нема. Раунд закривається не автоматично при заповненні, а по часу
+// (roundDuration, зараз 5 днів) — після дедлайну хтось повинен викликати
+// closeRound(), а після розіграшу Chainlink VRF — settle(). Це може зробити
+// будь-хто (не тільки власник), тому нижче на сторінці ці дві кнопки
+// з'являються самі, коли настає момент — не потрібен окремий бекенд-бот.
 let lotteryQty = 1;
-function setLotteryQty(qty){lotteryQty=qty;[1,2,3,5].forEach(q=>{const btn=document.getElementById('lqty'+q);if(!btn)return;if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});document.getElementById('lotteryCost').textContent=(qty*10)+' GATE';}
+let lotteryTicketPriceRaw = 0n;
+let lotteryMaxPerWallet = 5;
+const LOTTERY_OWNER = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+
+function lotteryFmtUSDT(raw){ return parseFloat(ethers.formatUnits(raw||0n,18)).toFixed(2); }
+
+function setLotteryQty(qty){
+  lotteryQty=qty;
+  [1,2,3,5].forEach(q=>{const btn=document.getElementById('lqty'+q);if(!btn)return;if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});
+  const costEl=document.getElementById('lotteryCost');
+  if(costEl) costEl.textContent=lotteryFmtUSDT(lotteryTicketPriceRaw*BigInt(qty))+' USDT';
+}
+
 async function loadLottery(){
   try{
-    const p=getReadProvider();
-    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
-    // getCurrentRound() returns (roundId, playerCount, pot, isActive)
-    const round=await lottery.getCurrentRound();
-    const roundId=Number(round[0]);
-    const playerCount=Number(round[1]);
-    const pot=round[2];
+    const roundId=Number(await bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).currentRound()));
+    const [r, players, price, maxPerWallet] = await Promise.all([
+      bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).rounds(roundId)),
+      bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).participantCount(roundId)),
+      bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).ticketPrice()),
+      bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).maxTicketsPerWallet()),
+    ]);
+    lotteryTicketPriceRaw=price;
+    lotteryMaxPerWallet=Number(maxPerWallet)||5;
+    setLotteryQty(lotteryQty);
+    const priceRuleEl=document.getElementById('lotteryTicketPriceRule');
+    if(priceRuleEl) priceRuleEl.textContent=lotteryFmtUSDT(price)+' USDT';
+
     document.getElementById('lotteryRound').textContent=roundId.toString();
-    document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';
-    document.getElementById('lotteryPlayers').textContent=playerCount.toString();
-    document.getElementById('lotteryBar').style.width=(playerCount*100/20)+'%';
+    document.getElementById('lotteryPot').textContent=lotteryFmtUSDT(r.pot)+' USDT';
+    document.getElementById('lotteryPlayers').textContent=players.toString();
+
+    const now=Math.floor(Date.now()/1000);
+    const startedAt=Number(r.startedAt), endsAt=Number(r.endsAt), state=Number(r.state);
+    const dur=Math.max(1, endsAt-startedAt);
+    const elapsedPct=state===0 ? Math.min(100, Math.max(0,(now-startedAt)*100/dur)) : 100;
+    document.getElementById('lotteryBar').style.width=elapsedPct+'%';
+
+    renderLotteryStatus(state, endsAt, now, Number(players));
+
     if(userAddr){
       try{
-        const myT=await lottery.getMyTickets(roundId);
+        const myT=await bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).ticketsOf(roundId,userAddr));
         document.getElementById('myLotteryTickets').textContent=myT.toString();
       }catch(e){}
     }
-    loadLotteryWinners(lottery, roundId);
+    loadLotteryWinners(roundId);
   }catch(e){
     document.getElementById('pastLotteryRounds').innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load lottery</div>';
   }
 }
 
-async function loadLotteryWinners(lottery, currentRoundId){
+// Стан раунду: 0 Open, 1 Drawing (чекаємо Chainlink), 2 Drawn (готово до
+// settle), 3 Closed (щойно закрився — currentRound() вже вказує на новий).
+function renderLotteryStatus(state, endsAt, now, playerCount){
+  const box=document.getElementById('lotteryStatusBox');
+  const buyBtn=document.getElementById('buyTicketBtn');
+  const closeBtn=document.getElementById('lotteryCloseBtn');
+  const settleBtn=document.getElementById('lotterySettleBtn');
+  if(!box||!buyBtn||!closeBtn||!settleBtn) return;
+  closeBtn.style.display='none';
+  settleBtn.style.display='none';
+  if(state===0 && now<endsAt){
+    const secsLeft=endsAt-now;
+    const d=Math.floor(secsLeft/86400), h=Math.floor((secsLeft%86400)/3600), m=Math.floor((secsLeft%3600)/60);
+    box.textContent=(d>0?d+'d ':'')+(d>0||h>0?h+'h ':'')+m+'m left in this round';
+    buyBtn.disabled=false; buyBtn.style.opacity='1'; buyBtn.style.cursor='pointer';
+  } else if(state===0 && now>=endsAt){
+    box.textContent='This round has ended — waiting for someone to close it and start the draw.';
+    buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
+    closeBtn.style.display='block';
+  } else if(state===1){
+    box.textContent='Drawing the winner (waiting on Chainlink VRF) — check back in a minute.';
+    buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
+  } else if(state===2){
+    box.textContent='Winner picked — waiting for the payout to be settled.';
+    buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
+    settleBtn.style.display='block';
+  } else {
+    box.textContent='Starting the next round...';
+    buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
+  }
+}
+
+async function closeLotteryRound(){
+  const btn=document.getElementById('lotteryCloseBtn');
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  btn.disabled=true; btn.textContent='Closing...';
+  try{
+    await switchToBNB();
+    const freshSigner=await provider.getSigner();
+    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
+    await (await lottery.closeRound()).wait();
+    showToast('Round closed!','ok');
+    loadLottery();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  btn.disabled=false; btn.textContent='🔔 Close round & start draw';
+}
+
+async function settleLotteryRound(){
+  const btn=document.getElementById('lotterySettleBtn');
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  btn.disabled=true; btn.textContent='Settling...';
+  try{
+    await switchToBNB();
+    const freshSigner=await provider.getSigner();
+    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
+    await (await lottery.settle()).wait();
+    showToast('Winner paid! 🎉','ok');
+    loadLottery();
+  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
+  btn.disabled=false; btn.textContent='🏆 Settle & pay winner';
+}
+
+async function loadLotteryWinners(currentRoundId){
   const el=document.getElementById('pastLotteryRounds');
   if(!el) return;
   if(currentRoundId<=1){
@@ -13655,25 +13795,10 @@ async function loadLotteryWinners(lottery, currentRoundId){
     for(let i=currentRoundId-1;i>=from;i--){
       promises.push((async(roundNum)=>{
         try{
-          // rounds(uint256) returns: (uint256 pot, address[] players, address winner, uint256 ticketPrice, bool drawn, uint256 timestamp)
-          const r=await lottery.rounds(roundNum);
-          const pot=r[0];
-          const players=r[1];
-          const winner=r[2];
-          const drawn=r[4];
-          // Also try by name in case ethers returns object
-          const potVal=r.pot??pot??0n;
-          const winnderVal=r.winner??winner??'';
-          const drawnVal=r.drawn??drawn??false;
-          const playersVal=r.players??players??[];
-          const zeroAddr='0x0000000000000000000000000000000000000000';
-          if(!drawnVal||!winnderVal||winnderVal===zeroAddr) return null;
-          return {
-            roundNum,
-            pot: potVal,
-            winner: winnderVal,
-            players: Array.isArray(playersVal)?playersVal.length:Number(playersVal)||0
-          };
+          const [winners, prizes] = await bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).winnersOf(roundNum));
+          if(!winners || winners.length===0) return null;
+          const playerCount = await bnbReadRetry(p=>new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p).participantCount(roundNum));
+          return { roundNum, winner: winners[0], prize: prizes[0], players: Number(playerCount) };
         }catch(e){ return null; }
       })(i));
     }
@@ -13684,17 +13809,16 @@ async function loadLotteryWinners(lottery, currentRoundId){
     }
     let html='';
     results.forEach(r=>{
-      const potGate=parseFloat(ethers.formatEther(r.pot)).toFixed(0);
-      const prize=(parseFloat(ethers.formatEther(r.pot))*0.95).toFixed(0);
+      const prize=lotteryFmtUSDT(r.prize);
       const winnerShort=r.winner.slice(0,6)+'...'+r.winner.slice(-4);
       const isMe=userAddr&&r.winner.toLowerCase()===userAddr.toLowerCase();
       html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
         <div>
           <div style="font-size:13px;font-weight:700;">Round #${r.roundNum} ${isMe?'🎉 You won!':''}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.players} players · ${potGate} GATE pot</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.players} players</div>
         </div>
         <div style="text-align:right;">
-          <div style="font-size:12px;font-weight:700;color:var(--green);">🏆 ${prize} GATE</div>
+          <div style="font-size:12px;font-weight:700;color:var(--green);">🏆 ${prize} USDT</div>
           <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;cursor:pointer;"
             onclick="cpText('${r.winner}');showToast('Copied!','ok')" title="${r.winner}">${winnerShort} ⧉</div>
         </div>
@@ -13705,20 +13829,30 @@ async function loadLotteryWinners(lottery, currentRoundId){
     el.innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load past rounds</div>';
   }
 }
+
 async function buyLotteryTicket(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(userAddr.toLowerCase()===LOTTERY_OWNER){showToast("Owner wallet doesn't play the lottery","err");return;}
   const btn=document.getElementById('buyTicketBtn');
   btn.textContent='⏳ Checking...';btn.disabled=true;
   try{
-    await switchToLitVM();
+    await switchToBNB();
     const freshSigner=await provider.getSigner();
-    const amount=ethers.parseEther((lotteryQty*10).toString());
-    await smartApprove(GATE_LOTTERY, amount, freshSigner);
+    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,freshSigner);
+    const price=await lottery.ticketPrice();
+    const cost=price*BigInt(lotteryQty);
+    const usdt=new ethers.Contract(USDT_BNB_ADDR,ERC20_SIMPLE_ABI,freshSigner);
+    const bal=await usdt.balanceOf(userAddr);
+    if(bal<cost){showToast('Insufficient USDT. Need '+lotteryFmtUSDT(cost),'err');btn.textContent='🎟️ Buy Ticket';btn.disabled=false;return;}
+    const allowance=await usdt.allowance(userAddr,GATE_LOTTERY);
+    if(allowance<cost){
+      showToast('Approving USDT...','ok');
+      await (await usdt.approve(GATE_LOTTERY,cost)).wait();
+    }
     btn.textContent='🎟️ Buying...';
-    const LOTTERY_IFACE=new ethers.Interface(['function buyTicket(uint256 qty)']);
-    const tx=await freshSigner.sendTransaction({to:GATE_LOTTERY,data:LOTTERY_IFACE.encodeFunctionData('buyTicket',[BigInt(lotteryQty)])});
+    const tx=await lottery.buyTickets(BigInt(lotteryQty));
     await tx.wait();
-    showToast('🎟️ Ticket bought!','ok');loadLottery();loadGateBal();
+    showToast('🎟️ Ticket bought!','ok');loadLottery();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
   btn.textContent='🎟️ Buy Ticket';btn.disabled=false;
 }
@@ -17230,7 +17364,7 @@ const LANGS = {
     // Lottery
     currentPot:'Current Prize Pool', players:'Players', myTickets:'My tickets this round',
     ticketPrice:'Ticket price', maxPlayers:'Max players', prize:'Prize', platformFee:'Platform fee',
-    draw:'Auto when full', pastWinners:'Past Winners', buyTicket:'🎟️ Buy Ticket',
+    draw:'Every 5 days', pastWinners:'Past Winners', buyTicket:'🎟️ Buy Ticket',
     // Messages
     typeMsg:'Type a message...', send:'Send', newDmPlaceholder:'0x...',
     // Profile
@@ -17262,7 +17396,7 @@ const LANGS = {
     gamesTitle:'🎮 Игры', vsAI:'Бесплатно, сразу', stakeMode:'Со ставками', freeMode:'Без ставок',
     currentPot:'Призовой фонд', players:'Игроки', myTickets:'Мои билеты',
     ticketPrice:'Цена билета', maxPlayers:'Макс игроков', prize:'Приз', platformFee:'Комиссия платформы',
-    draw:'Авто при заполнении', pastWinners:'Прошлые победители', buyTicket:'🎟️ Купить билет',
+    draw:'Раз в 5 дней', pastWinners:'Прошлые победители', buyTicket:'🎟️ Купить билет',
     typeMsg:'Написать сообщение...', send:'Отправить', newDmPlaceholder:'0x...',
     editProfile:'Ред. профиль', follow:'Подписаться', following2:'Подписан', saveProfile:'Сохранить',
     posts:'Посты', followers:'Подписчики', followingCount:'Подписки',
@@ -17290,7 +17424,7 @@ const LANGS = {
     gamesTitle:'🎮 Ігри', vsAI:'Безкоштовно, одразу', stakeMode:'Зі ставками', freeMode:'Без ставок',
     currentPot:'Призовий фонд', players:'Гравці', myTickets:'Мої квитки',
     ticketPrice:'Ціна квитка', maxPlayers:'Макс гравців', prize:'Приз', platformFee:'Комісія платформи',
-    draw:'Авто при заповненні', pastWinners:'Минулі переможці', buyTicket:'🎟️ Купити квиток',
+    draw:'Раз на 5 днів', pastWinners:'Минулі переможці', buyTicket:'🎟️ Купити квиток',
     typeMsg:'Написати повідомлення...', send:'Надіслати', newDmPlaceholder:'0x...',
     editProfile:'Ред. профіль', follow:'Підписатись', following2:'Підписаний', saveProfile:'Зберегти',
     posts:'Пости', followers:'Підписники', followingCount:'Підписки',
@@ -17318,7 +17452,7 @@ const LANGS = {
     gamesTitle:'🎮 गेम्स', vsAI:'मुफ्त, तुरंत', stakeMode:'दांव के साथ', freeMode:'मुफ्त',
     currentPot:'पुरस्कार राशि', players:'खिलाड़ी', myTickets:'मेरे टिकट',
     ticketPrice:'टिकट मूल्य', maxPlayers:'अधिकतम खिलाड़ी', prize:'पुरस्कार', platformFee:'प्लेटफ़ॉर्म शुल्क',
-    draw:'भरने पर स्वतः', pastWinners:'पिछले विजेता', buyTicket:'🎟️ टिकट खरीदें',
+    draw:'हर 5 दिनों में', pastWinners:'पिछले विजेता', buyTicket:'🎟️ टिकट खरीदें',
     typeMsg:'संदेश लिखें...', send:'भेजें', newDmPlaceholder:'0x...',
     editProfile:'प्रोफ़ाइल संपादित करें', follow:'फ़ॉलो', following2:'फ़ॉलो कर रहे हैं', saveProfile:'सहेजें',
     posts:'पोस्ट', followers:'फ़ॉलोअर्स', followingCount:'फ़ॉलोइंग',
@@ -17346,7 +17480,7 @@ const LANGS = {
     gamesTitle:'🎮 游戏', vsAI:'免费，即时开始', stakeMode:'带赌注', freeMode:'免费玩',
     currentPot:'当前奖池', players:'玩家', myTickets:'我的票',
     ticketPrice:'票价', maxPlayers:'最多玩家', prize:'奖励', platformFee:'平台费',
-    draw:'满员自动开奖', pastWinners:'历史获奖者', buyTicket:'🎟️ 购买彩票',
+    draw:'每5天一次', pastWinners:'历史获奖者', buyTicket:'🎟️ 购买彩票',
     typeMsg:'输入消息...', send:'发送', newDmPlaceholder:'0x...',
     editProfile:'编辑资料', follow:'关注', following2:'已关注', saveProfile:'保存',
     posts:'帖子', followers:'粉丝', followingCount:'关注',
@@ -17374,7 +17508,7 @@ const LANGS = {
     gamesTitle:'🎮 Oyunlar', vsAI:'Ücretsiz, anında', stakeMode:'Bahisli', freeMode:'Ücretsiz',
     currentPot:'Mevcut Ödül', players:'Oyuncular', myTickets:'Biletlerim',
     ticketPrice:'Bilet fiyatı', maxPlayers:'Maks oyuncu', prize:'Ödül', platformFee:'Platform ücreti',
-    draw:'Dolu olunca otomatik', pastWinners:'Geçmiş Kazananlar', buyTicket:'🎟️ Bilet Al',
+    draw:'5 günde bir', pastWinners:'Geçmiş Kazananlar', buyTicket:'🎟️ Bilet Al',
     typeMsg:'Mesaj yaz...', send:'Gönder', newDmPlaceholder:'0x...',
     editProfile:'Profili Düzenle', follow:'Takip Et', following2:'Takip Ediliyor', saveProfile:'Kaydet',
     posts:'Gönderiler', followers:'Takipçiler', followingCount:'Takip',
@@ -17402,7 +17536,7 @@ const LANGS = {
     gamesTitle:'🎮 Spiele', vsAI:'Kostenlos, sofort', stakeMode:'Mit Einsatz', freeMode:'Kostenlos',
     currentPot:'Aktueller Jackpot', players:'Spieler', myTickets:'Meine Tickets',
     ticketPrice:'Ticketpreis', maxPlayers:'Max Spieler', prize:'Prämie', platformFee:'Plattformgebühr',
-    draw:'Auto bei Vollfüllung', pastWinners:'Frühere Gewinner', buyTicket:'🎟️ Ticket kaufen',
+    draw:'Alle 5 Tage', pastWinners:'Frühere Gewinner', buyTicket:'🎟️ Ticket kaufen',
     typeMsg:'Nachricht schreiben...', send:'Senden', newDmPlaceholder:'0x...',
     editProfile:'Profil bearbeiten', follow:'Folgen', following2:'Folge ich', saveProfile:'Speichern',
     posts:'Beiträge', followers:'Follower', followingCount:'Folge ich',
