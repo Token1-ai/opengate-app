@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OpenGate — zkLitVM Transaction Counter</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{--bg:#08090C;--bg2:#0E1018;--bg3:#141720;--border:#242832;--text:#EDEDF2;--muted:#8A8F9C;--gold:#F5C842;--green:#26D98A;--red:#FF4D4D;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Space Grotesk',-apple-system,sans-serif;background:var(--bg);color:var(--text);padding:24px;}
+  .wrap{max-width:820px;margin:0 auto;}
+  h1{font-size:22px;margin-bottom:4px;}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:24px;}
+  .total-box{background:linear-gradient(135deg,rgba(245,200,66,0.12),rgba(245,200,66,0.03));border:1px solid rgba(245,200,66,0.35);border-radius:16px;padding:24px;margin-bottom:24px;text-align:center;}
+  .total-num{font-family:'Space Mono',monospace;font-size:42px;font-weight:700;color:var(--gold);}
+  .total-label{color:var(--muted);font-size:13px;margin-top:4px;}
+  table{width:100%;border-collapse:collapse;background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  th,td{padding:12px 16px;text-align:left;font-size:13px;border-bottom:1px solid var(--border);}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+  tr:last-child td{border-bottom:none;}
+  .addr{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+  .count{font-family:'Space Mono',monospace;font-weight:700;color:var(--gold);text-align:right;}
+  .status{font-size:11px;color:var(--muted);}
+  .refresh-btn{background:var(--gold);color:#08090C;border:none;border-radius:9px;padding:10px 20px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:12px;margin-right:8px;}
+  .refresh-btn.secondary{background:transparent;color:var(--gold);border:1px solid rgba(245,200,66,0.5);}
+  .refresh-btn:disabled{opacity:.5;cursor:default;}
+  a{color:var(--gold);text-decoration:none;}
+  .err{color:var(--red);}
+  .warn-box{display:none;background:rgba(255,77,77,0.08);border:1px solid rgba(255,77,77,0.35);border-radius:12px;padding:16px;margin:16px 0;font-size:13px;line-height:1.6;color:var(--text);}
+  .warn-box code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-family:'Space Mono',monospace;font-size:12px;}
+  .btnrow{margin-bottom:20px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>⚡ zkLitVM Transaction Counter</h1>
+  <div class="sub">Live count pulled directly from the LiteForge block explorer (Blockscout) — includes every past transaction, not just new ones.</div>
+
+  <div class="btnrow">
+    <button class="refresh-btn" id="refreshBtn" onclick="loadAll()">🔄 Refresh all</button>
+    <button class="refresh-btn secondary" id="retryBtn" onclick="retryFailedOnly()" style="display:none;">↻ Retry failed only</button>
+  </div>
+
+  <div class="total-box">
+    <div class="total-num" id="totalNum">—</div>
+    <div class="total-label">Total transactions across all OpenGate contracts on zkLitVM</div>
+  </div>
+
+  <div class="warn-box" id="warnBox">
+    Some contracts still can't be reached. This is almost always the explorer's site
+    blocking/limiting requests that come from a page opened directly as a local file
+    (<code>file://...</code>) rather than a real web address. To fix it, serve this file
+    over a local address instead of double-clicking it:
+    <br><br>
+    1. Open a terminal in the folder that has this file.<br>
+    2. Run: <code>python -m http.server 8000</code><br>
+    3. Open <code>http://localhost:8000/zklitvm-tx-counter.html</code> in your browser and click Refresh.
+  </div>
+
+  <table>
+    <thead><tr><th>Contract</th><th>Address</th><th style="text-align:right;">Transactions</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div class="sub" style="margin-top:20px;">
+    Data source: <a href="https://liteforge.explorer.caldera.xyz" target="_blank">liteforge.explorer.caldera.xyz</a> (Blockscout public API). Numbers are exact, on-chain, and include all historical activity.
+  </div>
+</div>
+
+<script>
+const CONTRACTS = [
+  { name: 'GATE Token',              address: '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af' },
+  { name: 'GATE Staking',            address: '0x4c1B51bbef77344B7671E94082E032a62237737A' },
+  { name: 'GATE Presale',            address: '0xd1BD1853913F1CA242cD4D88a1F50EB0a6ba0854' },
+  { name: 'Token Launchpad',         address: '0x07b49A05C2a2cf2B11cA5796Fcad250E9Bc2D38f' },
+  { name: 'NFT Marketplace',         address: '0xF80a8ea1324679C95E81BDf056FC29ad7E8A7Cb0' },
+  { name: 'NFT Studio (Factory)',    address: '0x25375207779012f869E267fb4A657185AEd959C0' },
+  { name: 'GATE Rewards',            address: '0xc4da965B91F13D89fEd37fd75452cc596f663F3a' },
+  { name: 'GATE DAO',                address: '0x0A71755Eb9A72669A627534e17FFafDBfbF49298' },
+  { name: 'Lottery',                 address: '0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035' },
+  { name: 'Dice Roll',               address: '0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855' },
+  { name: 'Battleship (testnet)',    address: '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143' },
+  { name: 'Lending',                 address: '0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6' },
+  { name: 'Faucet',                  address: '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74' },
+  { name: 'Free NFT Mint (Merlin)',  address: '0x156DCCFe6C64DC9BE20d3D17778cC9DA7c96957D' },
+];
+
+const EXPLORER_API = 'https://liteforge.explorer.caldera.xyz/api/v2/addresses/';
+
+// Known-good counts we've already fetched, kept across refreshes so a
+// "retry failed only" pass doesn't lose already-confirmed numbers.
+const counts = {};
+
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function jitter(ms){ return ms + Math.random()*ms*0.4; }
+
+async function fetchTxCount(address, attempt){
+  attempt = attempt || 1;
+  const MAX_ATTEMPTS = 5;
+  let res;
+  try{
+    res = await fetch(EXPLORER_API + address + '/counters', { cache: 'no-store' });
+  }catch(networkErr){
+    // fetch() throws before we ever see a status code when the browser
+    // blocks the response (e.g. CORS on an error response, or a hard
+    // network failure). Treat this as retryable too, with backoff,
+    // since it's frequently the same underlying rate limit just hidden
+    // from us.
+    if(attempt < MAX_ATTEMPTS){
+      await sleep(jitter(1500 * attempt));
+      return fetchTxCount(address, attempt + 1);
+    }
+    throw new Error('Blocked before response (' + networkErr.message + ') — likely rate-limited or CORS-blocked');
+  }
+  if(res.status===429 || res.status===503){
+    if(attempt < MAX_ATTEMPTS){
+      await sleep(jitter(1500 * attempt));
+      return fetchTxCount(address, attempt+1);
+    }
+    throw new Error('Rate limited (HTTP '+res.status+')');
+  }
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+  if(data.transactions_count===undefined){
+    throw new Error('Unexpected response: '+JSON.stringify(data).slice(0,80));
+  }
+  return parseInt(data.transactions_count, 10);
+}
+
+function renderRows(){
+  const rowsEl = document.getElementById('rows');
+  rowsEl.innerHTML = CONTRACTS.map(c =>
+    `<tr id="row-${c.address}">
+      <td>${c.name}</td>
+      <td class="addr"><a href="https://liteforge.explorer.caldera.xyz/address/${c.address}" target="_blank">${c.address.slice(0,8)}...${c.address.slice(-6)}</a></td>
+      <td class="count status">${c.address in counts ? counts[c.address].toLocaleString() : 'loading…'}</td>
+    </tr>`
+  ).join('');
+  CONTRACTS.forEach(c=>{
+    if(c.address in counts){
+      const cell = document.querySelector(`#row-${c.address} td:last-child`);
+      cell.className = 'count';
+    }
+  });
+}
+
+function updateTotal(failedCount){
+  const total = Object.values(counts).reduce((a,b)=>a+b,0);
+  document.getElementById('totalNum').textContent =
+    total.toLocaleString() + (failedCount ? ' +' : '');
+  document.getElementById('warnBox').style.display = failedCount ? 'block' : 'none';
+  document.getElementById('retryBtn').style.display = failedCount ? 'inline-block' : 'none';
+}
+
+async function tryFetch(c){
+  const cell = document.querySelector(`#row-${c.address} td:last-child`);
+  cell.textContent = 'loading…';
+  cell.className = 'count status';
+  try{
+    const count = await fetchTxCount(c.address);
+    counts[c.address] = count;
+    cell.textContent = count.toLocaleString();
+    cell.className = 'count';
+    return true;
+  }catch(e){
+    delete counts[c.address];
+    cell.textContent = 'error';
+    cell.title = e.message;
+    cell.className = 'count err';
+    return false;
+  }
+}
+
+async function runQueue(list, gapMs){
+  const failed = [];
+  for(const c of list){
+    const ok = await tryFetch(c);
+    if(!ok) failed.push(c);
+    await sleep(jitter(gapMs));
+  }
+  return failed;
+}
+
+async function loadAll(){
+  const btn = document.getElementById('refreshBtn');
+  btn.disabled = true; btn.textContent = 'Loading...';
+  document.getElementById('retryBtn').disabled = true;
+  Object.keys(counts).forEach(k => delete counts[k]);
+  renderRows();
+
+  let failed = await runQueue(CONTRACTS, 3000); // slow, deliberate pacing
+
+  // Up to 3 extra rounds for whatever is still failing, backing off
+  // further each time — a real rate limit needs a real cooldown, not
+  // another instant retry.
+  for(let round = 1; round <= 3 && failed.length; round++){
+    updateTotal(failed.length);
+    await sleep(4000 * round);
+    failed = await runQueue(failed, 4000 * round);
+  }
+
+  updateTotal(failed.length);
+  btn.disabled = false; btn.textContent = '🔄 Refresh all';
+  document.getElementById('retryBtn').disabled = false;
+}
+
+async function retryFailedOnly(){
+  const failedNow = CONTRACTS.filter(c => !(c.address in counts));
+  if(!failedNow.length) return;
+  const btn = document.getElementById('retryBtn');
+  btn.disabled = true; btn.textContent = 'Retrying...';
+
+  let failed = await runQueue(failedNow, 4000);
+  updateTotal(failed.length);
+
+  btn.disabled = false; btn.textContent = '↻ Retry failed only';
+}
+
+renderRows();
+loadAll();
+</script>
+</body>
+</html>
