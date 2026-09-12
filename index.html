@@ -2262,9 +2262,7 @@ async function smartConnectWallet(){
              only for in-game purchases). Links out to the live PWA at
              territory.opengate.bond, same pattern as the LaunchLab button. -->
         <div style="margin:16px auto 4px;max-width:600px;padding:0 16px;">
-          <div onclick="window.open('https://territory.opengate.bond','_blank','noopener')"
-               style="position:relative;cursor:pointer;border-radius:var(--r);overflow:hidden;border:1px solid rgba(38,217,138,0.35);background:linear-gradient(180deg,rgba(8,9,12,.35) 0%,rgba(8,9,12,.92) 78%),url('https://territory.opengate.bond/splash-1080.webp') center/cover;transition:all .2s;"
-               onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='rgba(38,217,138,0.35)'">
+          <div style="position:relative;border-radius:var(--r);overflow:hidden;border:1px solid rgba(38,217,138,0.35);background:linear-gradient(180deg,rgba(8,9,12,.35) 0%,rgba(8,9,12,.92) 78%),url('https://territory.opengate.bond/splash-1080.webp') center/cover;">
             <div style="position:absolute;top:14px;right:14px;background:var(--green);color:#08090C;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;letter-spacing:.05em;">🆓 FREE TO PLAY</div>
             <div style="padding:20px;">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
@@ -2277,15 +2275,43 @@ async function smartConnectWallet(){
               <div style="font-size:13px;color:#dfe3ea;line-height:1.55;margin-bottom:12px;">
                 Walk to a real spot — plant a bunker and make that point yours. Reinforce it, mount guns, defend it from sieges, or go storm someone else's point yourself. Team up in a clan with the players you don't fight and share the spoils with.
               </div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
                 <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">📍 Live GPS</span>
                 <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">⚔️ Real-time PvP sieges</span>
                 <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">🛡️ Clans</span>
                 <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">🚁 Drones, rockets, troops</span>
               </div>
-              <div style="font-size:11px;color:var(--green);margin-top:12px;font-weight:700;">▶ Play free · install it as an app on your phone</div>
-              <div style="font-size:10px;color:var(--muted);margin-top:4px;">The game is completely free. In-game purchases (upgrades, weapons) are optional, paid via BNB Chain.</div>
+              <div style="display:flex;gap:8px;">
+                <button onclick="window.open('https://territory.opengate.bond','_blank','noopener')" style="flex:1;padding:12px;border-radius:10px;background:var(--green);color:#08090C;border:none;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">▶ Play Now</button>
+                <button onclick="openTerritoryInstall()" style="flex:1;padding:12px;border-radius:10px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">📲 Install App</button>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:10px;">The game is completely free. In-game purchases (upgrades, weapons) are optional, paid via BNB Chain.</div>
             </div>
+          </div>
+        </div>
+
+        <!-- Gate Territory — "how to install" modal. It's a PWA hosted on a
+             different origin (territory.opengate.bond), so the browser's
+             native install prompt can't be triggered from opengate.bond —
+             these are the manual add-to-home-screen steps per platform. -->
+        <div class="modal-overlay" id="territoryInstallModal">
+          <div class="modal">
+            <button class="modal-close-btn" onclick="closeTerritoryInstall()">✕</button>
+            <div class="modal-title">📲 Install Gate Territory</div>
+            <div class="modal-sub">Adds it to your home screen like a real app — no app store needed.</div>
+            <div class="modal-info" style="margin-bottom:14px;">
+              <b style="color:var(--text);">🤖 Android (Chrome)</b><br>
+              Open the game, tap the <b>⋮</b> menu in the top right, then <b>"Install app"</b> or <b>"Add to Home screen"</b>.
+            </div>
+            <div class="modal-info" style="margin-bottom:14px;">
+              <b style="color:var(--text);">🍎 iPhone (Safari)</b><br>
+              Open the game, tap the <b>Share</b> icon (square with an arrow), then <b>"Add to Home Screen"</b>.
+            </div>
+            <div class="modal-info">
+              <b style="color:var(--text);">💻 Desktop (Chrome/Edge)</b><br>
+              Open the game, click the install icon (⊕) at the right of the address bar.
+            </div>
+            <button class="modal-exec-btn gold-btn" style="margin-top:20px;" onclick="closeTerritoryInstall();window.open('https://territory.opengate.bond','_blank','noopener')">Open Gate Territory</button>
           </div>
         </div>
 
@@ -12438,6 +12464,8 @@ async function openMintModal(type){
   }catch(e){document.getElementById('mintBnb').textContent='Could not fetch price';}
 }
 function closeMintModal(){document.getElementById('mintModal').classList.remove('open');mintType=null;mintPrice=null;}
+function openTerritoryInstall(){document.getElementById('territoryInstallModal').classList.add('open');}
+function closeTerritoryInstall(){document.getElementById('territoryInstallModal').classList.remove('open');}
 async function executeMint(){
   if(!userAddr){await connectWallet();return;}
   if(!mintPrice){showToast('Price not loaded','err');return;}
