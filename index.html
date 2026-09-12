@@ -2257,6 +2257,38 @@ async function smartConnectWallet(){
       <div id="view-games" style="display:none;">
         <div class="feed-hdr">🎮 Games</div>
 
+        <!-- Gate Territory — featured real-world GPS game, shown above the
+             chain tabs since it isn't gated to one chain (BNB Chain is used
+             only for in-game purchases). Links out to the live PWA at
+             territory.opengate.bond, same pattern as the LaunchLab button. -->
+        <div style="margin:16px auto 4px;max-width:600px;padding:0 16px;">
+          <div onclick="window.open('https://territory.opengate.bond','_blank','noopener')"
+               style="position:relative;cursor:pointer;border-radius:var(--r);overflow:hidden;border:1px solid rgba(38,217,138,0.35);background:linear-gradient(180deg,rgba(8,9,12,.35) 0%,rgba(8,9,12,.92) 78%),url('https://territory.opengate.bond/splash-1080.webp') center/cover;transition:all .2s;"
+               onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='rgba(38,217,138,0.35)'">
+            <div style="position:absolute;top:14px;right:14px;background:var(--green);color:#08090C;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;letter-spacing:.05em;">🆓 FREE TO PLAY</div>
+            <div style="padding:20px;">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                <img src="https://territory.opengate.bond/icon-192.png" alt="" style="width:46px;height:46px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.4);" onerror="this.style.display='none'"/>
+                <div>
+                  <div style="font-size:18px;font-weight:800;">🗺️ Gate Territory</div>
+                  <div style="font-size:12px;color:var(--green);font-weight:600;">A real-world GPS game · claim ground in your own city</div>
+                </div>
+              </div>
+              <div style="font-size:13px;color:#dfe3ea;line-height:1.55;margin-bottom:12px;">
+                Walk to a real spot — plant a bunker and make that point yours. Reinforce it, mount guns, defend it from sieges, or go storm someone else's point yourself. Team up in a clan with the players you don't fight and share the spoils with.
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">📍 Live GPS</span>
+                <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">⚔️ Real-time PvP sieges</span>
+                <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">🛡️ Clans</span>
+                <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">🚁 Drones, rockets, troops</span>
+              </div>
+              <div style="font-size:11px;color:var(--green);margin-top:12px;font-weight:700;">▶ Play free · install it as an app on your phone</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;">The game is completely free. In-game purchases (upgrades, weapons) are optional, paid via BNB Chain.</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Chain switcher -->
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:600px;margin:0 auto;">
           <button id="gamesChainLitvm" onclick="gamesSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
