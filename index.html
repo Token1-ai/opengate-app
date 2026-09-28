@@ -10858,6 +10858,7 @@ function showTab(tab){
   if(tab==='games'){}
   if(tab==='lending') loadLending();
   if(tab==='faucet') loadFaucet();
+  if(tab==='feed'&&feedFilter==='following') loadPosts();
   // Re-apply translations when switching tabs
   if(currentLang&&currentLang!=='en') applyLang();
 }
@@ -11987,7 +11988,7 @@ async function loadPosts(){
     if(allLikesRes.data) allLikesRes.data.forEach(l=>{likesCountMap[l.post_id]=(likesCountMap[l.post_id]||0)+1;});
     // Inject real counts into posts
     posts.forEach(p=>{ p._realLikes=likesCountMap[p.id]||0; });
-    list.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id))).join('');
+    list.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id),!!authors)).join('');
     // Load comment counts asynchronously
     loadCommentCounts(posts.map(p=>p.id));
     // Load more button
@@ -12013,12 +12014,12 @@ function renderImages(urls){
 function isOwnerWallet(){
   return !!userAddr && userAddr.toLowerCase()==='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
 }
-function renderPost(post,liked){
+function renderPost(post,liked,alreadyFollowing=false){
   const u=post.users||{};
   const name=u.username||sAddr(post.author_wallet);
   const av=u.avatar_url?`<img loading="lazy" decoding="async" src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
-  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;position:relative;">${av}<span class="og-dot" data-og-online="${(post.author_wallet||'').toLowerCase()}"></span></div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div>${renderPostText(post.content,post.id)}${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
+  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;position:relative;">${av}<span class="og-dot" data-og-online="${(post.author_wallet||'').toLowerCase()}"></span></div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr&&!alreadyFollowing?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div>${renderPostText(post.content,post.id)}${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
           <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
           ${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')\" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}
           ${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}
@@ -12060,7 +12061,7 @@ async function loadMorePosts(before){
     // Append posts
     const frag=document.createDocumentFragment();
     const tmp=document.createElement('div');
-    tmp.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id))).join('');
+    tmp.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id),!!authors)).join('');
     while(tmp.firstChild)frag.appendChild(tmp.firstChild);
     list.appendChild(frag);
     // New load more button
