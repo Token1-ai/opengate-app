@@ -10858,13 +10858,24 @@ function showTab(tab){
   if(tab==='games'){}
   if(tab==='lending') loadLending();
   if(tab==='faucet') loadFaucet();
+  if(tab==='feed'&&feedFilter==='following') loadPosts();
   // Re-apply translations when switching tabs
   if(currentLang&&currentLang!=='en') applyLang();
 }
+let feedFilter='all';
+let feedLoadId=0;
 function switchFeedTab(tab,el){
+  feedFilter=tab;
   document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   loadPosts();
+}
+async function feedAuthors(){
+  if(feedFilter!=='following') return null;
+  if(!userAddr) return [];
+  const {data,error}=await sb.from('follows').select('following_wallet').eq('follower_wallet',userAddr);
+  if(error) throw error;
+  return [...new Set((data||[]).map(f=>f.following_wallet))];
 }
 
 // ── POSTS ──
@@ -11901,7 +11912,8 @@ async function createPost(){
   const btn=document.getElementById('postBtn');
   btn.disabled=true; btn.textContent='Posting...';
   try{
-    await sb.from('posts').insert({author_wallet:userAddr,content,image_urls:pendingImages});
+    const {error}=await sb.from('posts').insert({author_wallet:userAddr,content,image_urls:pendingImages});
+    if(error) throw error;
     pendingImages = [];
     renderImgPreviews();
     // Check if any follower has bell on for this user
@@ -11911,7 +11923,7 @@ async function createPost(){
     showToast('Posted! ✓','ok');
     loadPosts();
   }catch(e){showToast('Failed to post','err');}
-  btn.disabled=false; btn.textContent='Post';
+  btn.textContent='Post'; updateComposer();
 }
 let postsRealtimeChannel=null;
 let notifsAutoChannel=null;
@@ -11934,26 +11946,35 @@ function subscribeToNewPosts(){
 }
 
 async function loadPosts(){
+  const loadId=++feedLoadId;
   const list=document.getElementById('postsList');
   list.innerHTML='<div class="app-loader">Loading...</div>';
   const btn=document.getElementById('newPostsBtn');
   if(btn) btn.style.display='none';
   try{
-    // Load posts + likes in parallel
-    const postsPromise=sb.from('posts')
+    const authors=await feedAuthors();
+    if(loadId!==feedLoadId) return;
+    if(authors?.length===0){
+      list.innerHTML='<div class="app-empty">'+(userAddr?'No one followed yet. Explore to find people to follow.':'Connect your wallet to see posts from people you follow.')+'</div>';
+      return;
+    }
+    let postsPromise=sb.from('posts')
       .select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)')
-      .order('created_at',{ascending:false})
-      .limit(15);
+      .order('created_at',{ascending:false});
+    if(authors) postsPromise=postsPromise.in('author_wallet',authors);
+    postsPromise=postsPromise.limit(15);
     const [postsRes]=await Promise.all([postsPromise]);
+    if(loadId!==feedLoadId) return;
     const posts=postsRes.data;
     if(postsRes.error) throw postsRes.error;
-    if(!posts||posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
+    if(!posts||posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>'+(authors?'No posts from people you follow yet.':'No posts yet. Be the first!')+'</div>';return;}
     const banned=await getBannedWallets();
+    if(loadId!==feedLoadId) return;
     if(banned.size>0){
       const filtered=posts.filter(p=>!banned.has((p.author_wallet||'').toLowerCase()));
       posts.length=0; posts.push(...filtered);
     }
-    if(posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
+    if(posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>'+(authors?'No posts from people you follow yet.':'No posts yet. Be the first!')+'</div>';return;}
     // Load likes counts + user liked status in parallel
     const postIds=posts.map(p=>p.id);
     let ls=new Set();
@@ -11962,11 +11983,12 @@ async function loadPosts(){
       userAddr ? sb.from('likes').select('post_id').eq('liker_wallet',userAddr).in('post_id',postIds) : Promise.resolve({data:[]}),
       sb.from('likes').select('post_id').in('post_id',postIds)
     ]);
+    if(loadId!==feedLoadId) return;
     if(userLikesRes.data) userLikesRes.data.forEach(l=>ls.add(l.post_id));
     if(allLikesRes.data) allLikesRes.data.forEach(l=>{likesCountMap[l.post_id]=(likesCountMap[l.post_id]||0)+1;});
     // Inject real counts into posts
     posts.forEach(p=>{ p._realLikes=likesCountMap[p.id]||0; });
-    list.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id))).join('');
+    list.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id),!!authors)).join('');
     // Load comment counts asynchronously
     loadCommentCounts(posts.map(p=>p.id));
     // Load more button
@@ -11980,7 +12002,7 @@ async function loadPosts(){
       more.appendChild(btn);
       list.appendChild(more);
     }
-  }catch(e){list.innerHTML='<div class="app-empty">Failed to load posts</div>';}
+  }catch(e){if(loadId===feedLoadId)list.innerHTML='<div class="app-empty">Failed to load posts</div>';}
 }
 function renderImages(urls){
   if(!urls||urls.length===0) return '';
@@ -11992,12 +12014,12 @@ function renderImages(urls){
 function isOwnerWallet(){
   return !!userAddr && userAddr.toLowerCase()==='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
 }
-function renderPost(post,liked){
+function renderPost(post,liked,alreadyFollowing=false){
   const u=post.users||{};
   const name=u.username||sAddr(post.author_wallet);
   const av=u.avatar_url?`<img loading="lazy" decoding="async" src="${u.avatar_url}" onerror="this.parentElement.textContent='🧑'"/>`:'🧑';
   const badge=u.pass_type==='gold'?'<span class="post-badge badge-gold">🥇 Gold</span>':u.pass_type==='silver'?'<span class="post-badge badge-silver">🥈 Silver</span>':'';
-  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;position:relative;">${av}<span class="og-dot" data-og-online="${(post.author_wallet||'').toLowerCase()}"></span></div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div>${renderPostText(post.content,post.id)}${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
+  return `<div class="post-card"><div class="post-inner"><div class="post-av" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;position:relative;">${av}<span class="og-dot" data-og-online="${(post.author_wallet||'').toLowerCase()}"></span></div><div class="post-body"><div class="post-hdr"><span class="post-name" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${esc(name)}</span>${badge}<span class="post-wlt" onclick="showTab('profile');loadProfile('${post.author_wallet}')" style="cursor:pointer;">${sAddr(post.author_wallet)}</span><span class="post-time">${tAgo(post.created_at)}</span>${post.author_wallet!==userAddr&&!alreadyFollowing?`<button onclick="quickFollow('${post.author_wallet}',this)" class="quick-follow-btn" style="margin-left:auto;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">+ Follow</button>`:''}</div>${renderPostText(post.content,post.id)}${renderImages(post.image_urls)}<div class="post-acts"><button class="act-btn${liked?' liked':''}" onclick="likePost('${post.id}','${post.author_wallet}',this)"><span>${liked?'❤️':'🤍'}</span><span class="act-cnt" id="cnt-${post.id}">${post._realLikes!==undefined?post._realLikes:(post.likes_count||0)}</span></button>
           <button class="act-btn" onclick="cpText(location.href+'?p=${post.id}');showToast('Link copied!','ok')"><span>🔗</span></button>
           ${post.author_wallet!==userAddr?`<button class="act-btn" onclick="openChallenge('${post.author_wallet}','${esc((post.users?.username||sAddr(post.author_wallet)))}')\" title="Challenge to Battleship" style="font-size:11px;"><span>⚔️</span></button>`:''}
           ${post.author_wallet===userAddr?`<button class="act-btn" onclick="deletePost('${post.id}',this)" title="Delete post" style="color:var(--red);font-size:11px;"><span>🗑️</span></button>`:''}
@@ -12008,17 +12030,23 @@ function renderPost(post,liked){
           </div></div></div></div>`;
 }
 async function loadMorePosts(before){
+  const loadId=feedLoadId;
   const list=document.getElementById('postsList');
-  const moreBtn=list.querySelector('button');
-  if(moreBtn) moreBtn.textContent='Loading...';
+  const moreDiv=list.lastElementChild;
+  const moreBtn=moreDiv?.querySelector('button');
+  if(moreBtn){moreBtn.textContent='Loading...';moreBtn.disabled=true;}
   try{
-    const {data:posts}=await sb.from('posts')
+    const authors=await feedAuthors();
+    if(loadId!==feedLoadId) return;
+    let query=sb.from('posts')
       .select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)')
       .order('created_at',{ascending:false})
-      .lt('created_at',before)
-      .limit(15);
+      .lt('created_at',before);
+    if(authors) query=query.in('author_wallet',authors);
+    const {data:posts,error}=await query.limit(15);
+    if(loadId!==feedLoadId) return;
+    if(error) throw error;
     if(!posts||posts.length===0){
-      const moreDiv=list.querySelector('div:last-child');
       if(moreDiv)moreDiv.remove();
       return;
     }
@@ -12027,13 +12055,13 @@ async function loadMorePosts(before){
       const {data:lk}=await sb.from('likes').select('post_id').eq('liker_wallet',userAddr).in('post_id',posts.map(p=>p.id));
       if(lk)lk.forEach(l=>ls.add(l.post_id));
     }
+    if(loadId!==feedLoadId) return;
     // Remove load more button
-    const moreDiv=list.querySelector('div:last-child');
     if(moreDiv)moreDiv.remove();
     // Append posts
     const frag=document.createDocumentFragment();
     const tmp=document.createElement('div');
-    tmp.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id))).join('');
+    tmp.innerHTML=posts.map(p=>renderPost(p,ls.has(p.id),!!authors)).join('');
     while(tmp.firstChild)frag.appendChild(tmp.firstChild);
     list.appendChild(frag);
     // New load more button
@@ -12046,7 +12074,7 @@ async function loadMorePosts(before){
       btn.onclick=function(){loadMorePosts(posts[posts.length-1].created_at);};
       more.appendChild(btn);list.appendChild(more);
     }
-  }catch(e){}
+  }catch(e){if(loadId===feedLoadId&&moreBtn){moreBtn.textContent='Retry loading';moreBtn.disabled=false;}}
 }
 
 async function likePost(postId,authorWallet,btn){
