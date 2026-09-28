@@ -10861,10 +10861,20 @@ function showTab(tab){
   // Re-apply translations when switching tabs
   if(currentLang&&currentLang!=='en') applyLang();
 }
+let feedFilter='all';
+let feedLoadId=0;
 function switchFeedTab(tab,el){
+  feedFilter=tab;
   document.querySelectorAll('.feed-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   loadPosts();
+}
+async function feedAuthors(){
+  if(feedFilter!=='following') return null;
+  if(!userAddr) return [];
+  const {data,error}=await sb.from('follows').select('following_wallet').eq('follower_wallet',userAddr);
+  if(error) throw error;
+  return [...new Set((data||[]).map(f=>f.following_wallet))];
 }
 
 // ── POSTS ──
@@ -11901,7 +11911,8 @@ async function createPost(){
   const btn=document.getElementById('postBtn');
   btn.disabled=true; btn.textContent='Posting...';
   try{
-    await sb.from('posts').insert({author_wallet:userAddr,content,image_urls:pendingImages});
+    const {error}=await sb.from('posts').insert({author_wallet:userAddr,content,image_urls:pendingImages});
+    if(error) throw error;
     pendingImages = [];
     renderImgPreviews();
     // Check if any follower has bell on for this user
@@ -11911,7 +11922,7 @@ async function createPost(){
     showToast('Posted! ✓','ok');
     loadPosts();
   }catch(e){showToast('Failed to post','err');}
-  btn.disabled=false; btn.textContent='Post';
+  btn.textContent='Post'; updateComposer();
 }
 let postsRealtimeChannel=null;
 let notifsAutoChannel=null;
@@ -11934,26 +11945,35 @@ function subscribeToNewPosts(){
 }
 
 async function loadPosts(){
+  const loadId=++feedLoadId;
   const list=document.getElementById('postsList');
   list.innerHTML='<div class="app-loader">Loading...</div>';
   const btn=document.getElementById('newPostsBtn');
   if(btn) btn.style.display='none';
   try{
-    // Load posts + likes in parallel
-    const postsPromise=sb.from('posts')
+    const authors=await feedAuthors();
+    if(loadId!==feedLoadId) return;
+    if(authors?.length===0){
+      list.innerHTML='<div class="app-empty">'+(userAddr?'No one followed yet. Explore to find people to follow.':'Connect your wallet to see posts from people you follow.')+'</div>';
+      return;
+    }
+    let postsPromise=sb.from('posts')
       .select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)')
-      .order('created_at',{ascending:false})
-      .limit(15);
+      .order('created_at',{ascending:false});
+    if(authors) postsPromise=postsPromise.in('author_wallet',authors);
+    postsPromise=postsPromise.limit(15);
     const [postsRes]=await Promise.all([postsPromise]);
+    if(loadId!==feedLoadId) return;
     const posts=postsRes.data;
     if(postsRes.error) throw postsRes.error;
-    if(!posts||posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
+    if(!posts||posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>'+(authors?'No posts from people you follow yet.':'No posts yet. Be the first!')+'</div>';return;}
     const banned=await getBannedWallets();
+    if(loadId!==feedLoadId) return;
     if(banned.size>0){
       const filtered=posts.filter(p=>!banned.has((p.author_wallet||'').toLowerCase()));
       posts.length=0; posts.push(...filtered);
     }
-    if(posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>No posts yet. Be the first!</div>';return;}
+    if(posts.length===0){list.innerHTML='<div class="app-empty"><div class="app-empty-ico">✍️</div>'+(authors?'No posts from people you follow yet.':'No posts yet. Be the first!')+'</div>';return;}
     // Load likes counts + user liked status in parallel
     const postIds=posts.map(p=>p.id);
     let ls=new Set();
@@ -11962,6 +11982,7 @@ async function loadPosts(){
       userAddr ? sb.from('likes').select('post_id').eq('liker_wallet',userAddr).in('post_id',postIds) : Promise.resolve({data:[]}),
       sb.from('likes').select('post_id').in('post_id',postIds)
     ]);
+    if(loadId!==feedLoadId) return;
     if(userLikesRes.data) userLikesRes.data.forEach(l=>ls.add(l.post_id));
     if(allLikesRes.data) allLikesRes.data.forEach(l=>{likesCountMap[l.post_id]=(likesCountMap[l.post_id]||0)+1;});
     // Inject real counts into posts
@@ -11980,7 +12001,7 @@ async function loadPosts(){
       more.appendChild(btn);
       list.appendChild(more);
     }
-  }catch(e){list.innerHTML='<div class="app-empty">Failed to load posts</div>';}
+  }catch(e){if(loadId===feedLoadId)list.innerHTML='<div class="app-empty">Failed to load posts</div>';}
 }
 function renderImages(urls){
   if(!urls||urls.length===0) return '';
@@ -12008,17 +12029,23 @@ function renderPost(post,liked){
           </div></div></div></div>`;
 }
 async function loadMorePosts(before){
+  const loadId=feedLoadId;
   const list=document.getElementById('postsList');
-  const moreBtn=list.querySelector('button');
-  if(moreBtn) moreBtn.textContent='Loading...';
+  const moreDiv=list.lastElementChild;
+  const moreBtn=moreDiv?.querySelector('button');
+  if(moreBtn){moreBtn.textContent='Loading...';moreBtn.disabled=true;}
   try{
-    const {data:posts}=await sb.from('posts')
+    const authors=await feedAuthors();
+    if(loadId!==feedLoadId) return;
+    let query=sb.from('posts')
       .select('*, users!posts_author_wallet_fkey(username,avatar_url,pass_type)')
       .order('created_at',{ascending:false})
-      .lt('created_at',before)
-      .limit(15);
+      .lt('created_at',before);
+    if(authors) query=query.in('author_wallet',authors);
+    const {data:posts,error}=await query.limit(15);
+    if(loadId!==feedLoadId) return;
+    if(error) throw error;
     if(!posts||posts.length===0){
-      const moreDiv=list.querySelector('div:last-child');
       if(moreDiv)moreDiv.remove();
       return;
     }
@@ -12027,8 +12054,8 @@ async function loadMorePosts(before){
       const {data:lk}=await sb.from('likes').select('post_id').eq('liker_wallet',userAddr).in('post_id',posts.map(p=>p.id));
       if(lk)lk.forEach(l=>ls.add(l.post_id));
     }
+    if(loadId!==feedLoadId) return;
     // Remove load more button
-    const moreDiv=list.querySelector('div:last-child');
     if(moreDiv)moreDiv.remove();
     // Append posts
     const frag=document.createDocumentFragment();
@@ -12046,7 +12073,7 @@ async function loadMorePosts(before){
       btn.onclick=function(){loadMorePosts(posts[posts.length-1].created_at);};
       more.appendChild(btn);list.appendChild(more);
     }
-  }catch(e){}
+  }catch(e){if(loadId===feedLoadId&&moreBtn){moreBtn.textContent='Retry loading';moreBtn.disabled=false;}}
 }
 
 async function likePost(postId,authorWallet,btn){
