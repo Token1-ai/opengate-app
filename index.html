@@ -12,8 +12,8 @@
 <meta name="apple-mobile-web-app-title" content="OpenGate"/>
 <meta name="application-name" content="OpenGate"/>
 <!-- SEO -->
-<meta name="description" content="OpenGate — Web3 social platform. Post content, earn GATE tokens from likes. Built on LitVM + BNB Chain."/>
-<meta name="keywords" content="OpenGate, GATE token, Web3 social, DeFi, LitVM, BNB Chain, earn crypto"/>
+<meta name="description" content="OpenGate — Web3 social platform. Post content, earn tokens from likes. Live on BNB Chain, Polygon, Base and Arbitrum."/>
+<meta name="keywords" content="OpenGate, Web3 social, DeFi, BNB Chain, Polygon, Base, Arbitrum, NFT, earn crypto"/>
 <meta property="og:title" content="OpenGate — Post. Earn. Own."/>
 <meta property="og:description" content="Social platform where every like sends GATE tokens to your wallet. Your content earns for you."/>
 <meta property="og:image" content="/icon-512.png"/>
@@ -907,9 +907,10 @@ async function smartConnectWallet(){
 
   <section id="hero">
     <div class="hero-bg"></div><div class="grid-bg"></div>
-    <div class="hero-tag"><div class="live-dot"></div>Live on LitVM + BNB Chain</div>
+    <div class="hero-tag"><div class="live-dot"></div>Live on BNB Chain · Polygon · Base · Arbitrum</div>
     <h1 class="hero-title">Post. Like.<br><span>Earn crypto.</span></h1>
     <p class="hero-desc">OpenGate is a social platform where every like you receive sends GATE tokens directly to your wallet. Your content earns for you.</p>
+    <p class="hero-desc" style="font-size:13px;line-height:1.6;opacity:.8;margin-top:-6px;">Passes, token creation, the NFT market and the games run on real mainnets — BNB Chain, Polygon, Base and Arbitrum. GATE and everything built around it — staking, swap, lending, faucet — run on the zkLitVM <b>testnet</b>.</p>
     <div class="hero-btns">
       <button class="btn-gold" onclick="openApp()">Open App →</button>
       <button class="btn-outline" onclick="openMintModal('gold')">Get Gold Pass — $9</button>
@@ -930,7 +931,7 @@ async function smartConnectWallet(){
         <div class="step fade"><div class="step-icon" style="background:rgba(38,217,138,0.1);">🔗</div><div class="step-title">Connect your wallet</div><p class="step-text">Use MetaMask or Trust Wallet. Your wallet is your account — no email, no password, no personal data.</p><div class="step-line"></div></div>
         <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">✍️</div><div class="step-title">Post your content</div><p class="step-text">Create posts, share images, follow people. Posting is free for everyone. Silver & Gold Pass unlock image uploads.</p><div class="step-line"></div></div>
         <div class="step fade"><div class="step-icon" style="background:rgba(168,189,208,0.1);">💰</div><div class="step-title">Get paid for likes</div><p class="step-text">Every like sends 0.1 GATE straight to your wallet. Stake it, swap it on Easy Swap DEX, or hold it.</p><div class="step-line"></div></div>
-        <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">🚀</div><div class="step-title">Grow with the platform</div><p class="step-text">Gold Pass holders earn 2× more GATE. Buy now — at mainnet launch the price goes up significantly.</p><div class="step-line"></div></div>
+        <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">🚀</div><div class="step-title">Grow with the platform</div><p class="step-text">Gold Pass holders earn 2× more GATE. Everything you get today stays yours forever.</p><div class="step-line"></div></div>
       </div>
     </div>
   </section>
@@ -977,7 +978,7 @@ async function smartConnectWallet(){
             <li><span class="feat-icon">✓</span>VIP badge 🥇</li>
             <li><span class="feat-icon">✓</span>+100% GATE rewards (2×)</li>
             <li><span class="feat-icon">✓</span>All new features FREE forever</li>
-            <li><span class="feat-icon">✓</span>Free token creation on mainnet</li>
+            <li><span class="feat-icon">✓</span>Free token creation on BNB Chain</li>
           </ul>
           <button class="pass-mint-btn" onclick="openMintModal('gold')">Buy Gold Pass</button>
         </div>
@@ -1021,11 +1022,11 @@ async function smartConnectWallet(){
         <tr><th>Action</th><th>Fee</th><th>Note</th></tr>
         <tr><td>Create a post</td><td class="fee-zero">FREE</td><td style="color:var(--muted);">For everyone, unlimited</td></tr>
         <tr><td>Post with images</td><td class="fee-val">Silver / Gold Pass</td><td style="color:var(--muted);">NFT pass required</td></tr>
-        <tr><td>Send a like</td><td class="fee-val">0.1 GATE</td><td style="color:var(--muted);">Goes directly to the author</td></tr>
+        <tr><td>Send a like</td><td class="fee-val">0.1 GATE</td><td style="color:var(--muted);">Goes directly to the author · testnet</td></tr>
         <tr><td>Send a message</td><td class="fee-zero">FREE</td><td style="color:var(--muted);">Between any two users</td></tr>
-        <tr><td>Staking GATE</td><td class="fee-zero">0%</td><td style="color:var(--muted);">No staking fees ever</td></tr>
-        <tr><td>Swap GATE on DEX</td><td class="fee-val">0.3%</td><td style="color:var(--muted);">Standard AMM fee</td></tr>
-        <tr><td>Create a token (mainnet)</td><td class="fee-val">Gold Pass = FREE</td><td style="color:var(--muted);">Others pay small fee</td></tr>
+        <tr><td>Staking GATE</td><td class="fee-zero">0%</td><td style="color:var(--muted);">No staking fees ever · testnet</td></tr>
+        <tr><td>Swap GATE on DEX</td><td class="fee-val">0.3%</td><td style="color:var(--muted);">Standard AMM fee · testnet</td></tr>
+        <tr><td>Create a token (BNB Chain)</td><td class="fee-val">Gold Pass = FREE</td><td style="color:var(--muted);">Others pay small fee</td></tr>
       </table>
     </div>
   </section>
@@ -1035,10 +1036,10 @@ async function smartConnectWallet(){
       <div class="eyebrow fade">Roadmap</div>
       <h2 class="section-title fade">What's coming</h2>
       <div class="roadmap-grid">
-        <div class="rm-item active fade"><div class="rm-phase">Phase 1 — Now</div><div class="rm-title">Foundation</div><ul class="rm-features"><li class="done">GATE token on LitVM</li><li class="done">Gold Pass NFT</li><li class="done">Silver Pass NFT</li><li class="done">Social feed app</li><li class="done">GATE Faucet</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 1 — Now</div><div class="rm-title">Foundation</div><ul class="rm-features"><li class="done">GATE token on zkLitVM testnet</li><li class="done">Gold Pass NFT</li><li class="done">Silver Pass NFT</li><li class="done">Social feed app</li><li class="done">GATE Faucet</li></ul><span class="rm-badge">Live</span></div>
         <div class="rm-item active fade"><div class="rm-phase">Phase 2</div><div class="rm-title">Social Layer</div><ul class="rm-features"><li class="done">User profiles</li><li class="done">Post feed + images</li><li class="done">Likes → GATE</li><li class="done">Direct messages</li></ul><span class="rm-badge">Live</span></div>
-        <div class="rm-item active fade"><div class="rm-phase">Phase 3</div><div class="rm-title">DeFi Layer</div><ul class="rm-features"><li class="done">GATE staking</li><li class="done">GATE presale</li><li class="done">Easy Swap DEX</li><li class="done">Reward multipliers</li><li class="done">Lending protocol</li></ul><span class="rm-badge">Live</span></div>
-        <div class="rm-item active fade"><div class="rm-phase">Phase 4</div><div class="rm-title">Ecosystem</div><ul class="rm-features"><li class="done">NFT marketplace (zkLitVM + BNB)</li><li class="done">NFT creation studio</li><li class="done">Token launchpad (zkLitVM)</li><li class="done">Professional token creator (BNB)</li><li class="done">Play-to-earn games</li><li class="building">DAO voting</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 3</div><div class="rm-title">DeFi Layer <span style="font-size:11px;font-weight:600;color:var(--muted);">· zkLitVM testnet</span></div><ul class="rm-features"><li class="done">GATE staking</li><li class="done">GATE presale</li><li class="done">Easy Swap DEX</li><li class="done">Reward multipliers</li><li class="done">Lending protocol</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 4</div><div class="rm-title">Ecosystem</div><ul class="rm-features"><li class="done">NFT marketplace (BNB Chain + zkLitVM testnet)</li><li class="done">NFT creation studio</li><li class="done">Token launchpad (zkLitVM testnet)</li><li class="done">Professional token creator (BNB)</li><li class="done">Play-to-earn games</li><li class="building">DAO voting</li></ul><span class="rm-badge">Live</span></div>
         <div class="rm-item fade"><div class="rm-phase">Phase 5</div><div class="rm-title">What's Next</div><ul class="rm-features"><li class="soon">Solana marketplace &amp; games</li><li class="soon">More tokens for bets &amp; likes</li><li class="soon">New games</li><li class="soon">Mobile app</li></ul><span class="rm-badge">Coming soon</span></div>
       </div>
     </div>
@@ -1049,8 +1050,8 @@ async function smartConnectWallet(){
     <h2 class="early-title fade">Buy now.<br>Price only goes up.</h2>
     <p class="early-sub fade">All current privileges are locked in forever.</p>
     <div class="early-cards">
-      <div class="early-card fade"><div class="early-now" style="color:var(--gold);">🥇 $9</div><div class="early-arrow">↓ mainnet</div><div class="early-later" style="color:var(--green);">Price rises significantly</div></div>
-      <div class="early-card fade"><div class="early-now" style="color:var(--silver);">🥈 $0.90</div><div class="early-arrow">↓ mainnet</div><div class="early-later" style="color:var(--green);">Price rises</div></div>
+      <div class="early-card fade"><div class="early-now" style="color:var(--gold);">🥇 $9</div><div class="early-arrow">↓ later</div><div class="early-later" style="color:var(--green);">Price rises significantly</div></div>
+      <div class="early-card fade"><div class="early-now" style="color:var(--silver);">🥈 $0.90</div><div class="early-arrow">↓ later</div><div class="early-later" style="color:var(--green);">Price rises</div></div>
       <div class="early-card fade"><div class="early-now" style="color:var(--green);">💰 GATE</div><div class="early-arrow">↓ listing</div><div class="early-later" style="color:var(--green);">Lowest presale price</div></div>
       <div class="early-card fade"><div class="early-now">🏆 OG</div><div class="early-arrow">first 1,000</div><div class="early-later" style="color:var(--gold);">Exclusive OG badge</div></div>
     </div>
@@ -1058,7 +1059,7 @@ async function smartConnectWallet(){
   </section>
 
   <footer>
-    <div><div class="footer-logo">OpenGate</div><div class="footer-copy">© 2025 OpenGate. Built on LitVM + BNB Chain.</div></div>
+    <div><div class="footer-logo">OpenGate</div><div class="footer-copy">© 2025 OpenGate. Built on BNB Chain, Polygon, Base, Arbitrum and zkLitVM.</div></div>
     <div class="footer-links">
       <a href="https://bscscan.com/address/0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c" target="_blank">GoldPass</a>
       <a href="https://bscscan.com/address/0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89" target="_blank">SilverPass</a>
@@ -2175,9 +2176,9 @@ async function smartConnectWallet(){
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">What can you do with GATE?</div>
             <div class="w-row"><span class="w-lbl">❤️ Like posts</span><span class="w-val" style="color:var(--muted);">Sends 0.1 GATE to author</span></div>
-            <div class="w-row"><span class="w-lbl">💎 Stake</span><span class="w-val" style="color:var(--green);">Earn 365% APR</span></div>
+            <div class="w-row"><span class="w-lbl">💎 Stake</span><span class="w-val" style="color:var(--green);">Earn 365% APR · testnet</span></div>
             <div class="w-row"><span class="w-lbl">🎲 Dice game</span><span class="w-val" style="color:var(--gold);">Win up to 5× your bet</span></div>
-            <div class="w-row"><span class="w-lbl">🎰 Lottery</span><span class="w-val" style="color:var(--gold);">10 GATE per ticket</span></div>
+            <div class="w-row"><span class="w-lbl">🎰 GATE Lottery</span><span class="w-val" style="color:var(--gold);">10 GATE · testnet</span></div>
             <div class="w-row"><span class="w-lbl">🪙 Create token</span><span class="w-val" style="color:var(--muted);">Launch your own token</span></div>
           </div>
         </div>
@@ -2259,7 +2260,7 @@ async function smartConnectWallet(){
 
         <!-- Chain switcher -->
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:600px;margin:0 auto;">
-          <button id="gamesChainLitvm" onclick="gamesSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="gamesChainLitvm" onclick="gamesSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM test</button>
           <button id="gamesChainBnb" onclick="gamesSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="gamesChainPolygon" onclick="gamesSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
           <button id="gamesChainBase" onclick="gamesSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -2700,7 +2701,7 @@ async function smartConnectWallet(){
 
         <!-- Chain switcher -->
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;">
-          <button id="mktChainLitvm" onclick="mktSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="mktChainLitvm" onclick="mktSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM test</button>
           <button id="mktChainBnb" onclick="mktSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="mktChainPolygon" onclick="mktSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
           <button id="mktChainBase" onclick="mktSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -3160,7 +3161,7 @@ async function smartConnectWallet(){
         <div class="feed-hdr">🎨 NFT Studio</div>
 
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;">
-          <button id="studioChainLitvm" onclick="nftStudioSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="studioChainLitvm" onclick="nftStudioSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM test</button>
           <button id="studioChainBnb" onclick="nftStudioSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="studioChainPolygon" onclick="nftStudioSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
           <button id="studioChainBase" onclick="nftStudioSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -3464,7 +3465,7 @@ async function smartConnectWallet(){
 
         <!-- Chain switcher -->
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:560px;margin:0 auto;">
-          <button id="launchChainLitvm" onclick="launchSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="launchChainLitvm" onclick="launchSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM test</button>
           <button id="launchChainBnb" onclick="launchSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="launchChainPolygon" onclick="launchSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
           <button id="launchChainBase" onclick="launchSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -17470,7 +17471,7 @@ const LANGS = {
     newPosts:'↻ New posts', search:'Search users, posts...',
     mainMenu:'Main', defiFull:'Money', play:'Play',
     // Staking
-    stakingTitle:'💎 GATE Staking', stakingDesc:'Stake your GATE tokens and earn ~365% APR. Rewards every second. No lock period.',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'Stake GATE and earn ~365% APR, paid every second, no lock period. Rewards come out of the reward pool shown below — when that pool is empty, rewards stop. GATE runs on the zkLitVM testnet.',
     myStaked:'My Staked', pendingReward:'Pending Reward', totalStaked:'Total Staked',
     stakeAmount:'Amount to stake (GATE)', stakeBtn:'Stake', claimBtn:'Claim Rewards', unstakeBtn:'Unstake All',
     poolInfo:'Pool Info', apr:'APR', lockPeriod:'Lock period', none:'None', stakingFee:'Staking fee', rewardPool:'Reward pool',
@@ -17505,7 +17506,7 @@ const LANGS = {
     releaseToRefresh:'Отпустите!', refreshing:'Обновляем...',
     newPosts:'↻ Новые посты', search:'Поиск пользователей...',
     mainMenu:'Главное', defiFull:'Деньги', play:'Игры',
-    stakingTitle:'💎 Стейкинг GATE', stakingDesc:'Стейкайте GATE и зарабатывайте ~365% APR. Награды каждую секунду. Без блокировки.',
+    stakingTitle:'💎 Стейкинг GATE', stakingDesc:'Стейкайте GATE и зарабатывайте ~365% APR, начисление каждую секунду, без блокировки. Награды берутся из пула наград ниже — когда он опустеет, начисления прекратятся. GATE работает в тестовой сети zkLitVM.',
     myStaked:'Мой стейк', pendingReward:'Награда', totalStaked:'Всего в стейке',
     stakeAmount:'Сумма для стейка (GATE)', stakeBtn:'Стейк', claimBtn:'Забрать награду', unstakeBtn:'Вывести всё',
     poolInfo:'Инфо пула', apr:'APR', lockPeriod:'Блокировка', none:'Нет', stakingFee:'Комиссия', rewardPool:'Пул наград',
@@ -17533,7 +17534,7 @@ const LANGS = {
     releaseToRefresh:'Відпустіть!', refreshing:'Оновлення...',
     newPosts:'↻ Нові пости', search:'Пошук користувачів...',
     mainMenu:'Головне', defiFull:'Гроші', play:'Ігри',
-    stakingTitle:'💎 Стейкінг GATE', stakingDesc:'Стейкайте GATE і заробляйте ~365% APR. Нагороди щосекунди. Без блокування.',
+    stakingTitle:'💎 Стейкінг GATE', stakingDesc:'Стейкайте GATE і заробляйте ~365% APR, нарахування щосекунди, без блокування. Нагороди беруться з пулу нагород нижче — коли він спорожніє, нарахування зупиняться. GATE працює в тестовій мережі zkLitVM.',
     myStaked:'Мій стейк', pendingReward:'Нагорода', totalStaked:'Всього в стейку',
     stakeAmount:'Сума для стейку (GATE)', stakeBtn:'Стейк', claimBtn:'Забрати нагороду', unstakeBtn:'Вивести все',
     poolInfo:'Інфо пулу', apr:'APR', lockPeriod:'Блокування', none:'Немає', stakingFee:'Комісія', rewardPool:'Пул нагород',
@@ -17561,7 +17562,7 @@ const LANGS = {
     releaseToRefresh:'छोड़ें!', refreshing:'लोड हो रहा है...',
     newPosts:'↻ नई पोस्ट', search:'खोजें...',
     mainMenu:'मुख्य', defiFull:'पैसा', play:'खेलें',
-    stakingTitle:'💎 GATE स्टेकिंग', stakingDesc:'GATE स्टेक करें और ~365% APR कमाएं।',
+    stakingTitle:'💎 GATE स्टेकिंग', stakingDesc:'GATE स्टेक करें और ~365% APR कमाएं। इनाम नीचे दिखाए गए रिवॉर्ड पूल से आते हैं — पूल खाली होने पर इनाम रुक जाते हैं। GATE zkLitVM टेस्टनेट पर चलता है।',
     myStaked:'मेरा स्टेक', pendingReward:'पुरस्कार', totalStaked:'कुल स्टेक',
     stakeAmount:'स्टेक राशि (GATE)', stakeBtn:'स्टेक', claimBtn:'पुरस्कार लें', unstakeBtn:'सब निकालें',
     poolInfo:'पूल जानकारी', apr:'APR', lockPeriod:'लॉक', none:'कोई नहीं', stakingFee:'शुल्क', rewardPool:'पुरस्कार पूल',
@@ -17589,7 +17590,7 @@ const LANGS = {
     releaseToRefresh:'松开刷新！', refreshing:'刷新中...',
     newPosts:'↻ 新帖子', search:'搜索...',
     mainMenu:'主要', defiFull:'资金', play:'游戏',
-    stakingTitle:'💎 GATE质押', stakingDesc:'质押GATE赚取~365% APR。无锁定期。',
+    stakingTitle:'💎 GATE质押', stakingDesc:'质押GATE赚取~365% APR，无锁定期。奖励来自下方的奖励池，池子用完后奖励即停止。GATE 运行在 zkLitVM 测试网。',
     myStaked:'我的质押', pendingReward:'待领奖励', totalStaked:'总质押量',
     stakeAmount:'质押数量(GATE)', stakeBtn:'质押', claimBtn:'领取奖励', unstakeBtn:'全部取回',
     poolInfo:'池信息', apr:'APR', lockPeriod:'锁定期', none:'无', stakingFee:'质押费', rewardPool:'奖励池',
@@ -17617,7 +17618,7 @@ const LANGS = {
     releaseToRefresh:'Bırak!', refreshing:'Yenileniyor...',
     newPosts:'↻ Yeni gönderiler', search:'Ara...',
     mainMenu:'Ana', defiFull:'Para', play:'Oyna',
-    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE stake edin ve ~365% APR kazanın. Kilit yok.',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE stake edin ve ~365% APR kazanın, kilit yok. Ödüller aşağıdaki ödül havuzundan gelir — havuz bitince ödüller durur. GATE, zkLitVM test ağında çalışır.',
     myStaked:'Stake\'im', pendingReward:'Ödül', totalStaked:'Toplam Stake',
     stakeAmount:'Stake miktarı (GATE)', stakeBtn:'Stake', claimBtn:'Ödül Al', unstakeBtn:'Hepsini Çek',
     poolInfo:'Havuz Bilgisi', apr:'APR', lockPeriod:'Kilit', none:'Yok', stakingFee:'Stake Ücreti', rewardPool:'Ödül Havuzu',
@@ -17645,7 +17646,7 @@ const LANGS = {
     releaseToRefresh:'Loslassen!', refreshing:'Aktualisierung...',
     newPosts:'↻ Neue Beiträge', search:'Suche...',
     mainMenu:'Haupt', defiFull:'Geld', play:'Spielen',
-    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE staken und ~365% APR verdienen. Keine Sperrfrist.',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE staken und ~365% APR verdienen, keine Sperrfrist. Die Belohnungen kommen aus dem unten gezeigten Reward-Pool — ist er leer, enden sie. GATE läuft im zkLitVM-Testnet.',
     myStaked:'Mein Stake', pendingReward:'Ausstehend', totalStaked:'Gesamt gestakt',
     stakeAmount:'Stake-Betrag (GATE)', stakeBtn:'Staken', claimBtn:'Prämien abholen', unstakeBtn:'Alles abheben',
     poolInfo:'Pool-Info', apr:'APR', lockPeriod:'Sperrfrist', none:'Keine', stakingFee:'Staking-Gebühr', rewardPool:'Prämienpool',
