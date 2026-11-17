@@ -3993,7 +3993,10 @@ async function smartConnectWallet(){
       <div id="view-messages" style="display:none;">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span id="dmTitle">💬 Messages</span>
+          <span style="display:flex;gap:6px;align-items:center;">
+          <button id="dmWipeBtn" title="Delete this whole chat" style="display:none;background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;" onclick="wipeDMChat()">🗑 Delete chat</button>
           <button id="dmBackBtn" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;" onclick="showConvList()">← Back</button>
+          </span>
         </div>
         <!-- Conversation list -->
         <div id="convList" style="padding:0;">
@@ -16196,6 +16199,7 @@ async function openDM(wallet){
   document.getElementById('convList').style.display='none';
   document.getElementById('convView').style.display='flex';
   document.getElementById('dmBackBtn').style.display='block';
+  document.getElementById('dmWipeBtn').style.display='block';
   const {data:user}=await sb.from('users').select('username').eq('wallet',wallet).single();
   document.getElementById('dmTitle').innerHTML='💬 <span style="position:relative;display:inline-block;">'+esc(user?.username||sAddr(wallet))+'<span class="og-dot dm-dot" data-og-online="'+wallet.toLowerCase()+'"></span></span>';
   scheduleOnlineDots();
@@ -16243,6 +16247,7 @@ function showConvList(){
   document.getElementById('convList').style.display='block';
   document.getElementById('convView').style.display='none';
   document.getElementById('dmBackBtn').style.display='none';
+  document.getElementById('dmWipeBtn').style.display='none';
   document.getElementById('dmTitle').textContent='💬 Messages';
   loadConversations();
 }
@@ -16300,9 +16305,44 @@ async function loadMessages(){
       timeEl.textContent=tAgo(m.created_at);
       bubble.appendChild(timeEl);
     }
-    wrap.appendChild(bubble);el.appendChild(wrap);
+    // Крестик удаления у каждого сообщения. Удалить можно любое сообщение
+    // своей переписки — и своё, и присланное. Строка уходит из базы навсегда.
+    const delBtn=document.createElement('button');
+    delBtn.textContent='✕';
+    delBtn.title='Delete this message';
+    delBtn.style.cssText='align-self:center;background:none;border:none;color:var(--muted);opacity:.3;font-size:12px;line-height:1;cursor:pointer;padding:0 6px;';
+    delBtn.onmouseenter=function(){delBtn.style.opacity='1';delBtn.style.color='var(--red)';};
+    delBtn.onmouseleave=function(){delBtn.style.opacity='.3';delBtn.style.color='var(--muted)';};
+    delBtn.onclick=(function(id){return function(){deleteDMMessage(id);};})(m.id);
+
+    if(mine){wrap.appendChild(delBtn);wrap.appendChild(bubble);}
+    else{wrap.appendChild(bubble);wrap.appendChild(delBtn);}
+    el.appendChild(wrap);
   });
   setTimeout(function(){el.scrollTop=el.scrollHeight;},50);
+}
+// ─────────── Удаление личной переписки ───────────
+// Удаляет строки из базы НАВСЕГДА (не скрывает). Идёт через Edge Function
+// с подписью кошелька, поэтому чужую переписку удалить нельзя.
+async function deleteDMMessage(id){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(!confirm('Delete this message? It will be erased from the database permanently.'))return;
+  try{
+    await callGroupAction('deleteDM',{message_id:id});
+    showToast('Message deleted','ok');
+    loadMessages();
+    loadConversations();
+  }catch(e){ showToast(e.message||'Failed to delete','err'); }
+}
+async function wipeDMChat(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(!currentDMWallet)return;
+  if(!confirm('Delete this whole chat? Every message between you two will be erased from the database permanently, for both sides.'))return;
+  try{
+    const r=await callGroupAction('deleteDMChat',{peer:currentDMWallet});
+    showToast('Chat deleted ('+(r.deleted||0)+')','ok');
+    showConvList();
+  }catch(e){ showToast(e.message||'Failed to delete','err'); }
 }
 async function sendDM(){if(!userAddr){showToast('Connect wallet first','err');return;}if(!currentDMWallet)return;const input=document.getElementById('msgInput');const content=input.value.trim();if(!content)return;input.value='';try{await sb.from('messages').insert({from_wallet:userAddr,to_wallet:currentDMWallet,content});await createNotif(currentDMWallet,'dm');loadMessages();}catch(e){showToast('Failed','err');input.value=content;}}
 function openConversation(wallet){openDM(wallet);}
