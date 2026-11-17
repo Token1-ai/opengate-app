@@ -37,8 +37,11 @@
 
 const { ethers } = require('ethers');
 
-const GOLD_PASS = '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
-const SILVER_PASS = '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
+// Пропуска. Вынесены в переменные окружения GOLD_PASS_CONTRACT и
+// SILVER_PASS_CONTRACT, чтобы новый владелец мог подключить свои,
+// не правя код. Без переменных берутся нынешние.
+const GOLD_PASS = process.env.GOLD_PASS_CONTRACT || '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
+const SILVER_PASS = process.env.SILVER_PASS_CONTRACT || '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
 const BNB_RPCS = [
   'https://bsc-dataseed.binance.org/',
   'https://bsc-dataseed1.defibit.io/',

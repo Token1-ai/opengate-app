@@ -26,7 +26,14 @@
 const { ethers } = require('ethers');
 const { createClient } = require('@supabase/supabase-js');
 
-const OWNER_WALLET = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+// Кошелёк владельца площадки: даёт права модерации и работу без
+// ограничений. БЫЛ ВШИТ В КОД — при продаже его пришлось бы искать и
+// править в пяти файлах двух репозиториев, и что-то почти наверняка
+// осталось бы незамеченным. Теперь задаётся переменной окружения
+// PLATFORM_OWNER (Vercel -> Settings -> Environment Variables).
+// Пока переменной нет — берётся прежнее значение, поэтому сейчас
+// ничего не меняется.
+const OWNER_WALLET = process.env.PLATFORM_OWNER || '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
 const MAX_SIGNATURE_AGE_MS = 5 * 60 * 1000; // 5 minutes
 
 module.exports = async function handler(req, res) {
