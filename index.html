@@ -13655,7 +13655,13 @@ async function sendChallenge(){
     await sb.from('notifications').insert({to_wallet:challTarget,from_wallet:userAddr,type:'challenge'});
     var myName=currentUser&&currentUser.username?currentUser.username:sAddr(userAddr);
     var betInfo=challMode==='free'?'Free Play':amt+' '+challToken;
-    await sb.from('messages').insert({from_wallet:userAddr,to_wallet:challTarget,content:'⚔️ '+myName+' challenges you to Battleship! Bet: '+betInfo+'. Check notifications to accept!'});
+    // Письмо в личные сообщения — приятное дополнение, а не главный путь:
+    // вызов и так ушёл уведомлением. Поэтому тихо: если человек ещё не
+    // заходил в сообщения на этом устройстве, подпись на подтверждение
+    // посреди вызова на бой не выскочит, а вызов всё равно дойдёт.
+    try{
+      await dmCall('send',{peer:challTarget,content:'⚔️ '+myName+' challenges you to Battleship! Bet: '+betInfo+'. Check notifications to accept!'},true);
+    }catch(e){}
     var modal=document.getElementById('challengeModal');
     if(modal)modal.classList.remove('open');
     showToast('⚔️ Challenge sent!','ok');
@@ -15164,8 +15170,15 @@ async function updateNotifBadge(){
 }
 async function updateUnreadBadge(){
   if(!userAddr)return;
-  const {count}=await sb.from('messages').select('*',{count:'exact',head:true})
-    .eq('to_wallet',userAddr).eq('read',false);
+  // silent: пока человек не заходил в сообщения на этом устройстве, счётчик
+  // просто молчит — кошелёк на подпись не выскакивает. О новом письме всё
+  // равно скажет колокольчик уведомлений.
+  let count=0;
+  try{
+    const r=await dmCall('unread',{},true);
+    if(!r) return;
+    count=r.count||0;
+  }catch(e){ return; }
   const badge=document.getElementById('unreadBadge');
   if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}
   const db=document.getElementById('drawerUnreadBadge');
@@ -16090,16 +16103,88 @@ let convsRealtimeChannel=null;
 let _lastMsgCount=0;
 let _msgPollTimer=null;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ЛИЧНЫЕ СООБЩЕНИЯ — ЧЕРЕЗ СЕРВЕР
+//
+// Раньше браузер читал таблицу messages напрямую, а правило доступа в базе
+// разрешало читать её ВСЕМ. На экране было видно только свои сообщения, но
+// любой посетитель мог выгрузить всю переписку всех людей. Теперь таблица
+// закрыта, и вся переписка идёт через функцию "dm".
+//
+// Для человека это выглядит так: один раз на устройстве он подписывает вход
+// кошельком (бесплатно, не транзакция), браузер запоминает это на 30 дней.
+// Дальше всё как в обычной переписке — написал, отправилось, пришло,
+// прочитал. Никаких подписей на каждое сообщение.
+// ═══════════════════════════════════════════════════════════════════════════
+const DM_URL = SUPABASE_URL + '/functions/v1/dm';
+let _dmToken = null;
+let _dmLoginPromise = null;
+
+function _dmKey(){ return 'og_dm_tok_'+(userAddr||'').toLowerCase(); }
+function _dmTokenGet(){
+  if(_dmToken) return _dmToken;
+  try{
+    const raw=localStorage.getItem(_dmKey()); if(!raw) return null;
+    const o=JSON.parse(raw);
+    if(!o||!o.token||!o.exp) return null;
+    // за две минуты до конца считаем просроченным — чтобы не упасть посередине
+    if(Math.floor(Date.now()/1000) > o.exp-120){ localStorage.removeItem(_dmKey()); return null; }
+    _dmToken=o.token; return _dmToken;
+  }catch(e){ return null; }
+}
+function _dmTokenClear(){ _dmToken=null; try{ localStorage.removeItem(_dmKey()); }catch(e){} }
+
+async function dmLogin(){
+  if(!userAddr) throw new Error('Connect wallet first');
+  if(_dmLoginPromise) return _dmLoginPromise; // не просим подпись дважды разом
+  _dmLoginPromise=(async function(){
+    const nonce=Math.floor(Date.now()/1000);
+    const freshSigner=await provider.getSigner();
+    const signature=await freshSigner.signMessage('OpenGate messages login '+nonce);
+    const r=await fetch(DM_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
+      body:JSON.stringify({action:'login',wallet:userAddr,nonce,signature})});
+    const j=await r.json();
+    if(!r.ok||!j.token) throw new Error(j.error||'Login failed');
+    _dmToken=j.token;
+    try{ localStorage.setItem(_dmKey(),JSON.stringify({token:j.token,exp:j.expires_at})); }catch(e){}
+    return j.token;
+  })();
+  try{ return await _dmLoginPromise; } finally { _dmLoginPromise=null; }
+}
+
+// silent=true — не просить подпись: если входа ещё нет, просто вернуть null.
+// Так ведут себя счётчики на старте, чтобы не выскакивал кошелёк на пустом месте.
+async function dmCall(action,payload,silent){
+  let tok=_dmTokenGet();
+  if(!tok){ if(silent) return null; tok=await dmLogin(); }
+  const post=async function(t){
+    const r=await fetch(DM_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
+      body:JSON.stringify(Object.assign({action,token:t},payload||{}))});
+    let b={}; try{ b=await r.json(); }catch(e){}
+    return {status:r.status,body:b};
+  };
+  let res=await post(tok);
+  if(res.status===401){            // токен устарел — один раз входим заново
+    _dmTokenClear();
+    if(silent) return null;
+    res=await post(await dmLogin());
+  }
+  if(res.status!==200) throw new Error((res.body&&res.body.error)||'Request failed');
+  return res.body;
+}
+
 function subscribeToConversations(){
   if(!userAddr||convsRealtimeChannel) return;
 
-  // Realtime WebSocket - listens for ALL messages involving this user
-  convsRealtimeChannel=sb.channel('msgs-'+userAddr)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
-      const m=payload.new;
-      if(!m) return;
-      if(m.to_wallet!==userAddr&&m.from_wallet!==userAddr) return;
-      handleNewMessage(m);
+  // Мгновенная доставка. Сами сообщения закрыты в базе, поэтому слушаем
+  // уведомление: пришло «dm» — тут же забираем свежее письмо с сервера.
+  convsRealtimeChannel=sb.channel('dmnotif-'+userAddr)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(payload){
+      const n=payload.new;
+      if(!n||n.type!=='dm') return;
+      handleNewMessage(n.from_wallet);
     })
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
@@ -16109,8 +16194,9 @@ function subscribeToConversations(){
         _msgPollTimer=setInterval(async function(){
           if(!userAddr)return;
           try{
-            const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
-            const c=count||0;
+            const r=await dmCall('unread',{},true);
+            if(!r) return;
+            const c=r.count||0;
             if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();
               const convList=document.getElementById('convList');
               if(convList&&convList.style.display!=='none')loadConversations();
@@ -16124,30 +16210,17 @@ function subscribeToConversations(){
   // Polling only activates inside the CHANNEL_ERROR branch above.
 }
 
-function handleNewMessage(m){
-  const isToMe=m.to_wallet===userAddr;
-  if(isToMe){
-    _lastMsgCount++;
-    updateUnreadBadge();
-  }
+// Пришло новое письмо от fromWallet
+function handleNewMessage(fromWallet){
+  updateUnreadBadge();
   // Refresh conv list if open
   const convList=document.getElementById('convList');
   if(convList&&convList.style.display!=='none') loadConversations();
   // If in active DM - show message instantly
-  if(currentDMWallet){
-    const partner=isToMe?m.from_wallet:m.to_wallet;
-    if(partner===currentDMWallet){
-      // Make sure convView is visible
-      const cv=document.getElementById('convView');
-      if(cv&&cv.style.display==='none') cv.style.display='flex';
-      loadMessages();
-      if(isToMe){
-        _lastMsgCount=Math.max(0,_lastMsgCount-1);
-        updateUnreadBadge();
-        sb.from('messages').update({read:true})
-          .eq('from_wallet',currentDMWallet).eq('to_wallet',userAddr);
-      }
-    }
+  if(currentDMWallet&&fromWallet&&String(fromWallet).toLowerCase()===String(currentDMWallet).toLowerCase()){
+    const cv=document.getElementById('convView');
+    if(cv&&cv.style.display==='none') cv.style.display='flex';
+    loadMessages(); // сервер сам пометит этот диалог прочитанным
   }
 }
 
@@ -16157,22 +16230,18 @@ async function loadConversations(){
   const el=document.getElementById('convListItems');
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
-    const {data:sent}=await sb.from('messages').select('to_wallet').eq('from_wallet',userAddr);
-    const {data:recv}=await sb.from('messages').select('from_wallet').eq('to_wallet',userAddr);
-    const wallets=new Set([...(sent||[]).map(m=>m.to_wallet),...(recv||[]).map(m=>m.from_wallet)]);
-    if(wallets.size===0){el.innerHTML='<div class="app-empty"><div class="app-empty-ico">💬</div>No conversations yet.</div>';return;}
-    // Batch fetch all users + unread counts in parallel
-    const walletArr=[...wallets];
+    // Один запрос к серверу: список диалогов, последнее письмо и сколько
+    // непрочитанных. Раньше тут было по два запроса на каждого собеседника.
+    const r=await dmCall('convs',{});
+    const convs=(r&&r.convs)||[];
+    if(convs.length===0){el.innerHTML='<div class="app-empty"><div class="app-empty-ico">💬</div>No conversations yet.</div>';return;}
+    const walletArr=convs.map(c=>c.wallet);
     const {data:convUsers}=await sb.from('users').select('wallet,username,avatar_url').in('wallet',walletArr);
     const convUserMap={};
-    if(convUsers)convUsers.forEach(u=>{convUserMap[u.wallet]=u;});
-    const items=await Promise.all(walletArr.map(async w=>{
-      const [lastRes,unreadRes]=await Promise.all([
-        sb.from('messages').select('*').or('and(from_wallet.eq.'+userAddr+',to_wallet.eq.'+w+'),and(from_wallet.eq.'+w+',to_wallet.eq.'+userAddr+')').order('created_at',{ascending:false}).limit(1).single(),
-        sb.from('messages').select('*',{count:'exact',head:true}).eq('from_wallet',w).eq('to_wallet',userAddr).eq('read',false)
-      ]);
-      return {wallet:w,last:lastRes.data,user:convUserMap[w],unread:unreadRes.count||0};
-    }));
+    if(convUsers)convUsers.forEach(u=>{convUserMap[(u.wallet||'').toLowerCase()]=u;});
+    const items=convs.map(function(c){
+      return {wallet:c.wallet,last:{content:c.content,created_at:c.created_at},user:convUserMap[c.wallet],unread:c.unread||0};
+    });
     items.sort((a,b)=>new Date(b.last?.created_at||0)-new Date(a.last?.created_at||0));
     el.innerHTML='';
     items.forEach(function(i){
@@ -16203,29 +16272,13 @@ async function openDM(wallet){
   const {data:user}=await sb.from('users').select('username').eq('wallet',wallet).single();
   document.getElementById('dmTitle').innerHTML='💬 <span style="position:relative;display:inline-block;">'+esc(user?.username||sAddr(wallet))+'<span class="og-dot dm-dot" data-og-online="'+wallet.toLowerCase()+'"></span></span>';
   scheduleOnlineDots();
-  loadMessages();
-  await sb.from('messages').update({read:true}).eq('from_wallet',wallet).eq('to_wallet',userAddr);
-  // Realtime for messages
+  loadMessages(); // сервер сам отметит входящие этого диалога прочитанными
+  // Мгновенная доставка идёт по общему каналу уведомлений (см.
+  // subscribeToConversations) — отдельная подписка на таблицу сообщений
+  // больше не нужна, таблица закрыта в базе.
   clearInterval(dmTimer);
   if(dmRealtimeChannel){sb.removeChannel(dmRealtimeChannel);dmRealtimeChannel=null;}
-  dmRealtimeChannel=sb.channel('dm-'+userAddr+'-'+wallet+'-'+Date.now())
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
-      const m=payload.new;
-      if(!m) return;
-      if((m.from_wallet===wallet&&m.to_wallet===userAddr)||(m.from_wallet===userAddr&&m.to_wallet===wallet)){
-        loadMessages();
-        if(m.from_wallet===wallet){
-          sb.from('messages').update({read:true}).eq('from_wallet',wallet).eq('to_wallet',userAddr);
-          updateUnreadBadge();
-        }
-      }
-    })
-    .subscribe(function(status){
-      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
-        clearInterval(dmTimer);
-        dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},5000);
-      }
-    });
+  subscribeToConversations();
 
   // PWA: when app returns from background, WebSocket may have dropped.
   // Reload messages immediately on visibility change.
@@ -16254,14 +16307,19 @@ function showConvList(){
 async function loadMessages(){
   if(!currentDMWallet||!userAddr)return;
   const el=document.getElementById('msgList');
-  const {data:msgs}=await sb.from('messages').select('*').or('and(from_wallet.eq.'+userAddr+',to_wallet.eq.'+currentDMWallet+'),and(from_wallet.eq.'+currentDMWallet+',to_wallet.eq.'+userAddr+')').order('created_at',{ascending:false}).limit(300);
-  // Берём последние 300 сообщений, а не всю переписку целиком.
-  // Раньше при каждом обновлении — а оно приходит и по подписке, и по
-  // таймеру раз в 5 секунд — заново скачивалась вся история. При длинной
-  // переписке это тормозило всё сильнее с каждым днём.
-  // Запрашиваем от новых к старым (так база берёт их по индексу сразу),
-  // а переворачиваем уже здесь, чтобы порядок на экране не изменился.
-  if(msgs) msgs.reverse();
+  // Последние 300 сообщений, а не вся переписка целиком: иначе при длинной
+  // переписке каждое обновление скачивало всю историю и тормозило всё
+  // сильнее с каждым днём. Сервер отдаёт их уже в правильном порядке
+  // и попутно отмечает входящие прочитанными.
+  let msgs=[];
+  try{
+    const r=await dmCall('thread',{peer:currentDMWallet,limit:300});
+    msgs=(r&&r.messages)||[];
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;">'+esc((e.message||'Failed').slice(0,80))+'</div>';
+    return;
+  }
+  updateUnreadBadge();
   if(!msgs||msgs.length===0){el.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;">No messages yet 👋</div>';return;}
   el.innerHTML='';
   msgs.forEach(function(m,idx){
@@ -16322,29 +16380,40 @@ async function loadMessages(){
   setTimeout(function(){el.scrollTop=el.scrollHeight;},50);
 }
 // ─────────── Удаление личной переписки ───────────
-// Удаляет строки из базы НАВСЕГДА (не скрывает). Идёт через Edge Function
-// с подписью кошелька, поэтому чужую переписку удалить нельзя.
+// Удаляет строки из базы НАВСЕГДА (не скрывает с экрана). Проходит через
+// сервер, поэтому чужую переписку удалить нельзя.
 async function deleteDMMessage(id){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   if(!confirm('Delete this message? It will be erased from the database permanently.'))return;
   try{
-    await callGroupAction('deleteDM',{message_id:id});
+    await dmCall('del',{message_id:id});
     showToast('Message deleted','ok');
     loadMessages();
-    loadConversations();
-  }catch(e){ showToast(e.message||'Failed to delete','err'); }
+  }catch(e){ showToast((e.message||'Failed to delete').slice(0,60),'err'); }
 }
 async function wipeDMChat(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   if(!currentDMWallet)return;
   if(!confirm('Delete this whole chat? Every message between you two will be erased from the database permanently, for both sides.'))return;
   try{
-    const r=await callGroupAction('deleteDMChat',{peer:currentDMWallet});
-    showToast('Chat deleted ('+(r.deleted||0)+')','ok');
+    const r=await dmCall('delChat',{peer:currentDMWallet});
+    showToast('Chat deleted ('+((r&&r.deleted)||0)+')','ok');
     showConvList();
-  }catch(e){ showToast(e.message||'Failed to delete','err'); }
+  }catch(e){ showToast((e.message||'Failed to delete').slice(0,60),'err'); }
 }
-async function sendDM(){if(!userAddr){showToast('Connect wallet first','err');return;}if(!currentDMWallet)return;const input=document.getElementById('msgInput');const content=input.value.trim();if(!content)return;input.value='';try{await sb.from('messages').insert({from_wallet:userAddr,to_wallet:currentDMWallet,content});await createNotif(currentDMWallet,'dm');loadMessages();}catch(e){showToast('Failed','err');input.value=content;}}
+async function sendDM(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(!currentDMWallet)return;
+  const input=document.getElementById('msgInput');
+  const content=input.value.trim();
+  if(!content)return;
+  input.value='';
+  try{
+    // Уведомление получателю создаёт сам сервер — отдельно звать не нужно.
+    await dmCall('send',{peer:currentDMWallet,content});
+    loadMessages();
+  }catch(e){ showToast((e.message||'Failed').slice(0,60),'err'); input.value=content; }
+}
 function openConversation(wallet){openDM(wallet);}
 function openDMWith(wallet){showTab('messages');setTimeout(function(){openDM(wallet);},300);}
 
@@ -17860,8 +17929,9 @@ document.addEventListener('visibilitychange',function(){
         _msgPollTimer=setInterval(async function(){
           if(!userAddr)return;
           try{
-            const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
-            const c=count||0;
+            const r=await dmCall('unread',{},true);
+            if(!r) return;
+            const c=r.count||0;
             if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();
               const convList=document.getElementById('convList');
               if(convList&&convList.style.display!=='none')loadConversations();
