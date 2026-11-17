@@ -4345,7 +4345,9 @@ const ARB_CURRENCIES = {
   USDT: {addr:'0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals:6},
   USDC: {addr:'0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals:6},
 };
-const NFT_FACTORY_POLYGON = '0xee9957fbc8Dc7280e42853c76508dD71f42dA10D';
+// Передаваемый контракт. Прежний (непередаваемый):
+// 0xee9957fbc8Dc7280e42853c76508dD71f42dA10D
+const NFT_FACTORY_POLYGON = '0x3229Ed7458EDf915113C70bE1BcfcAA08869C51C';
 const NFT_FACTORY_POLYGON_ABI = [
   'function quoteSinglePrice(address,(uint8,uint256,bytes)) view returns(uint256)',
   'function quotePrice(uint256,address,(uint8,uint256,bytes)) view returns(uint256)',
@@ -4508,10 +4510,15 @@ const BNB_MKT_CURRENCIES = {
   USDT: {addr:'0x55d398326f99059fF775485246999027B3197955', decimals:18},
   USDC: {addr:'0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', decimals:18},
 };
-const NFT_FACTORY_BNB = '0x381Ba71CccF8BbA5bCdc3f1BeED89C65c9608b35';
+// Передаваемый контракт. Прежний (непередаваемый):
+// 0x381Ba71CccF8BbA5bCdc3f1BeED89C65c9608b35
+const NFT_FACTORY_BNB = '0xAAeffd9dC63e8E59c1865bd42f054b83a6998224';
 const OWNER_WALLET_LC = window.OPENGATE_OWNER;
 const NFT_FACTORY_LITVM = '0x25375207779012f869E267fb4A657185AEd959C0';
-const TOKEN_FACTORY_BNB = '0x472eE271fDbDa4498835FD1b2AEC11489438995B';
+// Передаваемый контракт: владение в два шага, кошелёк комиссии отдельно,
+// пропуска и ценовой оракул больше не вшиты как constant.
+// Прежний (непередаваемый): 0x472eE271fDbDa4498835FD1b2AEC11489438995B
+const TOKEN_FACTORY_BNB = '0xcC072333E5d43E2521F7C5a0da26312a3E44b2ff';
 const TOKEN_FACTORY_BNB_ABI = [
   'function quoteUsdCents(address) view returns(uint256)',
   'function quotePrice(address,address) view returns(uint256)',
