@@ -4250,6 +4250,15 @@ const SUPABASE_URL = 'https://hgzthbidfdqomuotdocb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnenRoYmlkZmRxb211b3Rkb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTI2NjEsImV4cCI6MjA5NjU4ODY2MX0.otgk-jq2k0COrIE3cUEnRBPYKGnzAHRi3LEIQhE7khA';
 const GOLD_PASS  = '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
 const SILVER_PASS= '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
+/* ═══════════════════════════════════════════════════════════════════════
+   ПЕРЕДАЧА ПЛОЩАДКИ: кошелёк владельца указан ЗДЕСЬ И ТОЛЬКО ЗДЕСЬ.
+   Раньше он был вписан в девяти разных местах файла под шестью разными
+   именами — при продаже часть из них почти наверняка осталась бы
+   незамеченной, и прежний владелец сохранил бы админские права.
+   Новый владелец меняет одну эту строку.
+   ═══════════════════════════════════════════════════════════════════════ */
+window.OPENGATE_OWNER = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+
 const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
 const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
@@ -4336,7 +4345,9 @@ const ARB_CURRENCIES = {
   USDT: {addr:'0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals:6},
   USDC: {addr:'0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals:6},
 };
-const NFT_FACTORY_POLYGON = '0xee9957fbc8Dc7280e42853c76508dD71f42dA10D';
+// Передаваемый контракт. Прежний (непередаваемый):
+// 0xee9957fbc8Dc7280e42853c76508dD71f42dA10D
+const NFT_FACTORY_POLYGON = '0x3229Ed7458EDf915113C70bE1BcfcAA08869C51C';
 const NFT_FACTORY_POLYGON_ABI = [
   'function quoteSinglePrice(address,(uint8,uint256,bytes)) view returns(uint256)',
   'function quotePrice(uint256,address,(uint8,uint256,bytes)) view returns(uint256)',
@@ -4471,7 +4482,10 @@ const POLYGON_MKT_CURRENCIES = {
   USDT: {addr:'0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals:6},
   USDC: {addr:'0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', decimals:6},
 };
-const NFT_MARKET_BNB = '0x3C5438AC05D2ab5C5CBFbdDd9AD7B9843AA5Bc6C';
+// Передаваемый контракт: владелец и кошелёк комиссии меняются, комиссия
+// больше не вшита (была constant 5%). Прежний (непередаваемый):
+// 0x3C5438AC05D2ab5C5CBFbdDd9AD7B9843AA5Bc6C
+const NFT_MARKET_BNB = '0x78D7211915D15446230f3Fb0cC8469cD57Aa29Bf';
 const NFT_MARKET_BNB_ABI = [
   'function listNFT(address,uint256,uint256,address) returns(uint256)',
   'function buyNFT(uint256) payable',
@@ -4496,10 +4510,15 @@ const BNB_MKT_CURRENCIES = {
   USDT: {addr:'0x55d398326f99059fF775485246999027B3197955', decimals:18},
   USDC: {addr:'0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', decimals:18},
 };
-const NFT_FACTORY_BNB = '0x381Ba71CccF8BbA5bCdc3f1BeED89C65c9608b35';
-const OWNER_WALLET_LC = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+// Передаваемый контракт. Прежний (непередаваемый):
+// 0x381Ba71CccF8BbA5bCdc3f1BeED89C65c9608b35
+const NFT_FACTORY_BNB = '0xAAeffd9dC63e8E59c1865bd42f054b83a6998224';
+const OWNER_WALLET_LC = window.OPENGATE_OWNER;
 const NFT_FACTORY_LITVM = '0x25375207779012f869E267fb4A657185AEd959C0';
-const TOKEN_FACTORY_BNB = '0x472eE271fDbDa4498835FD1b2AEC11489438995B';
+// Передаваемый контракт: владение в два шага, кошелёк комиссии отдельно,
+// пропуска и ценовой оракул больше не вшиты как constant.
+// Прежний (непередаваемый): 0x472eE271fDbDa4498835FD1b2AEC11489438995B
+const TOKEN_FACTORY_BNB = '0xcC072333E5d43E2521F7C5a0da26312a3E44b2ff';
 const TOKEN_FACTORY_BNB_ABI = [
   'function quoteUsdCents(address) view returns(uint256)',
   'function quotePrice(address,address) view returns(uint256)',
@@ -7946,7 +7965,7 @@ async function initGoldPolygonBattle(){
     document.getElementById('gpbs-main').style.display='none';
     return;
   }
-  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  var OWNER=window.OPENGATE_OWNER;
   var isOwner=userAddr.toLowerCase()===OWNER;
   var pass=currentUser&&currentUser.pass_type;
   if(!isOwner&&(!pass||pass==='free')){
@@ -8831,7 +8850,7 @@ async function initGoldBaseBattle(){
     document.getElementById('gbbs-main').style.display='none';
     return;
   }
-  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  var OWNER=window.OPENGATE_OWNER;
   var isOwner=userAddr.toLowerCase()===OWNER;
   var pass=currentUser&&currentUser.pass_type;
   if(!isOwner&&(!pass||pass==='free')){
@@ -9730,7 +9749,7 @@ async function initGoldBattle(){
   // Тестери, яким показуємо UI без пропуску (owner + 2-й ноут).
   // УВАГА: щоб реально грати on-chain, гаманець ВСЕ ОДНО має тримати Gold Pass —
   // контракт onlyGoldPass відхилить create/join без NFT. Це лише про видимість UI.
-  var GBS_TESTERS=['0xc85b148f3ebd09e9072706166b4cd99cf7ed3108','0x410964fbe0158285db66deff21ea74faf42d13d9'];
+  var GBS_TESTERS=[window.OPENGATE_OWNER,'0x410964fbe0158285db66deff21ea74faf42d13d9'];
   var isOwner=GBS_TESTERS.indexOf(userAddr.toLowerCase())>=0;
   var pass=currentUser&&currentUser.pass_type;
   // GOLD-ONLY: silver не допускається у VIP-гру
@@ -10871,7 +10890,7 @@ function switchFeedTab(tab,el){
 function updateComposer(){
   const el=document.getElementById('postText');
   const v=el.value;
-  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const OWNER_WALLET=window.OPENGATE_OWNER;
   const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const isGold=isOwner||currentUser?.pass_type==='gold';
   const wordLimit=isGold?1000:500;
@@ -11780,7 +11799,7 @@ async function uploadToPinata(file){
 }
 
 function checkImgUpload(){
-  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const OWNER_WALLET=window.OPENGATE_OWNER;
   const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const passType=currentUser?.pass_type;
   if(!isOwner&&(!passType||passType==='free')){
@@ -11836,7 +11855,7 @@ function compressImageIfNeeded(file,maxBytes){
 async function handleImages(input){
   const files=Array.from(input.files);
   if(files.length===0) return;
-  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const OWNER_WALLET=window.OPENGATE_OWNER;
   const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const passType=currentUser?.pass_type;
   const isGold=isOwner||passType==='gold';
@@ -11890,7 +11909,7 @@ async function createPost(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const content=document.getElementById('postText').value.trim();
   if(!content) return;
-  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const OWNER_WALLET=window.OPENGATE_OWNER;
   const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const isGold=isOwner||currentUser?.pass_type==='gold';
   if(isGold){
@@ -11990,7 +12009,7 @@ function renderImages(urls){
 }
 
 function isOwnerWallet(){
-  return !!userAddr && userAddr.toLowerCase()==='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  return !!userAddr && userAddr.toLowerCase()===window.OPENGATE_OWNER;
 }
 function renderPost(post,liked){
   const u=post.users||{};
