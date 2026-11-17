@@ -1058,6 +1058,25 @@ async function smartConnectWallet(){
     <button class="btn-gold fade" onclick="openApp()" style="font-size:17px;padding:16px 48px;">Open App Now →</button>
   </section>
 
+  <section class="section" style="text-align:center;background:var(--bg2);border-top:1px solid var(--border);">
+    <div class="section-inner" style="max-width:760px;">
+      <div class="eyebrow fade" style="justify-content:center;display:flex;">Security</div>
+      <h2 class="section-title fade">Not audited yet — and we say so</h2>
+      <p class="fade" style="font-size:15px;color:var(--muted);line-height:1.75;">
+        No outside security firm has audited these contracts. We would rather tell you than let you assume otherwise.
+        What you can do instead: every contract address is public, so you can open it on BscScan and read the code
+        before you spend anything. Never put in money you cannot afford to lose.
+      </p>
+      <div class="footer-links" style="display:flex;justify-content:center;gap:18px;margin-top:18px;flex-wrap:wrap;">
+        <a href="https://bscscan.com/address/0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c" target="_blank" rel="noopener noreferrer">Gold Pass</a>
+        <a href="https://bscscan.com/address/0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89" target="_blank" rel="noopener noreferrer">Silver Pass</a>
+        <a href="https://bscscan.com/address/0x9740e2C9214965d68A731b1af49Ed1b5814664ff" target="_blank" rel="noopener noreferrer">Launchpad</a>
+        <a href="https://bscscan.com/address/0x8923bF72154A10af579030162C6F945Df2F1b351" target="_blank" rel="noopener noreferrer">Trading pools</a>
+        <a href="https://bscscan.com/address/0x78D7211915D15446230f3Fb0cC8469cD57Aa29Bf" target="_blank" rel="noopener noreferrer">NFT market</a>
+      </div>
+    </div>
+  </section>
+
   <footer>
     <div><div class="footer-logo">OpenGate</div><div class="footer-copy">© 2025 OpenGate. Built on BNB Chain, Polygon, Base, Arbitrum and zkLitVM.</div></div>
     <div class="footer-links">
@@ -1189,101 +1208,6 @@ async function smartConnectWallet(){
       </div>
       <div id="view-profile" style="display:none;">
         <div id="profileContent"><div class="app-loader">Connect wallet to view profile</div></div>
-      </div>
-      <div id="view-bnblottery" style="display:none;">
-        <div class="feed-hdr">💰 BNB Lottery</div>
-        <div style="max-width:520px;margin:0 auto;padding:24px 16px;">
-
-          <!-- Coming Soon Hero -->
-          <div style="text-align:center;padding:40px 20px;background:linear-gradient(135deg,rgba(245,200,66,0.08),rgba(38,217,138,0.04));border:1px solid rgba(245,200,66,0.25);border-radius:20px;margin-bottom:20px;">
-            <div style="font-size:64px;margin-bottom:16px;">💰</div>
-            <div style="font-size:24px;font-weight:800;margin-bottom:8px;">BNB Lottery</div>
-            <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:20px;letter-spacing:.05em;">COMING SOON</div>
-            <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">
-              The first real-money lottery on OpenGate.<br/>
-              Buy tickets with BNB or USDT. 10 winners.<br/>
-              Powered by <b style="color:var(--text);">Chainlink VRF</b> — provably fair.
-            </div>
-            <div style="font-size:13px;font-weight:700;color:var(--gold);">🔔 Stay tuned for the launch!</div>
-          </div>
-
-          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" class="help-toggle-btn" style="margin-bottom:16px;">❔ How will this work?</button>
-          <div id="lottohelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:20px;">
-            <div style="color:var(--muted);">
-              <b style="color:var(--text);">1.</b> Buy one or more tickets with BNB or USDT — <b style="color:var(--text);">$0.90 each</b>.<br>
-              <b style="color:var(--text);">2.</b> When the round ends, <b style="color:var(--text);">10 winners</b> are picked at random.<br>
-              <b style="color:var(--text);">3.</b> The draw uses <b style="color:var(--text);">Chainlink VRF</b> — a verifiable, tamper-proof random number source, so nobody (including us) can rig who wins.<br>
-              <b style="color:var(--text);">4.</b> Winnings are paid automatically to the winners' wallets — no claiming needed.<br><br>
-              Not live yet — this is a preview of how it will work once the round opens.
-            </div>
-          </div>
-
-          <!-- Features grid -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🎟️</div>
-              <div style="font-size:13px;font-weight:700;">$0.90 / ticket</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">BNB or USDT</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🏆</div>
-              <div style="font-size:13px;font-weight:700;">10 winners</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Different prize shares</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">⏱️</div>
-              <div style="font-size:13px;font-weight:700;">7 days / round</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Auto-starts next round</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🔐</div>
-              <div style="font-size:13px;font-weight:700;">Chainlink VRF</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">100% provably fair</div>
-            </div>
-          </div>
-
-          <!-- Prize distribution -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Prize Distribution</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥇 1st place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~30%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥈 2nd place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~20%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥉 3rd place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~15%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;color:var(--muted);">4th–10th place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--muted);">~31%</span>
-              </div>
-              <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;color:var(--muted);">Platform fee</span>
-                <span style="font-size:12px;color:var(--muted);">10%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;color:var(--muted);">Next round seed</span>
-                <span style="font-size:12px;color:var(--muted);">4%</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Social links -->
-          <div style="text-align:center;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;">
-            <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Be the first to know when it launches:</div>
-            <a href="https://x.com/OpenGatelive" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;font-size:13px;font-weight:700;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              @OpenGatelive
-            </a>
-          </div>
-
-        </div>
       </div>
 
       <!-- ── BNB BATTLESHIP ── -->
@@ -2176,7 +2100,7 @@ async function smartConnectWallet(){
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">What can you do with GATE?</div>
             <div class="w-row"><span class="w-lbl">❤️ Like posts</span><span class="w-val" style="color:var(--muted);">Sends 0.1 GATE to author</span></div>
-            <div class="w-row"><span class="w-lbl">💎 Stake</span><span class="w-val" style="color:var(--green);">Earn 365% APR · testnet</span></div>
+            <div class="w-row"><span class="w-lbl">💎 Stake</span><span class="w-val" style="color:var(--green);">Earn 11% APR · testnet</span></div>
             <div class="w-row"><span class="w-lbl">🎲 Dice game</span><span class="w-val" style="color:var(--gold);">Win up to 5× your bet</span></div>
             <div class="w-row"><span class="w-lbl">🎰 GATE Lottery</span><span class="w-val" style="color:var(--gold);">10 GATE · testnet</span></div>
             <div class="w-row"><span class="w-lbl">🪙 Create token</span><span class="w-val" style="color:var(--muted);">Launch your own token</span></div>
@@ -2296,14 +2220,6 @@ async function smartConnectWallet(){
 
         <!-- BNB Chain games -->
         <div id="gamesBnbSection" style="display:none;padding:16px;grid-template-columns:1fr 1fr;gap:12px;max-width:600px;margin:0 auto;">
-          <!-- BNB Lottery — Coming Soon -->
-          <div onclick="showTab('bnblottery')" style="background:linear-gradient(135deg,rgba(245,200,66,0.05),rgba(38,217,138,0.03));border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,200,66,0.3)'">
-            <div style="position:absolute;top:8px;right:8px;background:var(--gold);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">SOON</div>
-            <div style="font-size:36px;margin-bottom:8px;">💰</div>
-            <div style="font-size:15px;font-weight:700;">BNB Lottery</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;">10 winners · 7 days</div>
-            <div style="font-size:11px;color:var(--gold);margin-top:6px;">$0.90 · BNB or USDT</div>
-          </div>
           <!-- BNB Battleship — LIVE -->
           <div onclick="showTab('bnbbattle')" style="background:linear-gradient(135deg,rgba(59,130,246,0.05),rgba(38,217,138,0.03));border:1px solid rgba(59,130,246,0.3);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='#3B82F6'" onmouseout="this.style.borderColor='rgba(59,130,246,0.3)'">
             <div style="position:absolute;top:8px;right:8px;background:var(--green);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">🟢 LIVE</div>
@@ -4024,7 +3940,7 @@ async function smartConnectWallet(){
         <div style="padding:20px;max-width:560px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border-g);border-radius:var(--r);padding:20px;margin-bottom:16px;">
             <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7;">
-              Stake your GATE tokens and earn <span style="color:var(--gold);font-weight:700;">~365% APR</span>.<br>
+              Stake your GATE tokens and earn <span style="color:var(--gold);font-weight:700;">~11% APR</span>.<br>
               Rewards accumulate every second. Withdraw anytime — no lock period. <span style="color:var(--green);font-weight:700;">0% fee.</span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
@@ -4055,7 +3971,7 @@ async function smartConnectWallet(){
           </div>
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Pool Info</div>
-            <div class="w-row"><span class="w-lbl">APR</span><span class="w-val" style="color:var(--gold);">~365%</span></div>
+            <div class="w-row"><span class="w-lbl">APR</span><span class="w-val" style="color:var(--gold);">~11%</span></div>
             <div class="w-row"><span class="w-lbl">Lock period</span><span class="w-val" style="color:var(--green);">None</span></div>
             <div class="w-row"><span class="w-lbl">Staking fee</span><span class="w-val" style="color:var(--green);">0%</span></div>
             <div class="w-row"><span class="w-lbl">Reward pool</span><span class="w-val" id="rewardPoolVal">—</span></div>
@@ -10764,7 +10680,6 @@ function showTab(tab){
   if(tab!=='groups' && typeof groupsCleanup==='function'){ groupsCleanup(); }
   document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
   document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
-  document.getElementById('view-bnblottery').style.display=tab==='bnblottery'?'block':'none';
   document.getElementById('view-bnbbattle').style.display=tab==='bnbbattle'?'block':'none';
   if(tab==='bnbbattle') initBNBBattle();
   document.getElementById('view-goldbattle').style.display=tab==='goldbattle'?'block':'none';
@@ -17471,7 +17386,7 @@ const LANGS = {
     newPosts:'↻ New posts', search:'Search users, posts...',
     mainMenu:'Main', defiFull:'Money', play:'Play',
     // Staking
-    stakingTitle:'💎 GATE Staking', stakingDesc:'Stake GATE and earn ~365% APR, paid every second, no lock period. Rewards come out of the reward pool shown below — when that pool is empty, rewards stop. GATE runs on the zkLitVM testnet.',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'Stake GATE and earn ~11% APR, paid every second, no lock period. Rewards come out of the reward pool shown below — when that pool is empty, rewards stop. GATE runs on the zkLitVM testnet.',
     myStaked:'My Staked', pendingReward:'Pending Reward', totalStaked:'Total Staked',
     stakeAmount:'Amount to stake (GATE)', stakeBtn:'Stake', claimBtn:'Claim Rewards', unstakeBtn:'Unstake All',
     poolInfo:'Pool Info', apr:'APR', lockPeriod:'Lock period', none:'None', stakingFee:'Staking fee', rewardPool:'Reward pool',
@@ -17506,7 +17421,7 @@ const LANGS = {
     releaseToRefresh:'Отпустите!', refreshing:'Обновляем...',
     newPosts:'↻ Новые посты', search:'Поиск пользователей...',
     mainMenu:'Главное', defiFull:'Деньги', play:'Игры',
-    stakingTitle:'💎 Стейкинг GATE', stakingDesc:'Стейкайте GATE и зарабатывайте ~365% APR, начисление каждую секунду, без блокировки. Награды берутся из пула наград ниже — когда он опустеет, начисления прекратятся. GATE работает в тестовой сети zkLitVM.',
+    stakingTitle:'💎 Стейкинг GATE', stakingDesc:'Стейкайте GATE и зарабатывайте ~11% APR, начисление каждую секунду, без блокировки. Награды берутся из пула наград ниже — когда он опустеет, начисления прекратятся. GATE работает в тестовой сети zkLitVM.',
     myStaked:'Мой стейк', pendingReward:'Награда', totalStaked:'Всего в стейке',
     stakeAmount:'Сумма для стейка (GATE)', stakeBtn:'Стейк', claimBtn:'Забрать награду', unstakeBtn:'Вывести всё',
     poolInfo:'Инфо пула', apr:'APR', lockPeriod:'Блокировка', none:'Нет', stakingFee:'Комиссия', rewardPool:'Пул наград',
@@ -17534,7 +17449,7 @@ const LANGS = {
     releaseToRefresh:'Відпустіть!', refreshing:'Оновлення...',
     newPosts:'↻ Нові пости', search:'Пошук користувачів...',
     mainMenu:'Головне', defiFull:'Гроші', play:'Ігри',
-    stakingTitle:'💎 Стейкінг GATE', stakingDesc:'Стейкайте GATE і заробляйте ~365% APR, нарахування щосекунди, без блокування. Нагороди беруться з пулу нагород нижче — коли він спорожніє, нарахування зупиняться. GATE працює в тестовій мережі zkLitVM.',
+    stakingTitle:'💎 Стейкінг GATE', stakingDesc:'Стейкайте GATE і заробляйте ~11% APR, нарахування щосекунди, без блокування. Нагороди беруться з пулу нагород нижче — коли він спорожніє, нарахування зупиняться. GATE працює в тестовій мережі zkLitVM.',
     myStaked:'Мій стейк', pendingReward:'Нагорода', totalStaked:'Всього в стейку',
     stakeAmount:'Сума для стейку (GATE)', stakeBtn:'Стейк', claimBtn:'Забрати нагороду', unstakeBtn:'Вивести все',
     poolInfo:'Інфо пулу', apr:'APR', lockPeriod:'Блокування', none:'Немає', stakingFee:'Комісія', rewardPool:'Пул нагород',
@@ -17562,7 +17477,7 @@ const LANGS = {
     releaseToRefresh:'छोड़ें!', refreshing:'लोड हो रहा है...',
     newPosts:'↻ नई पोस्ट', search:'खोजें...',
     mainMenu:'मुख्य', defiFull:'पैसा', play:'खेलें',
-    stakingTitle:'💎 GATE स्टेकिंग', stakingDesc:'GATE स्टेक करें और ~365% APR कमाएं। इनाम नीचे दिखाए गए रिवॉर्ड पूल से आते हैं — पूल खाली होने पर इनाम रुक जाते हैं। GATE zkLitVM टेस्टनेट पर चलता है।',
+    stakingTitle:'💎 GATE स्टेकिंग', stakingDesc:'GATE स्टेक करें और ~11% APR कमाएं। इनाम नीचे दिखाए गए रिवॉर्ड पूल से आते हैं — पूल खाली होने पर इनाम रुक जाते हैं। GATE zkLitVM टेस्टनेट पर चलता है।',
     myStaked:'मेरा स्टेक', pendingReward:'पुरस्कार', totalStaked:'कुल स्टेक',
     stakeAmount:'स्टेक राशि (GATE)', stakeBtn:'स्टेक', claimBtn:'पुरस्कार लें', unstakeBtn:'सब निकालें',
     poolInfo:'पूल जानकारी', apr:'APR', lockPeriod:'लॉक', none:'कोई नहीं', stakingFee:'शुल्क', rewardPool:'पुरस्कार पूल',
@@ -17590,7 +17505,7 @@ const LANGS = {
     releaseToRefresh:'松开刷新！', refreshing:'刷新中...',
     newPosts:'↻ 新帖子', search:'搜索...',
     mainMenu:'主要', defiFull:'资金', play:'游戏',
-    stakingTitle:'💎 GATE质押', stakingDesc:'质押GATE赚取~365% APR，无锁定期。奖励来自下方的奖励池，池子用完后奖励即停止。GATE 运行在 zkLitVM 测试网。',
+    stakingTitle:'💎 GATE质押', stakingDesc:'质押GATE赚取~11% APR，无锁定期。奖励来自下方的奖励池，池子用完后奖励即停止。GATE 运行在 zkLitVM 测试网。',
     myStaked:'我的质押', pendingReward:'待领奖励', totalStaked:'总质押量',
     stakeAmount:'质押数量(GATE)', stakeBtn:'质押', claimBtn:'领取奖励', unstakeBtn:'全部取回',
     poolInfo:'池信息', apr:'APR', lockPeriod:'锁定期', none:'无', stakingFee:'质押费', rewardPool:'奖励池',
@@ -17618,7 +17533,7 @@ const LANGS = {
     releaseToRefresh:'Bırak!', refreshing:'Yenileniyor...',
     newPosts:'↻ Yeni gönderiler', search:'Ara...',
     mainMenu:'Ana', defiFull:'Para', play:'Oyna',
-    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE stake edin ve ~365% APR kazanın, kilit yok. Ödüller aşağıdaki ödül havuzundan gelir — havuz bitince ödüller durur. GATE, zkLitVM test ağında çalışır.',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE stake edin ve ~11% APR kazanın, kilit yok. Ödüller aşağıdaki ödül havuzundan gelir — havuz bitince ödüller durur. GATE, zkLitVM test ağında çalışır.',
     myStaked:'Stake\'im', pendingReward:'Ödül', totalStaked:'Toplam Stake',
     stakeAmount:'Stake miktarı (GATE)', stakeBtn:'Stake', claimBtn:'Ödül Al', unstakeBtn:'Hepsini Çek',
     poolInfo:'Havuz Bilgisi', apr:'APR', lockPeriod:'Kilit', none:'Yok', stakingFee:'Stake Ücreti', rewardPool:'Ödül Havuzu',
@@ -17646,7 +17561,7 @@ const LANGS = {
     releaseToRefresh:'Loslassen!', refreshing:'Aktualisierung...',
     newPosts:'↻ Neue Beiträge', search:'Suche...',
     mainMenu:'Haupt', defiFull:'Geld', play:'Spielen',
-    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE staken und ~365% APR verdienen, keine Sperrfrist. Die Belohnungen kommen aus dem unten gezeigten Reward-Pool — ist er leer, enden sie. GATE läuft im zkLitVM-Testnet.',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE staken und ~11% APR verdienen, keine Sperrfrist. Die Belohnungen kommen aus dem unten gezeigten Reward-Pool — ist er leer, enden sie. GATE läuft im zkLitVM-Testnet.',
     myStaked:'Mein Stake', pendingReward:'Ausstehend', totalStaked:'Gesamt gestakt',
     stakeAmount:'Stake-Betrag (GATE)', stakeBtn:'Staken', claimBtn:'Prämien abholen', unstakeBtn:'Alles abheben',
     poolInfo:'Pool-Info', apr:'APR', lockPeriod:'Sperrfrist', none:'Keine', stakingFee:'Staking-Gebühr', rewardPool:'Prämienpool',
