@@ -4574,12 +4574,19 @@ let provider, signer, userAddr, currentUser, mintPrice, mintType;
 // JsonRpcProvider construction is the version that's actually reliable.
 // The minor extra eth_chainId call per fresh provider is a worthwhile
 // trade for correctness over a micro-optimization that kept backfiring.
+let _litvmReadProvider = null;
 function getReadProvider(){
-  // Провайдер MetaMask годиться для читання LitVM лише коли MetaMask
-  // РЕАЛЬНО на LitVM (0x1159). Якщо користувач на BNB (грає в Battleship),
-  // читаємо через публічний RPC LitVM — інакше баланси/стейкінг ламались.
-  if(provider && window._ogChainId==='0x1159') return provider;
-  return new ethers.JsonRpcProvider('https://rpc.testnet.liteforge.zeeve.net/');
+  // Читаємо LitVM ЗАВЖДИ через публічний RPC мережі, а не через гаманець.
+  // У тих, хто додав LitVM раніше, у гаманці збережена стара адреса
+  // (Caldera), яка більше не відповідає: читання падало б із помилкою
+  // "RPC endpoint not found", хоча сама мережа працює.
+  try{
+    if(!_litvmReadProvider) _litvmReadProvider = new ethers.JsonRpcProvider(LITVM.rpcUrls[0]);
+    return _litvmReadProvider;
+  }catch(e){
+    if(provider && window._ogChainId==='0x1159') return provider;
+    throw e;
+  }
 }
 function getBNBProvider(){
   // BNB reads always use public RPC (not LitVM) — shares the same rotating pool as Battleship
@@ -10489,6 +10496,20 @@ async function switchToLitVM(){
   provider = new ethers.BrowserProvider(window.ethereum);
   signer = await provider.getSigner();
   userAddr = (await signer.getAddress()).toLowerCase();
+  // У гаманця може бути збережена стара адреса мережі (Caldera), яка вже
+  // не відповідає. Перевіряємо це одним дешевим запитом і, якщо так,
+  // пропонуємо додати нову адресу — інакше будь-яка транзакція впаде.
+  try{
+    await provider.getBlockNumber();
+  }catch(e){
+    try{
+      await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+    }catch(e2){
+      showToast('Update the LitVM network in your wallet: '+LITVM.rpcUrls[0],'err');
+    }
+  }
 }
 
 // ── USER ──
