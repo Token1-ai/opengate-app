@@ -98,9 +98,12 @@ All addresses are on mainnet unless marked otherwise.
 
 ### zkLitVM — testnet, not mainnet
 
-The GATE token and everything around it run on the zkLitVM LiteForge **testnet**.
-That network is migrating from Caldera to Zeeve and its old endpoints are down, so
-these features are temporarily out of order. The site says so on every affected page.
+The GATE token and everything around it run on the zkLitVM LiteForge **testnet**
+(chain ID 4441). The network moved from Caldera to Zeeve in late 2026; the chain and
+every contract on it are unchanged, only the addresses you connect to:
+
+- RPC: `https://rpc.testnet.liteforge.zeeve.net/`
+- Explorer: `https://explorer.testnet.liteforge.zeeve.net`
 
 | Contract | Address |
 | --- | --- |
@@ -191,7 +194,6 @@ compile.
 ## Known limitations
 
 - **No security audit.** No outside firm has reviewed the contracts.
-- **The zkLitVM half is down** while that testnet migrates to a new provider.
 - **Game results are settled by a server key**, not decided inside the contract.
 - **The Alchemy keys in `index.html` are visible to anyone** who opens the site.
   Replace them with your own before you rely on them.

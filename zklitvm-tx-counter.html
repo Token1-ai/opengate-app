@@ -63,7 +63,7 @@
   </table>
 
   <div class="sub" style="margin-top:20px;">
-    Data source: <a href="https://liteforge.explorer.caldera.xyz" target="_blank">liteforge.explorer.caldera.xyz</a> (Blockscout public API). Numbers are exact, on-chain, and include all historical activity.
+    Data source: <a href="https://explorer.testnet.liteforge.zeeve.net" target="_blank">explorer.testnet.liteforge.zeeve.net</a> (Blockscout public API). Numbers are exact, on-chain, and include all historical activity.
   </div>
 </div>
 
@@ -84,7 +84,7 @@ const CONTRACTS = [
   { name: 'Free NFT Mint (Merlin)',  address: '0x156DCCFe6C64DC9BE20d3D17778cC9DA7c96957D' },
 ];
 
-const EXPLORER_API = 'https://liteforge.explorer.caldera.xyz/api/v2/addresses/';
+const EXPLORER_API = 'https://explorer.testnet.liteforge.zeeve.net/api/v2/addresses/';
 
 // Known-good counts we've already fetched, kept across refreshes so a
 // "retry failed only" pass doesn't lose already-confirmed numbers.
@@ -131,7 +131,7 @@ function renderRows(){
   rowsEl.innerHTML = CONTRACTS.map(c =>
     `<tr id="row-${c.address}">
       <td>${c.name}</td>
-      <td class="addr"><a href="https://liteforge.explorer.caldera.xyz/address/${c.address}" target="_blank">${c.address.slice(0,8)}...${c.address.slice(-6)}</a></td>
+      <td class="addr"><a href="https://explorer.testnet.liteforge.zeeve.net/address/${c.address}" target="_blank">${c.address.slice(0,8)}...${c.address.slice(-6)}</a></td>
       <td class="count status">${c.address in counts ? counts[c.address].toLocaleString() : 'loading…'}</td>
     </tr>`
   ).join('');

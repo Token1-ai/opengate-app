@@ -15,7 +15,7 @@ const BYPASS_HOSTS = [
   'cloudflare-ipfs.com',
   'dweb.link',
   'cloudinary.com',
-  'liteforge.rpc.caldera.xyz',
+  'rpc.testnet.liteforge.zeeve.net',
   'bsc-dataseed.binance.org',
   'bscscan.com',
   'googleapis.com',
