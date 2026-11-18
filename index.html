@@ -4141,6 +4141,45 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
     throw lastErr;
   };
 })();
+
+// ── СТАРА АДРЕСА МЕРЕЖІ LitVM У ГАМАНЦІ ──────────────────────────────
+// LitVM змінила постачальника: стара адреса (Caldera) більше не
+// відповідає. У того, хто додав мережу раніше, вона й лишилась у
+// гаманці, тому будь-яка транзакція падає з кодом -32002
+// ("RPC endpoint not found or unavailable") — хоча мережа працює.
+// MetaMask сам нічого не оновлює, лише показує "Update RPC".
+// Тут ми ловимо саме цю помилку на будь-якому запиті до гаманця,
+// пропонуємо додати нову адресу мережі й повторюємо запит.
+(function(){
+  if(!ethers.BrowserProvider || !ethers.BrowserProvider.prototype) return;
+  var _origWalletSend = ethers.BrowserProvider.prototype.send;
+  var _fixPromise = null;
+  function looksLikeDeadRpc(e){
+    var txt = '';
+    try{ txt = String(e && e.message || '') + ' ' + JSON.stringify((e && (e.info || e.error)) || {}); }catch(_){ }
+    return /-32002/.test(txt) || /endpoint not found|not found or unavailable|could not coalesce/i.test(txt);
+  }
+  ethers.BrowserProvider.prototype.send = async function(method, params){
+    try{
+      return await _origWalletSend.call(this, method, params);
+    }catch(e){
+      if(!looksLikeDeadRpc(e) || !window.ethereum) throw e;
+      var onLitVM = false;
+      try{ onLitVM = (await window.ethereum.request({method:'eth_chainId'})) === '0x1159'; }catch(_){ }
+      if(!onLitVM) throw e;
+      try{
+        if(!_fixPromise) _fixPromise = window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
+        await _fixPromise;
+      }catch(e2){
+        _fixPromise = null;
+        try{ showToast('Open MetaMask and press "Update RPC" for LitVM','err'); }catch(_){ }
+        throw e;
+      }
+      _fixPromise = null;
+      return await _origWalletSend.call(this, method, params);
+    }
+  };
+})();
 const POLYGON_ID = '0x89';
 const POLYGON    = {chainId:'0x89',chainName:'Polygon',nativeCurrency:{name:'POL',symbol:'POL',decimals:18},rpcUrls:['https://polygon-bor-rpc.publicnode.com','https://polygon.drpc.org','https://rpc.ankr.com/polygon'],blockExplorerUrls:['https://polygonscan.com']};
 const BASE_ID    = '0x2105'; // 8453
@@ -10500,7 +10539,9 @@ async function switchToLitVM(){
   // не відповідає. Перевіряємо це одним дешевим запитом і, якщо так,
   // пропонуємо додати нову адресу — інакше будь-яка транзакція впаде.
   try{
-    await provider.getBlockNumber();
+    // саме читання контракту, а не номер блоку: номер блоку MetaMask
+    // може віддати з кешу навіть тоді, коли адреса мережі мертва.
+    await provider.call({to:GATE_TOKEN, data:'0x18160ddd'});
   }catch(e){
     try{
       await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
