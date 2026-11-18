@@ -4142,6 +4142,57 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
   };
 })();
 
+// Смуга «оновіть адресу мережі»: показується, коли гаманець не може
+// достукатись до LitVM. Кнопка відкриває вікно MetaMask — саме тому це
+// кнопка, а не автоматичний запит (див. нижче).
+function showLitVMRpcBanner(){
+  if(document.getElementById('litvmRpcBar')) return;
+  var bar=document.createElement('div');
+  bar.id='litvmRpcBar';
+  bar.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#241a05;border-top:1px solid #f5c842;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:13px;line-height:1.5;color:#fff;';
+  var txt=document.createElement('span');
+  txt.textContent='Your wallet still uses the old LitVM address, so transactions cannot go through.';
+  var btn=document.createElement('button');
+  btn.textContent='Update network';
+  btn.style.cssText='background:#f5c842;color:#08090C;border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;';
+  btn.onclick=async function(){
+    btn.disabled=true; btn.textContent='Confirm in MetaMask...';
+    try{
+      await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
+      try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x1159'}]}); }catch(_){ }
+      try{ provider=new ethers.BrowserProvider(window.ethereum); signer=await provider.getSigner(); }catch(_){ }
+      bar.remove();
+      try{ showToast('Network updated — try again','ok'); }catch(_){ }
+    }catch(e){
+      btn.disabled=false; btn.textContent='Update network';
+      try{ showToast('In MetaMask press "Update RPC" for LitVM','err'); }catch(_){ }
+    }
+  };
+  var close=document.createElement('span');
+  close.textContent='\u2715';
+  close.style.cssText='cursor:pointer;opacity:.6;padding:0 4px;';
+  close.onclick=function(){ bar.remove(); };
+  bar.appendChild(txt); bar.appendChild(btn); bar.appendChild(close);
+  document.body.appendChild(bar);
+}
+
+// Тиха перевірка: якщо гаманець стоїть на LitVM, але не може прочитати
+// звідти жодного контракту — у нього стара адреса мережі. Показуємо смугу
+// ОДРАЗУ, ще до того як людина натисне кнопку й отримає незрозумілу помилку.
+let _litvmRpcChecked = false;
+async function checkLitVMRpc(){
+  try{
+    if(_litvmRpcChecked || !window.ethereum) return;
+    if(window._ogChainId !== '0x1159') return;
+    _litvmRpcChecked = true;
+    var p = new ethers.BrowserProvider(window.ethereum);
+    await p.call({to:GATE_TOKEN, data:'0x18160ddd'});
+  }catch(e){
+    _litvmRpcChecked = false;
+    try{ showLitVMRpcBanner(); }catch(_){ }
+  }
+}
+
 // ── СТАРА АДРЕСА МЕРЕЖІ LitVM У ГАМАНЦІ ──────────────────────────────
 // LitVM змінила постачальника: стара адреса (Caldera) більше не
 // відповідає. У того, хто додав мережу раніше, вона й лишилась у
@@ -4153,7 +4204,6 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
 (function(){
   if(!ethers.BrowserProvider || !ethers.BrowserProvider.prototype) return;
   var _origWalletSend = ethers.BrowserProvider.prototype.send;
-  var _fixPromise = null;
   function looksLikeDeadRpc(e){
     var txt = '';
     try{ txt = String(e && e.message || '') + ' ' + JSON.stringify((e && (e.info || e.error)) || {}); }catch(_){ }
@@ -4167,16 +4217,12 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
       var onLitVM = false;
       try{ onLitVM = (await window.ethereum.request({method:'eth_chainId'})) === '0x1159'; }catch(_){ }
       if(!onLitVM) throw e;
-      try{
-        if(!_fixPromise) _fixPromise = window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
-        await _fixPromise;
-      }catch(e2){
-        _fixPromise = null;
-        try{ showToast('Open MetaMask and press "Update RPC" for LitVM','err'); }catch(_){ }
-        throw e;
-      }
-      _fixPromise = null;
-      return await _origWalletSend.call(this, method, params);
+      // Не просимо гаманець самі: MetaMask відкриває вікно лише після
+      // натискання мишею, інакше запит мовчки стає в чергу (червона
+      // цифра на значку) і людина його не бачить. Показуємо свою смугу
+      // з кнопкою — натискання по ній і відкриє вікно MetaMask.
+      try{ showLitVMRpcBanner(); }catch(_){ }
+      throw e;
     }
   };
 })();
@@ -10543,13 +10589,7 @@ async function switchToLitVM(){
     // може віддати з кешу навіть тоді, коли адреса мережі мертва.
     await provider.call({to:GATE_TOKEN, data:'0x18160ddd'});
   }catch(e){
-    try{
-      await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
-      provider = new ethers.BrowserProvider(window.ethereum);
-      signer = await provider.getSigner();
-    }catch(e2){
-      showToast('Update the LitVM network in your wallet: '+LITVM.rpcUrls[0],'err');
-    }
+    try{ showLitVMRpcBanner(); }catch(_){ }
   }
 }
 
@@ -18111,9 +18151,10 @@ if(window.ethereum){
       provider=new ethers.BrowserProvider(window.ethereum);
       if(userAddr){ provider.getSigner().then(function(s){signer=s;}).catch(function(){}); }
     }catch(e){}
+    checkLitVMRpc();
   });
   // Запам'ятовуємо поточну мережу для getReadProvider
-  window.ethereum.request({method:'eth_chainId'}).then(function(id){window._ogChainId=id;}).catch(function(){});
+  window.ethereum.request({method:'eth_chainId'}).then(function(id){window._ogChainId=id;checkLitVMRpc();}).catch(function(){});
 }</script>
 <script>
 if('serviceWorker' in navigator){
