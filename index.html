@@ -13962,13 +13962,11 @@ async function loadMarketplace(){
       let img='',name='NFT #'+l.tokenId.toString();
       try{
         const nft=new ethers.Contract(l.nftContract,ERC721_ABI,p);
-        let uri=await nft.tokenURI(l.tokenId);
-        const meta=await fetchNFTMeta(uri);
-        const imgField=meta.image||meta.image_url;
-        if(imgField){
-          // Try multiple IPFS gateways for image
-          img=await resolveIPFSWithFallback(imgField);
-        }
+        let uri=await ogTimeout(nft.tokenURI(l.tokenId),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        // Картинку не чекаємо: сам <img> нижче перебирає шлюзи сам,
+        // а гонка шлюзів тут затримувала показ усієї вітрини.
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){
         console.log('NFT meta error:',l.nftContract,l.tokenId.toString(),err.message);
@@ -13990,7 +13988,7 @@ async function loadMarketplace(){
         im.loading='lazy';
         im.style.cssText='width:100%;height:100%;object-fit:cover;';
         im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;
         im.src=_gateways[_gwIdx];
@@ -14169,9 +14167,9 @@ async function loadMarketplaceBNB(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        let uri=await bnbReadRetry(rp=>new ethers.Contract(l.nftContract,ERC721_ABI,rp).tokenURI(l.tokenId));
-        const meta=await fetchNFTMeta(uri);
-        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        let uri=await ogTimeout(bnbReadRetry(rp=>new ethers.Contract(l.nftContract,ERC721_ABI,rp).tokenURI(l.tokenId)),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){}
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
@@ -14188,7 +14186,7 @@ async function loadMarketplaceBNB(){
       if(img){
         const im=document.createElement('img');
         im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;im.src=_gateways[_gwIdx];
         im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
@@ -14339,9 +14337,9 @@ async function loadMarketplacePolygon(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        let uri=await polygonReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);});
-        const meta=await fetchNFTMeta(uri);
-        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        let uri=await ogTimeout(polygonReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);}),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){}
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
@@ -14358,7 +14356,7 @@ async function loadMarketplacePolygon(){
       if(img){
         const im=document.createElement('img');
         im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;im.src=_gateways[_gwIdx];
         im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
@@ -14508,9 +14506,9 @@ async function loadMarketplaceBase(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        let uri=await baseReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);});
-        const meta=await fetchNFTMeta(uri);
-        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        let uri=await ogTimeout(baseReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);}),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){}
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
@@ -14527,7 +14525,7 @@ async function loadMarketplaceBase(){
       if(img){
         const im=document.createElement('img');
         im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;im.src=_gateways[_gwIdx];
         im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
@@ -14671,9 +14669,9 @@ async function loadMarketplaceArb(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        let uri=await arbReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);});
-        const meta=await fetchNFTMeta(uri);
-        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        let uri=await ogTimeout(arbReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);}),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){}
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
@@ -14690,7 +14688,7 @@ async function loadMarketplaceArb(){
       if(img){
         const im=document.createElement('img');
         im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;im.src=_gateways[_gwIdx];
         im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
