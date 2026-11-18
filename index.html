@@ -16206,11 +16206,29 @@ async function sendDM(){
   const content=input.value.trim();
   if(!content)return;
   input.value='';
+  // Показуємо повідомлення одразу, не чекаючи відповіді сервера: інакше між
+  // натисканням і появою тексту минала секунда-дві, і здавалось, що гальмує.
+  const _list=document.getElementById('msgList');
+  let _ghost=null;
+  if(_list){
+    if(_list.querySelector('div[style*="text-align:center"]')) _list.innerHTML='';
+    _ghost=document.createElement('div');
+    _ghost.style.cssText='display:flex;justify-content:flex-end;margin-bottom:10px;opacity:.5;';
+    const _b=document.createElement('div');
+    _b.style.cssText='max-width:72%;background:var(--gold);color:#08090C;padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:14px;word-break:break-word;';
+    _b.textContent=content;
+    _ghost.appendChild(_b);
+    _list.appendChild(_ghost);
+    _list.scrollTop=_list.scrollHeight;
+  }
   try{
     // Уведомление получателю создаёт сам сервер — отдельно звать не нужно.
     await dmCall('send',{peer:currentDMWallet,content});
     loadMessages();
-  }catch(e){ showToast((e.message||'Failed').slice(0,60),'err'); input.value=content; }
+  }catch(e){
+    if(_ghost&&_ghost.parentNode) _ghost.parentNode.removeChild(_ghost);
+    showToast((e.message||'Failed').slice(0,60),'err'); input.value=content;
+  }
 }
 function openConversation(wallet){openDM(wallet);}
 function openDMWith(wallet){showTab('messages');setTimeout(function(){openDM(wallet);},300);}
