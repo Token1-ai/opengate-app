@@ -58,8 +58,10 @@ All addresses are on mainnet unless marked otherwise.
 
 | Contract | Address |
 | --- | --- |
-| Gold Pass | `0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c` |
-| Silver Pass | `0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89` |
+| Gold Pass (V2, current) | `0xCF2B61D76F2140D8270e612918DEE1501EcC637C` |
+| Silver Pass (V2, current) | `0x543a0Bd90387768BE17E038ff685be7DD8d9791A` |
+| Gold Pass (V1, retired) | `0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c` |
+| Silver Pass (V1, retired) | `0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89` |
 | Token factory | `0xcC072333E5d43E2521F7C5a0da26312a3E44b2ff` |
 | NFT factory | `0xAAeffd9dC63e8E59c1865bd42f054b83a6998224` |
 | NFT marketplace | `0x78D7211915D15446230f3Fb0cC8469cD57Aa29Bf` |
@@ -108,8 +110,14 @@ these features are temporarily out of order. The site says so on every affected 
 | Faucet | `0xCF2B61D76F2140D8270e612918DEE1501EcC637C` |
 | Lending | `0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6` |
 | Dice | `0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855` |
-| Lottery | `0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035` |
 | Battleship | `0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143` |
+
+**Passes.** New passes are sold only from the V2 contracts. There is no supply
+limit on them, the price is a setting (`setPriceUsdCents`, in US cents, converted to
+BNB through Chainlink at the moment of payment) and the owner can hand passes out for
+free with `ownerMint`. The V1 passes stay valid forever: every pass check in the site
+and in `api/pass-voucher.js` reads V2 and V1 together, so the 26 passes sold under V1
+keep working. The V1 contracts are capped at 3,000 and 5,000 and cannot be raised.
 
 **Ownership transfer.** Every contract uses a two-step handover: the current owner
 calls `transferOwnership(newWallet)`, then the new owner calls `acceptOwnership()`

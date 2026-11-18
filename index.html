@@ -276,8 +276,8 @@ button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline
   #view-market [id^="mktChain"]:first-child{
     margin-left:0;
   }
-  /* числовые ряды в Dice/Lottery — переносятся, если не влезают */
-  #view-dice [style*="justify-content:center"], #view-lottery [style*="justify-content:center"]{flex-wrap:wrap!important;}
+  /* числовые ряды в Dice — переносятся, если не влезают */
+  #view-dice [style*="justify-content:center"]{flex-wrap:wrap!important;}
   /* карточки игр (grid 2 колонки) — padding не распирает за экран */
   #view-games [style*="display:grid"]{padding:12px!important;box-sizing:border-box!important;max-width:100%!important;}
   #view-games [style*="display:grid"] > div{box-sizing:border-box!important;min-width:0!important;padding:16px!important;}
@@ -958,7 +958,7 @@ async function smartConnectWallet(){
           <div class="pass-top"><div class="pass-tier">🥈 Silver</div></div>
           <div class="pass-price">$0.90</div>
           <div class="pass-price-note">Paid in BNB · live rate from Chainlink</div>
-          <div class="pass-supply"><div class="supply-track"><div class="supply-fill" data-target="2%"></div></div><div class="supply-text" id="silverSupply">5,000 max</div></div>
+          <div class="pass-supply"><div class="supply-text" id="silverSupply">No limit</div></div>
           <ul class="pass-features">
             <li><span class="feat-icon">✓</span>Unlimited posts</li>
             <li><span class="feat-icon">✓</span>Up to 3 images per post</li>
@@ -972,7 +972,7 @@ async function smartConnectWallet(){
           <div class="pass-top"><div class="pass-tier">🥇 Gold</div><div class="pass-best">Best value</div></div>
           <div class="pass-price">$9</div>
           <div class="pass-price-note">Paid in BNB · live rate from Chainlink</div>
-          <div class="pass-supply"><div class="supply-track"><div class="supply-fill" data-target="1%"></div></div><div class="supply-text" id="goldSupply">3,000 max</div></div>
+          <div class="pass-supply"><div class="supply-text" id="goldSupply">No limit</div></div>
           <ul class="pass-features">
             <li><span class="feat-icon">✓</span>Unlimited posts & images, up to 1000 words each</li>
             <li><span class="feat-icon">✓</span>VIP badge 🥇</li>
@@ -1068,8 +1068,8 @@ async function smartConnectWallet(){
         before you spend anything. Never put in money you cannot afford to lose.
       </p>
       <div class="footer-links" style="display:flex;justify-content:center;gap:18px;margin-top:18px;flex-wrap:wrap;">
-        <a href="https://bscscan.com/address/0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c" target="_blank" rel="noopener noreferrer">Gold Pass</a>
-        <a href="https://bscscan.com/address/0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89" target="_blank" rel="noopener noreferrer">Silver Pass</a>
+        <a href="https://bscscan.com/address/0xCF2B61D76F2140D8270e612918DEE1501EcC637C" target="_blank" rel="noopener noreferrer">Gold Pass</a>
+        <a href="https://bscscan.com/address/0x543a0Bd90387768BE17E038ff685be7DD8d9791A" target="_blank" rel="noopener noreferrer">Silver Pass</a>
         <a href="https://bscscan.com/address/0x9740e2C9214965d68A731b1af49Ed1b5814664ff" target="_blank" rel="noopener noreferrer">Launchpad</a>
         <a href="https://bscscan.com/address/0x8923bF72154A10af579030162C6F945Df2F1b351" target="_blank" rel="noopener noreferrer">Trading pools</a>
         <a href="https://bscscan.com/address/0x78D7211915D15446230f3Fb0cC8469cD57Aa29Bf" target="_blank" rel="noopener noreferrer">NFT market</a>
@@ -1080,8 +1080,8 @@ async function smartConnectWallet(){
   <footer>
     <div><div class="footer-logo">OpenGate</div><div class="footer-copy">© 2025 OpenGate. Built on BNB Chain, Polygon, Base, Arbitrum and zkLitVM.</div></div>
     <div class="footer-links">
-      <a href="https://bscscan.com/address/0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c" target="_blank">GoldPass</a>
-      <a href="https://bscscan.com/address/0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89" target="_blank">SilverPass</a>
+      <a href="https://bscscan.com/address/0xCF2B61D76F2140D8270e612918DEE1501EcC637C" target="_blank">GoldPass</a>
+      <a href="https://bscscan.com/address/0x543a0Bd90387768BE17E038ff685be7DD8d9791A" target="_blank">SilverPass</a>
     </div>
   </footer>
 </div>
@@ -1150,7 +1150,7 @@ async function smartConnectWallet(){
             <div onclick="testnetGo('games')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
               <div style="font-size:30px;margin-bottom:8px;">🎮</div>
               <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Testnet Games</div>
-              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Battleship, Dice & Lottery — play free with test GATE.</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Battleship and Dice — play free with test GATE.</div>
             </div>
             <div onclick="testnetGo('faucet')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
               <div style="font-size:30px;margin-bottom:8px;">💧</div>
@@ -2104,7 +2104,6 @@ async function smartConnectWallet(){
             <div class="w-row"><span class="w-lbl">❤️ Like posts</span><span class="w-val" style="color:var(--muted);">Sends 0.1 GATE to author</span></div>
             <div class="w-row"><span class="w-lbl">💎 Stake</span><span class="w-val" style="color:var(--green);">Earn 11% APR · testnet</span></div>
             <div class="w-row"><span class="w-lbl">🎲 Dice game</span><span class="w-val" style="color:var(--gold);">Win up to 5× your bet</span></div>
-            <div class="w-row"><span class="w-lbl">🎰 GATE Lottery</span><span class="w-val" style="color:var(--gold);">10 GATE · testnet</span></div>
             <div class="w-row"><span class="w-lbl">🪙 Create token</span><span class="w-val" style="color:var(--muted);">Launch your own token</span></div>
           </div>
         </div>
@@ -2207,12 +2206,6 @@ async function smartConnectWallet(){
             <div style="font-size:15px;font-weight:700;">Dice Roll</div>
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">Guess 1-6, win 5×</div>
             <div style="font-size:11px;color:var(--gold);margin-top:6px;">50 / 100 / 200 / 500 GATE</div>
-          </div>
-          <div onclick="showTab('lottery')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:36px;margin-bottom:8px;">🎰</div>
-            <div style="font-size:15px;font-weight:700;">Lottery</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;">20 players, one winner</div>
-            <div style="font-size:11px;color:#a855f7;margin-top:6px;">10 GATE per ticket</div>
           </div>
           <div onclick="showTab('lending')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='var(--silver)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="font-size:36px;margin-bottom:8px;">🏦</div>
@@ -2499,72 +2492,6 @@ async function smartConnectWallet(){
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">My Recent Games</div>
             <div id="diceHistory"><div style="font-size:13px;color:var(--muted);">Connect wallet to see history</div></div>
-          </div>
-        </div>
-      </div>
-      <div id="view-lottery" style="display:none;">
-        <div class="feed-hdr">🎰 GATE Lottery</div>
-        <div style="margin:12px auto;max-width:600px;padding:12px 14px;background:rgba(245,200,66,0.08);border:1px solid rgba(245,200,66,0.35);border-radius:12px;color:var(--text);font-size:13px;line-height:1.6;text-align:left;"><b>⚠️ zkLitVM testnet is moving house.</b> The test network is being migrated to a new provider, so everything here is temporarily out of order. Nothing is lost — it comes back when the new network addresses are published. The real-money parts of OpenGate (BNB Chain, Polygon, Base, Arbitrum) are unaffected.</div>
-        <div style="padding:20px;max-width:560px;margin:0 auto;">
-
-          <!-- Current Round -->
-          <div style="background:linear-gradient(145deg,rgba(245,200,66,0.09),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:24px;margin-bottom:16px;text-align:center;">
-            <div style="font-size:13px;color:var(--muted);margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Round #<span id="lotteryRound">—</span></div>
-            <div style="font-size:48px;font-weight:700;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:4px;" id="lotteryPot">— GATE</div>
-            <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Current Prize Pool</div>
-
-            <!-- Players progress -->
-            <div style="margin-bottom:12px;">
-              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
-                <span>Players</span>
-                <span><span id="lotteryPlayers">0</span> / 20</span>
-              </div>
-              <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
-                <div id="lotteryBar" style="height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:4px;width:0%;transition:width .8s ease;"></div>
-              </div>
-            </div>
-
-            <!-- Round status -->
-            <div id="lotteryStatusBox" style="font-size:12px;color:var(--muted);margin-bottom:16px;">—</div>
-
-            <!-- My tickets -->
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:20px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">My tickets this round</div>
-              <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--gold);" id="myLotteryTickets">—</div>
-            </div>
-
-            <!-- Buy tickets -->
-            <div style="margin-bottom:12px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many tickets? (1-5 per tx, 10 GATE each)</div>
-              <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
-                <button onclick="setLotteryQty(1)" id="lqty1" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:16px;font-weight:700;cursor:pointer;">1</button>
-                <button onclick="setLotteryQty(2)" id="lqty2" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">2</button>
-                <button onclick="setLotteryQty(3)" id="lqty3" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">3</button>
-                <button onclick="setLotteryQty(5)" id="lqty5" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">5</button>
-              </div>
-              <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cost: <span id="lotteryCost" style="color:var(--gold);font-weight:700;">10 GATE</span></div>
-              <button onclick="buyLotteryTicket()" id="buyTicketBtn"
-                style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;transition:all .2s;"
-                onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-                🎟️ Buy Ticket
-              </button>
-            </div>
-          </div>
-
-          <!-- Rules -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">How it works</div>
-            <div class="w-row"><span class="w-lbl">Ticket price</span><span class="w-val" style="color:var(--gold);">10 GATE</span></div>
-            <div class="w-row"><span class="w-lbl">Max players</span><span class="w-val">20</span></div>
-            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">95% of pot</span></div>
-            <div class="w-row"><span class="w-lbl">Platform fee</span><span class="w-val">5%</span></div>
-            <div class="w-row"><span class="w-lbl">Draw</span><span class="w-val">Auto when full</span></div>
-          </div>
-
-          <!-- Past rounds -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Past Winners</div>
-            <div id="pastLotteryRounds"><div style="font-size:13px;color:var(--muted);">Loading...</div></div>
           </div>
         </div>
       </div>
@@ -4046,7 +3973,6 @@ async function smartConnectWallet(){
       <div class="drawer-lbl">Play</div>
       <button class="drawer-btn" id="drawer-games" onclick="closeDrawer();showTab('games')"><span class="drawer-ico">🎮</span>Games</button>
       <button class="drawer-btn" id="drawer-groups" onclick="closeDrawer();showTab('groups')"><span class="drawer-ico">👥</span>Groups</button>
-      <button class="drawer-btn" id="drawer-lottery" onclick="closeDrawer();showTab('lottery')"><span class="drawer-ico">🎰</span>Lottery</button>
 
       <div class="drawer-lbl">More</div>
       <button class="drawer-btn" id="drawer-market" onclick="closeDrawer();showTab('market')"><span class="drawer-ico">🛒</span>NFT Market</button>
@@ -4125,6 +4051,25 @@ const SUPABASE_URL = 'https://hgzthbidfdqomuotdocb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnenRoYmlkZmRxb211b3Rkb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTI2NjEsImV4cCI6MjA5NjU4ODY2MX0.otgk-jq2k0COrIE3cUEnRBPYKGnzAHRi3LEIQhE7khA';
 const GOLD_PASS  = '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
 const SILVER_PASS= '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
+/* Пропуска V2 (ноябрь 2026): без ограничения количества, цену меняет владелец,
+   бесплатная выдача сохранена. Старые пропуска V1 остаются действительными
+   навсегда — каждая проверка ниже смотрит НА ОБА контракта сразу.
+   Новые пропуска продаются только из V2. */
+const GOLD_PASS_V2   = '0xCF2B61D76F2140D8270e612918DEE1501EcC637C';
+const SILVER_PASS_V2 = '0x543a0Bd90387768BE17E038ff685be7DD8d9791A';
+const GOLD_PASSES    = [GOLD_PASS_V2, GOLD_PASS];
+const SILVER_PASSES  = [SILVER_PASS_V2, SILVER_PASS];
+const GOLD_PASS_MINT   = GOLD_PASS_V2;
+const SILVER_PASS_MINT = SILVER_PASS_V2;
+/* Сколько пропусков у кошелька: складывает новый и старый контракт. */
+async function passCount(addresses, provider, wallet){
+  var abi=['function balanceOf(address) view returns(uint256)'];
+  var total=0n;
+  for(var i=0;i<addresses.length;i++){
+    try{ total += await new ethers.Contract(addresses[i],abi,provider).balanceOf(wallet); }catch(e){}
+  }
+  return total;
+}
 /* ═══════════════════════════════════════════════════════════════════════
    ПЕРЕДАЧА ПЛОЩАДКИ: кошелёк владельца указан ЗДЕСЬ И ТОЛЬКО ЗДЕСЬ.
    Раньше он был вписан в девяти разных местах файла под шестью разными
@@ -4176,7 +4121,7 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
 // LitVM has exactly one public RPC (liteforge.rpc.caldera.xyz) — unlike
 // BNB/Polygon/Base there is no fallback list to rotate through (checked
 // chainlist.org: this is the only endpoint that exists for this chain).
-// So every faucet/lottery/balance/NFT read that goes through
+// So every faucet/balance/NFT read that goes through
 // getReadProvider() is a single point of failure: one slow response or
 // a transient 429/timeout from that one host and the read just fails —
 // which is exactly what "works time from time" looks like from outside.
@@ -4237,7 +4182,6 @@ const TOKEN_FACTORY   = '0x07b49A05C2a2cf2B11cA5796Fcad250E9Bc2D38f';
 const NFT_MARKET      = '0xF80a8ea1324679C95E81BDf056FC29ad7E8A7Cb0';
 const GATE_REWARDS    = '0xc4da965B91F13D89fEd37fd75452cc596f663F3a';
 const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
-const GATE_LOTTERY    = '0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035';
 const GATE_DICE         = '0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855';
 const BATTLESHIP_ADDR   = '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143';
 const GATE_LENDING      = '0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6';
@@ -4283,26 +4227,6 @@ const DICE_ABI        = [
   'function housePool() view returns(uint256)',
   'function playerWins(address) view returns(uint256)',
   'function playerLosses(address) view returns(uint256)',
-];
-// ВИПРАВЛЕНО (я помилився раніше): цей контракт реально живе на zkLitVM,
-// не на BNB — на BNB за цією ж адресою коду взагалі нема (eth_getCode = "0x").
-// Перевірено напряму по байткоду на zkLitVM: селектори збігаються 1:1 зі
-// старим ABI нижче (buyTicket/getCurrentRound/getMyTickets/rounds/TICKET_PRICE/
-// MAX_PLAYERS/draw), і currentRound() на ланцюгу зараз повертає 97 — точнісінько
-// як на скріні. Тобто оригінальний ABI був правильний, купівля білетів і
-// раніше не працювала не через баг фронта, а тому що сам раунд #97 реально
-// неактивний (isActive=false) — контракт коректно відхиляє купівлю.
-const LOTTERY_ABI     = [
-  'function buyTicket(uint256)',
-  'function draw()',
-  'function getCurrentRound() view returns(uint256,uint256,uint256,bool)',
-  'function getRoundPlayers(uint256) view returns(address[])',
-  'function getMyTickets(uint256) view returns(uint256)',
-  'function rounds(uint256) view returns(uint256,address[],address,uint256,bool,uint256)',
-  'function currentRound() view returns(uint256)',
-  'function TICKET_PRICE() view returns(uint256)',
-  'function MAX_PLAYERS() view returns(uint256)',
-  'function owner() view returns(address)',
 ];
 const DAO_ABI         = [
   'function createProposal(string,string) returns(uint256)',
@@ -7846,10 +7770,7 @@ async function initGoldPolygonBattle(){
   if(!isOwner&&(!pass||pass==='free')){
     try{
       var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
-      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
+      var r=await Promise.all([passCount(GOLD_PASSES,bnbP,userAddr),passCount(SILVER_PASSES,bnbP,userAddr)]);
       if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
     }catch(e){}
   }
@@ -8731,10 +8652,7 @@ async function initGoldBaseBattle(){
   if(!isOwner&&(!pass||pass==='free')){
     try{
       var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
-      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
+      var r=await Promise.all([passCount(GOLD_PASSES,bnbP,userAddr),passCount(SILVER_PASSES,bnbP,userAddr)]);
       if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
     }catch(e){}
   }
@@ -9632,9 +9550,7 @@ async function initGoldBattle(){
   if(!isOwner&&!hasGold){
     try{
       var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var gbal=await gC.balanceOf(userAddr).catch(function(){return 0n;});
+      var gbal=await passCount(GOLD_PASSES,bnbP,userAddr);
       if(gbal>0n) hasGold=true;
     }catch(e){}
   }
@@ -10598,12 +10514,10 @@ async function checkPassType(){
   if(!userAddr) return;
   try{
     const bnbP = getBNBProvider();
-    const nftAbi = ['function balanceOf(address) view returns(uint256)'];
-    const goldNFT   = new ethers.Contract('0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c', nftAbi, bnbP);
-    const silverNFT = new ethers.Contract('0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89', nftAbi, bnbP);
+    // Смотрим и новые пропуска, и старые — старые остаются действительными.
     const [goldBal, silverBal] = await Promise.all([
-      ogTimeout(goldNFT.balanceOf(userAddr), 8000),
-      ogTimeout(silverNFT.balanceOf(userAddr), 8000)
+      ogTimeout(passCount(GOLD_PASSES, bnbP, userAddr), 8000),
+      ogTimeout(passCount(SILVER_PASSES, bnbP, userAddr), 8000)
     ]);
     let passType = 'free';
     if(goldBal > 0n) passType = 'gold';
@@ -10684,7 +10598,6 @@ function showTab(tab){
   document.getElementById('view-market').style.display=tab==='market'?'block':'none';
   document.getElementById('view-nftstudio').style.display=tab==='nftstudio'?'block':'none';
   document.getElementById('view-dao').style.display=tab==='dao'?'block':'none';
-  document.getElementById('view-lottery').style.display=tab==='lottery'?'block':'none';
   document.getElementById('view-dice').style.display=tab==='dice'?'block':'none';
   document.getElementById('view-battle').style.display=tab==='battle'?'block':'none';
   document.getElementById('view-games').style.display=tab==='games'?'block':'none';
@@ -10745,7 +10658,6 @@ function showTab(tab){
   if(tab==='explore') loadExploreDefault();
   if(tab==='market') loadMarketplace();
   if(tab==='dao') loadDAO();
-  if(tab==='lottery') loadLottery();
   if(tab==='dice') loadDice();
   if(tab==='battle'){ loadBattleLobby(); subscribeToBattleLobby(); clearInterval(bsTimer); }
   if(tab==='games'){}
@@ -12350,7 +12262,7 @@ async function openMintModal(type){
   document.getElementById('mintModal').classList.add('open');
   try{
     const p=getBNBProvider();
-    const c=new ethers.Contract(isGold?GOLD_PASS:SILVER_PASS,MINT_ABI,p);
+    const c=new ethers.Contract(isGold?GOLD_PASS_MINT:SILVER_PASS_MINT,MINT_ABI,p);
     mintPrice=await c.getMintPriceBNB();
     document.getElementById('mintBnb').textContent=parseFloat(ethers.formatEther(mintPrice)).toFixed(6)+' BNB';
     document.getElementById('mintNote').textContent='Live rate via Chainlink oracle';
@@ -12361,7 +12273,7 @@ async function executeMint(){
   if(!userAddr){await connectWallet();return;}
   if(!mintPrice){showToast('Price not loaded','err');return;}
   await switchToBNB();
-  const addr=mintType==='gold'?GOLD_PASS:SILVER_PASS;
+  const addr=mintType==='gold'?GOLD_PASS_MINT:SILVER_PASS_MINT;
   const c=new ethers.Contract(addr,MINT_ABI,signer);
   const btn=document.getElementById('mintExecBtn');
   try{
@@ -13633,9 +13545,7 @@ async function declineChallengeDM(fromWallet,event){
 
 // ── DICE TOKEN ──
 let diceToken = 'GATE';
-let lotteryToken = 'GATE';
 function setDiceToken(t){diceToken=t;const g=document.getElementById('diceTokenGATE');const z=document.getElementById('diceTokenZKLTC');if(g){g.style.borderColor=t==='GATE'?'var(--gold)':'var(--border)';g.style.background=t==='GATE'?'rgba(245,200,66,0.1)':'var(--bg3)';g.style.color=t==='GATE'?'var(--gold)':'var(--muted)';}if(z){z.style.borderColor=t==='zkLTC'?'var(--gold)':'var(--border)';z.style.background=t==='zkLTC'?'rgba(245,200,66,0.1)':'var(--bg3)';z.style.color=t==='zkLTC'?'var(--gold)':'var(--muted)';}}
-function setLotteryToken(t){lotteryToken=t;}
 function updateDiceWinText(){const el=document.getElementById('diceWinAmt');if(el){const win=(diceBet*5*0.97).toFixed(2);el.textContent='Win: '+win+' '+(diceToken||'GATE')+' (5× − 3% fee)';}}
 
 // ── DICE GAME ──
@@ -13670,139 +13580,6 @@ async function rollDice(){
     loadDice();loadGateBal();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
   btn.textContent='🎲 Roll Dice';btn.disabled=false;
-}
-
-// ── LOTTERY ──
-// ВИПРАВЛЕНО: лотерея реально живе на zkLitVM (GATE-токен, ліміт 20 гравців,
-// авто-розіграш при заповненні), а не на BNB/USDT з Chainlink VRF — та версія
-// була моєю помилкою і зняла зі стрічки, тому кнопка "Купити білет" не
-// працювала. Перевірено напряму по байткоду й живих getCurrentRound()/
-// currentRound() викликах на zkLitVM. Раунд #97 зараз isActive=false —
-// це не баг, контракт коректно блокує купівлю, поки new draw не запущено;
-// draw() власницька (onlyOwner) і власник контракту — не поточний гаманець
-// власника сайту, тому кнопки "розіграти" тут немає (вона б все одно
-// відхилялась). Нижче лише статус-повідомлення для гравців.
-let lotteryQty = 1;
-function setLotteryQty(qty){lotteryQty=qty;[1,2,3,5].forEach(q=>{const btn=document.getElementById('lqty'+q);if(!btn)return;if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});document.getElementById('lotteryCost').textContent=(qty*10)+' GATE';}
-async function loadLottery(){
-  try{
-    const p=getReadProvider();
-    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
-    // getCurrentRound() returns (roundId, playerCount, pot, isActive)
-    const round=await lottery.getCurrentRound();
-    const roundId=Number(round[0]);
-    const playerCount=Number(round[1]);
-    const pot=round[2];
-    const isActive=round[3];
-    document.getElementById('lotteryRound').textContent=roundId.toString();
-    document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';
-    document.getElementById('lotteryPlayers').textContent=playerCount.toString();
-    document.getElementById('lotteryBar').style.width=(playerCount*100/20)+'%';
-
-    const statusBox=document.getElementById('lotteryStatusBox');
-    const buyBtn=document.getElementById('buyTicketBtn');
-    if(statusBox&&buyBtn){
-      if(isActive){
-        statusBox.textContent=playerCount+' / 20 players — round is open, draw fires automatically when full.';
-        buyBtn.disabled=false; buyBtn.style.opacity='1'; buyBtn.style.cursor='pointer';
-      }else{
-        statusBox.textContent='This round has ended and is waiting to be drawn. Buying is paused until the next round opens.';
-        buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
-      }
-    }
-
-    if(userAddr){
-      try{
-        const myT=await lottery.getMyTickets(roundId);
-        document.getElementById('myLotteryTickets').textContent=myT.toString();
-      }catch(e){}
-    }
-    loadLotteryWinners(lottery, roundId);
-  }catch(e){
-    document.getElementById('pastLotteryRounds').innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load lottery</div>';
-  }
-}
-
-async function loadLotteryWinners(lottery, currentRoundId){
-  const el=document.getElementById('pastLotteryRounds');
-  if(!el) return;
-  if(currentRoundId<=1){
-    el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No past rounds yet</div>';
-    return;
-  }
-  el.innerHTML='<div style="font-size:13px;color:var(--muted);">Loading winners...</div>';
-  try{
-    const from=Math.max(1, currentRoundId-10);
-    const promises=[];
-    for(let i=currentRoundId-1;i>=from;i--){
-      promises.push((async(roundNum)=>{
-        try{
-          // rounds(uint256) returns: (uint256 pot, address[] players, address winner, uint256 ticketPrice, bool drawn, uint256 timestamp)
-          const r=await lottery.rounds(roundNum);
-          const pot=r[0];
-          const players=r[1];
-          const winner=r[2];
-          const drawn=r[4];
-          // Also try by name in case ethers returns object
-          const potVal=r.pot??pot??0n;
-          const winnderVal=r.winner??winner??'';
-          const drawnVal=r.drawn??drawn??false;
-          const playersVal=r.players??players??[];
-          const zeroAddr='0x0000000000000000000000000000000000000000';
-          if(!drawnVal||!winnderVal||winnderVal===zeroAddr) return null;
-          return {
-            roundNum,
-            pot: potVal,
-            winner: winnderVal,
-            players: Array.isArray(playersVal)?playersVal.length:Number(playersVal)||0
-          };
-        }catch(e){ return null; }
-      })(i));
-    }
-    const results=(await Promise.all(promises)).filter(Boolean);
-    if(results.length===0){
-      el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No completed rounds yet</div>';
-      return;
-    }
-    let html='';
-    results.forEach(r=>{
-      const potGate=parseFloat(ethers.formatEther(r.pot)).toFixed(0);
-      const prize=(parseFloat(ethers.formatEther(r.pot))*0.95).toFixed(0);
-      const winnerShort=r.winner.slice(0,6)+'...'+r.winner.slice(-4);
-      const isMe=userAddr&&r.winner.toLowerCase()===userAddr.toLowerCase();
-      html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div>
-          <div style="font-size:13px;font-weight:700;">Round #${r.roundNum} ${isMe?'🎉 You won!':''}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.players} players · ${potGate} GATE pot</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:12px;font-weight:700;color:var(--green);">🏆 ${prize} GATE</div>
-          <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;cursor:pointer;"
-            onclick="cpText('${r.winner}');showToast('Copied!','ok')" title="${r.winner}">${winnerShort} ⧉</div>
-        </div>
-      </div>`;
-    });
-    el.innerHTML=html;
-  }catch(e){
-    el.innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load past rounds</div>';
-  }
-}
-async function buyLotteryTicket(){
-  if(!userAddr){showToast('Connect wallet first','err');return;}
-  const btn=document.getElementById('buyTicketBtn');
-  btn.textContent='⏳ Checking...';btn.disabled=true;
-  try{
-    await switchToLitVM();
-    const freshSigner=await provider.getSigner();
-    const amount=ethers.parseEther((lotteryQty*10).toString());
-    await smartApprove(GATE_LOTTERY, amount, freshSigner);
-    btn.textContent='🎟️ Buying...';
-    const LOTTERY_IFACE=new ethers.Interface(['function buyTicket(uint256 qty)']);
-    const tx=await freshSigner.sendTransaction({to:GATE_LOTTERY,data:LOTTERY_IFACE.encodeFunctionData('buyTicket',[BigInt(lotteryQty)])});
-    await tx.wait();
-    showToast('🎟️ Ticket bought!','ok');loadLottery();loadGateBal();
-  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
-  btn.textContent='🎟️ Buy Ticket';btn.disabled=false;
 }
 
 // ── DAO ──
@@ -17257,28 +17034,23 @@ function tAgo(ts){const d=(Date.now()-new Date(ts))/1000;if(d<60)return'now';if(
 // ── SUPPLY COUNTS ──
 async function loadPassSupply(){
   try{
-    const abi=['function totalSupply() view returns(uint256)','function MAX_SUPPLY() view returns(uint256)'];
-    const [gMinted,gMax,sMinted,sMax]=await Promise.all([
-      bnbReadRetry(p=>new ethers.Contract(GOLD_PASS,abi,p).totalSupply()).catch(e=>{console.warn('[Supply] Gold totalSupply() failed:',e.message);return 0n;}),
-      bnbReadRetry(p=>new ethers.Contract(GOLD_PASS,abi,p).MAX_SUPPLY()).catch(e=>{console.warn('[Supply] Gold MAX_SUPPLY() failed:',e.message);return 3000n;}),
-      bnbReadRetry(p=>new ethers.Contract(SILVER_PASS,abi,p).totalSupply()).catch(e=>{console.warn('[Supply] Silver totalSupply() failed:',e.message);return 0n;}),
-      bnbReadRetry(p=>new ethers.Contract(SILVER_PASS,abi,p).MAX_SUPPLY()).catch(e=>{console.warn('[Supply] Silver MAX_SUPPLY() failed:',e.message);return 5000n;}),
+    // Пропусков больше не ограниченное число, поэтому показываем,
+    // сколько уже выдано: новый контракт плюс старый.
+    const abi=['function totalSupply() view returns(uint256)'];
+    const one=a=>bnbReadRetry(p=>new ethers.Contract(a,abi,p).totalSupply()).catch(e=>{console.warn('[Supply] totalSupply() failed for',a,e.message);return 0n;});
+    const [gNew,gOld,sNew,sOld]=await Promise.all([
+      one(GOLD_PASS_V2), one(GOLD_PASS), one(SILVER_PASS_V2), one(SILVER_PASS),
     ]);
-    console.log('[Supply] Gold minted:',gMinted.toString(),'/ max:',gMax.toString());
-    console.log('[Supply] Silver minted:',sMinted.toString(),'/ max:',sMax.toString());
-    const gLeft=Number(gMax)-Number(gMinted);
-    const sLeft=Number(sMax)-Number(sMinted);
+    const gMinted=Number(gNew)+Number(gOld);
+    const sMinted=Number(sNew)+Number(sOld);
+    console.log('[Supply] Gold issued:',gMinted,'(new',String(gNew),'+ old',String(gOld)+')');
+    console.log('[Supply] Silver issued:',sMinted,'(new',String(sNew),'+ old',String(sOld)+')');
     const gEl=document.getElementById('goldSupply');
     const sEl=document.getElementById('silverSupply');
-    if(gEl)gEl.textContent=gLeft.toLocaleString()+' / 3,000 remaining';
-    if(sEl)sEl.textContent=sLeft.toLocaleString()+' / 5,000 remaining';
-    // Update supply bar
-    document.querySelectorAll('.pass-card.gold .supply-fill').forEach(b=>{
-      b.style.width=Math.min(100,(Number(gMinted)/3000)*100)+'%';
-    });
-    document.querySelectorAll('.pass-card.silver .supply-fill').forEach(b=>{
-      b.style.width=Math.min(100,(Number(sMinted)/5000)*100)+'%';
-    });
+    if(gEl)gEl.textContent=gMinted.toLocaleString()+' issued';
+    if(sEl)sEl.textContent=sMinted.toLocaleString()+' issued';
+    // Полоска больше ничего не ограничивает — убираем её.
+    document.querySelectorAll('.pass-card .supply-track').forEach(b=>{b.style.display='none';});
   }catch(e){console.warn('[Supply] loadPassSupply failed entirely:',e.message);}
 }
 
@@ -17392,7 +17164,7 @@ const LANGS = {
     home:'Home', allPosts:'All Posts', following:'Following',
     connectWallet:'Connect Wallet', explore:'Explore', messages:'Messages',
     staking:'Earn', lending:'Loans', presale:'Early Sale', games:'Games',
-    lottery:'Lottery', market:'NFT Market', launchpad:'Create Token', faucet:'Free Coins',
+    market:'NFT Market', launchpad:'Create Token', faucet:'Free Coins',
     buyGate:'Buy GATE', landingPage:'← Landing Page',
     whatsOnMind:"What's on your mind?", pullToRefresh:'Pull to refresh',
     releaseToRefresh:'Release to refresh!', refreshing:'Refreshing...',
@@ -17409,10 +17181,6 @@ const LANGS = {
     claimBtn2:'🚰 Claim 100 GATE', alreadyClaimed:'Already Claimed ✓', claimEligible:'✓ You are eligible!',
     // Games
     gamesTitle:'🎮 Games', vsAI:'Free, instant start', stakeMode:'With Stakes', freeMode:'Free Play',
-    // Lottery
-    currentPot:'Current Prize Pool', players:'Players', myTickets:'My tickets this round',
-    ticketPrice:'Ticket price', maxPlayers:'Max players', prize:'Prize', platformFee:'Platform fee',
-    draw:'Every 5 days', pastWinners:'Past Winners', buyTicket:'🎟️ Buy Ticket',
     // Messages
     typeMsg:'Type a message...', send:'Send', newDmPlaceholder:'0x...',
     // Profile
@@ -17428,7 +17196,7 @@ const LANGS = {
     home:'Главная', allPosts:'Все посты', following:'Подписки',
     connectWallet:'Подключить кошелёк', explore:'Поиск', messages:'Сообщения',
     staking:'Заработок', lending:'Займы', presale:'Ранняя продажа', games:'Игры',
-    lottery:'Лотерея', market:'NFT рынок', launchpad:'Создать токен', faucet:'Бесплатные монеты',
+    market:'NFT рынок', launchpad:'Создать токен', faucet:'Бесплатные монеты',
     buyGate:'Купить GATE', landingPage:'← На главную',
     whatsOnMind:'Что у вас на уме?', pullToRefresh:'Потяните для обновления',
     releaseToRefresh:'Отпустите!', refreshing:'Обновляем...',
@@ -17456,7 +17224,7 @@ const LANGS = {
     home:'Головна', allPosts:'Всі пости', following:'Підписки',
     connectWallet:'Підключити гаманець', explore:'Пошук', messages:'Повідомлення',
     staking:'Заробіток', lending:'Позики', presale:'Ранній продаж', games:'Ігри',
-    lottery:'Лотерея', market:'NFT ринок', launchpad:'Створити токен', faucet:'Безкоштовні монети',
+    market:'NFT ринок', launchpad:'Створити токен', faucet:'Безкоштовні монети',
     buyGate:'Купити GATE', landingPage:'← На головну',
     whatsOnMind:'Що у вас на думці?', pullToRefresh:'Потягніть для оновлення',
     releaseToRefresh:'Відпустіть!', refreshing:'Оновлення...',
@@ -17484,7 +17252,7 @@ const LANGS = {
     home:'होम', allPosts:'सभी पोस्ट', following:'फ़ॉलोइंग',
     connectWallet:'वॉलेट जोड़ें', explore:'खोजें', messages:'संदेश',
     staking:'कमाई', lending:'लोन', presale:'अर्ली सेल', games:'गेम्स',
-    lottery:'लॉटरी', market:'NFT', launchpad:'टोकन बनाएँ', faucet:'मुफ़्त सिक्के',
+    market:'NFT', launchpad:'टोकन बनाएँ', faucet:'मुफ़्त सिक्के',
     buyGate:'GATE खरीदें', landingPage:'← होम',
     whatsOnMind:'आप क्या सोच रहे हैं?', pullToRefresh:'नीचे खींचें',
     releaseToRefresh:'छोड़ें!', refreshing:'लोड हो रहा है...',
@@ -17512,7 +17280,7 @@ const LANGS = {
     home:'主页', allPosts:'全部帖子', following:'关注',
     connectWallet:'连接钱包', explore:'探索', messages:'消息',
     staking:'赚币', lending:'借贷', presale:'预售', games:'游戏',
-    lottery:'彩票', market:'NFT市场', launchpad:'创建代币', faucet:'免费代币',
+    market:'NFT市场', launchpad:'创建代币', faucet:'免费代币',
     buyGate:'购买GATE', landingPage:'← 首页',
     whatsOnMind:'你在想什么？', pullToRefresh:'下拉刷新',
     releaseToRefresh:'松开刷新！', refreshing:'刷新中...',
@@ -17540,7 +17308,7 @@ const LANGS = {
     home:'Ana Sayfa', allPosts:'Tüm Gönderiler', following:'Takip',
     connectWallet:'Cüzdan Bağla', explore:'Keşfet', messages:'Mesajlar',
     staking:'Kazanç', lending:'Kredi', presale:'Ön Satış', games:'Oyunlar',
-    lottery:'Piyango', market:'NFT Pazar', launchpad:'Token oluştur', faucet:'Ücretsiz jeton',
+    market:'NFT Pazar', launchpad:'Token oluştur', faucet:'Ücretsiz jeton',
     buyGate:'GATE Al', landingPage:'← Ana Sayfa',
     whatsOnMind:'Aklında ne var?', pullToRefresh:'Yenilemek için çek',
     releaseToRefresh:'Bırak!', refreshing:'Yenileniyor...',
@@ -17568,7 +17336,7 @@ const LANGS = {
     home:'Start', allPosts:'Alle Beiträge', following:'Folge ich',
     connectWallet:'Wallet verbinden', explore:'Entdecken', messages:'Nachrichten',
     staking:'Verdienen', lending:'Kredite', presale:'Vorverkauf', games:'Spiele',
-    lottery:'Lotterie', market:'NFT Markt', launchpad:'Token erstellen', faucet:'Gratis-Coins',
+    market:'NFT Markt', launchpad:'Token erstellen', faucet:'Gratis-Coins',
     buyGate:'GATE kaufen', landingPage:'← Startseite',
     whatsOnMind:'Was denkst du?', pullToRefresh:'Zum Aktualisieren ziehen',
     releaseToRefresh:'Loslassen!', refreshing:'Aktualisierung...',
@@ -17637,7 +17405,7 @@ function applyLang(){
   const cb=document.getElementById('connectBtn');
   if(cb&&!cb.classList.contains('connected'))cb.innerHTML='<div class="w-dot"></div>'+t('connectWallet');
   // Drawer btns
-  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet'};
+  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet'};
   Object.keys(dm).forEach(function(id){
     const el=document.getElementById(id);if(!el)return;
     const ico=el.querySelector('.drawer-ico');const badge=el.querySelector('.drawer-badge');
@@ -17681,9 +17449,6 @@ function applyLang(){
   const gh=document.querySelector('#view-games .feed-hdr');
   if(gh)gh.textContent=t('gamesTitle');
 
-  // Lottery header
-  const lh=document.querySelector('#view-lottery .feed-hdr');
-  if(lh)lh.textContent='🎰 '+t('lottery');
   const btk=document.getElementById('buyTicketBtn');
   if(btk&&!btk.disabled)btk.textContent=t('buyTicket');
 

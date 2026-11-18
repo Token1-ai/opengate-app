@@ -40,8 +40,13 @@ const { ethers } = require('ethers');
 // Пропуска. Вынесены в переменные окружения GOLD_PASS_CONTRACT и
 // SILVER_PASS_CONTRACT, чтобы новый владелец мог подключить свои,
 // не правя код. Без переменных берутся нынешние.
-const GOLD_PASS = process.env.GOLD_PASS_CONTRACT || '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
-const SILVER_PASS = process.env.SILVER_PASS_CONTRACT || '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
+// V2 — нынешние (без ограничения количества), V1 — старые, остаются действительными.
+const GOLD_PASS = process.env.GOLD_PASS_CONTRACT || '0xCF2B61D76F2140D8270e612918DEE1501EcC637C';
+const SILVER_PASS = process.env.SILVER_PASS_CONTRACT || '0x543a0Bd90387768BE17E038ff685be7DD8d9791A';
+const GOLD_PASS_V1 = process.env.GOLD_PASS_CONTRACT_V1 || '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
+const SILVER_PASS_V1 = process.env.SILVER_PASS_CONTRACT_V1 || '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
+const GOLD_PASSES = [GOLD_PASS, GOLD_PASS_V1].filter(Boolean);
+const SILVER_PASSES = [SILVER_PASS, SILVER_PASS_V1].filter(Boolean);
 const BNB_RPCS = [
   'https://bsc-dataseed.binance.org/',
   'https://bsc-dataseed1.defibit.io/',
@@ -62,11 +67,16 @@ async function getPassTier(wallet) {
   for (const rpc of BNB_RPCS) {
     try {
       const provider = new ethers.JsonRpcProvider(rpc);
-      const gold = new ethers.Contract(GOLD_PASS, NFT_MIN_ABI, provider);
-      const silver = new ethers.Contract(SILVER_PASS, NFT_MIN_ABI, provider);
+      // Считаем и новые пропуска, и старые: у кого есть любой — тот с пропуском.
+      const sumBalances = async (addresses) => {
+        const counts = await Promise.all(
+          addresses.map((a) => new ethers.Contract(a, NFT_MIN_ABI, provider).balanceOf(wallet))
+        );
+        return counts.reduce((a, b) => a + b, 0n);
+      };
       const [goldBal, silverBal] = await Promise.all([
-        gold.balanceOf(wallet),
-        silver.balanceOf(wallet),
+        sumBalances(GOLD_PASSES),
+        sumBalances(SILVER_PASSES),
       ]);
       if (goldBal > 0n) return 2;
       if (silverBal > 0n) return 1;
