@@ -14262,7 +14262,18 @@ function openListModal(){
   document.getElementById('listNFTModal').classList.add('open');
 }
 async function loadNFTPreview(){}
-async function submitListing(){if(!userAddr){showToast('Connect wallet first','err');return;}const contract=document.getElementById('listContract').value.trim();const tokenId=document.getElementById('listTokenId').value.trim();const price=document.getElementById('listPrice').value.trim();if(!contract||!tokenId||!price){showToast('Fill all fields','err');return;}try{await switchToLitVM();const nft=new ethers.Contract(contract,ERC721_ABI,signer);if(!await nft.isApprovedForAll(userAddr,NFT_MARKET))await(await nft.setApprovalForAll(NFT_MARKET,true)).wait();const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);await(await market.listNFT(contract,tokenId,ethers.parseEther(price))).wait();showToast('NFT listed! 🎉','ok');document.getElementById('listNFTModal').classList.remove('open');loadMarketplace();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
+async function submitListing(){if(!userAddr){showToast('Connect wallet first','err');return;}const contract=document.getElementById('listContract').value.trim();const tokenId=document.getElementById('listTokenId').value.trim();const price=document.getElementById('listPrice').value.trim();if(!contract||!tokenId||!price){showToast('Fill all fields','err');return;}try{await switchToLitVM();
+    // подпись берём заново: та, что лежала в signer, сделана ДО перехода
+    // на zkLitVM и после переключения сети уже не годится
+    const freshSigner=await provider.getSigner();
+    const nft=new ethers.Contract(contract,ERC721_ABI,freshSigner);
+    if(!await nft.isApprovedForAll(userAddr,NFT_MARKET)){
+      showToast('Step 1 of 2: allow the marketplace to move this NFT','ok');
+      await(await nft.setApprovalForAll(NFT_MARKET,true)).wait();
+    }
+    showToast('Step 2 of 2: confirm the listing','ok');
+    const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,freshSigner);
+    await(await market.listNFT(contract,tokenId,ethers.parseEther(price))).wait();showToast('NFT listed! 🎉','ok');document.getElementById('listNFTModal').classList.remove('open');loadMarketplace();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 async function buyNFT(listingId,price){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   try{
