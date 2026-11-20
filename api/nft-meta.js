@@ -39,6 +39,15 @@ module.exports = function handler(req, res) {
       description: 'Membership pass for OpenGate — grants 1.3x GATE rewards, unlimited posts with images, and early access to new features.',
       image: 'https://opengate.bond/silver-pass.png',
       trait: 'Silver'
+    },
+    // Безкоштовний колекційний дроп на мережі zkLitVM. Та сама ідея, що й
+    // з пропусками: один ендпоінт на всю колекцію, бо картинка в усіх
+    // однакова, а відрізняється тільки номер токена.
+    arcanix: {
+      name: 'Arcanix',
+      description: 'Arcanix — Epic collectible from the OpenGate founders drop. Minted free on the zkLitVM network by early members of the platform.',
+      image: 'https://opengate.bond/arcanix.jpg',
+      trait: 'Epic'
     }
   };
 
@@ -61,7 +70,7 @@ module.exports = function handler(req, res) {
     image: t.image,
     external_url: 'https://opengate.bond',
     attributes: [
-      { trait_type: 'Tier', value: t.trait },
+      { trait_type: tier === 'arcanix' ? 'Rarity' : 'Tier', value: t.trait },
       { trait_type: 'Platform', value: 'OpenGate' }
     ]
   });
