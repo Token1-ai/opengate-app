@@ -3023,6 +3023,30 @@ async function smartConnectWallet(){
         <!-- ══════════ zkLitVM PANEL ══════════ -->
         <div id="studioLitvmSection">
           <div style="grid-column:1/-1;"></div>
+
+        <!-- ══════════ ARCANIX — бесплатный дроп ══════════
+             Карточка оформлена как на NFT-маркете: картинка, название,
+             редкость, счётчик уже заминченных. Минт открывается только
+             после перехода в X — настоящую подписку проверить нельзя,
+             это барьер, а не проверка. -->
+        <div id="arcanixCard" style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
+          <div style="background:var(--bg2);border:1px solid var(--border-g);border-radius:var(--r);overflow:hidden;">
+            <div style="position:relative;background:var(--bg3);">
+              <img src="/arcanix.jpg" alt="Arcanix" loading="lazy" decoding="async" style="width:100%;display:block;height:300px;object-fit:contain;background:var(--bg3);"/>
+              <div style="position:absolute;top:10px;left:10px;background:rgba(8,9,12,.8);border:1px solid var(--border-g);color:var(--gold);font-size:11px;font-weight:700;padding:4px 10px;border-radius:999px;font-family:'Space Mono',monospace;">FREE MINT</div>
+            </div>
+            <div style="padding:14px 16px 16px;">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;">
+                <div style="font-size:17px;font-weight:700;">Arcanix</div>
+                <div id="arcanixMinted" style="font-size:12px;color:var(--muted);font-family:'Space Mono',monospace;white-space:nowrap;">…</div>
+              </div>
+              <div style="font-size:12px;color:var(--muted);margin-top:5px;line-height:1.55;">Free collectible on zkLitVM — one per wallet, you only pay the network fee. Follow us on X to unlock the mint.</div>
+              <div id="arcanixBtns" style="margin-top:12px;display:flex;flex-direction:column;gap:8px;"></div>
+              <div id="arcanixStatus" style="font-size:12px;margin-top:9px;text-align:center;color:var(--muted);min-height:16px;line-height:1.45;"></div>
+            </div>
+          </div>
+        </div>
+
         <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
           <button id="studiohelp-litvm-btn" onclick="toggleHelpBox('studiohelp-litvm')" class="help-toggle-btn">❔ How does this work?</button>
           <div id="studiohelp-litvm" style="display:none;background:var(--bg2);border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
@@ -4347,6 +4371,139 @@ const ERC721_ABI = [
   'function ownerOf(uint256) view returns(address)',
   'function name() view returns(string)',
 ];
+// ══════════════════ ARCANIX — бесплатный дроп на zkLitVM ══════════════════
+// Контракт выдаёт по одному NFT на кошелёк бесплатно — человек платит
+// только комиссию сети. Картинку и описание отдаёт сам сайт
+// (api/nft-meta?tier=arcanix&id=), поэтому в маркете NFT показывается
+// с картинкой сразу, без каких-либо настроек.
+//
+// Про "подписку на X": проверить её по-настоящему нельзя — для этого нужен
+// платный доступ от самого X. Поэтому кнопка просто открывает наш профиль
+// и после этого разблокирует минт. Это барьер от случайных людей, а не
+// проверка: кто захочет, тот обойдёт.
+const ARCANIX_ADDR  = '0x384aD8Bf79a2A0BDCD49EA4C0E21901cFC924178';
+const ARCANIX_X_URL = 'https://x.com/OpenGatelive';
+const ARCANIX_ABI   = [
+  'function mint()',
+  'function canMint(address) view returns(bool)',
+  'function totalSupply() view returns(uint256)',
+  'function balanceOf(address) view returns(uint256)',
+  'function mintOpen() view returns(bool)',
+];
+let _arcanixTokenId = null;
+let _arcanixOwned   = 0;
+let _arcanixOpen    = true;
+
+function arcanixFollowed(){ try{ return localStorage.getItem('og_arcanix_follow')==='1'; }catch(e){ return false; } }
+function arcanixSetStatus(text,color){
+  const el=document.getElementById('arcanixStatus');
+  if(el){ el.textContent=text||''; el.style.color=color||'var(--muted)'; }
+}
+
+function arcanixFollow(){
+  try{ localStorage.setItem('og_arcanix_follow','1'); }catch(e){}
+  window.open(ARCANIX_X_URL,'_blank','noopener');
+  arcanixRenderButtons();
+  arcanixSetStatus('Mint unlocked — thanks for the follow!','var(--green)');
+}
+
+function arcanixRenderButtons(){
+  const box=document.getElementById('arcanixBtns');
+  if(!box) return;
+  const gold='width:100%;padding:13px;border-radius:12px;background:var(--gold);color:#08090C;font-size:14px;font-weight:700;border:none;cursor:pointer;';
+  const plain='width:100%;padding:13px;border-radius:12px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:14px;font-weight:700;cursor:pointer;';
+  const off='width:100%;padding:13px;border-radius:12px;background:var(--bg3);color:var(--muted);border:1px solid var(--border);font-size:14px;font-weight:700;cursor:not-allowed;opacity:.65;';
+  const h=[];
+  if(!arcanixFollowed()){
+    h.push('<button onclick="arcanixFollow()" style="'+gold+'">𝕏  Follow @OpenGatelive to unlock</button>');
+    h.push('<button disabled style="'+off+'">🔒  Mint locked</button>');
+  }else if(_arcanixOwned>0){
+    h.push('<button onclick="arcanixSell()" style="'+gold+'">List for sale on the marketplace</button>');
+    h.push('<button onclick="arcanixMint()" id="arcanixMintBtn" style="'+plain+'">Mint another</button>');
+  }else if(!_arcanixOpen){
+    h.push('<button disabled style="'+off+'">Mint is closed</button>');
+  }else{
+    h.push('<button onclick="arcanixMint()" id="arcanixMintBtn" style="'+gold+'">Mint free — you pay only the network fee</button>');
+  }
+  box.innerHTML=h.join('');
+}
+
+async function arcanixLoad(){
+  try{
+    const p=getReadProvider();
+    const c=new ethers.Contract(ARCANIX_ADDR,ARCANIX_ABI,p);
+    const [supply,open]=await Promise.all([c.totalSupply(),c.mintOpen()]);
+    _arcanixOpen=open;
+    const el=document.getElementById('arcanixMinted');
+    if(el) el.textContent=supply.toString()+' minted';
+    if(typeof userAddr!=='undefined' && userAddr){
+      _arcanixOwned=Number(await c.balanceOf(userAddr));
+      if(_arcanixOwned>0 && !_arcanixTokenId) _arcanixTokenId=await arcanixFindToken(userAddr);
+    }else{
+      _arcanixOwned=0;
+    }
+  }catch(e){
+    // сеть могла не ответить — кнопки всё равно показываем, минт сам проверит
+    const el=document.getElementById('arcanixMinted');
+    if(el&&el.textContent==='…') el.textContent='';
+  }
+  arcanixRenderButtons();
+}
+
+// Номер своего токена нужен, чтобы кнопка продажи открывала окно уже
+// заполненным. Контракт не ведёт список токенов владельца (это удорожает
+// минт), поэтому ищем по событию перевода.
+async function arcanixFindToken(wallet){
+  try{
+    const p=getReadProvider();
+    const topic=ethers.id('Transfer(address,address,uint256)');
+    const to='0x'+wallet.toLowerCase().slice(2).padStart(64,'0');
+    const logs=await p.getLogs({address:ARCANIX_ADDR,topics:[topic,null,to],fromBlock:0,toBlock:'latest'});
+    if(!logs.length) return null;
+    return BigInt(logs[logs.length-1].topics[3]).toString();
+  }catch(e){ return null; }
+}
+
+async function arcanixMint(){
+  if(typeof userAddr==='undefined'||!userAddr){ showToast('Connect wallet first','err'); return; }
+  if(!arcanixFollowed()){ showToast('Follow us on X first','err'); return; }
+  const btn=document.getElementById('arcanixMintBtn');
+  try{
+    await switchToLitVM();
+    if(btn){ btn.disabled=true; btn.textContent='Minting…'; }
+    arcanixSetStatus('Confirm in your wallet…');
+    const c=new ethers.Contract(ARCANIX_ADDR,ARCANIX_ABI,signer);
+    const rc=await (await c.mint()).wait();
+    // номер токена берём прямо из квитанции — надёжнее, чем искать по логам
+    try{
+      const me=userAddr.toLowerCase();
+      for(const lg of (rc.logs||[])){
+        if(String(lg.address).toLowerCase()===ARCANIX_ADDR.toLowerCase() && lg.topics.length===4
+           && ('0x'+lg.topics[2].slice(26)).toLowerCase()===me){
+          _arcanixTokenId=BigInt(lg.topics[3]).toString(); break;
+        }
+      }
+    }catch(e){}
+    showToast('Arcanix minted! 🎉','ok');
+    arcanixSetStatus(_arcanixTokenId?('Yours: Arcanix #'+_arcanixTokenId):'Minted ✓','var(--green)');
+    await arcanixLoad();
+  }catch(e){
+    const msg=String((e&&(e.reason||e.shortMessage||e.message))||'Failed');
+    arcanixSetStatus(/already minted/i.test(msg)?'This wallet already has one.':msg.slice(0,90),'var(--red)');
+    showToast(msg.slice(0,60),'err');
+    arcanixRenderButtons();
+  }
+}
+
+function arcanixSell(){
+  const ca=document.getElementById('listContract');
+  const ti=document.getElementById('listTokenId');
+  if(ca) ca.value=ARCANIX_ADDR;
+  if(ti) ti.value=_arcanixTokenId||'';
+  document.getElementById('listNFTModal').classList.add('open');
+  if(!_arcanixTokenId) arcanixSetStatus('Could not read your token number — type it in the window.','var(--gold)');
+}
+
 const NFT_MARKET_POLYGON = '0x73b149defe4164484d3da166cAFB75d2CB40d997';
 const NFT_MARKET_POLYGON_ABI = [
   'function listNFT(address,uint256,uint256,address) returns(uint256)',
@@ -10697,6 +10854,7 @@ function showTab(tab){
   document.getElementById('view-explore').style.display=tab==='explore'?'block':'none';
   document.getElementById('view-market').style.display=tab==='market'?'block':'none';
   document.getElementById('view-nftstudio').style.display=tab==='nftstudio'?'block':'none';
+  if(tab==='nftstudio'){ try{ arcanixLoad(); }catch(e){} }
   document.getElementById('view-dao').style.display=tab==='dao'?'block':'none';
   document.getElementById('view-dice').style.display=tab==='dice'?'block':'none';
   document.getElementById('view-battle').style.display=tab==='battle'?'block':'none';
