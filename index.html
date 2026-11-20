@@ -1147,41 +1147,68 @@ async function smartConnectWallet(){
         </div>
         <div style="padding:16px 20px;max-width:720px;margin:0 auto;">
           <div style="background:linear-gradient(135deg,rgba(245,200,66,0.12),rgba(245,200,66,0.03));border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:14px;line-height:1.6;color:var(--text);margin-bottom:20px;">
-            Everything for the <b style="color:var(--gold);">zkLitVM testnet</b> in one place — games, faucet, presale, token creator, NFT studio and lending. Free to try with test GATE. Tap any card to jump straight in.
+            Everything for the <b style="color:var(--gold);">zkLitVM testnet</b> in one place — games, faucet, presale, token creator, NFT studio and lending. Free to try with test GATE. Tap any card to jump straight in, and grab the free collectible NFT below.
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div onclick="testnetGo('games')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🎮</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Testnet Games</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px;">
+            <div onclick="testnetGo('games')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🎮</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">Testnet Games</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Battleship and Dice — play free with test GATE.</div>
             </div>
-            <div onclick="testnetGo('faucet')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">💧</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">GATE Faucet</div>
+            <div onclick="testnetGo('faucet')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">💧</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">GATE Faucet</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Claim free test GATE to use across the testnet.</div>
             </div>
-            <div onclick="testnetGo('presale')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🚀</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">GATE Presale</div>
+            <div onclick="testnetGo('presale')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🚀</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">GATE Presale</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Take part in the GATE token presale.</div>
             </div>
-            <div onclick="testnetGo('launchpad')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🪙</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Create Token</div>
+            <div onclick="testnetGo('launchpad')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🪙</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">Create Token</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Launch your own token on the zkLitVM testnet.</div>
             </div>
-            <div onclick="testnetGo('nftstudio')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🎨</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">NFT Studio</div>
+            <div onclick="testnetGo('nftstudio')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🎨</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">NFT Studio</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Create your own NFTs on the testnet.</div>
             </div>
-            <div onclick="testnetGo('lending')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🏦</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Lending</div>
+            <div onclick="testnetGo('lending')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🏦</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">Lending</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Lend and borrow on the zkLitVM testnet.</div>
             </div>
           </div>
+
+        <!-- ══════════ ARCANIX — второй бесплатный дроп ══════════
+             Сделан один в один как блок Merlin выше. Отличие одно:
+             Arcanix выдаётся по одному на кошелёк, поэтому после минта
+             кнопка меняется на "выставить на продажу". -->
+        <div id="arcanixSection" style="display:none;margin:20px 0 0;background:linear-gradient(145deg,rgba(124,58,237,0.14),rgba(245,200,66,0.07));border:1.5px solid rgba(245,200,66,0.4);border-radius:18px;overflow:hidden;">
+          <div style="display:flex;flex-wrap:wrap;gap:18px;padding:18px;align-items:center;">
+            <img src="/arcanix.jpg" alt="Arcanix NFT" style="width:200px;max-width:45vw;border-radius:14px;border:2px solid var(--border-g);box-shadow:0 8px 24px rgba(0,0,0,.5);flex-shrink:0;"/>
+            <div style="flex:1;min-width:220px;">
+              <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:10px;font-weight:800;padding:3px 10px;border-radius:100px;letter-spacing:.06em;margin-bottom:8px;">🎁 FREE MINT</div>
+              <div style="font-size:24px;font-weight:800;margin-bottom:6px;font-family:'DM Serif Display',serif;">Arcanix — OpenGate Heroes</div>
+              <div style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:10px;">The hooded keeper of the gate, carrying the flame and the key to OpenGate. Epic rarity, <b style="color:var(--green);">completely FREE</b> — one per wallet. Use it as your avatar or sell it on the marketplace!</div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Already minted: <span id="arcanixCount" style="color:var(--gold);font-weight:700;font-family:'Space Mono',monospace;">—</span></div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button id="arcanixFollowBtn" onclick="ogArcanixFollow()" style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;background:#000;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  1. Follow @OpenGatelive
+                </button>
+                <button id="arcanixClaimBtn" onclick="ogClaimArcanix()" disabled style="padding:12px 24px;border-radius:12px;background:var(--gold);color:#08090C;border:none;font-size:14px;font-weight:800;cursor:pointer;opacity:.4;">
+                  🎁 2. Claim Free NFT
+                </button>
+              </div>
+              <div id="arcanixStatus" style="font-size:12px;color:var(--muted);margin-top:10px;"></div>
+            </div>
+          </div>
+        </div>
+
         </div>
       </div>
       <div id="view-feed">
@@ -2693,32 +2720,6 @@ async function smartConnectWallet(){
                 </button>
               </div>
               <div id="freeMintStatus" style="font-size:12px;color:var(--muted);margin-top:10px;"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ══════════ ARCANIX — второй бесплатный дроп ══════════
-             Сделан один в один как блок Merlin выше. Отличие одно:
-             Arcanix выдаётся по одному на кошелёк, поэтому после минта
-             кнопка меняется на "выставить на продажу". -->
-        <div id="arcanixSection" style="display:none;margin:14px;background:linear-gradient(145deg,rgba(124,58,237,0.14),rgba(245,200,66,0.07));border:1.5px solid rgba(245,200,66,0.4);border-radius:18px;overflow:hidden;">
-          <div style="display:flex;flex-wrap:wrap;gap:18px;padding:18px;align-items:center;">
-            <img src="/arcanix.jpg" alt="Arcanix NFT" style="width:200px;max-width:45vw;border-radius:14px;border:2px solid var(--border-g);box-shadow:0 8px 24px rgba(0,0,0,.5);flex-shrink:0;"/>
-            <div style="flex:1;min-width:220px;">
-              <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:10px;font-weight:800;padding:3px 10px;border-radius:100px;letter-spacing:.06em;margin-bottom:8px;">🎁 FREE MINT</div>
-              <div style="font-size:24px;font-weight:800;margin-bottom:6px;font-family:'DM Serif Display',serif;">Arcanix — OpenGate Heroes</div>
-              <div style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:10px;">The hooded keeper of the gate, carrying the flame and the key to OpenGate. Epic rarity, <b style="color:var(--green);">completely FREE</b> — one per wallet. Use it as your avatar or sell it on the marketplace!</div>
-              <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Already minted: <span id="arcanixCount" style="color:var(--gold);font-weight:700;font-family:'Space Mono',monospace;">—</span></div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <button id="arcanixFollowBtn" onclick="ogArcanixFollow()" style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;background:#000;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-                  1. Follow @OpenGatelive
-                </button>
-                <button id="arcanixClaimBtn" onclick="ogClaimArcanix()" disabled style="padding:12px 24px;border-radius:12px;background:var(--gold);color:#08090C;border:none;font-size:14px;font-weight:800;cursor:pointer;opacity:.4;">
-                  🎁 2. Claim Free NFT
-                </button>
-              </div>
-              <div id="arcanixStatus" style="font-size:12px;color:var(--muted);margin-top:10px;"></div>
             </div>
           </div>
         </div>
@@ -10865,6 +10866,7 @@ function testnetGo(target){
 function showTab(tab){
   localStorage.setItem('og_active_tab', tab);
   document.getElementById('view-testnet').style.display=tab==='testnet'?'block':'none';
+  if(tab==='testnet'){ try{ initArcanixMint(); }catch(e){} }
   document.getElementById('view-feed').style.display=tab==='feed'?'block':'none';
   document.getElementById('view-profile').style.display=tab==='profile'?'block':'none';
   document.getElementById('view-staking').style.display=tab==='staking'?'block':'none';
@@ -14113,7 +14115,6 @@ async function fetchNFTMeta(uri){
 }
 async function loadMarketplace(){
   initFreeMint();
-  initArcanixMint();
   try{
     const p=getReadProvider();
     const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,p);
