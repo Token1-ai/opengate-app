@@ -447,6 +447,11 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .post-btn:hover{opacity:.88;}
 .post-btn:disabled{opacity:.4;cursor:not-allowed;}
 .img-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+/* Подсказка о фото: люди грузили картинки и не понимали, почему их режет.
+   Режет не размер файла (он сжимается сам), а количество фото в посте:
+   одно фото показывается целиком, два-четыре становятся плитками. */
+.img-hint{margin-top:8px;font-size:12px;line-height:1.45;color:var(--muted);font-family:'Space Mono',monospace;}
+.img-hint b{color:var(--text);font-weight:700;}
 .img-preview-wrap{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
 .img-preview-wrap img{width:100%;height:100%;object-fit:cover;}
 .img-preview-del{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.7);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -867,7 +872,7 @@ async function smartConnectWallet(){
           <div id="avatarThumb" style="width:52px;height:52px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">🧑</div>
           <div>
             <div style="font-size:14px;font-weight:600;color:var(--text);">Click to choose photo</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">JPG, PNG, GIF from your device</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">JPG, PNG, GIF — square works best (400×400), it is cropped to a circle</div>
           </div>
           <div style="margin-left:auto;font-size:20px;">📁</div>
         </div>
@@ -1193,9 +1198,10 @@ async function smartConnectWallet(){
           <div class="comp-body">
             <textarea class="comp-input" id="postText" placeholder="What's on your mind?" maxlength="500" oninput="updateComposer()"></textarea>
             <div id="imgPreviews" class="img-previews"></div>
+            <div class="img-hint">📐 <b>1 photo</b> — shown in full. <b>2–4</b> — cropped to tiles, square works best.</div>
             <div class="comp-footer">
               <div style="display:flex;align-items:center;gap:8px;">
-                <button class="upload-btn" onclick="checkImgUpload()" title="Add photo">🖼️</button>
+                <button class="upload-btn" onclick="checkImgUpload()" title="Add photo — any file size, it is compressed automatically. One photo is shown in full; 2–4 are cropped to tiles.">🖼️</button>
                 <span class="char-cnt" id="charCnt">0/500</span>
                 <span class="uploading-indicator" id="uploadingTxt" style="display:none;">Uploading...</span>
               </div>
@@ -2822,7 +2828,7 @@ async function smartConnectWallet(){
               <div id="groupAvatarPreview" style="width:72px;height:72px;border-radius:16px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;">📷</div>
             </label>
             <input type="file" id="groupAvatarInput" accept="image/*" style="display:none;" onchange="groupAvatarSelected()"/>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Group photo</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Group photo — square works best</div>
           </div>
           <div style="margin-bottom:12px;">
             <div style="font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;">Name *</div>
@@ -3074,7 +3080,7 @@ async function smartConnectWallet(){
         <!-- SINGLE NFT -->
         <div id="studioSinglePanel" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo * <span style="opacity:.7;font-weight:400;">— square (1:1) works best, e.g. 1000×1000</span></div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
               <label for="studioSingleFile" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
               <span id="studioSingleFileName" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
@@ -3144,7 +3150,7 @@ async function smartConnectWallet(){
 
         <div id="studioSinglePanelPolygon" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo * <span style="opacity:.7;font-weight:400;">— square (1:1) works best, e.g. 1000×1000</span></div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
               <label for="studioSingleFilePolygon" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
               <span id="studioSingleFileNamePolygon" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
@@ -3186,7 +3192,7 @@ async function smartConnectWallet(){
 
         <div id="studioSinglePanelBase" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo * <span style="opacity:.7;font-weight:400;">— square (1:1) works best, e.g. 1000×1000</span></div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
               <label for="studioSingleFileBase" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
               <span id="studioSingleFileNameBase" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
@@ -3238,7 +3244,7 @@ async function smartConnectWallet(){
 
         <div id="studioSinglePanelArbitrum" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo * <span style="opacity:.7;font-weight:400;">— square (1:1) works best, e.g. 1000×1000</span></div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
               <label for="studioSingleFileArbitrum" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
               <span id="studioSingleFileNameArbitrum" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
@@ -3445,7 +3451,7 @@ async function smartConnectWallet(){
             <div style="font-size:16px;font-weight:700;margin-bottom:20px;">🚀 Create Your Token</div>
 
             <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional)</span></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;font-weight:400;">(optional) — square (1:1), shown as a circle</span></div>
               <div style="display:flex;gap:12px;align-items:center;">
                 <div id="tokLogoPreview" style="width:56px;height:56px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);">🪙</div>
                 <label for="tokLogoFile" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
@@ -3539,7 +3545,7 @@ async function smartConnectWallet(){
             <div style="font-size:16px;font-weight:700;margin-bottom:20px;">🚀 Create Your Token</div>
 
             <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional)</span></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;font-weight:400;">(optional) — square (1:1), shown as a circle</span></div>
               <div style="display:flex;gap:12px;align-items:center;">
                 <div id="tokLogoPreviewPolygon" style="width:56px;height:56px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);">🪙</div>
                 <label for="tokLogoFilePolygon" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
@@ -3641,7 +3647,7 @@ async function smartConnectWallet(){
             </div>
 
             <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional, stored on-chain)</span></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;font-weight:400;">(optional, stored on-chain) — square (1:1), shown as a circle</span></div>
               <div style="display:flex;gap:12px;align-items:center;">
                 <label for="tokLogoFileBase" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
                 <span id="tokLogoFileNameBase" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;">No file chosen</span>
@@ -3724,7 +3730,7 @@ async function smartConnectWallet(){
             </div>
 
             <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional, stored on-chain)</span></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;font-weight:400;">(optional, stored on-chain) — square (1:1), shown as a circle</span></div>
               <div style="display:flex;gap:12px;align-items:center;">
                 <label for="tokLogoFileArbitrum" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
                 <span id="tokLogoFileNameArbitrum" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;">No file chosen</span>
