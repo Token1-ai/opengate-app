@@ -31,13 +31,15 @@ module.exports = function handler(req, res) {
     gold: {
       name: 'OpenGate Gold Pass',
       description: 'VIP membership pass for OpenGate — grants 2x GATE rewards, unlimited posts with images, VIP Gold Battleship access, and free token creation on mainnet.',
-      image: 'https://opengate.bond/gold-pass.png',
+      image: 'ipfs://QmbsrKMF7iXTPKcbjoePAyuuEdpxgBVY1vjWyyvpbEgNZg',
+      imageHttp: 'https://gateway.pinata.cloud/ipfs/QmbsrKMF7iXTPKcbjoePAyuuEdpxgBVY1vjWyyvpbEgNZg',
       trait: 'Gold'
     },
     silver: {
       name: 'OpenGate Silver Pass',
       description: 'Membership pass for OpenGate — grants 1.3x GATE rewards, unlimited posts with images, and early access to new features.',
-      image: 'https://opengate.bond/silver-pass.png',
+      image: 'ipfs://QmczKxi97ezj9FWZDkC9LuEwg6R5ipaTuxtbiatymV6PYp',
+      imageHttp: 'https://gateway.pinata.cloud/ipfs/QmczKxi97ezj9FWZDkC9LuEwg6R5ipaTuxtbiatymV6PYp',
       trait: 'Silver'
     },
     // Безкоштовний колекційний дроп на мережі zkLitVM. Та сама ідея, що й
@@ -46,7 +48,8 @@ module.exports = function handler(req, res) {
     arcanix: {
       name: 'Arcanix',
       description: 'Arcanix — Epic collectible from the OpenGate founders drop. Minted free on the zkLitVM network by early members of the platform.',
-      image: 'https://opengate.bond/arcanix.jpg',
+      image: 'ipfs://QmcLqYM4GfBPgXKTnTyJj1YHNpYHzJJdWk6vJCLnRSRKRu',
+      imageHttp: 'https://gateway.pinata.cloud/ipfs/QmcLqYM4GfBPgXKTnTyJj1YHNpYHzJJdWk6vJCLnRSRKRu',
       trait: 'Epic'
     }
   };
@@ -68,6 +71,10 @@ module.exports = function handler(req, res) {
     name: `${t.name} #${id}`,
     description: t.description,
     image: t.image,
+    // image — в виде ipfs://, как принято у NFT: кошелёк или маркет сам
+    // выбирает себе быстрый шлюз. image_url — та же картинка обычной
+    // ссылкой, для тех читателей, кто ipfs:// не понимает.
+    image_url: t.imageHttp,
     external_url: 'https://opengate.bond',
     attributes: [
       { trait_type: tier === 'arcanix' ? 'Rarity' : 'Tier', value: t.trait },
