@@ -12,8 +12,8 @@
 <meta name="apple-mobile-web-app-title" content="OpenGate"/>
 <meta name="application-name" content="OpenGate"/>
 <!-- SEO -->
-<meta name="description" content="OpenGate — Web3 social platform. Post content, earn GATE tokens from likes. Built on LitVM + BNB Chain."/>
-<meta name="keywords" content="OpenGate, GATE token, Web3 social, DeFi, LitVM, BNB Chain, earn crypto"/>
+<meta name="description" content="OpenGate — Web3 social platform. Post content, earn tokens from likes. Live on BNB Chain, Polygon, Base and Arbitrum."/>
+<meta name="keywords" content="OpenGate, Web3 social, DeFi, BNB Chain, Polygon, Base, Arbitrum, NFT, earn crypto"/>
 <meta property="og:title" content="OpenGate — Post. Earn. Own."/>
 <meta property="og:description" content="Social platform where every like sends GATE tokens to your wallet. Your content earns for you."/>
 <meta property="og:image" content="/icon-512.png"/>
@@ -276,8 +276,8 @@ button{font-family:'Space Grotesk',sans-serif;cursor:pointer;border:none;outline
   #view-market [id^="mktChain"]:first-child{
     margin-left:0;
   }
-  /* числовые ряды в Dice/Lottery — переносятся, если не влезают */
-  #view-dice [style*="justify-content:center"], #view-lottery [style*="justify-content:center"]{flex-wrap:wrap!important;}
+  /* числовые ряды в Dice — переносятся, если не влезают */
+  #view-dice [style*="justify-content:center"]{flex-wrap:wrap!important;}
   /* карточки игр (grid 2 колонки) — padding не распирает за экран */
   #view-games [style*="display:grid"]{padding:12px!important;box-sizing:border-box!important;max-width:100%!important;}
   #view-games [style*="display:grid"] > div{box-sizing:border-box!important;min-width:0!important;padding:16px!important;}
@@ -360,6 +360,22 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .footer-links{display:flex;gap:20px;flex-wrap:wrap;}
 .footer-links a{font-size:13px;color:var(--muted);transition:color .2s;}
 .footer-links a:hover{color:var(--text);}
+
+/* CONTRACTS BY CHAIN (landing / security block)
+   Один ряд на мережу: назва мережі ліворуч, посилання на контракти
+   праворуч. Кожне посилання веде в оглядач САМЕ ТІЄЇ мережі, а не
+   завжди в BscScan — інакше людина тисне й бачить порожню сторінку. */
+.cc-wrap{display:flex;flex-direction:column;gap:14px;margin-top:22px;text-align:left;}
+.cc-row{display:grid;grid-template-columns:116px 1fr;gap:14px;align-items:baseline;
+  padding-bottom:12px;border-bottom:1px solid var(--border);}
+.cc-row:last-child{border-bottom:none;padding-bottom:0;}
+.cc-chain{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.04em;text-transform:uppercase;}
+.cc-links{display:flex;flex-wrap:wrap;gap:6px 16px;}
+.cc-links a{font-size:13px;color:var(--muted);transition:color .2s;white-space:nowrap;}
+.cc-links a:hover{color:var(--text);}
+@media(max-width:560px){
+  .cc-row{grid-template-columns:1fr;gap:7px;}
+}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
@@ -447,6 +463,11 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .post-btn:hover{opacity:.88;}
 .post-btn:disabled{opacity:.4;cursor:not-allowed;}
 .img-previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+/* Подсказка о фото: люди грузили картинки и не понимали, почему их режет.
+   Режет не размер файла (он сжимается сам), а количество фото в посте:
+   одно фото показывается целиком, два-четыре становятся плитками. */
+.img-hint{margin-top:8px;font-size:12px;line-height:1.45;color:var(--muted);font-family:'Space Mono',monospace;}
+.img-hint b{color:var(--text);font-weight:700;}
 .img-preview-wrap{position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border);}
 .img-preview-wrap img{width:100%;height:100%;object-fit:cover;}
 .img-preview-del{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.7);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -867,7 +888,7 @@ async function smartConnectWallet(){
           <div id="avatarThumb" style="width:52px;height:52px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px;">🧑</div>
           <div>
             <div style="font-size:14px;font-weight:600;color:var(--text);">Click to choose photo</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px;">JPG, PNG, GIF from your device</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">JPG, PNG, GIF — square works best (400×400), it is cropped to a circle</div>
           </div>
           <div style="margin-left:auto;font-size:20px;">📁</div>
         </div>
@@ -907,9 +928,10 @@ async function smartConnectWallet(){
 
   <section id="hero">
     <div class="hero-bg"></div><div class="grid-bg"></div>
-    <div class="hero-tag"><div class="live-dot"></div>Live on LitVM + BNB Chain</div>
+    <div class="hero-tag"><div class="live-dot"></div>Live on BNB Chain · Polygon · Base · Arbitrum</div>
     <h1 class="hero-title">Post. Like.<br><span>Earn crypto.</span></h1>
     <p class="hero-desc">OpenGate is a social platform where every like you receive sends GATE tokens directly to your wallet. Your content earns for you.</p>
+    <p class="hero-desc" style="font-size:13px;line-height:1.6;opacity:.8;margin-top:-6px;">Passes, token creation, the NFT market and the games run on real mainnets — BNB Chain, Polygon, Base and Arbitrum. GATE and everything built around it — staking, swap, lending, faucet — run on the zkLitVM <b>testnet</b>, where the coins are test coins with no money value.</p>
     <div class="hero-btns">
       <button class="btn-gold" onclick="openApp()">Open App →</button>
       <button class="btn-outline" onclick="openMintModal('gold')">Get Gold Pass — $9</button>
@@ -930,7 +952,7 @@ async function smartConnectWallet(){
         <div class="step fade"><div class="step-icon" style="background:rgba(38,217,138,0.1);">🔗</div><div class="step-title">Connect your wallet</div><p class="step-text">Use MetaMask or Trust Wallet. Your wallet is your account — no email, no password, no personal data.</p><div class="step-line"></div></div>
         <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">✍️</div><div class="step-title">Post your content</div><p class="step-text">Create posts, share images, follow people. Posting is free for everyone. Silver & Gold Pass unlock image uploads.</p><div class="step-line"></div></div>
         <div class="step fade"><div class="step-icon" style="background:rgba(168,189,208,0.1);">💰</div><div class="step-title">Get paid for likes</div><p class="step-text">Every like sends 0.1 GATE straight to your wallet. Stake it, swap it on Easy Swap DEX, or hold it.</p><div class="step-line"></div></div>
-        <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">🚀</div><div class="step-title">Grow with the platform</div><p class="step-text">Gold Pass holders earn 2× more GATE. Buy now — at mainnet launch the price goes up significantly.</p><div class="step-line"></div></div>
+        <div class="step fade"><div class="step-icon" style="background:rgba(245,200,66,0.1);">🚀</div><div class="step-title">Grow with the platform</div><p class="step-text">Gold Pass holders earn 2× more GATE. Everything you get today stays yours forever.</p><div class="step-line"></div></div>
       </div>
     </div>
   </section>
@@ -957,7 +979,7 @@ async function smartConnectWallet(){
           <div class="pass-top"><div class="pass-tier">🥈 Silver</div></div>
           <div class="pass-price">$0.90</div>
           <div class="pass-price-note">Paid in BNB · live rate from Chainlink</div>
-          <div class="pass-supply"><div class="supply-track"><div class="supply-fill" data-target="2%"></div></div><div class="supply-text" id="silverSupply">5,000 max</div></div>
+          <div class="pass-supply"><div class="supply-text" id="silverSupply">No limit</div></div>
           <ul class="pass-features">
             <li><span class="feat-icon">✓</span>Unlimited posts</li>
             <li><span class="feat-icon">✓</span>Up to 3 images per post</li>
@@ -971,13 +993,13 @@ async function smartConnectWallet(){
           <div class="pass-top"><div class="pass-tier">🥇 Gold</div><div class="pass-best">Best value</div></div>
           <div class="pass-price">$9</div>
           <div class="pass-price-note">Paid in BNB · live rate from Chainlink</div>
-          <div class="pass-supply"><div class="supply-track"><div class="supply-fill" data-target="1%"></div></div><div class="supply-text" id="goldSupply">3,000 max</div></div>
+          <div class="pass-supply"><div class="supply-text" id="goldSupply">No limit</div></div>
           <ul class="pass-features">
             <li><span class="feat-icon">✓</span>Unlimited posts & images, up to 1000 words each</li>
             <li><span class="feat-icon">✓</span>VIP badge 🥇</li>
             <li><span class="feat-icon">✓</span>+100% GATE rewards (2×)</li>
             <li><span class="feat-icon">✓</span>All new features FREE forever</li>
-            <li><span class="feat-icon">✓</span>Free token creation on mainnet</li>
+            <li><span class="feat-icon">✓</span>Free token creation on BNB Chain</li>
           </ul>
           <button class="pass-mint-btn" onclick="openMintModal('gold')">Buy Gold Pass</button>
         </div>
@@ -1021,11 +1043,11 @@ async function smartConnectWallet(){
         <tr><th>Action</th><th>Fee</th><th>Note</th></tr>
         <tr><td>Create a post</td><td class="fee-zero">FREE</td><td style="color:var(--muted);">For everyone, unlimited</td></tr>
         <tr><td>Post with images</td><td class="fee-val">Silver / Gold Pass</td><td style="color:var(--muted);">NFT pass required</td></tr>
-        <tr><td>Send a like</td><td class="fee-val">0.1 GATE</td><td style="color:var(--muted);">Goes directly to the author</td></tr>
+        <tr><td>Send a like</td><td class="fee-val">0.1 GATE</td><td style="color:var(--muted);">Goes directly to the author · testnet</td></tr>
         <tr><td>Send a message</td><td class="fee-zero">FREE</td><td style="color:var(--muted);">Between any two users</td></tr>
-        <tr><td>Staking GATE</td><td class="fee-zero">0%</td><td style="color:var(--muted);">No staking fees ever</td></tr>
-        <tr><td>Swap GATE on DEX</td><td class="fee-val">0.3%</td><td style="color:var(--muted);">Standard AMM fee</td></tr>
-        <tr><td>Create a token (mainnet)</td><td class="fee-val">Gold Pass = FREE</td><td style="color:var(--muted);">Others pay small fee</td></tr>
+        <tr><td>Staking GATE</td><td class="fee-zero">0%</td><td style="color:var(--muted);">No staking fees ever · testnet</td></tr>
+        <tr><td>Swap GATE on DEX</td><td class="fee-val">0.3%</td><td style="color:var(--muted);">Standard AMM fee · testnet</td></tr>
+        <tr><td>Create a token (BNB Chain)</td><td class="fee-val">Gold Pass = FREE</td><td style="color:var(--muted);">Others pay small fee</td></tr>
       </table>
     </div>
   </section>
@@ -1035,11 +1057,11 @@ async function smartConnectWallet(){
       <div class="eyebrow fade">Roadmap</div>
       <h2 class="section-title fade">What's coming</h2>
       <div class="roadmap-grid">
-        <div class="rm-item active fade"><div class="rm-phase">Phase 1 — Now</div><div class="rm-title">Foundation</div><ul class="rm-features"><li class="done">GATE token on LitVM</li><li class="done">Gold Pass NFT</li><li class="done">Silver Pass NFT</li><li class="done">Social feed app</li><li class="done">GATE Faucet</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 1 — Now</div><div class="rm-title">Foundation</div><ul class="rm-features"><li class="done">GATE token on zkLitVM testnet</li><li class="done">Gold Pass NFT</li><li class="done">Silver Pass NFT</li><li class="done">Social feed app</li><li class="done">GATE Faucet</li></ul><span class="rm-badge">Live</span></div>
         <div class="rm-item active fade"><div class="rm-phase">Phase 2</div><div class="rm-title">Social Layer</div><ul class="rm-features"><li class="done">User profiles</li><li class="done">Post feed + images</li><li class="done">Likes → GATE</li><li class="done">Direct messages</li></ul><span class="rm-badge">Live</span></div>
-        <div class="rm-item active fade"><div class="rm-phase">Phase 3</div><div class="rm-title">DeFi Layer</div><ul class="rm-features"><li class="done">GATE staking</li><li class="done">GATE presale</li><li class="done">Easy Swap DEX</li><li class="done">Reward multipliers</li><li class="done">Lending protocol</li></ul><span class="rm-badge">Live</span></div>
-        <div class="rm-item active fade"><div class="rm-phase">Phase 4</div><div class="rm-title">Ecosystem</div><ul class="rm-features"><li class="done">NFT marketplace (zkLitVM + BNB)</li><li class="done">NFT creation studio</li><li class="done">Token launchpad (zkLitVM)</li><li class="done">Professional token creator (BNB)</li><li class="done">Play-to-earn games</li><li class="building">DAO voting</li></ul><span class="rm-badge">Live</span></div>
-        <div class="rm-item fade"><div class="rm-phase">Phase 5</div><div class="rm-title">What's Next</div><ul class="rm-features"><li class="soon">Solana marketplace &amp; games</li><li class="soon">More tokens for bets &amp; likes</li><li class="soon">New games</li><li class="soon">Mobile app</li></ul><span class="rm-badge">Coming soon</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 3</div><div class="rm-title">DeFi Layer <span style="font-size:11px;font-weight:600;color:var(--muted);">· zkLitVM testnet</span></div><ul class="rm-features"><li class="done">GATE staking</li><li class="done">GATE presale</li><li class="done">Easy Swap DEX</li><li class="done">Reward multipliers</li><li class="done">Lending protocol</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item active fade"><div class="rm-phase">Phase 4</div><div class="rm-title">Ecosystem</div><ul class="rm-features"><li class="done">NFT marketplace (BNB Chain, Polygon, Base, Arbitrum)</li><li class="done">NFT creation studio</li><li class="done">Token launchpad (zkLitVM testnet)</li><li class="done">Token creator (BNB Chain, Polygon, Base, Arbitrum)</li><li class="done">PvP games (BNB Chain, Polygon, Base)</li><li class="building">DAO voting</li></ul><span class="rm-badge">Live</span></div>
+        <div class="rm-item fade"><div class="rm-phase">Phase 5</div><div class="rm-title">What's Next</div><ul class="rm-features"><li class="soon">More tokens for bets &amp; likes</li><li class="soon">New games</li><li class="soon">Mobile app</li></ul><span class="rm-badge">Coming soon</span></div>
       </div>
     </div>
   </section>
@@ -1049,19 +1071,97 @@ async function smartConnectWallet(){
     <h2 class="early-title fade">Buy now.<br>Price only goes up.</h2>
     <p class="early-sub fade">All current privileges are locked in forever.</p>
     <div class="early-cards">
-      <div class="early-card fade"><div class="early-now" style="color:var(--gold);">🥇 $9</div><div class="early-arrow">↓ mainnet</div><div class="early-later" style="color:var(--green);">Price rises significantly</div></div>
-      <div class="early-card fade"><div class="early-now" style="color:var(--silver);">🥈 $0.90</div><div class="early-arrow">↓ mainnet</div><div class="early-later" style="color:var(--green);">Price rises</div></div>
+      <div class="early-card fade"><div class="early-now" style="color:var(--gold);">🥇 $9</div><div class="early-arrow">↓ later</div><div class="early-later" style="color:var(--green);">Price rises significantly</div></div>
+      <div class="early-card fade"><div class="early-now" style="color:var(--silver);">🥈 $0.90</div><div class="early-arrow">↓ later</div><div class="early-later" style="color:var(--green);">Price rises</div></div>
       <div class="early-card fade"><div class="early-now" style="color:var(--green);">💰 GATE</div><div class="early-arrow">↓ listing</div><div class="early-later" style="color:var(--green);">Lowest presale price</div></div>
       <div class="early-card fade"><div class="early-now">🏆 OG</div><div class="early-arrow">first 1,000</div><div class="early-later" style="color:var(--gold);">Exclusive OG badge</div></div>
     </div>
     <button class="btn-gold fade" onclick="openApp()" style="font-size:17px;padding:16px 48px;">Open App Now →</button>
   </section>
 
+  <section class="section" style="text-align:center;background:var(--bg2);border-top:1px solid var(--border);">
+    <div class="section-inner" style="max-width:760px;">
+      <div class="eyebrow fade" style="justify-content:center;display:flex;">Security</div>
+      <h2 class="section-title fade">Not audited yet — and we say so</h2>
+      <p class="fade" style="font-size:15px;color:var(--muted);line-height:1.75;">
+        No outside security firm has audited these contracts. We would rather tell you than let you assume otherwise.
+        What you can do instead: every contract address below is public, so you can open it in the explorer of its own
+        network and read the code before you spend anything. Never put in money you cannot afford to lose.
+      </p>
+      <div class="cc-wrap fade">
+
+        <div class="cc-row">
+          <span class="cc-chain">BNB Chain</span>
+          <span class="cc-links">
+            <a href="https://bscscan.com/address/0xCF2B61D76F2140D8270e612918DEE1501EcC637C" target="_blank" rel="noopener noreferrer">Gold Pass</a>
+            <a href="https://bscscan.com/address/0x543a0Bd90387768BE17E038ff685be7DD8d9791A" target="_blank" rel="noopener noreferrer">Silver Pass</a>
+            <a href="https://bscscan.com/address/0x9740e2C9214965d68A731b1af49Ed1b5814664ff" target="_blank" rel="noopener noreferrer">Launchpad</a>
+            <a href="https://bscscan.com/address/0x8923bF72154A10af579030162C6F945Df2F1b351" target="_blank" rel="noopener noreferrer">Trading pools</a>
+            <a href="https://bscscan.com/address/0x78D7211915D15446230f3Fb0cC8469cD57Aa29Bf" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://bscscan.com/address/0xAAeffd9dC63e8E59c1865bd42f054b83a6998224" target="_blank" rel="noopener noreferrer">NFT factory</a>
+            <a href="https://bscscan.com/address/0xcC072333E5d43E2521F7C5a0da26312a3E44b2ff" target="_blank" rel="noopener noreferrer">Token factory</a>
+            <a href="https://bscscan.com/address/0xa51bc530BCa50D8D658f5c185156904fFBe41994" target="_blank" rel="noopener noreferrer">Battleship</a>
+            <a href="https://bscscan.com/address/0x7a2808690be859aD786dC3C43001d42550f39BEF" target="_blank" rel="noopener noreferrer">Gold Battleship</a>
+          </span>
+        </div>
+
+        <div class="cc-row">
+          <span class="cc-chain">Polygon</span>
+          <span class="cc-links">
+            <a href="https://polygonscan.com/address/0x73b149defe4164484d3da166cAFB75d2CB40d997" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://polygonscan.com/address/0x3229Ed7458EDf915113C70bE1BcfcAA08869C51C" target="_blank" rel="noopener noreferrer">NFT factory</a>
+            <a href="https://polygonscan.com/address/0x3E345EF72d29D9e46E1E713b3d4f7AEf8b02E453" target="_blank" rel="noopener noreferrer">Token factory</a>
+            <a href="https://polygonscan.com/address/0x9E723b339dA57f046435239dac168003f90B1B20" target="_blank" rel="noopener noreferrer">Battleship</a>
+            <a href="https://polygonscan.com/address/0xb21482cFd2b5A7a35A85fF4193501CDEDFDdB7dd" target="_blank" rel="noopener noreferrer">Gold Battleship</a>
+          </span>
+        </div>
+
+        <div class="cc-row">
+          <span class="cc-chain">Base</span>
+          <span class="cc-links">
+            <a href="https://basescan.org/address/0xba774172f7bb0a2E9BEc9B53D7a55267A3107F5E" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://basescan.org/address/0x3eCad12b461931f78f4237660dADc068f89C6b49" target="_blank" rel="noopener noreferrer">NFT factory</a>
+            <a href="https://basescan.org/address/0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143" target="_blank" rel="noopener noreferrer">Token factory</a>
+            <a href="https://basescan.org/address/0xc4844EBDACE533D7b98C730ad06aF57376eCbf12" target="_blank" rel="noopener noreferrer">Battleship</a>
+            <a href="https://basescan.org/address/0x2b7b9d98404Fa0b5F0ffcAB89387373B98268acE" target="_blank" rel="noopener noreferrer">Gold Battleship</a>
+          </span>
+        </div>
+
+        <div class="cc-row">
+          <span class="cc-chain">Arbitrum</span>
+          <span class="cc-links">
+            <a href="https://arbiscan.io/address/0x73b149defe4164484d3da166cAFB75d2CB40d997" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://arbiscan.io/address/0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143" target="_blank" rel="noopener noreferrer">NFT factory</a>
+            <a href="https://arbiscan.io/address/0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89" target="_blank" rel="noopener noreferrer">Token factory</a>
+          </span>
+        </div>
+
+        <div class="cc-row">
+          <span class="cc-chain">zkLitVM</span>
+          <span class="cc-links">
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af" target="_blank" rel="noopener noreferrer">GATE token</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x4c1B51bbef77344B7671E94082E032a62237737A" target="_blank" rel="noopener noreferrer">Staking</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xF80a8ea1324679C95E81BDf056FC29ad7E8A7Cb0" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x25375207779012f869E267fb4A657185AEd959C0" target="_blank" rel="noopener noreferrer">NFT studio</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x07b49A05C2a2cf2B11cA5796Fcad250E9Bc2D38f" target="_blank" rel="noopener noreferrer">Token launchpad</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143" target="_blank" rel="noopener noreferrer">Battleship</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855" target="_blank" rel="noopener noreferrer">Dice</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6" target="_blank" rel="noopener noreferrer">Lending</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xCF2B61D76F2140D8270e612918DEE1501EcC637C" target="_blank" rel="noopener noreferrer">Faucet</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x156DCCFe6C64DC9BE20d3D17778cC9DA7c96957D" target="_blank" rel="noopener noreferrer">Merlin NFT</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xbc165C392FcB309CAFe7D60F77eE7D9E7A828eD7" target="_blank" rel="noopener noreferrer">Arcanix NFT</a>
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <footer>
-    <div><div class="footer-logo">OpenGate</div><div class="footer-copy">© 2025 OpenGate. Built on LitVM + BNB Chain.</div></div>
+    <div><div class="footer-logo">OpenGate</div><div class="footer-copy">© 2025 OpenGate. Built on BNB Chain, Polygon, Base, Arbitrum and zkLitVM.</div></div>
     <div class="footer-links">
-      <a href="https://bscscan.com/address/0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c" target="_blank">GoldPass</a>
-      <a href="https://bscscan.com/address/0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89" target="_blank">SilverPass</a>
+      <a href="https://bscscan.com/address/0xCF2B61D76F2140D8270e612918DEE1501EcC637C" target="_blank">GoldPass</a>
+      <a href="https://bscscan.com/address/0x543a0Bd90387768BE17E038ff685be7DD8d9791A" target="_blank">SilverPass</a>
     </div>
   </footer>
 </div>
@@ -1122,41 +1222,71 @@ async function smartConnectWallet(){
         </div>
         <div style="padding:16px 20px;max-width:720px;margin:0 auto;">
           <div style="background:linear-gradient(135deg,rgba(245,200,66,0.12),rgba(245,200,66,0.03));border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:14px;line-height:1.6;color:var(--text);margin-bottom:20px;">
-            Everything for the <b style="color:var(--gold);">zkLitVM testnet</b> in one place — games, faucet, presale, token creator, NFT studio and lending. Free to try with test GATE. Tap any card to jump straight in.
+            Everything for the <b style="color:var(--gold);">zkLitVM testnet</b> in one place — games, faucet, presale, token creator, NFT studio and lending. Free to try with test GATE. Tap any card to jump straight in, and grab the free collectible NFT below.
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div onclick="testnetGo('games')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🎮</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Testnet Games</div>
-              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Battleship, Dice & Lottery — play free with test GATE.</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:12px;">
+            <div onclick="testnetGo('games')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🎮</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">Testnet Games</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5;">Battleship and Dice — play free with test GATE.</div>
             </div>
-            <div onclick="testnetGo('faucet')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">💧</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">GATE Faucet</div>
+            <div onclick="testnetGo('faucet')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">💧</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">GATE Faucet</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Claim free test GATE to use across the testnet.</div>
             </div>
-            <div onclick="testnetGo('presale')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🚀</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">GATE Presale</div>
+            <div onclick="testnetGo('presale')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🚀</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">GATE Presale</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Take part in the GATE token presale.</div>
             </div>
-            <div onclick="testnetGo('launchpad')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🪙</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Create Token</div>
+            <div onclick="testnetGo('launchpad')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🪙</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">Create Token</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Launch your own token on the zkLitVM testnet.</div>
             </div>
-            <div onclick="testnetGo('nftstudio')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🎨</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">NFT Studio</div>
+            <div onclick="testnetGo('nftstudio')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🎨</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">NFT Studio</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Create your own NFTs on the testnet.</div>
             </div>
-            <div onclick="testnetGo('lending')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .15s;">
-              <div style="font-size:30px;margin-bottom:8px;">🏦</div>
-              <div style="font-size:15px;font-weight:700;margin-bottom:4px;">Lending</div>
+            <div onclick="testnetGo('lending')" class="tn-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:13px 14px;cursor:pointer;transition:all .15s;">
+              <div style="font-size:23px;margin-bottom:5px;">🏦</div>
+              <div style="font-size:14px;font-weight:700;margin-bottom:3px;">Lending</div>
               <div style="font-size:12px;color:var(--muted);line-height:1.5;">Lend and borrow on the zkLitVM testnet.</div>
             </div>
           </div>
+
+        <!-- ══════════ ARCANIX — второй бесплатный дроп ══════════
+             Сделан один в один как блок Merlin выше. Отличие одно:
+             Arcanix выдаётся по одному на кошелёк, поэтому после минта
+             кнопка меняется на "выставить на продажу". -->
+        <div id="arcanixSection" style="display:none;margin:20px 0 0;background:linear-gradient(145deg,rgba(124,58,237,0.14),rgba(245,200,66,0.07));border:1.5px solid rgba(245,200,66,0.4);border-radius:18px;overflow:hidden;">
+          <div style="display:flex;flex-wrap:wrap;gap:18px;padding:18px;align-items:center;">
+            <img src="/arcanix.jpg" alt="Arcanix NFT" style="width:200px;max-width:45vw;border-radius:14px;border:2px solid var(--border-g);box-shadow:0 8px 24px rgba(0,0,0,.5);flex-shrink:0;"/>
+            <div style="flex:1;min-width:220px;">
+              <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:10px;font-weight:800;padding:3px 10px;border-radius:100px;letter-spacing:.06em;margin-bottom:8px;">🎁 FREE MINT</div>
+              <div style="font-size:24px;font-weight:800;margin-bottom:6px;font-family:'DM Serif Display',serif;">Arcanix — OpenGate Heroes</div>
+              <div style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:10px;">The hooded keeper of the gate, carrying the flame and the key to OpenGate. Epic rarity, <b style="color:var(--green);">completely FREE</b> — <b style="color:var(--gold);">one every day</b>, come back tomorrow for another. Use it as your avatar or sell it on the marketplace!</div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Already minted: <span id="arcanixCount" style="color:var(--gold);font-weight:700;font-family:'Space Mono',monospace;">—</span></div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button id="arcanixFollowBtn" onclick="ogArcanixFollow()" style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;background:#000;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  1. Follow @OpenGatelive
+                </button>
+                <button id="arcanixClaimBtn" onclick="ogClaimArcanix()" disabled style="padding:12px 24px;border-radius:12px;background:var(--gold);color:#08090C;border:none;font-size:14px;font-weight:800;cursor:pointer;opacity:.4;">
+                  🎁 2. Claim Free NFT
+                </button>
+                <button id="arcanixSellBtn" onclick="arcanixSell()" style="display:none;padding:12px 20px;border-radius:12px;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;">
+                  💰 Sell yours
+                </button>
+              </div>
+              <div id="arcanixStatus" style="font-size:12px;color:var(--muted);margin-top:10px;"></div>
+            </div>
+          </div>
+        </div>
+
         </div>
       </div>
       <div id="view-feed">
@@ -1173,9 +1303,10 @@ async function smartConnectWallet(){
           <div class="comp-body">
             <textarea class="comp-input" id="postText" placeholder="What's on your mind?" maxlength="500" oninput="updateComposer()"></textarea>
             <div id="imgPreviews" class="img-previews"></div>
+            <div class="img-hint">📐 <b>1 photo:</b> any shape, shown in full — best <b>1200×900</b>. <b>2–4 photos:</b> cropped to tiles — best square <b>800×800</b>.</div>
             <div class="comp-footer">
               <div style="display:flex;align-items:center;gap:8px;">
-                <button class="upload-btn" onclick="checkImgUpload()" title="Add photo">🖼️</button>
+                <button class="upload-btn" onclick="checkImgUpload()" title="Add photo — any file size, it is compressed automatically. One photo of any shape is shown in full (best 1200×900). Two to four are cropped to tiles, so square 800×800 works best.">🖼️</button>
                 <span class="char-cnt" id="charCnt">0/500</span>
                 <span class="uploading-indicator" id="uploadingTxt" style="display:none;">Uploading...</span>
               </div>
@@ -1189,105 +1320,10 @@ async function smartConnectWallet(){
       <div id="view-profile" style="display:none;">
         <div id="profileContent"><div class="app-loader">Connect wallet to view profile</div></div>
       </div>
-      <div id="view-bnblottery" style="display:none;">
-        <div class="feed-hdr">💰 BNB Lottery</div>
-        <div style="max-width:520px;margin:0 auto;padding:24px 16px;">
-
-          <!-- Coming Soon Hero -->
-          <div style="text-align:center;padding:40px 20px;background:linear-gradient(135deg,rgba(245,200,66,0.08),rgba(38,217,138,0.04));border:1px solid rgba(245,200,66,0.25);border-radius:20px;margin-bottom:20px;">
-            <div style="font-size:64px;margin-bottom:16px;">💰</div>
-            <div style="font-size:24px;font-weight:800;margin-bottom:8px;">BNB Lottery</div>
-            <div style="display:inline-block;background:var(--gold);color:#08090C;font-size:12px;font-weight:800;padding:4px 14px;border-radius:100px;margin-bottom:20px;letter-spacing:.05em;">COMING SOON</div>
-            <div style="font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:24px;">
-              The first real-money lottery on OpenGate.<br/>
-              Buy tickets with BNB or USDT. 10 winners.<br/>
-              Powered by <b style="color:var(--text);">Chainlink VRF</b> — provably fair.
-            </div>
-            <div style="font-size:13px;font-weight:700;color:var(--gold);">🔔 Stay tuned for the launch!</div>
-          </div>
-
-          <button id="lottohelp-bnb-btn" onclick="toggleHelpBox('lottohelp-bnb')" class="help-toggle-btn" style="margin-bottom:16px;">❔ How will this work?</button>
-          <div id="lottohelp-bnb" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:20px;">
-            <div style="color:var(--muted);">
-              <b style="color:var(--text);">1.</b> Buy one or more tickets with BNB or USDT — <b style="color:var(--text);">$0.90 each</b>.<br>
-              <b style="color:var(--text);">2.</b> When the round ends, <b style="color:var(--text);">10 winners</b> are picked at random.<br>
-              <b style="color:var(--text);">3.</b> The draw uses <b style="color:var(--text);">Chainlink VRF</b> — a verifiable, tamper-proof random number source, so nobody (including us) can rig who wins.<br>
-              <b style="color:var(--text);">4.</b> Winnings are paid automatically to the winners' wallets — no claiming needed.<br><br>
-              Not live yet — this is a preview of how it will work once the round opens.
-            </div>
-          </div>
-
-          <!-- Features grid -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🎟️</div>
-              <div style="font-size:13px;font-weight:700;">$0.90 / ticket</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">BNB or USDT</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🏆</div>
-              <div style="font-size:13px;font-weight:700;">10 winners</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Different prize shares</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">⏱️</div>
-              <div style="font-size:13px;font-weight:700;">7 days / round</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">Auto-starts next round</div>
-            </div>
-            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
-              <div style="font-size:24px;margin-bottom:6px;">🔐</div>
-              <div style="font-size:13px;font-weight:700;">Chainlink VRF</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:3px;">100% provably fair</div>
-            </div>
-          </div>
-
-          <!-- Prize distribution -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Prize Distribution</div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥇 1st place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~30%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥈 2nd place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~20%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;">🥉 3rd place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--gold);">~15%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:13px;color:var(--muted);">4th–10th place</span>
-                <span style="font-size:13px;font-weight:700;color:var(--muted);">~31%</span>
-              </div>
-              <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;color:var(--muted);">Platform fee</span>
-                <span style="font-size:12px;color:var(--muted);">10%</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:12px;color:var(--muted);">Next round seed</span>
-                <span style="font-size:12px;color:var(--muted);">4%</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Social links -->
-          <div style="text-align:center;padding:16px;background:var(--bg2);border:1px solid var(--border);border-radius:14px;">
-            <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Be the first to know when it launches:</div>
-            <a href="https://x.com/OpenGatelive" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none;font-size:13px;font-weight:700;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              @OpenGatelive
-            </a>
-          </div>
-
-        </div>
-      </div>
 
       <!-- ── BNB BATTLESHIP ── -->
       <div id="view-bnbbattle" style="display:none;">
-        <div class="feed-hdr">⚓ BNB Battleship</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:12px;"><button onclick="showTab('games')" title="Back to all games" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">← All games</button><span>⚓ BNB Battleship</span></div>
 
         <!-- Pass check -->
         <div id="bnbbs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
@@ -1427,7 +1463,7 @@ async function smartConnectWallet(){
       </div>
 
       <div id="view-goldbattle" style="display:none;">
-        <div class="feed-hdr">⚜️ Gold Battleship</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:12px;"><button onclick="showTab('games')" title="Back to all games" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">← All games</button><span>⚜️ Gold Battleship</span></div>
 
         <!-- Pass check -->
         <div id="gbs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
@@ -1569,7 +1605,7 @@ async function smartConnectWallet(){
       </div>
 
       <div id="view-polygonbattle" style="display:none;">
-        <div class="feed-hdr">⚓ Polygon Battleship</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:12px;"><button onclick="showTab('games')" title="Back to all games" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">← All games</button><span>⚓ Polygon Battleship</span></div>
 
         <!-- Pass check -->
         <div id="pbs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
@@ -1710,7 +1746,7 @@ async function smartConnectWallet(){
       </div>
 
       <div id="view-basebattle" style="display:none;">
-        <div class="feed-hdr">⚓ Base Battleship</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:12px;"><button onclick="showTab('games')" title="Back to all games" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">← All games</button><span>⚓ Base Battleship</span></div>
 
         <!-- Pass check -->
         <div id="basebs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
@@ -1851,7 +1887,7 @@ async function smartConnectWallet(){
       </div>
 
       <div id="view-goldpolygonbattle" style="display:none;">
-        <div class="feed-hdr">⚜️ Polygon Gold Battleship</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:12px;"><button onclick="showTab('games')" title="Back to all games" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">← All games</button><span>⚜️ Polygon Gold Battleship</span></div>
 
         <!-- Pass check -->
         <div id="gpbs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
@@ -1995,7 +2031,7 @@ async function smartConnectWallet(){
       </div>
 
       <div id="view-goldbasebattle" style="display:none;">
-        <div class="feed-hdr">⚜️ Base Gold Battleship</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:12px;"><button onclick="showTab('games')" title="Back to all games" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">← All games</button><span>⚜️ Base Gold Battleship</span></div>
 
         <!-- Pass check -->
         <div id="gbbs-nopass" style="display:none;text-align:center;padding:40px 20px;max-width:480px;margin:0 auto;">
@@ -2175,9 +2211,8 @@ async function smartConnectWallet(){
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">What can you do with GATE?</div>
             <div class="w-row"><span class="w-lbl">❤️ Like posts</span><span class="w-val" style="color:var(--muted);">Sends 0.1 GATE to author</span></div>
-            <div class="w-row"><span class="w-lbl">💎 Stake</span><span class="w-val" style="color:var(--green);">Earn 365% APR</span></div>
+            <div class="w-row"><span class="w-lbl">💎 Stake</span><span class="w-val" style="color:var(--muted);">Rewards paused · testnet</span></div>
             <div class="w-row"><span class="w-lbl">🎲 Dice game</span><span class="w-val" style="color:var(--gold);">Win up to 5× your bet</span></div>
-            <div class="w-row"><span class="w-lbl">🎰 Lottery</span><span class="w-val" style="color:var(--gold);">10 GATE per ticket</span></div>
             <div class="w-row"><span class="w-lbl">🪙 Create token</span><span class="w-val" style="color:var(--muted);">Launch your own token</span></div>
           </div>
         </div>
@@ -2257,67 +2292,9 @@ async function smartConnectWallet(){
       <div id="view-games" style="display:none;">
         <div class="feed-hdr">🎮 Games</div>
 
-        <!-- Gate Territory — featured real-world GPS game, shown above the
-             chain tabs since it isn't gated to one chain (BNB Chain is used
-             only for in-game purchases). Links out to the live PWA at
-             territory.opengate.bond, same pattern as the LaunchLab button. -->
-        <div style="margin:16px auto 4px;max-width:600px;padding:0 16px;">
-          <div style="position:relative;border-radius:var(--r);overflow:hidden;border:1px solid rgba(38,217,138,0.35);background:linear-gradient(180deg,rgba(8,9,12,.35) 0%,rgba(8,9,12,.92) 78%),url('https://territory.opengate.bond/splash-1080.webp') center/cover;">
-            <div style="position:absolute;top:14px;right:14px;background:var(--green);color:#08090C;font-size:9px;font-weight:800;padding:3px 8px;border-radius:100px;letter-spacing:.05em;">🆓 FREE TO PLAY</div>
-            <div style="padding:20px;">
-              <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-                <img src="https://territory.opengate.bond/icon-192.png" alt="" style="width:46px;height:46px;border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.4);" onerror="this.style.display='none'"/>
-                <div>
-                  <div style="font-size:18px;font-weight:800;">🗺️ Gate Territory</div>
-                  <div style="font-size:12px;color:var(--green);font-weight:600;">A real-world GPS game · claim ground in your own city</div>
-                </div>
-              </div>
-              <div style="font-size:13px;color:#dfe3ea;line-height:1.55;margin-bottom:12px;">
-                Walk to a real spot — plant a bunker and make that point yours. Reinforce it, mount guns, defend it from sieges, or go storm someone else's point yourself. Team up in a clan with the players you don't fight and share the spoils with.
-              </div>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
-                <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">📍 Live GPS</span>
-                <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">⚔️ Real-time PvP sieges</span>
-                <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">🛡️ Clans</span>
-                <span style="background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:100px;padding:4px 10px;font-size:11px;color:#dfe3ea;">🚁 Drones, rockets, troops</span>
-              </div>
-              <div style="display:flex;gap:8px;">
-                <button onclick="window.open('https://territory.opengate.bond','_blank','noopener')" style="flex:1;padding:12px;border-radius:10px;background:var(--green);color:#08090C;border:none;font-size:14px;font-weight:800;cursor:pointer;transition:all .2s;" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">▶ Play Now</button>
-                <button onclick="openTerritoryInstall()" style="flex:1;padding:12px;border-radius:10px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">📲 Install App</button>
-              </div>
-              <div style="font-size:10px;color:var(--muted);margin-top:10px;">The game is completely free. In-game purchases (upgrades, weapons) are optional, paid via BNB Chain.</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Gate Territory — "how to install" modal. It's a PWA hosted on a
-             different origin (territory.opengate.bond), so the browser's
-             native install prompt can't be triggered from opengate.bond —
-             these are the manual add-to-home-screen steps per platform. -->
-        <div class="modal-overlay" id="territoryInstallModal">
-          <div class="modal">
-            <button class="modal-close-btn" onclick="closeTerritoryInstall()">✕</button>
-            <div class="modal-title">📲 Install Gate Territory</div>
-            <div class="modal-sub">Adds it to your home screen like a real app — no app store needed.</div>
-            <div class="modal-info" style="margin-bottom:14px;">
-              <b style="color:var(--text);">🤖 Android (Chrome)</b><br>
-              Open the game, tap the <b>⋮</b> menu in the top right, then <b>"Install app"</b> or <b>"Add to Home screen"</b>.
-            </div>
-            <div class="modal-info" style="margin-bottom:14px;">
-              <b style="color:var(--text);">🍎 iPhone (Safari)</b><br>
-              Open the game, tap the <b>Share</b> icon (square with an arrow), then <b>"Add to Home Screen"</b>.
-            </div>
-            <div class="modal-info">
-              <b style="color:var(--text);">💻 Desktop (Chrome/Edge)</b><br>
-              Open the game, click the install icon (⊕) at the right of the address bar.
-            </div>
-            <button class="modal-exec-btn gold-btn" style="margin-top:20px;" onclick="closeTerritoryInstall();window.open('https://territory.opengate.bond','_blank','noopener')">Open Gate Territory</button>
-          </div>
-        </div>
-
         <!-- Chain switcher -->
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:600px;margin:0 auto;">
-          <button id="gamesChainLitvm" onclick="gamesSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="gamesChainLitvm" onclick="gamesSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM test</button>
           <button id="gamesChainBnb" onclick="gamesSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="gamesChainPolygon" onclick="gamesSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
           <button id="gamesChainBase" onclick="gamesSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -2325,6 +2302,7 @@ async function smartConnectWallet(){
 
         <!-- zkLitVM games -->
         <div id="gamesLitvmSection" style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:600px;margin:0 auto;">
+          <div style="grid-column:1/-1;"></div>
           <div onclick="showTab('battle')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="font-size:36px;margin-bottom:8px;">⚓</div>
             <div style="font-size:15px;font-weight:700;">Battleship</div>
@@ -2337,12 +2315,6 @@ async function smartConnectWallet(){
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">Guess 1-6, win 5×</div>
             <div style="font-size:11px;color:var(--gold);margin-top:6px;">50 / 100 / 200 / 500 GATE</div>
           </div>
-          <div onclick="showTab('lottery')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='#a855f7'" onmouseout="this.style.borderColor='var(--border)'">
-            <div style="font-size:36px;margin-bottom:8px;">🎰</div>
-            <div style="font-size:15px;font-weight:700;">Lottery</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;">20 players, one winner</div>
-            <div style="font-size:11px;color:#a855f7;margin-top:6px;">10 GATE per ticket</div>
-          </div>
           <div onclick="showTab('lending')" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;" onmouseover="this.style.borderColor='var(--silver)'" onmouseout="this.style.borderColor='var(--border)'">
             <div style="font-size:36px;margin-bottom:8px;">🏦</div>
             <div style="font-size:15px;font-weight:700;">Lending</div>
@@ -2353,14 +2325,6 @@ async function smartConnectWallet(){
 
         <!-- BNB Chain games -->
         <div id="gamesBnbSection" style="display:none;padding:16px;grid-template-columns:1fr 1fr;gap:12px;max-width:600px;margin:0 auto;">
-          <!-- BNB Lottery — Coming Soon -->
-          <div onclick="showTab('bnblottery')" style="background:linear-gradient(135deg,rgba(245,200,66,0.05),rgba(38,217,138,0.03));border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(245,200,66,0.3)'">
-            <div style="position:absolute;top:8px;right:8px;background:var(--gold);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">SOON</div>
-            <div style="font-size:36px;margin-bottom:8px;">💰</div>
-            <div style="font-size:15px;font-weight:700;">BNB Lottery</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:4px;">10 winners · 7 days</div>
-            <div style="font-size:11px;color:var(--gold);margin-top:6px;">$0.90 · BNB or USDT</div>
-          </div>
           <!-- BNB Battleship — LIVE -->
           <div onclick="showTab('bnbbattle')" style="background:linear-gradient(135deg,rgba(59,130,246,0.05),rgba(38,217,138,0.03));border:1px solid rgba(59,130,246,0.3);border-radius:var(--r);padding:20px;cursor:pointer;transition:all .2s;text-align:center;position:relative;" onmouseover="this.style.borderColor='#3B82F6'" onmouseout="this.style.borderColor='rgba(59,130,246,0.3)'">
             <div style="position:absolute;top:8px;right:8px;background:var(--green);color:#08090C;font-size:9px;font-weight:800;padding:2px 7px;border-radius:100px;letter-spacing:.05em;">🟢 LIVE</div>
@@ -2468,7 +2432,7 @@ async function smartConnectWallet(){
         </div>
       </div>
       <div id="view-battle" style="display:none;">
-        <div class="feed-hdr">⚓ Battleship PvP</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:12px;"><button onclick="showTab('games')" title="Back to all games" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">← All games</button><span>⚓ Battleship PvP</span></div>
         <div id="battleLobby">
           <!-- Lobby -->
           <div style="padding:16px 20px;max-width:600px;margin:0 auto;">
@@ -2569,7 +2533,7 @@ async function smartConnectWallet(){
       </div>
 
       <div id="view-dice" style="display:none;">
-        <div class="feed-hdr">🎲 Dice Roll</div>
+        <div class="feed-hdr" style="display:flex;align-items:center;gap:12px;"><button onclick="showTab('games')" title="Back to all games" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">← All games</button><span>🎲 Dice Roll</span></div>
         <div style="padding:20px;max-width:500px;margin:0 auto;">
 
           <!-- Dice display -->
@@ -2637,71 +2601,6 @@ async function smartConnectWallet(){
           </div>
         </div>
       </div>
-      <div id="view-lottery" style="display:none;">
-        <div class="feed-hdr">🎰 GATE Lottery</div>
-        <div style="padding:20px;max-width:560px;margin:0 auto;">
-
-          <!-- Current Round -->
-          <div style="background:linear-gradient(145deg,rgba(245,200,66,0.09),rgba(201,151,26,0.04));border:1px solid var(--border-g);border-radius:var(--r);padding:24px;margin-bottom:16px;text-align:center;">
-            <div style="font-size:13px;color:var(--muted);margin-bottom:4px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.08em;">Round #<span id="lotteryRound">—</span></div>
-            <div style="font-size:48px;font-weight:700;color:var(--gold);font-family:'Space Mono',monospace;margin-bottom:4px;" id="lotteryPot">— GATE</div>
-            <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Current Prize Pool</div>
-
-            <!-- Players progress -->
-            <div style="margin-bottom:12px;">
-              <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
-                <span>Players</span>
-                <span><span id="lotteryPlayers">0</span> / 20</span>
-              </div>
-              <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;">
-                <div id="lotteryBar" style="height:100%;background:linear-gradient(90deg,var(--gold),var(--green));border-radius:4px;width:0%;transition:width .8s ease;"></div>
-              </div>
-            </div>
-
-            <!-- Round status -->
-            <div id="lotteryStatusBox" style="font-size:12px;color:var(--muted);margin-bottom:16px;">—</div>
-
-            <!-- My tickets -->
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:20px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">My tickets this round</div>
-              <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--gold);" id="myLotteryTickets">—</div>
-            </div>
-
-            <!-- Buy tickets -->
-            <div style="margin-bottom:12px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">How many tickets? (1-5 per tx, 10 GATE each)</div>
-              <div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;">
-                <button onclick="setLotteryQty(1)" id="lqty1" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--gold);background:rgba(245,200,66,0.1);color:var(--gold);font-size:16px;font-weight:700;cursor:pointer;">1</button>
-                <button onclick="setLotteryQty(2)" id="lqty2" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">2</button>
-                <button onclick="setLotteryQty(3)" id="lqty3" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">3</button>
-                <button onclick="setLotteryQty(5)" id="lqty5" style="width:48px;height:48px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:16px;font-weight:700;cursor:pointer;">5</button>
-              </div>
-              <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Cost: <span id="lotteryCost" style="color:var(--gold);font-weight:700;">10 GATE</span></div>
-              <button onclick="buyLotteryTicket()" id="buyTicketBtn"
-                style="width:100%;padding:14px;border-radius:12px;background:var(--gold);color:#08090C;font-size:15px;font-weight:700;transition:all .2s;"
-                onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-                🎟️ Buy Ticket
-              </button>
-            </div>
-          </div>
-
-          <!-- Rules -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:16px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">How it works</div>
-            <div class="w-row"><span class="w-lbl">Ticket price</span><span class="w-val" style="color:var(--gold);">10 GATE</span></div>
-            <div class="w-row"><span class="w-lbl">Max players</span><span class="w-val">20</span></div>
-            <div class="w-row"><span class="w-lbl">Prize</span><span class="w-val" style="color:var(--green);">95% of pot</span></div>
-            <div class="w-row"><span class="w-lbl">Platform fee</span><span class="w-val">5%</span></div>
-            <div class="w-row"><span class="w-lbl">Draw</span><span class="w-val">Auto when full</span></div>
-          </div>
-
-          <!-- Past rounds -->
-          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
-            <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Past Winners</div>
-            <div id="pastLotteryRounds"><div style="font-size:13px;color:var(--muted);">Loading...</div></div>
-          </div>
-        </div>
-      </div>
       <div id="view-dao" style="display:none;">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span>🏛️ DAO Voting</span>
@@ -2758,7 +2657,7 @@ async function smartConnectWallet(){
 
         <!-- Chain switcher -->
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;">
-          <button id="mktChainLitvm" onclick="mktSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="mktChainLitvm" onclick="mktSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM test</button>
           <button id="mktChainBnb" onclick="mktSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="mktChainPolygon" onclick="mktSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
           <button id="mktChainBase" onclick="mktSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -2904,6 +2803,7 @@ async function smartConnectWallet(){
         </div>
 
         <div id="mktLitvmSection">
+          <div style="grid-column:1/-1;"></div>
           <div style="padding:4px 20px 0;font-size:12px;font-family:'Space Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);">Listings for sale — zkLitVM</div>
           <div id="marketListings" style="padding:12px;">
             <div class="app-loader">Loading listings...</div>
@@ -3033,7 +2933,7 @@ async function smartConnectWallet(){
               <div id="groupAvatarPreview" style="width:72px;height:72px;border-radius:16px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;">📷</div>
             </label>
             <input type="file" id="groupAvatarInput" accept="image/*" style="display:none;" onchange="groupAvatarSelected()"/>
-            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Group photo</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Group photo — square works best</div>
           </div>
           <div style="margin-bottom:12px;">
             <div style="font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600;">Name *</div>
@@ -3218,7 +3118,7 @@ async function smartConnectWallet(){
         <div class="feed-hdr">🎨 NFT Studio</div>
 
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:520px;margin:0 auto;">
-          <button id="studioChainLitvm" onclick="nftStudioSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="studioChainLitvm" onclick="nftStudioSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM test</button>
           <button id="studioChainBnb" onclick="nftStudioSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="studioChainPolygon" onclick="nftStudioSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
           <button id="studioChainBase" onclick="nftStudioSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -3227,6 +3127,8 @@ async function smartConnectWallet(){
 
         <!-- ══════════ zkLitVM PANEL ══════════ -->
         <div id="studioLitvmSection">
+          <div style="grid-column:1/-1;"></div>
+
         <div style="padding:16px 16px 0;max-width:520px;margin:0 auto;">
           <button id="studiohelp-litvm-btn" onclick="toggleHelpBox('studiohelp-litvm')" class="help-toggle-btn">❔ How does this work?</button>
           <div id="studiohelp-litvm" style="display:none;background:var(--bg2);border:1px solid rgba(245,200,66,0.3);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.6;color:var(--text);margin-top:10px;">
@@ -3284,7 +3186,7 @@ async function smartConnectWallet(){
         <!-- SINGLE NFT -->
         <div id="studioSinglePanel" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo * <span style="opacity:.7;font-weight:400;">— square (1:1) works best, e.g. 1000×1000</span></div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
               <label for="studioSingleFile" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
               <span id="studioSingleFileName" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
@@ -3354,7 +3256,7 @@ async function smartConnectWallet(){
 
         <div id="studioSinglePanelPolygon" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo * <span style="opacity:.7;font-weight:400;">— square (1:1) works best, e.g. 1000×1000</span></div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
               <label for="studioSingleFilePolygon" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
               <span id="studioSingleFileNamePolygon" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
@@ -3396,7 +3298,7 @@ async function smartConnectWallet(){
 
         <div id="studioSinglePanelBase" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo * <span style="opacity:.7;font-weight:400;">— square (1:1) works best, e.g. 1000×1000</span></div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
               <label for="studioSingleFileBase" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
               <span id="studioSingleFileNameBase" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
@@ -3448,7 +3350,7 @@ async function smartConnectWallet(){
 
         <div id="studioSinglePanelArbitrum" style="padding:20px 16px;max-width:520px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:22px;">
-            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo *</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Your photo * <span style="opacity:.7;font-weight:400;">— square (1:1) works best, e.g. 1000×1000</span></div>
             <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
               <label for="studioSingleFileArbitrum" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose File</label>
               <span id="studioSingleFileNameArbitrum" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">No file chosen</span>
@@ -3522,7 +3424,7 @@ async function smartConnectWallet(){
 
         <!-- Chain switcher -->
         <div class="chain-switch-row" style="display:flex;gap:8px;padding:12px 16px 0;max-width:560px;margin:0 auto;">
-          <button id="launchChainLitvm" onclick="launchSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM</button>
+          <button id="launchChainLitvm" onclick="launchSwitchChain('litvm')" style="flex:1;padding:9px;border-radius:9px;background:var(--gold);color:#08090C;border:none;font-size:13px;font-weight:700;cursor:pointer;">⚡ zkLitVM test</button>
           <button id="launchChainBnb" onclick="launchSwitchChain('bnb')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟡 BNB Chain</button>
           <button id="launchChainPolygon" onclick="launchSwitchChain('polygon')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🟣 Polygon</button>
           <button id="launchChainBase" onclick="launchSwitchChain('base')" style="flex:1;padding:9px;border-radius:9px;background:var(--bg3);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;">🔵 Base</button>
@@ -3531,6 +3433,7 @@ async function smartConnectWallet(){
 
         <!-- ══════════ zkLitVM PANEL ══════════ -->
         <div id="launchLitvmSection">
+          <div style="grid-column:1/-1;"></div>
         <div style="padding:20px 20px 0;max-width:560px;margin:0 auto;">
           <button id="launchhelp-litvm-btn" class="help-toggle-btn" onclick="toggleHelpBox('launchhelp-litvm')">❔ How does this work?</button>
           <div id="launchhelp-litvm" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;font-size:13px;line-height:1.7;color:var(--text);margin-top:10px;">
@@ -3654,7 +3557,7 @@ async function smartConnectWallet(){
             <div style="font-size:16px;font-weight:700;margin-bottom:20px;">🚀 Create Your Token</div>
 
             <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional)</span></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;font-weight:400;">(optional) — square (1:1), shown as a circle</span></div>
               <div style="display:flex;gap:12px;align-items:center;">
                 <div id="tokLogoPreview" style="width:56px;height:56px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);">🪙</div>
                 <label for="tokLogoFile" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
@@ -3748,7 +3651,7 @@ async function smartConnectWallet(){
             <div style="font-size:16px;font-weight:700;margin-bottom:20px;">🚀 Create Your Token</div>
 
             <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional)</span></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;font-weight:400;">(optional) — square (1:1), shown as a circle</span></div>
               <div style="display:flex;gap:12px;align-items:center;">
                 <div id="tokLogoPreviewPolygon" style="width:56px;height:56px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--muted);">🪙</div>
                 <label for="tokLogoFilePolygon" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
@@ -3850,7 +3753,7 @@ async function smartConnectWallet(){
             </div>
 
             <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional, stored on-chain)</span></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;font-weight:400;">(optional, stored on-chain) — square (1:1), shown as a circle</span></div>
               <div style="display:flex;gap:12px;align-items:center;">
                 <label for="tokLogoFileBase" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
                 <span id="tokLogoFileNameBase" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;">No file chosen</span>
@@ -3933,7 +3836,7 @@ async function smartConnectWallet(){
             </div>
 
             <div style="margin-bottom:14px;">
-              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;">(optional, stored on-chain)</span></div>
+              <div style="font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;">Logo <span style="opacity:.7;font-weight:400;">(optional, stored on-chain) — square (1:1), shown as a circle</span></div>
               <div style="display:flex;gap:12px;align-items:center;">
                 <label for="tokLogoFileArbitrum" style="background:var(--gold);color:#08090C;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">Choose Logo</label>
                 <span id="tokLogoFileNameArbitrum" style="font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;">No file chosen</span>
@@ -4051,7 +3954,10 @@ async function smartConnectWallet(){
       <div id="view-messages" style="display:none;">
         <div class="feed-hdr" style="display:flex;align-items:center;justify-content:space-between;">
           <span id="dmTitle">💬 Messages</span>
+          <span style="display:flex;gap:6px;align-items:center;">
+          <button id="dmWipeBtn" title="Delete this whole chat" style="display:none;background:rgba(255,77,77,0.1);border:1px solid rgba(255,77,77,.3);color:var(--red);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;" onclick="wipeDMChat()">🗑 Delete chat</button>
           <button id="dmBackBtn" style="display:none;background:var(--bg3);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;" onclick="showConvList()">← Back</button>
+          </span>
         </div>
         <!-- Conversation list -->
         <div id="convList" style="padding:0;">
@@ -4078,8 +3984,8 @@ async function smartConnectWallet(){
         <div style="padding:20px;max-width:560px;margin:0 auto;">
           <div style="background:var(--bg2);border:1px solid var(--border-g);border-radius:var(--r);padding:20px;margin-bottom:16px;">
             <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.7;">
-              Stake your GATE tokens and earn <span style="color:var(--gold);font-weight:700;">~365% APR</span>.<br>
-              Rewards accumulate every second. Withdraw anytime — no lock period. <span style="color:var(--green);font-weight:700;">0% fee.</span>
+              <span style="color:var(--gold);font-weight:700;">Rewards are not being paid right now.</span><br>
+              The reward pool is empty, so staked GATE earns nothing at the moment. Staking and withdrawing still work — no lock period, no fee. GATE is a test token on the zkLitVM testnet and has no monetary value.
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
               <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
@@ -4109,7 +4015,7 @@ async function smartConnectWallet(){
           </div>
           <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;">
             <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Pool Info</div>
-            <div class="w-row"><span class="w-lbl">APR</span><span class="w-val" style="color:var(--gold);">~365%</span></div>
+            <div class="w-row"><span class="w-lbl">APR</span><span class="w-val" style="color:var(--muted);">— rewards paused</span></div>
             <div class="w-row"><span class="w-lbl">Lock period</span><span class="w-val" style="color:var(--green);">None</span></div>
             <div class="w-row"><span class="w-lbl">Staking fee</span><span class="w-val" style="color:var(--green);">0%</span></div>
             <div class="w-row"><span class="w-lbl">Reward pool</span><span class="w-val" id="rewardPoolVal">—</span></div>
@@ -4171,7 +4077,6 @@ async function smartConnectWallet(){
       <div class="drawer-lbl">Play</div>
       <button class="drawer-btn" id="drawer-games" onclick="closeDrawer();showTab('games')"><span class="drawer-ico">🎮</span>Games</button>
       <button class="drawer-btn" id="drawer-groups" onclick="closeDrawer();showTab('groups')"><span class="drawer-ico">👥</span>Groups</button>
-      <button class="drawer-btn" id="drawer-lottery" onclick="closeDrawer();showTab('lottery')"><span class="drawer-ico">🎰</span>Lottery</button>
 
       <div class="drawer-lbl">More</div>
       <button class="drawer-btn" id="drawer-market" onclick="closeDrawer();showTab('market')"><span class="drawer-ico">🛒</span>NFT Market</button>
@@ -4250,9 +4155,37 @@ const SUPABASE_URL = 'https://hgzthbidfdqomuotdocb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhnenRoYmlkZmRxb211b3Rkb2NiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMTI2NjEsImV4cCI6MjA5NjU4ODY2MX0.otgk-jq2k0COrIE3cUEnRBPYKGnzAHRi3LEIQhE7khA';
 const GOLD_PASS  = '0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c';
 const SILVER_PASS= '0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89';
+/* Пропуска V2 (ноябрь 2026): без ограничения количества, цену меняет владелец,
+   бесплатная выдача сохранена. Старые пропуска V1 остаются действительными
+   навсегда — каждая проверка ниже смотрит НА ОБА контракта сразу.
+   Новые пропуска продаются только из V2. */
+const GOLD_PASS_V2   = '0xCF2B61D76F2140D8270e612918DEE1501EcC637C';
+const SILVER_PASS_V2 = '0x543a0Bd90387768BE17E038ff685be7DD8d9791A';
+const GOLD_PASSES    = [GOLD_PASS_V2, GOLD_PASS];
+const SILVER_PASSES  = [SILVER_PASS_V2, SILVER_PASS];
+const GOLD_PASS_MINT   = GOLD_PASS_V2;
+const SILVER_PASS_MINT = SILVER_PASS_V2;
+/* Сколько пропусков у кошелька: складывает новый и старый контракт. */
+async function passCount(addresses, provider, wallet){
+  var abi=['function balanceOf(address) view returns(uint256)'];
+  var total=0n;
+  for(var i=0;i<addresses.length;i++){
+    try{ total += await new ethers.Contract(addresses[i],abi,provider).balanceOf(wallet); }catch(e){}
+  }
+  return total;
+}
+/* ═══════════════════════════════════════════════════════════════════════
+   ПЕРЕДАЧА ПЛОЩАДКИ: кошелёк владельца указан ЗДЕСЬ И ТОЛЬКО ЗДЕСЬ.
+   Раньше он был вписан в девяти разных местах файла под шестью разными
+   именами — при продаже часть из них почти наверняка осталась бы
+   незамеченной, и прежний владелец сохранил бы админские права.
+   Новый владелец меняет одну эту строку.
+   ═══════════════════════════════════════════════════════════════════════ */
+window.OPENGATE_OWNER = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+
 const GATE_TOKEN = '0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af';
 const BNB_ID     = '0x38';
-const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://liteforge.rpc.caldera.xyz/http'],blockExplorerUrls:['https://liteforge.explorer.caldera.xyz']};
+const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:{name:'zkLTC',symbol:'zkLTC',decimals:18},rpcUrls:['https://rpc.testnet.liteforge.zeeve.net/'],blockExplorerUrls:['https://explorer.testnet.liteforge.zeeve.net']};
 // ── zkLitVM gas-fee fix ("max fee per gas less than block base fee") ──
 // LitVM (Caldera rollup) base fee can move between the moment MetaMask
 // estimates a transaction and the moment the user confirms it, so the
@@ -4289,10 +4222,10 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
   };
 })();
 // ── zkLitVM read-retry fix ("тестнет time from time не працює") ──
-// LitVM has exactly one public RPC (liteforge.rpc.caldera.xyz) — unlike
+// LitVM has exactly one public RPC (rpc.testnet.liteforge.zeeve.net) — unlike
 // BNB/Polygon/Base there is no fallback list to rotate through (checked
 // chainlist.org: this is the only endpoint that exists for this chain).
-// So every faucet/lottery/balance/NFT read that goes through
+// So every faucet/balance/NFT read that goes through
 // getReadProvider() is a single point of failure: one slow response or
 // a transient 429/timeout from that one host and the read just fails —
 // which is exactly what "works time from time" looks like from outside.
@@ -4305,7 +4238,7 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
   ethers.JsonRpcProvider.prototype.send = async function(method, params){
     var url;
     try{ url = this._getConnection().url; }catch(e){}
-    if(!url || url.indexOf('caldera.xyz') === -1){
+    if(!url || url.indexOf('liteforge.zeeve.net') === -1){
       return _origProviderSend.call(this, method, params);
     }
     var attempts = 3, delays = [300, 900];
@@ -4318,6 +4251,91 @@ const LITVM      = {chainId:'0x1159',chainName:'LitVM LiteForge',nativeCurrency:
       }
     }
     throw lastErr;
+  };
+})();
+
+// Смуга «оновіть адресу мережі»: показується, коли гаманець не може
+// достукатись до LitVM. Кнопка відкриває вікно MetaMask — саме тому це
+// кнопка, а не автоматичний запит (див. нижче).
+function showLitVMRpcBanner(){
+  if(document.getElementById('litvmRpcBar')) return;
+  var bar=document.createElement('div');
+  bar.id='litvmRpcBar';
+  bar.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#241a05;border-top:1px solid #f5c842;padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;font-size:13px;line-height:1.5;color:#fff;';
+  var txt=document.createElement('span');
+  txt.textContent='Your wallet still uses the old LitVM address, so transactions cannot go through.';
+  var btn=document.createElement('button');
+  btn.textContent='Update network';
+  btn.style.cssText='background:#f5c842;color:#08090C;border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;';
+  btn.onclick=async function(){
+    btn.disabled=true; btn.textContent='Confirm in MetaMask...';
+    try{
+      await window.ethereum.request({method:'wallet_addEthereumChain',params:[LITVM]});
+      try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x1159'}]}); }catch(_){ }
+      try{ provider=new ethers.BrowserProvider(window.ethereum); signer=await provider.getSigner(); }catch(_){ }
+      bar.remove();
+      try{ showToast('Network updated — try again','ok'); }catch(_){ }
+    }catch(e){
+      btn.disabled=false; btn.textContent='Update network';
+      try{ showToast('In MetaMask press "Update RPC" for LitVM','err'); }catch(_){ }
+    }
+  };
+  var close=document.createElement('span');
+  close.textContent='\u2715';
+  close.style.cssText='cursor:pointer;opacity:.6;padding:0 4px;';
+  close.onclick=function(){ bar.remove(); };
+  bar.appendChild(txt); bar.appendChild(btn); bar.appendChild(close);
+  document.body.appendChild(bar);
+}
+
+// Тиха перевірка: якщо гаманець стоїть на LitVM, але не може прочитати
+// звідти жодного контракту — у нього стара адреса мережі. Показуємо смугу
+// ОДРАЗУ, ще до того як людина натисне кнопку й отримає незрозумілу помилку.
+let _litvmRpcChecked = false;
+async function checkLitVMRpc(){
+  try{
+    if(_litvmRpcChecked || !window.ethereum) return;
+    if(window._ogChainId !== '0x1159') return;
+    _litvmRpcChecked = true;
+    var p = new ethers.BrowserProvider(window.ethereum);
+    await p.call({to:GATE_TOKEN, data:'0x18160ddd'});
+  }catch(e){
+    _litvmRpcChecked = false;
+    try{ showLitVMRpcBanner(); }catch(_){ }
+  }
+}
+
+// ── СТАРА АДРЕСА МЕРЕЖІ LitVM У ГАМАНЦІ ──────────────────────────────
+// LitVM змінила постачальника: стара адреса (Caldera) більше не
+// відповідає. У того, хто додав мережу раніше, вона й лишилась у
+// гаманці, тому будь-яка транзакція падає з кодом -32002
+// ("RPC endpoint not found or unavailable") — хоча мережа працює.
+// MetaMask сам нічого не оновлює, лише показує "Update RPC".
+// Тут ми ловимо саме цю помилку на будь-якому запиті до гаманця,
+// пропонуємо додати нову адресу мережі й повторюємо запит.
+(function(){
+  if(!ethers.BrowserProvider || !ethers.BrowserProvider.prototype) return;
+  var _origWalletSend = ethers.BrowserProvider.prototype.send;
+  function looksLikeDeadRpc(e){
+    var txt = '';
+    try{ txt = String(e && e.message || '') + ' ' + JSON.stringify((e && (e.info || e.error)) || {}); }catch(_){ }
+    return /-32002/.test(txt) || /endpoint not found|not found or unavailable|could not coalesce/i.test(txt);
+  }
+  ethers.BrowserProvider.prototype.send = async function(method, params){
+    try{
+      return await _origWalletSend.call(this, method, params);
+    }catch(e){
+      if(!looksLikeDeadRpc(e) || !window.ethereum) throw e;
+      var onLitVM = false;
+      try{ onLitVM = (await window.ethereum.request({method:'eth_chainId'})) === '0x1159'; }catch(_){ }
+      if(!onLitVM) throw e;
+      // Не просимо гаманець самі: MetaMask відкриває вікно лише після
+      // натискання мишею, інакше запит мовчки стає в чергу (червона
+      // цифра на значку) і людина його не бачить. Показуємо свою смугу
+      // з кнопкою — натискання по ній і відкриє вікно MetaMask.
+      try{ showLitVMRpcBanner(); }catch(_){ }
+      throw e;
+    }
   };
 })();
 const POLYGON_ID = '0x89';
@@ -4336,7 +4354,9 @@ const ARB_CURRENCIES = {
   USDT: {addr:'0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', decimals:6},
   USDC: {addr:'0xaf88d065e77c8cC2239327C5EDb3A432268e5831', decimals:6},
 };
-const NFT_FACTORY_POLYGON = '0xee9957fbc8Dc7280e42853c76508dD71f42dA10D';
+// Передаваемый контракт. Прежний (непередаваемый):
+// 0xee9957fbc8Dc7280e42853c76508dD71f42dA10D
+const NFT_FACTORY_POLYGON = '0x3229Ed7458EDf915113C70bE1BcfcAA08869C51C';
 const NFT_FACTORY_POLYGON_ABI = [
   'function quoteSinglePrice(address,(uint8,uint256,bytes)) view returns(uint256)',
   'function quotePrice(uint256,address,(uint8,uint256,bytes)) view returns(uint256)',
@@ -4351,7 +4371,6 @@ const TOKEN_FACTORY   = '0x07b49A05C2a2cf2B11cA5796Fcad250E9Bc2D38f';
 const NFT_MARKET      = '0xF80a8ea1324679C95E81BDf056FC29ad7E8A7Cb0';
 const GATE_REWARDS    = '0xc4da965B91F13D89fEd37fd75452cc596f663F3a';
 const GATE_DAO        = '0x0A71755Eb9A72669A627534e17FFafDBfbF49298';
-const GATE_LOTTERY    = '0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035';
 const GATE_DICE         = '0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855';
 const BATTLESHIP_ADDR   = '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143';
 const GATE_LENDING      = '0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6';
@@ -4398,26 +4417,6 @@ const DICE_ABI        = [
   'function playerWins(address) view returns(uint256)',
   'function playerLosses(address) view returns(uint256)',
 ];
-// ВИПРАВЛЕНО (я помилився раніше): цей контракт реально живе на zkLitVM,
-// не на BNB — на BNB за цією ж адресою коду взагалі нема (eth_getCode = "0x").
-// Перевірено напряму по байткоду на zkLitVM: селектори збігаються 1:1 зі
-// старим ABI нижче (buyTicket/getCurrentRound/getMyTickets/rounds/TICKET_PRICE/
-// MAX_PLAYERS/draw), і currentRound() на ланцюгу зараз повертає 97 — точнісінько
-// як на скріні. Тобто оригінальний ABI був правильний, купівля білетів і
-// раніше не працювала не через баг фронта, а тому що сам раунд #97 реально
-// неактивний (isActive=false) — контракт коректно відхиляє купівлю.
-const LOTTERY_ABI     = [
-  'function buyTicket(uint256)',
-  'function draw()',
-  'function getCurrentRound() view returns(uint256,uint256,uint256,bool)',
-  'function getRoundPlayers(uint256) view returns(address[])',
-  'function getMyTickets(uint256) view returns(uint256)',
-  'function rounds(uint256) view returns(uint256,address[],address,uint256,bool,uint256)',
-  'function currentRound() view returns(uint256)',
-  'function TICKET_PRICE() view returns(uint256)',
-  'function MAX_PLAYERS() view returns(uint256)',
-  'function owner() view returns(address)',
-];
 const DAO_ABI         = [
   'function createProposal(string,string) returns(uint256)',
   'function vote(uint256,bool)',
@@ -4454,6 +4453,196 @@ const ERC721_ABI = [
   'function ownerOf(uint256) view returns(address)',
   'function name() view returns(string)',
 ];
+// ══════════════════ ARCANIX — второй бесплатный дроп на zkLitVM ══════════════════
+// Устроен один в один как блок Merlin: подписка -> минт. Отличие одно —
+// Arcanix выдаётся по одному на кошелёк, поэтому у того, кто уже забрал,
+// кнопка превращается в "выставить на продажу" и открывает окно продажи
+// уже заполненным.
+//
+// Про "подписку на X": по-настоящему её проверить нельзя, для этого нужен
+// платный доступ от самого X. Кнопка открывает наш профиль и после этого
+// разблокирует минт — это барьер от случайных, а не проверка.
+// Наши собственные картинки лежат и в IPFS, и прямо на сайте — байт в байт
+// одно и то же. В метаданных NFT стоит ipfs://, чтобы кошельки и маркеты
+// видели вечный адрес, не привязанный к домену. Но тянуть их через чужой
+// шлюз по 3-6 секунд незачем: если хеш наш, сайт берёт свою копию мгновенно,
+// а ipfs:// остаётся запасным путём.
+var OG_OWN_IPFS={
+  'QmbsrKMF7iXTPKcbjoePAyuuEdpxgBVY1vjWyyvpbEgNZg':'/gold-pass.png',
+  'QmczKxi97ezj9FWZDkC9LuEwg6R5ipaTuxtbiatymV6PYp':'/silver-pass.png',
+  'QmcLqYM4GfBPgXKTnTyJj1YHNpYHzJJdWk6vJCLnRSRKRu':'/arcanix.jpg',
+  'QmUXG8N3cVv5Ygr62ntFTt1kwiKuD6bRNUiwUc8PjJWrq9':'/merlin.jpg'
+};
+// try/catch намеренно: эта функция вызывается при отрисовке каждой
+// картинки, и она не имеет права уронить показ, что бы ни случилось выше.
+var ARCANIX_ADDR='0xbc165C392FcB309CAFe7D60F77eE7D9E7A828eD7';
+var ARCANIX_ABI=['function mint()','function totalSupply() view returns(uint256)','function mintOpen() view returns(bool)','function balanceOf(address) view returns(uint256)','function canMint(address) view returns(bool)','function nextMintAt(address) view returns(uint256)'];
+var _arcanixTokenId=null;   // номер своего токена — для окна продажи
+var _arcanixHas=false;      // есть ли у человека хотя бы один
+var _arcanixNext=0;         // когда снова можно брать (0 = прямо сейчас)
+var _arcanixTimer=null;
+
+function arcanixWaitText(){
+  var left=_arcanixNext*1000-Date.now();
+  if(left<=0) return '';
+  var h=Math.floor(left/3600000), m=Math.floor((left%3600000)/60000);
+  return h>0 ? ('\u23F3 Next one in '+h+'h '+m+'m') : ('\u23F3 Next one in '+Math.max(m,1)+'m');
+}
+
+function arcanixPaint(){
+  var cb=document.getElementById('arcanixClaimBtn');
+  var sb=document.getElementById('arcanixSellBtn');
+  var st=document.getElementById('arcanixStatus');
+  if(sb) sb.style.display=_arcanixHas?'inline-block':'none';
+  if(!cb) return;
+  var waiting=arcanixWaitText();
+  if(waiting){
+    cb.disabled=true; cb.style.opacity='.5'; cb.textContent=waiting;
+    if(st&&!/Minted/.test(st.innerHTML)) st.textContent='You already took yours today \u2014 come back tomorrow for another one.';
+  }else{
+    cb.textContent='\uD83C\uDF81 2. Claim Free NFT';
+    if(localStorage.getItem('og_followed_x')==='1'){ cb.disabled=false; cb.style.opacity='1'; }
+  }
+}
+
+function initArcanixMint(){
+  var sec=document.getElementById('arcanixSection');
+  if(!sec) return;
+  if(!ARCANIX_ADDR){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  // подписку засчитываем общую с Merlin — второй раз просить незачем
+  if(localStorage.getItem('og_followed_x')==='1') ogArcanixUnlock();
+  try{
+    var c=new ethers.Contract(ARCANIX_ADDR,ARCANIX_ABI,getReadProvider());
+    c.totalSupply().then(function(n){
+      var el=document.getElementById('arcanixCount');
+      if(el) el.textContent=n.toString();
+    }).catch(function(){});
+    c.mintOpen().then(function(open){
+      if(!open){
+        var b=document.getElementById('arcanixClaimBtn');
+        if(b){b.disabled=true;b.style.opacity='.4';b.textContent='Mint closed';}
+      }
+    }).catch(function(){});
+    if(typeof userAddr!=='undefined'&&userAddr){
+      c.balanceOf(userAddr).then(function(n){ _arcanixHas=Number(n)>0; arcanixPaint(); }).catch(function(){});
+      // в старом контракте этой функции нет — тогда просто не ограничиваем
+      c.nextMintAt(userAddr).then(function(t){ _arcanixNext=Number(t)||0; arcanixPaint(); }).catch(function(){ _arcanixNext=0; });
+    }
+  }catch(e){}
+  if(_arcanixTimer) clearInterval(_arcanixTimer);
+  _arcanixTimer=setInterval(arcanixPaint,30000);   // обновляем обратный отсчёт
+}
+
+function ogArcanixUnlock(){
+  var fb=document.getElementById('arcanixFollowBtn');
+  var cb=document.getElementById('arcanixClaimBtn');
+  if(fb){fb.style.opacity='.6';fb.innerHTML='\u2713 Following @OpenGatelive';fb.style.borderColor='rgba(38,217,138,.4)';fb.style.color='var(--green)';}
+  if(cb&&!arcanixWaitText()){cb.disabled=false;cb.style.opacity='1';cb.style.boxShadow='0 4px 16px rgba(245,200,66,.35)';}
+}
+
+function ogArcanixFollow(){
+  window.open('https://x.com/OpenGatelive','_blank');
+  var st=document.getElementById('arcanixStatus');
+  var cb=document.getElementById('arcanixClaimBtn');
+  var fb=document.getElementById('arcanixFollowBtn');
+  if(fb){fb.style.opacity='.6';fb.innerHTML='\u2713 Opened @OpenGatelive';}
+  var left=10;
+  if(cb){cb.disabled=true;cb.style.opacity='.4';}
+  var timer=setInterval(function(){
+    left--;
+    if(cb) cb.textContent='\u23F3 Verifying follow... '+left+'s';
+    if(st) st.textContent='Make sure you clicked Follow on @OpenGatelive!';
+    if(left<=0){
+      clearInterval(timer);
+      localStorage.setItem('og_followed_x','1');
+      ogArcanixUnlock();
+      arcanixPaint();
+      if(st) st.textContent='Great! Now claim your free NFT \uD83D\uDC49';
+      showToast('Thanks for following! Claim your NFT \uD83C\uDF81','ok');
+    }
+  },1000);
+}
+
+async function ogClaimArcanix(){
+  if(localStorage.getItem('og_followed_x')!=='1'){
+    showToast('Follow @OpenGatelive on X first! \uD835\uDD4F','err');
+    var fb2=document.getElementById('arcanixFollowBtn');
+    if(fb2){fb2.style.borderColor='var(--gold)';fb2.style.boxShadow='0 0 0 3px rgba(245,200,66,.3)';setTimeout(function(){fb2.style.boxShadow='';},1200);}
+    return;
+  }
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  var btn=document.getElementById('arcanixClaimBtn');
+  var st=document.getElementById('arcanixStatus');
+  if(btn){btn.disabled=true;btn.textContent='\u23F3 Minting...';}
+  try{
+    await switchToLitVM();
+    var freshSigner=await provider.getSigner();
+    var c=new ethers.Contract(ARCANIX_ADDR,ARCANIX_ABI,freshSigner);
+    showToast('Confirm in wallet (free \u2014 only gas)','ok');
+    var tx=await c.mint();
+    if(st) st.textContent='\u23F3 Waiting for confirmation...';
+    var rc=await tx.wait();
+    // номер токена берём прямо из квитанции — надёжнее, чем искать по логам
+    try{
+      var me=userAddr.toLowerCase();
+      for(var i=0;i<(rc.logs||[]).length;i++){
+        var lg=rc.logs[i];
+        if(String(lg.address).toLowerCase()===ARCANIX_ADDR.toLowerCase()&&lg.topics.length===4
+           &&('0x'+lg.topics[2].slice(26)).toLowerCase()===me){ _arcanixTokenId=BigInt(lg.topics[3]).toString(); break; }
+      }
+    }catch(e2){}
+    _arcanixHas=true;
+    showToast('\uD83C\uDF89 Arcanix minted!','ok');
+    if(st) st.innerHTML='<span style="color:var(--green);font-weight:700;">\u2713 Minted'+(_arcanixTokenId?(' \u2014 Arcanix #'+_arcanixTokenId):'')+'! Come back tomorrow for another one.</span>';
+    try{
+      var rcc=new ethers.Contract(ARCANIX_ADDR,ARCANIX_ABI,getReadProvider());
+      var n=await rcc.totalSupply();
+      var el=document.getElementById('arcanixCount');
+      if(el) el.textContent=n.toString();
+      _arcanixNext=Number(await rcc.nextMintAt(userAddr))||0;
+    }catch(e3){}
+    arcanixPaint();
+    return;
+  }catch(e){
+    var m=(e.reason||e.message||'Failed');
+    if(e.code===4001||m.indexOf('rejected')>=0) showToast('Cancelled','err');
+    else if(/come back tomorrow|already minted/i.test(m)){
+      showToast('You already took yours today','err');
+      try{ var rc2=new ethers.Contract(ARCANIX_ADDR,ARCANIX_ABI,getReadProvider()); _arcanixNext=Number(await rc2.nextMintAt(userAddr))||0; }catch(e4){}
+      arcanixPaint(); return;
+    }
+    else showToast(m.slice(0,60),'err');
+  }
+  if(btn){btn.disabled=false;btn.style.opacity='1';}
+  arcanixPaint();
+}
+
+// Открываем окно продажи уже заполненным — человеку остаётся вписать цену.
+async function arcanixSell(){
+  var st=document.getElementById('arcanixStatus');
+  if(!_arcanixTokenId&&userAddr) _arcanixTokenId=await arcanixFindToken(userAddr);
+  var ca=document.getElementById('listContract');
+  var ti=document.getElementById('listTokenId');
+  if(ca) ca.value=ARCANIX_ADDR;
+  if(ti) ti.value=_arcanixTokenId||'';
+  document.getElementById('listNFTModal').classList.add('open');
+  if(!_arcanixTokenId&&st) st.textContent='Could not read your token number \u2014 type it in the window.';
+}
+
+// Номер своего токена ищем по событию перевода: контракт не ведёт
+// список токенов владельца, это удорожало бы минт.
+async function arcanixFindToken(wallet){
+  try{
+    var p=getReadProvider();
+    var topic=ethers.id('Transfer(address,address,uint256)');
+    var to='0x'+wallet.toLowerCase().slice(2).padStart(64,'0');
+    var logs=await p.getLogs({address:ARCANIX_ADDR,topics:[topic,null,to],fromBlock:0,toBlock:'latest'});
+    if(!logs.length) return null;
+    return BigInt(logs[logs.length-1].topics[3]).toString();
+  }catch(e){ return null; }
+}
+
 const NFT_MARKET_POLYGON = '0x73b149defe4164484d3da166cAFB75d2CB40d997';
 const NFT_MARKET_POLYGON_ABI = [
   'function listNFT(address,uint256,uint256,address) returns(uint256)',
@@ -4471,7 +4660,10 @@ const POLYGON_MKT_CURRENCIES = {
   USDT: {addr:'0xc2132D05D31c914a87C6611C10748AEb04B58e8F', decimals:6},
   USDC: {addr:'0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', decimals:6},
 };
-const NFT_MARKET_BNB = '0x3C5438AC05D2ab5C5CBFbdDd9AD7B9843AA5Bc6C';
+// Передаваемый контракт: владелец и кошелёк комиссии меняются, комиссия
+// больше не вшита (была constant 5%). Прежний (непередаваемый):
+// 0x3C5438AC05D2ab5C5CBFbdDd9AD7B9843AA5Bc6C
+const NFT_MARKET_BNB = '0x78D7211915D15446230f3Fb0cC8469cD57Aa29Bf';
 const NFT_MARKET_BNB_ABI = [
   'function listNFT(address,uint256,uint256,address) returns(uint256)',
   'function buyNFT(uint256) payable',
@@ -4496,10 +4688,15 @@ const BNB_MKT_CURRENCIES = {
   USDT: {addr:'0x55d398326f99059fF775485246999027B3197955', decimals:18},
   USDC: {addr:'0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', decimals:18},
 };
-const NFT_FACTORY_BNB = '0x381Ba71CccF8BbA5bCdc3f1BeED89C65c9608b35';
-const OWNER_WALLET_LC = '0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+// Передаваемый контракт. Прежний (непередаваемый):
+// 0x381Ba71CccF8BbA5bCdc3f1BeED89C65c9608b35
+const NFT_FACTORY_BNB = '0xAAeffd9dC63e8E59c1865bd42f054b83a6998224';
+const OWNER_WALLET_LC = window.OPENGATE_OWNER;
 const NFT_FACTORY_LITVM = '0x25375207779012f869E267fb4A657185AEd959C0';
-const TOKEN_FACTORY_BNB = '0x472eE271fDbDa4498835FD1b2AEC11489438995B';
+// Передаваемый контракт: владение в два шага, кошелёк комиссии отдельно,
+// пропуска и ценовой оракул больше не вшиты как constant.
+// Прежний (непередаваемый): 0x472eE271fDbDa4498835FD1b2AEC11489438995B
+const TOKEN_FACTORY_BNB = '0xcC072333E5d43E2521F7C5a0da26312a3E44b2ff';
 const TOKEN_FACTORY_BNB_ABI = [
   'function quoteUsdCents(address) view returns(uint256)',
   'function quotePrice(address,address) view returns(uint256)',
@@ -4764,12 +4961,19 @@ let provider, signer, userAddr, currentUser, mintPrice, mintType;
 // JsonRpcProvider construction is the version that's actually reliable.
 // The minor extra eth_chainId call per fresh provider is a worthwhile
 // trade for correctness over a micro-optimization that kept backfiring.
+let _litvmReadProvider = null;
 function getReadProvider(){
-  // Провайдер MetaMask годиться для читання LitVM лише коли MetaMask
-  // РЕАЛЬНО на LitVM (0x1159). Якщо користувач на BNB (грає в Battleship),
-  // читаємо через публічний RPC LitVM — інакше баланси/стейкінг ламались.
-  if(provider && window._ogChainId==='0x1159') return provider;
-  return new ethers.JsonRpcProvider('https://liteforge.rpc.caldera.xyz/http');
+  // Читаємо LitVM ЗАВЖДИ через публічний RPC мережі, а не через гаманець.
+  // У тих, хто додав LitVM раніше, у гаманці збережена стара адреса
+  // (Caldera), яка більше не відповідає: читання падало б із помилкою
+  // "RPC endpoint not found", хоча сама мережа працює.
+  try{
+    if(!_litvmReadProvider) _litvmReadProvider = new ethers.JsonRpcProvider(LITVM.rpcUrls[0]);
+    return _litvmReadProvider;
+  }catch(e){
+    if(provider && window._ogChainId==='0x1159') return provider;
+    throw e;
+  }
 }
 function getBNBProvider(){
   // BNB reads always use public RPC (not LitVM) — shares the same rotating pool as Battleship
@@ -4967,7 +5171,7 @@ async function connectViaWalletConnect(triedIds){
       methods: ['eth_sendTransaction','eth_signTransaction','eth_sign','personal_sign','eth_signTypedData','wallet_switchEthereumChain','wallet_addEthereumChain'],
       events: ['chainChanged','accountsChanged'],
       rpcMap: {
-        4441: 'https://liteforge.rpc.caldera.xyz/http',
+        4441: 'https://rpc.testnet.liteforge.zeeve.net/',
         56: 'https://bsc-dataseed.binance.org/'
       },
       metadata: {
@@ -7946,16 +8150,13 @@ async function initGoldPolygonBattle(){
     document.getElementById('gpbs-main').style.display='none';
     return;
   }
-  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  var OWNER=window.OPENGATE_OWNER;
   var isOwner=userAddr.toLowerCase()===OWNER;
   var pass=currentUser&&currentUser.pass_type;
   if(!isOwner&&(!pass||pass==='free')){
     try{
       var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
-      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
+      var r=await Promise.all([passCount(GOLD_PASSES,bnbP,userAddr),passCount(SILVER_PASSES,bnbP,userAddr)]);
       if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
     }catch(e){}
   }
@@ -8831,16 +9032,13 @@ async function initGoldBaseBattle(){
     document.getElementById('gbbs-main').style.display='none';
     return;
   }
-  var OWNER='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  var OWNER=window.OPENGATE_OWNER;
   var isOwner=userAddr.toLowerCase()===OWNER;
   var pass=currentUser&&currentUser.pass_type;
   if(!isOwner&&(!pass||pass==='free')){
     try{
       var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var sC=new ethers.Contract(SILVER_PASS,nftAbi,bnbP);
-      var r=await Promise.all([gC.balanceOf(userAddr).catch(function(){return 0n;}),sC.balanceOf(userAddr).catch(function(){return 0n;})]);
+      var r=await Promise.all([passCount(GOLD_PASSES,bnbP,userAddr),passCount(SILVER_PASSES,bnbP,userAddr)]);
       if(r[0]>0n) pass='gold'; else if(r[1]>0n) pass='silver';
     }catch(e){}
   }
@@ -9730,7 +9928,7 @@ async function initGoldBattle(){
   // Тестери, яким показуємо UI без пропуску (owner + 2-й ноут).
   // УВАГА: щоб реально грати on-chain, гаманець ВСЕ ОДНО має тримати Gold Pass —
   // контракт onlyGoldPass відхилить create/join без NFT. Це лише про видимість UI.
-  var GBS_TESTERS=['0xc85b148f3ebd09e9072706166b4cd99cf7ed3108','0x410964fbe0158285db66deff21ea74faf42d13d9'];
+  var GBS_TESTERS=[window.OPENGATE_OWNER,'0x410964fbe0158285db66deff21ea74faf42d13d9'];
   var isOwner=GBS_TESTERS.indexOf(userAddr.toLowerCase())>=0;
   var pass=currentUser&&currentUser.pass_type;
   // GOLD-ONLY: silver не допускається у VIP-гру
@@ -9738,9 +9936,7 @@ async function initGoldBattle(){
   if(!isOwner&&!hasGold){
     try{
       var bnbP=getBNBBattleProvider();
-      var nftAbi=['function balanceOf(address) view returns(uint256)'];
-      var gC=new ethers.Contract(GOLD_PASS,nftAbi,bnbP);
-      var gbal=await gC.balanceOf(userAddr).catch(function(){return 0n;});
+      var gbal=await passCount(GOLD_PASSES,bnbP,userAddr);
       if(gbal>0n) hasGold=true;
     }catch(e){}
   }
@@ -10687,6 +10883,16 @@ async function switchToLitVM(){
   provider = new ethers.BrowserProvider(window.ethereum);
   signer = await provider.getSigner();
   userAddr = (await signer.getAddress()).toLowerCase();
+  // У гаманця може бути збережена стара адреса мережі (Caldera), яка вже
+  // не відповідає. Перевіряємо це одним дешевим запитом і, якщо так,
+  // пропонуємо додати нову адресу — інакше будь-яка транзакція впаде.
+  try{
+    // саме читання контракту, а не номер блоку: номер блоку MetaMask
+    // може віддати з кешу навіть тоді, коли адреса мережі мертва.
+    await provider.call({to:GATE_TOKEN, data:'0x18160ddd'});
+  }catch(e){
+    try{ showLitVMRpcBanner(); }catch(_){ }
+  }
 }
 
 // ── USER ──
@@ -10704,19 +10910,18 @@ async function checkPassType(){
   if(!userAddr) return;
   try{
     const bnbP = getBNBProvider();
-    const nftAbi = ['function balanceOf(address) view returns(uint256)'];
-    const goldNFT   = new ethers.Contract('0x4D26Ec2f8edbb3F567953CC7573FF60cA009258c', nftAbi, bnbP);
-    const silverNFT = new ethers.Contract('0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89', nftAbi, bnbP);
+    // Смотрим и новые пропуска, и старые — старые остаются действительными.
     const [goldBal, silverBal] = await Promise.all([
-      ogTimeout(goldNFT.balanceOf(userAddr), 8000),
-      ogTimeout(silverNFT.balanceOf(userAddr), 8000)
+      ogTimeout(passCount(GOLD_PASSES, bnbP, userAddr), 8000),
+      ogTimeout(passCount(SILVER_PASSES, bnbP, userAddr), 8000)
     ]);
     let passType = 'free';
     if(goldBal > 0n) passType = 'gold';
     else if(silverBal > 0n) passType = 'silver';
     // Update if changed
     if(currentUser && currentUser.pass_type !== passType){
-      await sb.from('users').update({pass_type: passType}).eq('wallet', userAddr);
+      // Записує сервер — він сам перевіряє пропуск у BNB Chain
+      await socialCall('syncPass', {wallet: userAddr});
       currentUser = {...currentUser, pass_type: passType};
       if(passType !== 'free') showToast('Pass detected: ' + passType + ' ✓', 'ok');
     }
@@ -10778,6 +10983,7 @@ function testnetGo(target){
 function showTab(tab){
   localStorage.setItem('og_active_tab', tab);
   document.getElementById('view-testnet').style.display=tab==='testnet'?'block':'none';
+  if(tab==='testnet'){ try{ initArcanixMint(); }catch(e){} }
   document.getElementById('view-feed').style.display=tab==='feed'?'block':'none';
   document.getElementById('view-profile').style.display=tab==='profile'?'block':'none';
   document.getElementById('view-staking').style.display=tab==='staking'?'block':'none';
@@ -10790,7 +10996,6 @@ function showTab(tab){
   document.getElementById('view-market').style.display=tab==='market'?'block':'none';
   document.getElementById('view-nftstudio').style.display=tab==='nftstudio'?'block':'none';
   document.getElementById('view-dao').style.display=tab==='dao'?'block':'none';
-  document.getElementById('view-lottery').style.display=tab==='lottery'?'block':'none';
   document.getElementById('view-dice').style.display=tab==='dice'?'block':'none';
   document.getElementById('view-battle').style.display=tab==='battle'?'block':'none';
   document.getElementById('view-games').style.display=tab==='games'?'block':'none';
@@ -10799,7 +11004,6 @@ function showTab(tab){
   if(tab!=='groups' && typeof groupsCleanup==='function'){ groupsCleanup(); }
   document.getElementById('view-lending').style.display=tab==='lending'?'block':'none';
   document.getElementById('view-faucet').style.display=tab==='faucet'?'block':'none';
-  document.getElementById('view-bnblottery').style.display=tab==='bnblottery'?'block':'none';
   document.getElementById('view-bnbbattle').style.display=tab==='bnbbattle'?'block':'none';
   if(tab==='bnbbattle') initBNBBattle();
   document.getElementById('view-goldbattle').style.display=tab==='goldbattle'?'block':'none';
@@ -10852,7 +11056,6 @@ function showTab(tab){
   if(tab==='explore') loadExploreDefault();
   if(tab==='market') loadMarketplace();
   if(tab==='dao') loadDAO();
-  if(tab==='lottery') loadLottery();
   if(tab==='dice') loadDice();
   if(tab==='battle'){ loadBattleLobby(); subscribeToBattleLobby(); clearInterval(bsTimer); }
   if(tab==='games'){}
@@ -10882,7 +11085,7 @@ async function feedAuthors(){
 function updateComposer(){
   const el=document.getElementById('postText');
   const v=el.value;
-  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const OWNER_WALLET=window.OPENGATE_OWNER;
   const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const isGold=isOwner||currentUser?.pass_type==='gold';
   const wordLimit=isGold?1000:500;
@@ -11772,26 +11975,27 @@ async function uploadToCloudinary(file){
   return json.secure_url;
 }
 
-async function uploadToPinata(file){
-  // Try all 3 services in parallel — use whichever succeeds first
-  try{
-    const result=await Promise.any([
-      uploadToSupabase(file),
-      uploadToPinataOnly(file),
-      uploadToCloudinary(file)
-    ]);
-    return result;
-  }catch(e){
-    // All failed in parallel — try each sequentially as last resort
-    try{ return await uploadToSupabase(file); }catch(e1){}
-    try{ return await uploadToCloudinary(file); }catch(e2){}
-    try{ return await uploadToPinataOnly(file); }catch(e3){}
-    throw new Error('All upload methods failed');
-  }
+// Картинка в посте — обычный контент сайта, а не NFT: её адрес лежит
+// в нашей базе и меняется когда угодно, вечное хранение ей не нужно.
+//
+// Порядок выбран по размеру бесплатных лимитов, чтобы платформа как
+// можно дольше жила бесплатно:
+//   1. Cloudinary — 25 ГБ в месяц бесплатно и настоящая CDN. Картинки
+//      раздаются быстро и не тратят трафик Supabase.
+//   2. Хранилище Supabase — 1 ГБ и 5 ГБ трафика бесплатно. Мало, зато
+//      переезжает к новому владельцу вместе с проектом.
+//   3. Pinata — последняя, это IPFS, и платить за вечное хранение
+//      обычной картинки из ленты смысла нет.
+// Когда у одного кончается лимит, следующий подхватывает сам.
+async function uploadPostImage(file){
+  try{ return await uploadToCloudinary(file); }catch(e){}
+  try{ return await uploadToSupabase(file); }catch(e2){}
+  try{ return await uploadToPinataOnly(file); }catch(e3){}
+  throw new Error('All upload methods failed');
 }
 
 function checkImgUpload(){
-  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const OWNER_WALLET=window.OPENGATE_OWNER;
   const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const passType=currentUser?.pass_type;
   if(!isOwner&&(!passType||passType==='free')){
@@ -11847,7 +12051,7 @@ function compressImageIfNeeded(file,maxBytes){
 async function handleImages(input){
   const files=Array.from(input.files);
   if(files.length===0) return;
-  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const OWNER_WALLET=window.OPENGATE_OWNER;
   const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const passType=currentUser?.pass_type;
   const isGold=isOwner||passType==='gold';
@@ -11871,7 +12075,7 @@ async function handleImages(input){
   for(let file of files){
     try{
       file=await compressImageIfNeeded(file,1.2*1024*1024);
-      const url=await uploadToPinata(file);
+      const url=await uploadPostImage(file);
       pendingImages.push(url);
       _todayImgCount++;
       uploaded++;
@@ -11901,7 +12105,7 @@ async function createPost(){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const content=document.getElementById('postText').value.trim();
   if(!content) return;
-  const OWNER_WALLET='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  const OWNER_WALLET=window.OPENGATE_OWNER;
   const isOwner=userAddr&&userAddr.toLowerCase()===OWNER_WALLET;
   const isGold=isOwner||currentUser?.pass_type==='gold';
   if(isGold){
@@ -11912,8 +12116,7 @@ async function createPost(){
   const btn=document.getElementById('postBtn');
   btn.disabled=true; btn.textContent='Posting...';
   try{
-    const {error}=await sb.from('posts').insert({author_wallet:userAddr,content,image_urls:pendingImages});
-    if(error) throw error;
+    await socialCall('post',{content,image_urls:pendingImages});
     pendingImages = [];
     renderImgPreviews();
     // Check if any follower has bell on for this user
@@ -12012,7 +12215,7 @@ function renderImages(urls){
 }
 
 function isOwnerWallet(){
-  return !!userAddr && userAddr.toLowerCase()==='0xc85b148f3ebd09e9072706166b4cd99cf7ed3108';
+  return !!userAddr && userAddr.toLowerCase()===window.OPENGATE_OWNER;
 }
 function renderPost(post,liked,alreadyFollowing=false){
   const u=post.users||{};
@@ -12082,11 +12285,9 @@ async function likePost(postId,authorWallet,btn){
   if(userAddr===authorWallet.toLowerCase()){showToast("Can't like your own post",'err');return;}
   const liked=btn.classList.contains('liked');
   if(liked){
-    await sb.from('likes').delete().eq('post_id',postId).eq('liker_wallet',userAddr);
-    // Count real likes from likes table
-    const {count:realCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
-    const c=realCount||0;
-    await sb.from('posts').update({likes_count:c}).eq('id',postId);
+    let c=0;
+    try{ const r=await socialCall('unlike',{post_id:postId}); c=r.likes_count||0; }
+    catch(e){ showToast((e.message||'Failed').slice(0,50),'err'); return; }
     btn.classList.remove('liked'); btn.querySelector('span').textContent='🤍';
     const cntEl2=document.getElementById('cnt-'+postId);
     if(cntEl2) cntEl2.textContent=c;
@@ -12094,6 +12295,8 @@ async function likePost(postId,authorWallet,btn){
   }
   btn.disabled=true;
   try{
+    // вхід ДО оплати — щоб підпис не вискочив уже після відправки GATE
+    await socialEnsure();
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
     const rewards=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,freshSigner);
@@ -12105,12 +12308,9 @@ async function likePost(postId,authorWallet,btn){
     showToast('Sending 0.1 GATE to author...','ok');
     const tx=await gate.transfer(authorWallet,rewardAmt);
     await tx.wait();
-    await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
+    const lr=await socialCall('like',{post_id:postId,tx_hash:tx.hash});
     await createNotif(authorWallet,'like',postId);
-    // Count real likes from likes table
-    const {count:realCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
-    const c=realCount||1;
-    await sb.from('posts').update({likes_count:c}).eq('id',postId);
+    const c=lr.likes_count||1;
     // Update UI
     btn.classList.add('liked');
     btn.querySelector('span').textContent='❤️';
@@ -12209,7 +12409,7 @@ async function quickFollow(wallet, btn){
     // Check if already following
     const {data:existing}=await sb.from('follows').select('id').eq('follower_wallet',userAddr).eq('following_wallet',wallet).single();
     if(existing){btn.textContent='✓';btn.style.color='var(--green)';return;}
-    await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});
+    await socialCall('follow',{wallet});
     await createNotif(wallet,'follow');
     btn.textContent='✓';
     btn.style.color='var(--green)';
@@ -12222,14 +12422,14 @@ async function toggleFollow(wallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const f=btn.classList.contains('following');
   if(f){
-    await sb.from('follows').delete().eq('follower_wallet',userAddr).eq('following_wallet',wallet);
+    try{ await socialCall('unfollow',{wallet}); }catch(e){ showToast((e.message||'Failed').slice(0,50),'err'); return; }
     btn.textContent='Follow';btn.classList.remove('following');
     removeBellNotif(wallet);
     // Update follower count on page
     const fcEl=document.querySelector('.pstat-n');
     // Just reload profile to update counts
   } else {
-    await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});
+    try{ await socialCall('follow',{wallet}); }catch(e){ showToast((e.message||'Failed').slice(0,50),'err'); return; }
     btn.textContent='Following';btn.classList.add('following');
     await createNotif(wallet,'follow');
     showToast('Following! ✓','ok');
@@ -12397,11 +12597,11 @@ async function loadNFTAvatar(){
     const nftAbi=['function tokenURI(uint256) view returns(string)'];
     const nft=new ethers.Contract(contract,nftAbi,p);
     let uri=await nft.tokenURI(tokenId);
-    if(uri.startsWith('ipfs://')) uri='https://gateway.pinata.cloud/ipfs/'+uri.slice(7);
+    if(uri.startsWith('ipfs://')) uri=ogOwnCopy(uri.slice(7))||('https://gateway.pinata.cloud/ipfs/'+uri.slice(7));
     const res=await fetch(uri);
     const meta=await res.json();
     let img=meta.image||'';
-    if(img.startsWith('ipfs://')) img='https://gateway.pinata.cloud/ipfs/'+img.slice(7);
+    if(img.startsWith('ipfs://')) img=ogOwnCopy(img.slice(7))||('https://gateway.pinata.cloud/ipfs/'+img.slice(7));
     preview.innerHTML=`<img loading="lazy" decoding="async" src="${img}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-top:8px;" onerror="this.parentElement.innerHTML='<div style=color:var(--red);font-size:12px;>Could not load NFT image</div>'"/>`;
     document.getElementById('editAvatar').value=img;
     showToast('NFT loaded! ✓','ok');
@@ -12419,13 +12619,14 @@ async function uploadAvatarFile(input){
   status.textContent='Завантаження...';
   status.style.color='var(--muted)';
   try{
-    // Avatar upload goes ONLY to Cloudinary — no wallet, no Supabase, no IPFS
-    // This prevents MetaMask from being triggered
+    // Аватарка — тот же обычный контент, порядок тот же, что и у картинок
+    // постов: сначала Cloudinary с большим бесплатным лимитом, потом
+    // Supabase, потом Pinata. Кошелёк ни одному не нужен, поэтому
+    // MetaMask при загрузке фото не всплывает.
     let url='';
     try{
       url=await uploadToCloudinary(file);
     }catch(e1){
-      // Fallback to Supabase storage (no wallet needed, just HTTP)
       try{
         url=await uploadToSupabase(file);
       }catch(e2){
@@ -12465,8 +12666,7 @@ async function saveProfile(){
     const updates={username,bio,avatar_url,cover_url,website,twitter};
     if(nft_contract) updates.nft_avatar_contract=nft_contract;
     if(nft_token) updates.nft_avatar_token_id=nft_token;
-    const {error}=await sb.from('users').update(updates).eq('wallet',userAddr);
-    if(error)throw error;
+    await socialCall('profile',updates);
     currentUser={...currentUser,username,bio,avatar_url,cover_url,website,twitter};
     updateCompAv();closeEditModal();showToast('Profile saved ✓','ok');loadProfile();
   }catch(e){showToast('Username may already be taken','err');}
@@ -12485,20 +12685,18 @@ async function openMintModal(type){
   document.getElementById('mintModal').classList.add('open');
   try{
     const p=getBNBProvider();
-    const c=new ethers.Contract(isGold?GOLD_PASS:SILVER_PASS,MINT_ABI,p);
+    const c=new ethers.Contract(isGold?GOLD_PASS_MINT:SILVER_PASS_MINT,MINT_ABI,p);
     mintPrice=await c.getMintPriceBNB();
     document.getElementById('mintBnb').textContent=parseFloat(ethers.formatEther(mintPrice)).toFixed(6)+' BNB';
     document.getElementById('mintNote').textContent='Live rate via Chainlink oracle';
   }catch(e){document.getElementById('mintBnb').textContent='Could not fetch price';}
 }
 function closeMintModal(){document.getElementById('mintModal').classList.remove('open');mintType=null;mintPrice=null;}
-function openTerritoryInstall(){document.getElementById('territoryInstallModal').classList.add('open');}
-function closeTerritoryInstall(){document.getElementById('territoryInstallModal').classList.remove('open');}
 async function executeMint(){
   if(!userAddr){await connectWallet();return;}
   if(!mintPrice){showToast('Price not loaded','err');return;}
   await switchToBNB();
-  const addr=mintType==='gold'?GOLD_PASS:SILVER_PASS;
+  const addr=mintType==='gold'?GOLD_PASS_MINT:SILVER_PASS_MINT;
   const c=new ethers.Contract(addr,MINT_ABI,signer);
   const btn=document.getElementById('mintExecBtn');
   try{
@@ -13718,10 +13916,16 @@ async function sendChallenge(){
     var betAmt=challMode==='free'?'0':amt;
     var betTok=challMode==='free'?'FREE':challToken;
     await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:betAmt,bet_token:betTok,status:'waiting',challenge_to:challTarget});
-    await sb.from('notifications').insert({to_wallet:challTarget,from_wallet:userAddr,type:'challenge'});
+    await socialCall('notify',{to_wallet:challTarget,type:'challenge'});
     var myName=currentUser&&currentUser.username?currentUser.username:sAddr(userAddr);
     var betInfo=challMode==='free'?'Free Play':amt+' '+challToken;
-    await sb.from('messages').insert({from_wallet:userAddr,to_wallet:challTarget,content:'⚔️ '+myName+' challenges you to Battleship! Bet: '+betInfo+'. Check notifications to accept!'});
+    // Письмо в личные сообщения — приятное дополнение, а не главный путь:
+    // вызов и так ушёл уведомлением. Поэтому тихо: если человек ещё не
+    // заходил в сообщения на этом устройстве, подпись на подтверждение
+    // посреди вызова на бой не выскочит, а вызов всё равно дойдёт.
+    try{
+      await dmCall('send',{peer:challTarget,content:'⚔️ '+myName+' challenges you to Battleship! Bet: '+betInfo+'. Check notifications to accept!'},true);
+    }catch(e){}
     var modal=document.getElementById('challengeModal');
     if(modal)modal.classList.remove('open');
     showToast('⚔️ Challenge sent!','ok');
@@ -13750,7 +13954,7 @@ async function declineChallenge(fromWallet,notifId,event){
   try{
     var {data:games}=await sb.from('battleship_games').select('*').eq('status','waiting').eq('player1_wallet',fromWallet).limit(1);
     if(games&&games[0])await sb.from('battleship_games').update({status:'cancelled'}).eq('id',games[0].id);
-    if(notifId)await sb.from('notifications').update({read:true}).eq('id',notifId);
+    if(notifId){ try{ await socialCall('markRead',{id:notifId}); }catch(e){} }
     showToast('Challenge declined','ok');
     loadNotifications();
   }catch(e){}
@@ -13764,9 +13968,7 @@ async function declineChallengeDM(fromWallet,event){
 
 // ── DICE TOKEN ──
 let diceToken = 'GATE';
-let lotteryToken = 'GATE';
 function setDiceToken(t){diceToken=t;const g=document.getElementById('diceTokenGATE');const z=document.getElementById('diceTokenZKLTC');if(g){g.style.borderColor=t==='GATE'?'var(--gold)':'var(--border)';g.style.background=t==='GATE'?'rgba(245,200,66,0.1)':'var(--bg3)';g.style.color=t==='GATE'?'var(--gold)':'var(--muted)';}if(z){z.style.borderColor=t==='zkLTC'?'var(--gold)':'var(--border)';z.style.background=t==='zkLTC'?'rgba(245,200,66,0.1)':'var(--bg3)';z.style.color=t==='zkLTC'?'var(--gold)':'var(--muted)';}}
-function setLotteryToken(t){lotteryToken=t;}
 function updateDiceWinText(){const el=document.getElementById('diceWinAmt');if(el){const win=(diceBet*5*0.97).toFixed(2);el.textContent='Win: '+win+' '+(diceToken||'GATE')+' (5× − 3% fee)';}}
 
 // ── DICE GAME ──
@@ -13801,139 +14003,6 @@ async function rollDice(){
     loadDice();loadGateBal();
   }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
   btn.textContent='🎲 Roll Dice';btn.disabled=false;
-}
-
-// ── LOTTERY ──
-// ВИПРАВЛЕНО: лотерея реально живе на zkLitVM (GATE-токен, ліміт 20 гравців,
-// авто-розіграш при заповненні), а не на BNB/USDT з Chainlink VRF — та версія
-// була моєю помилкою і зняла зі стрічки, тому кнопка "Купити білет" не
-// працювала. Перевірено напряму по байткоду й живих getCurrentRound()/
-// currentRound() викликах на zkLitVM. Раунд #97 зараз isActive=false —
-// це не баг, контракт коректно блокує купівлю, поки new draw не запущено;
-// draw() власницька (onlyOwner) і власник контракту — не поточний гаманець
-// власника сайту, тому кнопки "розіграти" тут немає (вона б все одно
-// відхилялась). Нижче лише статус-повідомлення для гравців.
-let lotteryQty = 1;
-function setLotteryQty(qty){lotteryQty=qty;[1,2,3,5].forEach(q=>{const btn=document.getElementById('lqty'+q);if(!btn)return;if(q===qty){btn.style.borderColor='var(--gold)';btn.style.background='rgba(245,200,66,0.1)';btn.style.color='var(--gold)';}else{btn.style.borderColor='var(--border)';btn.style.background='var(--bg3)';btn.style.color='var(--muted)';}});document.getElementById('lotteryCost').textContent=(qty*10)+' GATE';}
-async function loadLottery(){
-  try{
-    const p=getReadProvider();
-    const lottery=new ethers.Contract(GATE_LOTTERY,LOTTERY_ABI,p);
-    // getCurrentRound() returns (roundId, playerCount, pot, isActive)
-    const round=await lottery.getCurrentRound();
-    const roundId=Number(round[0]);
-    const playerCount=Number(round[1]);
-    const pot=round[2];
-    const isActive=round[3];
-    document.getElementById('lotteryRound').textContent=roundId.toString();
-    document.getElementById('lotteryPot').textContent=parseFloat(ethers.formatEther(pot)).toFixed(0)+' GATE';
-    document.getElementById('lotteryPlayers').textContent=playerCount.toString();
-    document.getElementById('lotteryBar').style.width=(playerCount*100/20)+'%';
-
-    const statusBox=document.getElementById('lotteryStatusBox');
-    const buyBtn=document.getElementById('buyTicketBtn');
-    if(statusBox&&buyBtn){
-      if(isActive){
-        statusBox.textContent=playerCount+' / 20 players — round is open, draw fires automatically when full.';
-        buyBtn.disabled=false; buyBtn.style.opacity='1'; buyBtn.style.cursor='pointer';
-      }else{
-        statusBox.textContent='This round has ended and is waiting to be drawn. Buying is paused until the next round opens.';
-        buyBtn.disabled=true; buyBtn.style.opacity='.5'; buyBtn.style.cursor='not-allowed';
-      }
-    }
-
-    if(userAddr){
-      try{
-        const myT=await lottery.getMyTickets(roundId);
-        document.getElementById('myLotteryTickets').textContent=myT.toString();
-      }catch(e){}
-    }
-    loadLotteryWinners(lottery, roundId);
-  }catch(e){
-    document.getElementById('pastLotteryRounds').innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load lottery</div>';
-  }
-}
-
-async function loadLotteryWinners(lottery, currentRoundId){
-  const el=document.getElementById('pastLotteryRounds');
-  if(!el) return;
-  if(currentRoundId<=1){
-    el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No past rounds yet</div>';
-    return;
-  }
-  el.innerHTML='<div style="font-size:13px;color:var(--muted);">Loading winners...</div>';
-  try{
-    const from=Math.max(1, currentRoundId-10);
-    const promises=[];
-    for(let i=currentRoundId-1;i>=from;i--){
-      promises.push((async(roundNum)=>{
-        try{
-          // rounds(uint256) returns: (uint256 pot, address[] players, address winner, uint256 ticketPrice, bool drawn, uint256 timestamp)
-          const r=await lottery.rounds(roundNum);
-          const pot=r[0];
-          const players=r[1];
-          const winner=r[2];
-          const drawn=r[4];
-          // Also try by name in case ethers returns object
-          const potVal=r.pot??pot??0n;
-          const winnderVal=r.winner??winner??'';
-          const drawnVal=r.drawn??drawn??false;
-          const playersVal=r.players??players??[];
-          const zeroAddr='0x0000000000000000000000000000000000000000';
-          if(!drawnVal||!winnderVal||winnderVal===zeroAddr) return null;
-          return {
-            roundNum,
-            pot: potVal,
-            winner: winnderVal,
-            players: Array.isArray(playersVal)?playersVal.length:Number(playersVal)||0
-          };
-        }catch(e){ return null; }
-      })(i));
-    }
-    const results=(await Promise.all(promises)).filter(Boolean);
-    if(results.length===0){
-      el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No completed rounds yet</div>';
-      return;
-    }
-    let html='';
-    results.forEach(r=>{
-      const potGate=parseFloat(ethers.formatEther(r.pot)).toFixed(0);
-      const prize=(parseFloat(ethers.formatEther(r.pot))*0.95).toFixed(0);
-      const winnerShort=r.winner.slice(0,6)+'...'+r.winner.slice(-4);
-      const isMe=userAddr&&r.winner.toLowerCase()===userAddr.toLowerCase();
-      html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div>
-          <div style="font-size:13px;font-weight:700;">Round #${r.roundNum} ${isMe?'🎉 You won!':''}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.players} players · ${potGate} GATE pot</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:12px;font-weight:700;color:var(--green);">🏆 ${prize} GATE</div>
-          <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-top:2px;cursor:pointer;"
-            onclick="cpText('${r.winner}');showToast('Copied!','ok')" title="${r.winner}">${winnerShort} ⧉</div>
-        </div>
-      </div>`;
-    });
-    el.innerHTML=html;
-  }catch(e){
-    el.innerHTML='<div style="font-size:13px;color:var(--muted);">Could not load past rounds</div>';
-  }
-}
-async function buyLotteryTicket(){
-  if(!userAddr){showToast('Connect wallet first','err');return;}
-  const btn=document.getElementById('buyTicketBtn');
-  btn.textContent='⏳ Checking...';btn.disabled=true;
-  try{
-    await switchToLitVM();
-    const freshSigner=await provider.getSigner();
-    const amount=ethers.parseEther((lotteryQty*10).toString());
-    await smartApprove(GATE_LOTTERY, amount, freshSigner);
-    btn.textContent='🎟️ Buying...';
-    const LOTTERY_IFACE=new ethers.Interface(['function buyTicket(uint256 qty)']);
-    const tx=await freshSigner.sendTransaction({to:GATE_LOTTERY,data:LOTTERY_IFACE.encodeFunctionData('buyTicket',[BigInt(lotteryQty)])});
-    await tx.wait();
-    showToast('🎟️ Ticket bought!','ok');loadLottery();loadGateBal();
-  }catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}
-  btn.textContent='🎟️ Buy Ticket';btn.disabled=false;
 }
 
 // ── DAO ──
@@ -14055,25 +14124,40 @@ function getCachedNFTImg(key){
 }
 function setCachedNFTImg(key,url){_nftImgCache[key]={url,t:Date.now()};}
 
+function ogOwnCopy(hash){
+  try{ return OG_OWN_IPFS[(hash||'').split(/[/?#]/)[0]]||null; }catch(e){ return null; }
+}
+
 async function resolveIPFS(uri){
   if(!uri) return '';
   if(uri.startsWith('data:')) return uri;
   if(uri.startsWith('ipfs://')){
     const hash=uri.slice(7);
-    return 'https://gateway.pinata.cloud/ipfs/'+hash;
+    return ogOwnCopy(hash) || 'https://gateway.pinata.cloud/ipfs/'+hash;
   }
   if(uri.startsWith('https://ipfs.io/ipfs/')) return uri.replace('https://ipfs.io/ipfs/','https://gateway.pinata.cloud/ipfs/');
   if(uri.startsWith('https://cloudflare-ipfs.com/')) return uri.replace('https://cloudflare-ipfs.com/','https://gateway.pinata.cloud/');
   return uri;
 }
 
-// 4 IPFS gateways tried in order until one works
+// IPFS gateways raced until one answers
 function getIPFSGateways(hash){
+  // cloudflare-ipfs.com убран: Cloudflare закрыла свой публичный шлюз,
+  // он всегда отваливался и только тормозил перебор.
+  const own=ogOwnCopy(hash);
   return [
+    ...(own?[own]:[]),
     'https://gateway.pinata.cloud/ipfs/'+hash,
-    'https://cloudflare-ipfs.com/ipfs/'+hash,
+    // Наш сервер как ещё один путь к той же картинке. Он нужен для тех,
+    // у кого провайдер или расширение режут публичные шлюзы, и он отдаёт
+    // уже скачанное со своего кеша, а адрес в IPFS неизменна по своей
+    // природе, поэтому кеш стоит на год. Участвует в общей гонке: кто
+    // ответил первым, тот и показался.
+    '/api/nft-proxy?url='+encodeURIComponent('https://gateway.pinata.cloud/ipfs/'+hash),
     'https://ipfs.io/ipfs/'+hash,
     'https://dweb.link/ipfs/'+hash,
+    'https://w3s.link/ipfs/'+hash,
+    'https://4everland.io/ipfs/'+hash,
   ];
 }
 
@@ -14222,13 +14306,11 @@ async function loadMarketplace(){
       let img='',name='NFT #'+l.tokenId.toString();
       try{
         const nft=new ethers.Contract(l.nftContract,ERC721_ABI,p);
-        let uri=await nft.tokenURI(l.tokenId);
-        const meta=await fetchNFTMeta(uri);
-        const imgField=meta.image||meta.image_url;
-        if(imgField){
-          // Try multiple IPFS gateways for image
-          img=await resolveIPFSWithFallback(imgField);
-        }
+        let uri=await ogTimeout(nft.tokenURI(l.tokenId),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        // Картинку не чекаємо: сам <img> нижче перебирає шлюзи сам,
+        // а гонка шлюзів тут затримувала показ усієї вітрини.
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){
         console.log('NFT meta error:',l.nftContract,l.tokenId.toString(),err.message);
@@ -14250,7 +14332,7 @@ async function loadMarketplace(){
         im.loading='lazy';
         im.style.cssText='width:100%;height:100%;object-fit:cover;';
         im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;
         im.src=_gateways[_gwIdx];
@@ -14309,7 +14391,18 @@ function openListModal(){
   document.getElementById('listNFTModal').classList.add('open');
 }
 async function loadNFTPreview(){}
-async function submitListing(){if(!userAddr){showToast('Connect wallet first','err');return;}const contract=document.getElementById('listContract').value.trim();const tokenId=document.getElementById('listTokenId').value.trim();const price=document.getElementById('listPrice').value.trim();if(!contract||!tokenId||!price){showToast('Fill all fields','err');return;}try{await switchToLitVM();const nft=new ethers.Contract(contract,ERC721_ABI,signer);if(!await nft.isApprovedForAll(userAddr,NFT_MARKET))await(await nft.setApprovalForAll(NFT_MARKET,true)).wait();const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,signer);await(await market.listNFT(contract,tokenId,ethers.parseEther(price))).wait();showToast('NFT listed! 🎉','ok');document.getElementById('listNFTModal').classList.remove('open');loadMarketplace();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
+async function submitListing(){if(!userAddr){showToast('Connect wallet first','err');return;}const contract=document.getElementById('listContract').value.trim();const tokenId=document.getElementById('listTokenId').value.trim();const price=document.getElementById('listPrice').value.trim();if(!contract||!tokenId||!price){showToast('Fill all fields','err');return;}try{await switchToLitVM();
+    // подпись берём заново: та, что лежала в signer, сделана ДО перехода
+    // на zkLitVM и после переключения сети уже не годится
+    const freshSigner=await provider.getSigner();
+    const nft=new ethers.Contract(contract,ERC721_ABI,freshSigner);
+    if(!await nft.isApprovedForAll(userAddr,NFT_MARKET)){
+      showToast('Step 1 of 2: allow the marketplace to move this NFT','ok');
+      await(await nft.setApprovalForAll(NFT_MARKET,true)).wait();
+    }
+    showToast('Step 2 of 2: confirm the listing','ok');
+    const market=new ethers.Contract(NFT_MARKET,NFT_MARKET_ABI,freshSigner);
+    await(await market.listNFT(contract,tokenId,ethers.parseEther(price))).wait();showToast('NFT listed! 🎉','ok');document.getElementById('listNFTModal').classList.remove('open');loadMarketplace();}catch(e){showToast((e.reason||e.message||'Failed').slice(0,60),'err');}}
 async function buyNFT(listingId,price){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   try{
@@ -14429,9 +14522,9 @@ async function loadMarketplaceBNB(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        let uri=await bnbReadRetry(rp=>new ethers.Contract(l.nftContract,ERC721_ABI,rp).tokenURI(l.tokenId));
-        const meta=await fetchNFTMeta(uri);
-        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        let uri=await ogTimeout(bnbReadRetry(rp=>new ethers.Contract(l.nftContract,ERC721_ABI,rp).tokenURI(l.tokenId)),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){}
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
@@ -14448,7 +14541,7 @@ async function loadMarketplaceBNB(){
       if(img){
         const im=document.createElement('img');
         im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;im.src=_gateways[_gwIdx];
         im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
@@ -14599,9 +14692,9 @@ async function loadMarketplacePolygon(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        let uri=await polygonReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);});
-        const meta=await fetchNFTMeta(uri);
-        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        let uri=await ogTimeout(polygonReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);}),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){}
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
@@ -14618,7 +14711,7 @@ async function loadMarketplacePolygon(){
       if(img){
         const im=document.createElement('img');
         im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;im.src=_gateways[_gwIdx];
         im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
@@ -14768,9 +14861,9 @@ async function loadMarketplaceBase(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        let uri=await baseReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);});
-        const meta=await fetchNFTMeta(uri);
-        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        let uri=await ogTimeout(baseReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);}),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){}
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
@@ -14787,7 +14880,7 @@ async function loadMarketplaceBase(){
       if(img){
         const im=document.createElement('img');
         im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;im.src=_gateways[_gwIdx];
         im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
@@ -14931,9 +15024,9 @@ async function loadMarketplaceArb(){
     await Promise.all(active.map(async(l)=>{
       let img='',name='NFT #'+l.tokenId.toString();
       try{
-        let uri=await arbReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);});
-        const meta=await fetchNFTMeta(uri);
-        if(meta.image||meta.image_url) img=await resolveIPFSWithFallback(meta.image||meta.image_url);
+        let uri=await ogTimeout(arbReadRetry(function(p){return new ethers.Contract(l.nftContract,ERC721_ABI,p).tokenURI(l.tokenId);}),6000);
+        const meta=await ogTimeout(fetchNFTMeta(uri),6000);
+        img=meta.image||meta.image_url||'';
         name=meta.name||name;
       }catch(err){}
       const isOwn=userAddr&&l.seller.toLowerCase()===userAddr.toLowerCase();
@@ -14950,7 +15043,7 @@ async function loadMarketplaceArb(){
       if(img){
         const im=document.createElement('img');
         im.loading='lazy';im.style.cssText='width:100%;height:100%;object-fit:cover;';im.alt=name;
-        const _hash=img.includes('/ipfs/')?img.split('/ipfs/').pop():null;
+        const _hash=img.startsWith('ipfs://')?img.slice(7):(img.includes('/ipfs/')?img.split('/ipfs/').pop():null);
         const _gateways=_hash?getIPFSGateways(_hash):[img];
         let _gwIdx=0;im.src=_gateways[_gwIdx];
         im.onerror=function(){_gwIdx++;if(_gwIdx<_gateways.length){this.src=_gateways[_gwIdx];}else{imgDiv.innerHTML='<div style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);">🖼️</div>';}};
@@ -15150,23 +15243,16 @@ async function showFollowersList(wallet, type){
 }
 
 // ── NOTIFICATIONS ──
-async function cleanupOldNotifications(){
-  if(!userAddr)return;
-  try{
-    // All notification types (likes, follows, challenges, DMs) — cleaned up after 24h
-    const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
-    const res=await sb.from('notifications').delete().eq('to_wallet',userAddr).lt('created_at',cutoff);
-    // If this errors silently, it's almost always a Supabase RLS policy blocking
-    // DELETE for the anon key (no auth.uid() since there's no Supabase Auth here).
-    // Check: Supabase → Authentication → Policies → notifications table → DELETE policy
-    // should allow it for the anon role, e.g.: USING (true) or a wallet-based check
-    // that doesn't rely on auth.uid().
-    if(res.error) console.warn('cleanupOldNotifications blocked (likely RLS):', res.error.message);
-  }catch(e){console.warn('cleanupOldNotifications failed:',e.message);}
-}
+// Старые уведомления чистит сам сервер базы, по расписанию раз в двое
+// суток (задание cleanup-old-notifications удаляет всё старше 48 часов).
+//
+// Раньше чистил браузер, и это не работало ни разу: в базе нет разрешения
+// на удаление для обычного ключа, поэтому запрос молча отклонялся — самому
+// старому уведомлению было пять месяцев. Чистка из браузера и по сути
+// негодная: у того, кто не заходит, не чистится никогда, а чтобы она
+// заработала, пришлось бы открыть удаление всем подряд.
 async function loadNotifications(){
   if(!userAddr)return;
-  await cleanupOldNotifications();
   const el=document.getElementById('notifsList');
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
@@ -15209,10 +15295,10 @@ async function loadNotifications(){
     });
   }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
 }
-async function markRead(id){await sb.from('notifications').update({read:true}).eq('id',id);updateNotifBadge();}
+async function markRead(id){try{await socialCall('markRead',{id});}catch(e){}updateNotifBadge();}
 async function markAllRead(){
   if(!userAddr)return;
-  await sb.from('notifications').update({read:true}).eq('to_wallet',userAddr).eq('read',false);
+  try{ await socialCall('markAllRead',{}); }catch(e){}
   await updateNotifBadge();
   loadNotifications();
 }
@@ -15230,14 +15316,21 @@ async function updateNotifBadge(){
 }
 async function updateUnreadBadge(){
   if(!userAddr)return;
-  const {count}=await sb.from('messages').select('*',{count:'exact',head:true})
-    .eq('to_wallet',userAddr).eq('read',false);
+  // silent: пока человек не заходил в сообщения на этом устройстве, счётчик
+  // просто молчит — кошелёк на подпись не выскакивает. О новом письме всё
+  // равно скажет колокольчик уведомлений.
+  let count=0;
+  try{
+    const r=await dmCall('unread',{},true);
+    if(!r) return;
+    count=r.count||0;
+  }catch(e){ return; }
   const badge=document.getElementById('unreadBadge');
   if(badge){if(count>0){badge.style.display='inline';badge.textContent=count;}else badge.style.display='none';}
   const db=document.getElementById('drawerUnreadBadge');
   if(db){if(count>0){db.style.display='inline';db.textContent=count;}else db.style.display='none';}
 }
-async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===toWallet)return;try{await sb.from('notifications').insert({to_wallet:toWallet,from_wallet:userAddr,type,post_id:postId||undefined});}catch(e){}}
+async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===toWallet)return;try{await socialCall('notify',{to_wallet:toWallet,type,post_id:postId||undefined});}catch(e){}}
 
 // ── LAUNCHPAD ──
 let ltOpts={ltMint:false,ltBurn:false,ltPause:false};
@@ -16156,16 +16249,129 @@ let convsRealtimeChannel=null;
 let _lastMsgCount=0;
 let _msgPollTimer=null;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ЛИЧНЫЕ СООБЩЕНИЯ — ЧЕРЕЗ СЕРВЕР
+//
+// Раньше браузер читал таблицу messages напрямую, а правило доступа в базе
+// разрешало читать её ВСЕМ. На экране было видно только свои сообщения, но
+// любой посетитель мог выгрузить всю переписку всех людей. Теперь таблица
+// закрыта, и вся переписка идёт через функцию "dm".
+//
+// Для человека это выглядит так: один раз на устройстве он подписывает вход
+// кошельком (бесплатно, не транзакция), браузер запоминает это на 30 дней.
+// Дальше всё как в обычной переписке — написал, отправилось, пришло,
+// прочитал. Никаких подписей на каждое сообщение.
+// ═══════════════════════════════════════════════════════════════════════════
+const DM_URL = SUPABASE_URL + '/functions/v1/dm';
+let _dmToken = null;
+let _dmLoginPromise = null;
+
+function _dmKey(){ return 'og_dm_tok_'+(userAddr||'').toLowerCase(); }
+function _dmTokenGet(){
+  if(_dmToken) return _dmToken;
+  try{
+    const raw=localStorage.getItem(_dmKey()); if(!raw) return null;
+    const o=JSON.parse(raw);
+    if(!o||!o.token||!o.exp) return null;
+    // за две минуты до конца считаем просроченным — чтобы не упасть посередине
+    if(Math.floor(Date.now()/1000) > o.exp-120){ localStorage.removeItem(_dmKey()); return null; }
+    _dmToken=o.token; return _dmToken;
+  }catch(e){ return null; }
+}
+function _dmTokenClear(){ _dmToken=null; try{ localStorage.removeItem(_dmKey()); }catch(e){} }
+
+async function dmLogin(){
+  if(!userAddr) throw new Error('Connect wallet first');
+  if(_dmLoginPromise) return _dmLoginPromise; // не просим подпись дважды разом
+  _dmLoginPromise=(async function(){
+    const nonce=Math.floor(Date.now()/1000);
+    const freshSigner=await provider.getSigner();
+    const signature=await freshSigner.signMessage('OpenGate messages login '+nonce);
+    const r=await fetch(DM_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
+      body:JSON.stringify({action:'login',wallet:userAddr,nonce,signature})});
+    const j=await r.json();
+    if(!r.ok||!j.token) throw new Error(j.error||'Login failed');
+    _dmToken=j.token;
+    try{ localStorage.setItem(_dmKey(),JSON.stringify({token:j.token,exp:j.expires_at})); }catch(e){}
+    return j.token;
+  })();
+  try{ return await _dmLoginPromise; } finally { _dmLoginPromise=null; }
+}
+
+// silent=true — не просить подпись: если входа ещё нет, просто вернуть null.
+// Так ведут себя счётчики на старте, чтобы не выскакивал кошелёк на пустом месте.
+async function dmCall(action,payload,silent){
+  let tok=_dmTokenGet();
+  if(!tok){ if(silent) return null; tok=await dmLogin(); }
+  const post=async function(t){
+    const r=await fetch(DM_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
+      body:JSON.stringify(Object.assign({action,token:t},payload||{}))});
+    let b={}; try{ b=await r.json(); }catch(e){}
+    return {status:r.status,body:b};
+  };
+  let res=await post(tok);
+  if(res.status===401){            // токен устарел — один раз входим заново
+    _dmTokenClear();
+    if(silent) return null;
+    res=await post(await dmLogin());
+  }
+  if(res.status!==200) throw new Error((res.body&&res.body.error)||'Request failed');
+  return res.body;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SOCIAL — усі записи соцмережі (пости, лайки, підписки, коментарі, профіль,
+// сповіщення, групи) йдуть через серверну функцію "social", а не напряму в
+// базу. Раніше база дозволяла будь-кому видаляти чужі пости й міняти чужі
+// профілі. Вхід — той самий, що й у повідомленнях: один підпис на пристрої
+// на 30 днів, далі все працює без підписів.
+// ═══════════════════════════════════════════════════════════════════════════
+var SOCIAL_URL = SUPABASE_URL + '/functions/v1/social';
+
+// Переконатись, що вхід є (за потреби — попросить один підпис).
+// Викликати ПЕРЕД платними діями, щоб підпис не вискочив після оплати.
+async function socialEnsure(){
+  if(_dmTokenGet()) return true;
+  await dmLogin();
+  return true;
+}
+
+async function socialCall(action,payload){
+  const send=async function(body){
+    const r=await fetch(SOCIAL_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
+      body:JSON.stringify(body)});
+    let b={}; try{ b=await r.json(); }catch(e){}
+    return {status:r.status,body:b};
+  };
+  if(action==='syncPass'){ // без входу — сервер сам дивиться пропуск у блокчейні
+    const res=await send(Object.assign({action},payload||{}));
+    if(res.status!==200) throw new Error((res.body&&res.body.error)||'Request failed');
+    return res.body;
+  }
+  let tok=_dmTokenGet();
+  if(!tok) tok=await dmLogin();
+  let res=await send(Object.assign({action,token:tok},payload||{}));
+  if(res.status===401){            // токен застарів — один раз входимо заново
+    _dmTokenClear();
+    res=await send(Object.assign({action,token:await dmLogin()},payload||{}));
+  }
+  if(res.status!==200) throw new Error((res.body&&res.body.error)||'Request failed');
+  return res.body;
+}
+
 function subscribeToConversations(){
   if(!userAddr||convsRealtimeChannel) return;
 
-  // Realtime WebSocket - listens for ALL messages involving this user
-  convsRealtimeChannel=sb.channel('msgs-'+userAddr)
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
-      const m=payload.new;
-      if(!m) return;
-      if(m.to_wallet!==userAddr&&m.from_wallet!==userAddr) return;
-      handleNewMessage(m);
+  // Мгновенная доставка. Сами сообщения закрыты в базе, поэтому слушаем
+  // уведомление: пришло «dm» — тут же забираем свежее письмо с сервера.
+  convsRealtimeChannel=sb.channel('dmnotif-'+userAddr)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'to_wallet=eq.'+userAddr},function(payload){
+      const n=payload.new;
+      if(!n||n.type!=='dm') return;
+      handleNewMessage(n.from_wallet);
     })
     .subscribe(function(status){
       if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
@@ -16175,8 +16381,9 @@ function subscribeToConversations(){
         _msgPollTimer=setInterval(async function(){
           if(!userAddr)return;
           try{
-            const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
-            const c=count||0;
+            const r=await dmCall('unread',{},true);
+            if(!r) return;
+            const c=r.count||0;
             if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();
               const convList=document.getElementById('convList');
               if(convList&&convList.style.display!=='none')loadConversations();
@@ -16190,30 +16397,17 @@ function subscribeToConversations(){
   // Polling only activates inside the CHANNEL_ERROR branch above.
 }
 
-function handleNewMessage(m){
-  const isToMe=m.to_wallet===userAddr;
-  if(isToMe){
-    _lastMsgCount++;
-    updateUnreadBadge();
-  }
+// Пришло новое письмо от fromWallet
+function handleNewMessage(fromWallet){
+  updateUnreadBadge();
   // Refresh conv list if open
   const convList=document.getElementById('convList');
   if(convList&&convList.style.display!=='none') loadConversations();
   // If in active DM - show message instantly
-  if(currentDMWallet){
-    const partner=isToMe?m.from_wallet:m.to_wallet;
-    if(partner===currentDMWallet){
-      // Make sure convView is visible
-      const cv=document.getElementById('convView');
-      if(cv&&cv.style.display==='none') cv.style.display='flex';
-      loadMessages();
-      if(isToMe){
-        _lastMsgCount=Math.max(0,_lastMsgCount-1);
-        updateUnreadBadge();
-        sb.from('messages').update({read:true})
-          .eq('from_wallet',currentDMWallet).eq('to_wallet',userAddr);
-      }
-    }
+  if(currentDMWallet&&fromWallet&&String(fromWallet).toLowerCase()===String(currentDMWallet).toLowerCase()){
+    const cv=document.getElementById('convView');
+    if(cv&&cv.style.display==='none') cv.style.display='flex';
+    loadMessages(); // сервер сам пометит этот диалог прочитанным
   }
 }
 
@@ -16223,22 +16417,18 @@ async function loadConversations(){
   const el=document.getElementById('convListItems');
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
-    const {data:sent}=await sb.from('messages').select('to_wallet').eq('from_wallet',userAddr);
-    const {data:recv}=await sb.from('messages').select('from_wallet').eq('to_wallet',userAddr);
-    const wallets=new Set([...(sent||[]).map(m=>m.to_wallet),...(recv||[]).map(m=>m.from_wallet)]);
-    if(wallets.size===0){el.innerHTML='<div class="app-empty"><div class="app-empty-ico">💬</div>No conversations yet.</div>';return;}
-    // Batch fetch all users + unread counts in parallel
-    const walletArr=[...wallets];
+    // Один запрос к серверу: список диалогов, последнее письмо и сколько
+    // непрочитанных. Раньше тут было по два запроса на каждого собеседника.
+    const r=await dmCall('convs',{});
+    const convs=(r&&r.convs)||[];
+    if(convs.length===0){el.innerHTML='<div class="app-empty"><div class="app-empty-ico">💬</div>No conversations yet.</div>';return;}
+    const walletArr=convs.map(c=>c.wallet);
     const {data:convUsers}=await sb.from('users').select('wallet,username,avatar_url').in('wallet',walletArr);
     const convUserMap={};
-    if(convUsers)convUsers.forEach(u=>{convUserMap[u.wallet]=u;});
-    const items=await Promise.all(walletArr.map(async w=>{
-      const [lastRes,unreadRes]=await Promise.all([
-        sb.from('messages').select('*').or('and(from_wallet.eq.'+userAddr+',to_wallet.eq.'+w+'),and(from_wallet.eq.'+w+',to_wallet.eq.'+userAddr+')').order('created_at',{ascending:false}).limit(1).single(),
-        sb.from('messages').select('*',{count:'exact',head:true}).eq('from_wallet',w).eq('to_wallet',userAddr).eq('read',false)
-      ]);
-      return {wallet:w,last:lastRes.data,user:convUserMap[w],unread:unreadRes.count||0};
-    }));
+    if(convUsers)convUsers.forEach(u=>{convUserMap[(u.wallet||'').toLowerCase()]=u;});
+    const items=convs.map(function(c){
+      return {wallet:c.wallet,last:{content:c.content,created_at:c.created_at},user:convUserMap[c.wallet],unread:c.unread||0};
+    });
     items.sort((a,b)=>new Date(b.last?.created_at||0)-new Date(a.last?.created_at||0));
     el.innerHTML='';
     items.forEach(function(i){
@@ -16265,32 +16455,17 @@ async function openDM(wallet){
   document.getElementById('convList').style.display='none';
   document.getElementById('convView').style.display='flex';
   document.getElementById('dmBackBtn').style.display='block';
+  document.getElementById('dmWipeBtn').style.display='block';
   const {data:user}=await sb.from('users').select('username').eq('wallet',wallet).single();
   document.getElementById('dmTitle').innerHTML='💬 <span style="position:relative;display:inline-block;">'+esc(user?.username||sAddr(wallet))+'<span class="og-dot dm-dot" data-og-online="'+wallet.toLowerCase()+'"></span></span>';
   scheduleOnlineDots();
-  loadMessages();
-  await sb.from('messages').update({read:true}).eq('from_wallet',wallet).eq('to_wallet',userAddr);
-  // Realtime for messages
+  loadMessages(); // сервер сам отметит входящие этого диалога прочитанными
+  // Мгновенная доставка идёт по общему каналу уведомлений (см.
+  // subscribeToConversations) — отдельная подписка на таблицу сообщений
+  // больше не нужна, таблица закрыта в базе.
   clearInterval(dmTimer);
   if(dmRealtimeChannel){sb.removeChannel(dmRealtimeChannel);dmRealtimeChannel=null;}
-  dmRealtimeChannel=sb.channel('dm-'+userAddr+'-'+wallet+'-'+Date.now())
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},function(payload){
-      const m=payload.new;
-      if(!m) return;
-      if((m.from_wallet===wallet&&m.to_wallet===userAddr)||(m.from_wallet===userAddr&&m.to_wallet===wallet)){
-        loadMessages();
-        if(m.from_wallet===wallet){
-          sb.from('messages').update({read:true}).eq('from_wallet',wallet).eq('to_wallet',userAddr);
-          updateUnreadBadge();
-        }
-      }
-    })
-    .subscribe(function(status){
-      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
-        clearInterval(dmTimer);
-        dmTimer=setInterval(function(){if(currentDMWallet)loadMessages();},5000);
-      }
-    });
+  subscribeToConversations();
 
   // PWA: when app returns from background, WebSocket may have dropped.
   // Reload messages immediately on visibility change.
@@ -16312,20 +16487,26 @@ function showConvList(){
   document.getElementById('convList').style.display='block';
   document.getElementById('convView').style.display='none';
   document.getElementById('dmBackBtn').style.display='none';
+  document.getElementById('dmWipeBtn').style.display='none';
   document.getElementById('dmTitle').textContent='💬 Messages';
   loadConversations();
 }
 async function loadMessages(){
   if(!currentDMWallet||!userAddr)return;
   const el=document.getElementById('msgList');
-  const {data:msgs}=await sb.from('messages').select('*').or('and(from_wallet.eq.'+userAddr+',to_wallet.eq.'+currentDMWallet+'),and(from_wallet.eq.'+currentDMWallet+',to_wallet.eq.'+userAddr+')').order('created_at',{ascending:false}).limit(300);
-  // Берём последние 300 сообщений, а не всю переписку целиком.
-  // Раньше при каждом обновлении — а оно приходит и по подписке, и по
-  // таймеру раз в 5 секунд — заново скачивалась вся история. При длинной
-  // переписке это тормозило всё сильнее с каждым днём.
-  // Запрашиваем от новых к старым (так база берёт их по индексу сразу),
-  // а переворачиваем уже здесь, чтобы порядок на экране не изменился.
-  if(msgs) msgs.reverse();
+  // Последние 300 сообщений, а не вся переписка целиком: иначе при длинной
+  // переписке каждое обновление скачивало всю историю и тормозило всё
+  // сильнее с каждым днём. Сервер отдаёт их уже в правильном порядке
+  // и попутно отмечает входящие прочитанными.
+  let msgs=[];
+  try{
+    const r=await dmCall('thread',{peer:currentDMWallet,limit:300});
+    msgs=(r&&r.messages)||[];
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;">'+esc((e.message||'Failed').slice(0,80))+'</div>';
+    return;
+  }
+  updateUnreadBadge();
   if(!msgs||msgs.length===0){el.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;">No messages yet 👋</div>';return;}
   el.innerHTML='';
   msgs.forEach(function(m,idx){
@@ -16369,11 +16550,75 @@ async function loadMessages(){
       timeEl.textContent=tAgo(m.created_at);
       bubble.appendChild(timeEl);
     }
-    wrap.appendChild(bubble);el.appendChild(wrap);
+    // Крестик удаления у каждого сообщения. Удалить можно любое сообщение
+    // своей переписки — и своё, и присланное. Строка уходит из базы навсегда.
+    const delBtn=document.createElement('button');
+    delBtn.textContent='✕';
+    delBtn.title='Delete this message';
+    delBtn.style.cssText='align-self:center;background:none;border:none;color:var(--muted);opacity:.3;font-size:12px;line-height:1;cursor:pointer;padding:0 6px;';
+    delBtn.onmouseenter=function(){delBtn.style.opacity='1';delBtn.style.color='var(--red)';};
+    delBtn.onmouseleave=function(){delBtn.style.opacity='.3';delBtn.style.color='var(--muted)';};
+    delBtn.onclick=(function(id){return function(){deleteDMMessage(id);};})(m.id);
+
+    if(mine){wrap.appendChild(delBtn);wrap.appendChild(bubble);}
+    else{wrap.appendChild(bubble);wrap.appendChild(delBtn);}
+    el.appendChild(wrap);
   });
   setTimeout(function(){el.scrollTop=el.scrollHeight;},50);
 }
-async function sendDM(){if(!userAddr){showToast('Connect wallet first','err');return;}if(!currentDMWallet)return;const input=document.getElementById('msgInput');const content=input.value.trim();if(!content)return;input.value='';try{await sb.from('messages').insert({from_wallet:userAddr,to_wallet:currentDMWallet,content});await createNotif(currentDMWallet,'dm');loadMessages();}catch(e){showToast('Failed','err');input.value=content;}}
+// ─────────── Удаление личной переписки ───────────
+// Удаляет строки из базы НАВСЕГДА (не скрывает с экрана). Проходит через
+// сервер, поэтому чужую переписку удалить нельзя.
+async function deleteDMMessage(id){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(!confirm('Delete this message? It will be erased from the database permanently.'))return;
+  try{
+    await dmCall('del',{message_id:id});
+    showToast('Message deleted','ok');
+    loadMessages();
+  }catch(e){ showToast((e.message||'Failed to delete').slice(0,60),'err'); }
+}
+async function wipeDMChat(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(!currentDMWallet)return;
+  if(!confirm('Delete this whole chat? Every message between you two will be erased from the database permanently, for both sides.'))return;
+  try{
+    const r=await dmCall('delChat',{peer:currentDMWallet});
+    showToast('Chat deleted ('+((r&&r.deleted)||0)+')','ok');
+    showConvList();
+  }catch(e){ showToast((e.message||'Failed to delete').slice(0,60),'err'); }
+}
+async function sendDM(){
+  if(!userAddr){showToast('Connect wallet first','err');return;}
+  if(!currentDMWallet)return;
+  const input=document.getElementById('msgInput');
+  const content=input.value.trim();
+  if(!content)return;
+  input.value='';
+  // Показуємо повідомлення одразу, не чекаючи відповіді сервера: інакше між
+  // натисканням і появою тексту минала секунда-дві, і здавалось, що гальмує.
+  const _list=document.getElementById('msgList');
+  let _ghost=null;
+  if(_list){
+    if(_list.querySelector('div[style*="text-align:center"]')) _list.innerHTML='';
+    _ghost=document.createElement('div');
+    _ghost.style.cssText='display:flex;justify-content:flex-end;margin-bottom:10px;opacity:.5;';
+    const _b=document.createElement('div');
+    _b.style.cssText='max-width:72%;background:var(--gold);color:#08090C;padding:9px 13px;border-radius:14px 14px 4px 14px;font-size:14px;word-break:break-word;';
+    _b.textContent=content;
+    _ghost.appendChild(_b);
+    _list.appendChild(_ghost);
+    _list.scrollTop=_list.scrollHeight;
+  }
+  try{
+    // Уведомление получателю создаёт сам сервер — отдельно звать не нужно.
+    await dmCall('send',{peer:currentDMWallet,content});
+    loadMessages();
+  }catch(e){
+    if(_ghost&&_ghost.parentNode) _ghost.parentNode.removeChild(_ghost);
+    showToast((e.message||'Failed').slice(0,60),'err'); input.value=content;
+  }
+}
 function openConversation(wallet){openDM(wallet);}
 function openDMWith(wallet){showTab('messages');setTimeout(function(){openDM(wallet);},300);}
 
@@ -16534,7 +16779,7 @@ async function joinCurrentGroup(){
       await callGroupAction('joinGate',{group_id:g.id});
     } else {
       // обычная группа — прямое вступление (RLS разрешает role='member')
-      await sb.from('group_members').upsert({group_id:g.id, wallet:userAddr, role:'member'}, {onConflict:'group_id,wallet'});
+      await socialCall('groupJoin',{group_id:g.id});
     }
     showToast('Joined! 🎉','ok');
     // обновить счётчик и открыть заново
@@ -16685,9 +16930,8 @@ async function toggleReaction(msgId,emoji,btn){
   if(!userAddr){ showToast('Connect wallet to react','err'); return; }
   try{
     // проверяем, стоит ли уже такая реакция
-    const {data:existing}=await sb.from('group_message_reactions').select('id').eq('message_id',msgId).eq('wallet',userAddr).eq('emoji',emoji).maybeSingle();
-    if(existing){ await sb.from('group_message_reactions').delete().eq('id',existing.id); }
-    else{ await sb.from('group_message_reactions').insert({message_id:msgId,wallet:userAddr,emoji:emoji}); }
+    // сервер сам вмикає/вимикає реакцію
+    await socialCall('groupReact',{message_id:msgId,emoji:emoji});
     loadGroupMessages();
   }catch(e){ showToast('Reaction failed','err'); }
 }
@@ -16737,7 +16981,7 @@ async function loadPollResults(p){
 async function votePoll(pollId, idx){
   if(!userAddr){ showToast('Connect wallet to vote','err'); return; }
   try{
-    await sb.from('group_poll_votes').insert({poll_id:pollId,wallet:userAddr,option_idx:idx});
+    await socialCall('vote',{poll_id:pollId,option_idx:idx});
     const p=(await sb.from('group_polls').select('*').eq('id',pollId).maybeSingle()).data;
     if(p) loadPollResults(p);
   }catch(e){ showToast('Already voted or failed','err'); }
@@ -16794,7 +17038,7 @@ async function sendGroupMessage(){
       clearGroupImage();
     } else {
       // текст — напрямую (RLS разрешает)
-      await sb.from('group_messages').insert({group_id:_currentGroup.id, author_wallet:userAddr, content:text, reply_to:_groupReplyTo});
+      await socialCall('groupMsg',{group_id:_currentGroup.id, content:text, reply_to:_groupReplyTo});
     }
     input.value=''; cancelGroupReply();
     // всегда перезагружаем список (realtime тоже сработает, но не полагаемся только на него)
@@ -16808,8 +17052,8 @@ async function toggleGroupLike(msgId, btn){
   const span=btn.querySelector('span'); const n=parseInt(span.textContent)||0;
   const liked=btn.style.color.includes('gold');
   try{
-    if(liked){ await sb.from('group_message_likes').delete().eq('message_id',msgId).eq('wallet',userAddr); btn.style.color='var(--muted)'; span.textContent=Math.max(0,n-1); }
-    else{ await sb.from('group_message_likes').insert({message_id:msgId,wallet:userAddr}); btn.style.color='var(--gold)'; span.textContent=n+1; }
+    if(liked){ await socialCall('groupUnlike',{message_id:msgId}); btn.style.color='var(--muted)'; span.textContent=Math.max(0,n-1); }
+    else{ await socialCall('groupLike',{message_id:msgId}); btn.style.color='var(--gold)'; span.textContent=n+1; }
   }catch(e){ /* дубль лайка — игнор */ }
 }
 
@@ -16972,11 +17216,8 @@ async function deletePost(postId,btn){
   if(!confirm('Delete this post?')) return;
   try{
     btn.disabled=true;
-    // Delete likes first
-    await sb.from('likes').delete().eq('post_id',postId);
-    // Delete post
-    const {error}=await sb.from('posts').delete().eq('id',postId).eq('author_wallet',userAddr);
-    if(error) throw error;
+    // Сервер сам перевіряє, що пост ваш, і видаляє його разом з лайками
+    await socialCall('deletePost',{post_id:postId});
     showToast('Post deleted ✓','ok');
     loadPosts();
   }catch(e){
@@ -17198,7 +17439,7 @@ async function submitComment(postId){
   if(!content){showToast('Write something first','err');return;}
   inp.value='';
   try{
-    await sb.from('comments').insert({post_id:postId,author_wallet:userAddr,content});
+    await socialCall('comment',{post_id:postId,content});
     // Notify post author
     const {data:post}=await sb.from('posts').select('author_wallet').eq('id',postId).single();
     if(post&&post.author_wallet!==userAddr) await createNotif(post.author_wallet,'comment',postId);
@@ -17210,7 +17451,7 @@ async function deleteComment(commentId,postId,btn){
   if(!userAddr) return;
   try{
     btn.disabled=true;
-    await sb.from('comments').delete().eq('id',commentId).eq('author_wallet',userAddr);
+    await socialCall('deleteComment',{comment_id:commentId});
     await loadComments(postId);
   }catch(e){showToast('Failed to delete','err');btn.disabled=false;}
 }
@@ -17288,28 +17529,23 @@ function tAgo(ts){const d=(Date.now()-new Date(ts))/1000;if(d<60)return'now';if(
 // ── SUPPLY COUNTS ──
 async function loadPassSupply(){
   try{
-    const abi=['function totalSupply() view returns(uint256)','function MAX_SUPPLY() view returns(uint256)'];
-    const [gMinted,gMax,sMinted,sMax]=await Promise.all([
-      bnbReadRetry(p=>new ethers.Contract(GOLD_PASS,abi,p).totalSupply()).catch(e=>{console.warn('[Supply] Gold totalSupply() failed:',e.message);return 0n;}),
-      bnbReadRetry(p=>new ethers.Contract(GOLD_PASS,abi,p).MAX_SUPPLY()).catch(e=>{console.warn('[Supply] Gold MAX_SUPPLY() failed:',e.message);return 3000n;}),
-      bnbReadRetry(p=>new ethers.Contract(SILVER_PASS,abi,p).totalSupply()).catch(e=>{console.warn('[Supply] Silver totalSupply() failed:',e.message);return 0n;}),
-      bnbReadRetry(p=>new ethers.Contract(SILVER_PASS,abi,p).MAX_SUPPLY()).catch(e=>{console.warn('[Supply] Silver MAX_SUPPLY() failed:',e.message);return 5000n;}),
+    // Пропусков больше не ограниченное число, поэтому показываем,
+    // сколько уже выдано: новый контракт плюс старый.
+    const abi=['function totalSupply() view returns(uint256)'];
+    const one=a=>bnbReadRetry(p=>new ethers.Contract(a,abi,p).totalSupply()).catch(e=>{console.warn('[Supply] totalSupply() failed for',a,e.message);return 0n;});
+    const [gNew,gOld,sNew,sOld]=await Promise.all([
+      one(GOLD_PASS_V2), one(GOLD_PASS), one(SILVER_PASS_V2), one(SILVER_PASS),
     ]);
-    console.log('[Supply] Gold minted:',gMinted.toString(),'/ max:',gMax.toString());
-    console.log('[Supply] Silver minted:',sMinted.toString(),'/ max:',sMax.toString());
-    const gLeft=Number(gMax)-Number(gMinted);
-    const sLeft=Number(sMax)-Number(sMinted);
+    const gMinted=Number(gNew)+Number(gOld);
+    const sMinted=Number(sNew)+Number(sOld);
+    console.log('[Supply] Gold issued:',gMinted,'(new',String(gNew),'+ old',String(gOld)+')');
+    console.log('[Supply] Silver issued:',sMinted,'(new',String(sNew),'+ old',String(sOld)+')');
     const gEl=document.getElementById('goldSupply');
     const sEl=document.getElementById('silverSupply');
-    if(gEl)gEl.textContent=gLeft.toLocaleString()+' / 3,000 remaining';
-    if(sEl)sEl.textContent=sLeft.toLocaleString()+' / 5,000 remaining';
-    // Update supply bar
-    document.querySelectorAll('.pass-card.gold .supply-fill').forEach(b=>{
-      b.style.width=Math.min(100,(Number(gMinted)/3000)*100)+'%';
-    });
-    document.querySelectorAll('.pass-card.silver .supply-fill').forEach(b=>{
-      b.style.width=Math.min(100,(Number(sMinted)/5000)*100)+'%';
-    });
+    if(gEl)gEl.textContent=gMinted.toLocaleString()+' issued';
+    if(sEl)sEl.textContent=sMinted.toLocaleString()+' issued';
+    // Полоска больше ничего не ограничивает — убираем её.
+    document.querySelectorAll('.pass-card .supply-track').forEach(b=>{b.style.display='none';});
   }catch(e){console.warn('[Supply] loadPassSupply failed entirely:',e.message);}
 }
 
@@ -17422,15 +17658,15 @@ const LANGS = {
     feed:'Feed', profile:'Profile', post:'Post', notifs:'Notifs', more:'More',
     home:'Home', allPosts:'All Posts', following:'Following',
     connectWallet:'Connect Wallet', explore:'Explore', messages:'Messages',
-    staking:'Staking', lending:'Lending', presale:'Presale', games:'Games',
-    lottery:'Lottery', market:'NFT Market', launchpad:'Create Token', faucet:'Faucet',
+    staking:'Earn', lending:'Loans', presale:'Early Sale', games:'Games',
+    market:'NFT Market', launchpad:'Create Token', faucet:'Free Coins',
     buyGate:'Buy GATE', landingPage:'← Landing Page',
     whatsOnMind:"What's on your mind?", pullToRefresh:'Pull to refresh',
     releaseToRefresh:'Release to refresh!', refreshing:'Refreshing...',
     newPosts:'↻ New posts', search:'Search users, posts...',
-    mainMenu:'Main', defiFull:'DeFi', play:'Play',
+    mainMenu:'Main', defiFull:'Money', play:'Play',
     // Staking
-    stakingTitle:'💎 GATE Staking', stakingDesc:'Stake your GATE tokens and earn ~365% APR. Rewards every second. No lock period.',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'Rewards are not being paid right now: the reward pool is empty, so staked GATE earns nothing. Staking and withdrawing still work — no lock period, no fee. GATE is a test token on the zkLitVM testnet and has no monetary value.',
     myStaked:'My Staked', pendingReward:'Pending Reward', totalStaked:'Total Staked',
     stakeAmount:'Amount to stake (GATE)', stakeBtn:'Stake', claimBtn:'Claim Rewards', unstakeBtn:'Unstake All',
     poolInfo:'Pool Info', apr:'APR', lockPeriod:'Lock period', none:'None', stakingFee:'Staking fee', rewardPool:'Reward pool',
@@ -17440,10 +17676,6 @@ const LANGS = {
     claimBtn2:'🚰 Claim 100 GATE', alreadyClaimed:'Already Claimed ✓', claimEligible:'✓ You are eligible!',
     // Games
     gamesTitle:'🎮 Games', vsAI:'Free, instant start', stakeMode:'With Stakes', freeMode:'Free Play',
-    // Lottery
-    currentPot:'Current Prize Pool', players:'Players', myTickets:'My tickets this round',
-    ticketPrice:'Ticket price', maxPlayers:'Max players', prize:'Prize', platformFee:'Platform fee',
-    draw:'Every 5 days', pastWinners:'Past Winners', buyTicket:'🎟️ Buy Ticket',
     // Messages
     typeMsg:'Type a message...', send:'Send', newDmPlaceholder:'0x...',
     // Profile
@@ -17458,14 +17690,14 @@ const LANGS = {
     feed:'Лента', profile:'Профиль', post:'Пост', notifs:'Уведомл.', more:'Меню',
     home:'Главная', allPosts:'Все посты', following:'Подписки',
     connectWallet:'Подключить кошелёк', explore:'Поиск', messages:'Сообщения',
-    staking:'Стейкинг', lending:'Займы', presale:'Пресейл', games:'Игры',
-    lottery:'Лотерея', market:'NFT рынок', launchpad:'Лончпад', faucet:'Кран',
+    staking:'Заработок', lending:'Займы', presale:'Ранняя продажа', games:'Игры',
+    market:'NFT рынок', launchpad:'Создать токен', faucet:'Бесплатные монеты',
     buyGate:'Купить GATE', landingPage:'← На главную',
     whatsOnMind:'Что у вас на уме?', pullToRefresh:'Потяните для обновления',
     releaseToRefresh:'Отпустите!', refreshing:'Обновляем...',
     newPosts:'↻ Новые посты', search:'Поиск пользователей...',
-    mainMenu:'Главное', defiFull:'DeFi', play:'Игры',
-    stakingTitle:'💎 Стейкинг GATE', stakingDesc:'Стейкайте GATE и зарабатывайте ~365% APR. Награды каждую секунду. Без блокировки.',
+    mainMenu:'Главное', defiFull:'Деньги', play:'Игры',
+    stakingTitle:'💎 Стейкинг GATE', stakingDesc:'Начисления сейчас не идут: пул наград пуст, поэтому GATE в стейкинге ничего не приносит. Застейкать и забрать по-прежнему можно — без блокировки и без комиссии. GATE — тестовый токен сети zkLitVM, денежной ценности не имеет.',
     myStaked:'Мой стейк', pendingReward:'Награда', totalStaked:'Всего в стейке',
     stakeAmount:'Сумма для стейка (GATE)', stakeBtn:'Стейк', claimBtn:'Забрать награду', unstakeBtn:'Вывести всё',
     poolInfo:'Инфо пула', apr:'APR', lockPeriod:'Блокировка', none:'Нет', stakingFee:'Комиссия', rewardPool:'Пул наград',
@@ -17486,14 +17718,14 @@ const LANGS = {
     feed:'Стрічка', profile:'Профіль', post:'Пост', notifs:'Сповіщ.', more:'Меню',
     home:'Головна', allPosts:'Всі пости', following:'Підписки',
     connectWallet:'Підключити гаманець', explore:'Пошук', messages:'Повідомлення',
-    staking:'Стейкінг', lending:'Позики', presale:'Пресейл', games:'Ігри',
-    lottery:'Лотерея', market:'NFT ринок', launchpad:'Лончпад', faucet:'Кран',
+    staking:'Заробіток', lending:'Позики', presale:'Ранній продаж', games:'Ігри',
+    market:'NFT ринок', launchpad:'Створити токен', faucet:'Безкоштовні монети',
     buyGate:'Купити GATE', landingPage:'← На головну',
     whatsOnMind:'Що у вас на думці?', pullToRefresh:'Потягніть для оновлення',
     releaseToRefresh:'Відпустіть!', refreshing:'Оновлення...',
     newPosts:'↻ Нові пости', search:'Пошук користувачів...',
-    mainMenu:'Головне', defiFull:'DeFi', play:'Ігри',
-    stakingTitle:'💎 Стейкінг GATE', stakingDesc:'Стейкайте GATE і заробляйте ~365% APR. Нагороди щосекунди. Без блокування.',
+    mainMenu:'Головне', defiFull:'Гроші', play:'Ігри',
+    stakingTitle:'💎 Стейкінг GATE', stakingDesc:'Нарахування зараз не йдуть: пул нагород порожній, тому GATE у стейкінгу нічого не приносить. Застейкати й забрати так само можна — без блокування і без комісії. GATE — тестовий токен мережі zkLitVM, грошової вартості не має.',
     myStaked:'Мій стейк', pendingReward:'Нагорода', totalStaked:'Всього в стейку',
     stakeAmount:'Сума для стейку (GATE)', stakeBtn:'Стейк', claimBtn:'Забрати нагороду', unstakeBtn:'Вивести все',
     poolInfo:'Інфо пулу', apr:'APR', lockPeriod:'Блокування', none:'Немає', stakingFee:'Комісія', rewardPool:'Пул нагород',
@@ -17514,14 +17746,14 @@ const LANGS = {
     feed:'फीड', profile:'प्रोफाइल', post:'पोस्ट', notifs:'सूचना', more:'मेनू',
     home:'होम', allPosts:'सभी पोस्ट', following:'फ़ॉलोइंग',
     connectWallet:'वॉलेट जोड़ें', explore:'खोजें', messages:'संदेश',
-    staking:'स्टेकिंग', lending:'लोन', presale:'प्रीसेल', games:'गेम्स',
-    lottery:'लॉटरी', market:'NFT', launchpad:'लॉन्च', faucet:'फ़ॉसेट',
+    staking:'कमाई', lending:'लोन', presale:'अर्ली सेल', games:'गेम्स',
+    market:'NFT', launchpad:'टोकन बनाएँ', faucet:'मुफ़्त सिक्के',
     buyGate:'GATE खरीदें', landingPage:'← होम',
     whatsOnMind:'आप क्या सोच रहे हैं?', pullToRefresh:'नीचे खींचें',
     releaseToRefresh:'छोड़ें!', refreshing:'लोड हो रहा है...',
     newPosts:'↻ नई पोस्ट', search:'खोजें...',
-    mainMenu:'मुख्य', defiFull:'DeFi', play:'खेलें',
-    stakingTitle:'💎 GATE स्टेकिंग', stakingDesc:'GATE स्टेक करें और ~365% APR कमाएं।',
+    mainMenu:'मुख्य', defiFull:'पैसा', play:'खेलें',
+    stakingTitle:'💎 GATE स्टेकिंग', stakingDesc:'अभी इनाम नहीं मिल रहे: रिवॉर्ड पूल खाली है, इसलिए स्टेक किया गया GATE कुछ नहीं कमाता। स्टेक और निकासी पहले की तरह काम करती है — कोई लॉक नहीं, कोई शुल्क नहीं। GATE zkLitVM टेस्टनेट का टेस्ट टोकन है, इसका कोई मूल्य नहीं है।',
     myStaked:'मेरा स्टेक', pendingReward:'पुरस्कार', totalStaked:'कुल स्टेक',
     stakeAmount:'स्टेक राशि (GATE)', stakeBtn:'स्टेक', claimBtn:'पुरस्कार लें', unstakeBtn:'सब निकालें',
     poolInfo:'पूल जानकारी', apr:'APR', lockPeriod:'लॉक', none:'कोई नहीं', stakingFee:'शुल्क', rewardPool:'पुरस्कार पूल',
@@ -17542,14 +17774,14 @@ const LANGS = {
     feed:'动态', profile:'我的', post:'发帖', notifs:'通知', more:'更多',
     home:'主页', allPosts:'全部帖子', following:'关注',
     connectWallet:'连接钱包', explore:'探索', messages:'消息',
-    staking:'质押', lending:'借贷', presale:'预售', games:'游戏',
-    lottery:'彩票', market:'NFT市场', launchpad:'发射台', faucet:'水龙头',
+    staking:'赚币', lending:'借贷', presale:'预售', games:'游戏',
+    market:'NFT市场', launchpad:'创建代币', faucet:'免费代币',
     buyGate:'购买GATE', landingPage:'← 首页',
     whatsOnMind:'你在想什么？', pullToRefresh:'下拉刷新',
     releaseToRefresh:'松开刷新！', refreshing:'刷新中...',
     newPosts:'↻ 新帖子', search:'搜索...',
-    mainMenu:'主要', defiFull:'DeFi', play:'游戏',
-    stakingTitle:'💎 GATE质押', stakingDesc:'质押GATE赚取~365% APR。无锁定期。',
+    mainMenu:'主要', defiFull:'资金', play:'游戏',
+    stakingTitle:'💎 GATE质押', stakingDesc:'目前不发放奖励：奖励池已空，质押的 GATE 不会产生收益。质押和取回仍可正常使用，无锁定期、无手续费。GATE 是 zkLitVM 测试网的测试代币，没有货币价值。',
     myStaked:'我的质押', pendingReward:'待领奖励', totalStaked:'总质押量',
     stakeAmount:'质押数量(GATE)', stakeBtn:'质押', claimBtn:'领取奖励', unstakeBtn:'全部取回',
     poolInfo:'池信息', apr:'APR', lockPeriod:'锁定期', none:'无', stakingFee:'质押费', rewardPool:'奖励池',
@@ -17570,14 +17802,14 @@ const LANGS = {
     feed:'Akış', profile:'Profil', post:'Gönderi', notifs:'Bildirim', more:'Menü',
     home:'Ana Sayfa', allPosts:'Tüm Gönderiler', following:'Takip',
     connectWallet:'Cüzdan Bağla', explore:'Keşfet', messages:'Mesajlar',
-    staking:'Staking', lending:'Kredi', presale:'Ön Satış', games:'Oyunlar',
-    lottery:'Piyango', market:'NFT Pazar', launchpad:'Lansman', faucet:'Faucet',
+    staking:'Kazanç', lending:'Kredi', presale:'Ön Satış', games:'Oyunlar',
+    market:'NFT Pazar', launchpad:'Token oluştur', faucet:'Ücretsiz jeton',
     buyGate:'GATE Al', landingPage:'← Ana Sayfa',
     whatsOnMind:'Aklında ne var?', pullToRefresh:'Yenilemek için çek',
     releaseToRefresh:'Bırak!', refreshing:'Yenileniyor...',
     newPosts:'↻ Yeni gönderiler', search:'Ara...',
-    mainMenu:'Ana', defiFull:'DeFi', play:'Oyna',
-    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE stake edin ve ~365% APR kazanın. Kilit yok.',
+    mainMenu:'Ana', defiFull:'Para', play:'Oyna',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'Şu anda ödül dağıtılmıyor: ödül havuzu boş, bu yüzden stake edilen GATE kazanç sağlamıyor. Stake etme ve çekme çalışmaya devam ediyor — kilit yok, ücret yok. GATE, zkLitVM test ağının test tokenıdır ve parasal değeri yoktur.',
     myStaked:'Stake\'im', pendingReward:'Ödül', totalStaked:'Toplam Stake',
     stakeAmount:'Stake miktarı (GATE)', stakeBtn:'Stake', claimBtn:'Ödül Al', unstakeBtn:'Hepsini Çek',
     poolInfo:'Havuz Bilgisi', apr:'APR', lockPeriod:'Kilit', none:'Yok', stakingFee:'Stake Ücreti', rewardPool:'Ödül Havuzu',
@@ -17598,14 +17830,14 @@ const LANGS = {
     feed:'Feed', profile:'Profil', post:'Post', notifs:'Meldungen', more:'Menü',
     home:'Start', allPosts:'Alle Beiträge', following:'Folge ich',
     connectWallet:'Wallet verbinden', explore:'Entdecken', messages:'Nachrichten',
-    staking:'Staking', lending:'Leihen', presale:'Vorverkauf', games:'Spiele',
-    lottery:'Lotterie', market:'NFT Markt', launchpad:'Launchpad', faucet:'Faucet',
+    staking:'Verdienen', lending:'Kredite', presale:'Vorverkauf', games:'Spiele',
+    market:'NFT Markt', launchpad:'Token erstellen', faucet:'Gratis-Coins',
     buyGate:'GATE kaufen', landingPage:'← Startseite',
     whatsOnMind:'Was denkst du?', pullToRefresh:'Zum Aktualisieren ziehen',
     releaseToRefresh:'Loslassen!', refreshing:'Aktualisierung...',
     newPosts:'↻ Neue Beiträge', search:'Suche...',
-    mainMenu:'Haupt', defiFull:'DeFi', play:'Spielen',
-    stakingTitle:'💎 GATE Staking', stakingDesc:'GATE staken und ~365% APR verdienen. Keine Sperrfrist.',
+    mainMenu:'Haupt', defiFull:'Geld', play:'Spielen',
+    stakingTitle:'💎 GATE Staking', stakingDesc:'Derzeit werden keine Belohnungen ausgezahlt: Der Reward-Pool ist leer, gestaktes GATE bringt also nichts ein. Staken und Abheben funktionieren weiterhin — ohne Sperrfrist und ohne Gebühr. GATE ist ein Test-Token im zkLitVM-Testnet und hat keinen Geldwert.',
     myStaked:'Mein Stake', pendingReward:'Ausstehend', totalStaked:'Gesamt gestakt',
     stakeAmount:'Stake-Betrag (GATE)', stakeBtn:'Staken', claimBtn:'Prämien abholen', unstakeBtn:'Alles abheben',
     poolInfo:'Pool-Info', apr:'APR', lockPeriod:'Sperrfrist', none:'Keine', stakingFee:'Staking-Gebühr', rewardPool:'Prämienpool',
@@ -17668,7 +17900,7 @@ function applyLang(){
   const cb=document.getElementById('connectBtn');
   if(cb&&!cb.classList.contains('connected'))cb.innerHTML='<div class="w-dot"></div>'+t('connectWallet');
   // Drawer btns
-  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-lottery':'lottery','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet'};
+  const dm={'drawer-feed':'home','drawer-profile':'profile','drawer-notifs':'notifs','drawer-messages':'messages','drawer-explore':'explore','drawer-staking':'staking','drawer-lending':'lending','drawer-presale':'presale','drawer-games':'games','drawer-market':'market','drawer-launchpad':'launchpad','drawer-faucet':'faucet'};
   Object.keys(dm).forEach(function(id){
     const el=document.getElementById(id);if(!el)return;
     const ico=el.querySelector('.drawer-ico');const badge=el.querySelector('.drawer-badge');
@@ -17712,9 +17944,6 @@ function applyLang(){
   const gh=document.querySelector('#view-games .feed-hdr');
   if(gh)gh.textContent=t('gamesTitle');
 
-  // Lottery header
-  const lh=document.querySelector('#view-lottery .feed-hdr');
-  if(lh)lh.textContent='🎰 '+t('lottery');
   const btk=document.getElementById('buyTicketBtn');
   if(btk&&!btk.disabled)btk.textContent=t('buyTicket');
 
@@ -17889,8 +18118,9 @@ document.addEventListener('visibilitychange',function(){
         _msgPollTimer=setInterval(async function(){
           if(!userAddr)return;
           try{
-            const {count}=await sb.from('messages').select('*',{count:'exact',head:true}).eq('to_wallet',userAddr).eq('read',false);
-            const c=count||0;
+            const r=await dmCall('unread',{},true);
+            if(!r) return;
+            const c=r.count||0;
             if(c!==_lastMsgCount){_lastMsgCount=c;updateUnreadBadge();
               const convList=document.getElementById('convList');
               if(convList&&convList.style.display!=='none')loadConversations();
@@ -18254,7 +18484,7 @@ async function _doConnect(addr){
     updateComposer();
     updateDrawerUser();
   }).catch(function(){});
-  loadGateBal();loadPosts();updateNotifBadge();cleanupOldNotifications();loadRewardsPool();
+  loadGateBal();loadPosts();updateNotifBadge();loadRewardsPool();
   setTimeout(applyLang, 300);
   setTimeout(function(){
     subscribeToConversations();
@@ -18322,9 +18552,10 @@ if(window.ethereum){
       provider=new ethers.BrowserProvider(window.ethereum);
       if(userAddr){ provider.getSigner().then(function(s){signer=s;}).catch(function(){}); }
     }catch(e){}
+    checkLitVMRpc();
   });
   // Запам'ятовуємо поточну мережу для getReadProvider
-  window.ethereum.request({method:'eth_chainId'}).then(function(id){window._ogChainId=id;}).catch(function(){});
+  window.ethereum.request({method:'eth_chainId'}).then(function(id){window._ogChainId=id;checkLitVMRpc();}).catch(function(){});
 }</script>
 <script>
 if('serviceWorker' in navigator){

@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     try {
       if (attempt > 0) await sleep(500 * attempt);
       
-      const response = await fetch('https://liteforge.rpc.caldera.xyz/http', {
+      const response = await fetch('https://rpc.testnet.liteforge.zeeve.net/', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

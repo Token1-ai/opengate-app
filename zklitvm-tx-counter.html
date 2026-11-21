@@ -63,7 +63,7 @@
   </table>
 
   <div class="sub" style="margin-top:20px;">
-    Data source: <a href="https://liteforge.explorer.caldera.xyz" target="_blank">liteforge.explorer.caldera.xyz</a> (Blockscout public API). Numbers are exact, on-chain, and include all historical activity.
+    Data source: <a href="https://explorer.testnet.liteforge.zeeve.net" target="_blank">explorer.testnet.liteforge.zeeve.net</a> (Blockscout public API). Numbers are exact, on-chain, and include all historical activity.
   </div>
 </div>
 
@@ -77,15 +77,16 @@ const CONTRACTS = [
   { name: 'NFT Studio (Factory)',    address: '0x25375207779012f869E267fb4A657185AEd959C0' },
   { name: 'GATE Rewards',            address: '0xc4da965B91F13D89fEd37fd75452cc596f663F3a' },
   { name: 'GATE DAO',                address: '0x0A71755Eb9A72669A627534e17FFafDBfbF49298' },
-  { name: 'Lottery',                 address: '0xfc5AFcF1dEa493d61E981B1D08519dd1a7d78035' },
   { name: 'Dice Roll',               address: '0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855' },
   { name: 'Battleship (testnet)',    address: '0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143' },
   { name: 'Lending',                 address: '0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6' },
-  { name: 'Faucet',                  address: '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74' },
+  { name: 'Faucet v1 (retired)',     address: '0x6E8d8F0cbed7126f6578B8cA2570506bd5BFDc74' },
+  { name: 'Faucet v2 (current)',     address: '0xCF2B61D76F2140D8270e612918DEE1501EcC637C' },
   { name: 'Free NFT Mint (Merlin)',  address: '0x156DCCFe6C64DC9BE20d3D17778cC9DA7c96957D' },
+  { name: 'Arcanix NFT (daily)',     address: '0xbc165C392FcB309CAFe7D60F77eE7D9E7A828eD7' },
 ];
 
-const EXPLORER_API = 'https://liteforge.explorer.caldera.xyz/api/v2/addresses/';
+const EXPLORER_API = 'https://explorer.testnet.liteforge.zeeve.net/api/v2/addresses/';
 
 // Known-good counts we've already fetched, kept across refreshes so a
 // "retry failed only" pass doesn't lose already-confirmed numbers.
@@ -124,7 +125,18 @@ async function fetchTxCount(address, attempt){
   if(data.transactions_count===undefined){
     throw new Error('Unexpected response: '+JSON.stringify(data).slice(0,80));
   }
-  return parseInt(data.transactions_count, 10);
+  const n = parseInt(data.transactions_count, 10);
+  // Blockscout builds this counter lazily: the FIRST request for an
+  // address it has never counted before returns 0 and only then starts
+  // the real count in the background. So a plain 0 can be a lie — ask
+  // again a couple of times before believing it. A contract that truly
+  // has no transactions just answers 0 three times, which costs a few
+  // seconds and nothing else.
+  if(n === 0 && attempt < 3){
+    await sleep(2000);
+    return fetchTxCount(address, attempt + 1);
+  }
+  return n;
 }
 
 function renderRows(){
@@ -132,7 +144,7 @@ function renderRows(){
   rowsEl.innerHTML = CONTRACTS.map(c =>
     `<tr id="row-${c.address}">
       <td>${c.name}</td>
-      <td class="addr"><a href="https://liteforge.explorer.caldera.xyz/address/${c.address}" target="_blank">${c.address.slice(0,8)}...${c.address.slice(-6)}</a></td>
+      <td class="addr"><a href="https://explorer.testnet.liteforge.zeeve.net/address/${c.address}" target="_blank">${c.address.slice(0,8)}...${c.address.slice(-6)}</a></td>
       <td class="count status">${c.address in counts ? counts[c.address].toLocaleString() : 'loading…'}</td>
     </tr>`
   ).join('');

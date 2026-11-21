@@ -39,7 +39,7 @@ const ABI = [
 // public RPC (like the now-deprecated polygon-rpc.com) can 401/rate-limit
 // under load.
 const RPCS = [
-  'https://polygon-mainnet.g.alchemy.com/v2/ewcbDASKyXi9HueIuQXtW', // dedicated key, tried first
+  process.env.ALCHEMY_POLYGON_RPC || 'https://polygon-mainnet.g.alchemy.com/v2/ewcbDASKyXi9HueIuQXtW', // dedicated key, tried first
   'https://polygon-bor-rpc.publicnode.com',
   'https://polygon.drpc.org',
   'https://rpc.ankr.com/polygon'
