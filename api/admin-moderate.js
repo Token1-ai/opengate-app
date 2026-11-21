@@ -95,6 +95,15 @@ module.exports = async function handler(req, res) {
         await supabase.from('likes').delete().in('post_id', ids);
         await supabase.from('posts').delete().in('id', ids);
       }
+      // Коментарі та повідомлення в групах теж прибираємо, а картинки
+      // профілю (аватар, обкладинка, NFT-аватар) і опис очищаємо — щоб
+      // заборонений контент не лишався на сторінці профілю.
+      await supabase.from('comments').delete().eq('author_wallet', w);
+      await supabase.from('group_messages').delete().eq('author_wallet', w);
+      await supabase.from('users').update({
+        avatar_url: '', cover_url: '', bio: '',
+        nft_avatar_contract: null, nft_avatar_token_id: null
+      }).eq('wallet', w);
       return res.status(200).json({ success: true });
     }
 
