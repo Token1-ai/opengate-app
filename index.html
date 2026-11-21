@@ -15138,23 +15138,16 @@ async function showFollowersList(wallet, type){
 }
 
 // ── NOTIFICATIONS ──
-async function cleanupOldNotifications(){
-  if(!userAddr)return;
-  try{
-    // All notification types (likes, follows, challenges, DMs) — cleaned up after 24h
-    const cutoff=new Date(Date.now()-24*60*60*1000).toISOString();
-    const res=await sb.from('notifications').delete().eq('to_wallet',userAddr).lt('created_at',cutoff);
-    // If this errors silently, it's almost always a Supabase RLS policy blocking
-    // DELETE for the anon key (no auth.uid() since there's no Supabase Auth here).
-    // Check: Supabase → Authentication → Policies → notifications table → DELETE policy
-    // should allow it for the anon role, e.g.: USING (true) or a wallet-based check
-    // that doesn't rely on auth.uid().
-    if(res.error) console.warn('cleanupOldNotifications blocked (likely RLS):', res.error.message);
-  }catch(e){console.warn('cleanupOldNotifications failed:',e.message);}
-}
+// Старые уведомления чистит сам сервер базы, по расписанию раз в двое
+// суток (задание cleanup-old-notifications удаляет всё старше 48 часов).
+//
+// Раньше чистил браузер, и это не работало ни разу: в базе нет разрешения
+// на удаление для обычного ключа, поэтому запрос молча отклонялся — самому
+// старому уведомлению было пять месяцев. Чистка из браузера и по сути
+// негодная: у того, кто не заходит, не чистится никогда, а чтобы она
+// заработала, пришлось бы открыть удаление всем подряд.
 async function loadNotifications(){
   if(!userAddr)return;
-  await cleanupOldNotifications();
   const el=document.getElementById('notifsList');
   el.innerHTML='<div class="app-loader">Loading...</div>';
   try{
@@ -18349,7 +18342,7 @@ async function _doConnect(addr){
     updateComposer();
     updateDrawerUser();
   }).catch(function(){});
-  loadGateBal();loadPosts();updateNotifBadge();cleanupOldNotifications();loadRewardsPool();
+  loadGateBal();loadPosts();updateNotifBadge();loadRewardsPool();
   setTimeout(applyLang, 300);
   setTimeout(function(){
     subscribeToConversations();
