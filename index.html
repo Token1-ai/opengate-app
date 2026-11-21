@@ -11889,14 +11889,20 @@ async function uploadToCloudinary(file){
 }
 
 // Картинка в посте — обычный контент сайта, а не NFT: её адрес лежит
-// в нашей же базе, и менять его мы можем когда угодно. Поэтому IPFS ей
-// не нужен. Кладём в хранилище Supabase: оно уезжает к новому владельцу
-// вместе с проектом, не требует отдельного аккаунта и не стоит денег за
-// хранение. Pinata и Cloudinary остаются запасом на случай сбоя.
+// в нашей базе и меняется когда угодно, вечное хранение ей не нужно.
+//
+// Порядок выбран по размеру бесплатных лимитов, чтобы платформа как
+// можно дольше жила бесплатно:
+//   1. Cloudinary — 25 ГБ в месяц бесплатно и настоящая CDN. Картинки
+//      раздаются быстро и не тратят трафик Supabase.
+//   2. Хранилище Supabase — 1 ГБ и 5 ГБ трафика бесплатно. Мало, зато
+//      переезжает к новому владельцу вместе с проектом.
+//   3. Pinata — последняя, это IPFS, и платить за вечное хранение
+//      обычной картинки из ленты смысла нет.
+// Когда у одного кончается лимит, следующий подхватывает сам.
 async function uploadPostImage(file){
-  try{ return await uploadToSupabase(file); }catch(e){}
-  try{ return await Promise.any([uploadToCloudinary(file),uploadToPinataOnly(file)]); }catch(e){}
-  try{ return await uploadToCloudinary(file); }catch(e2){}
+  try{ return await uploadToCloudinary(file); }catch(e){}
+  try{ return await uploadToSupabase(file); }catch(e2){}
   try{ return await uploadToPinataOnly(file); }catch(e3){}
   throw new Error('All upload methods failed');
 }
@@ -12513,16 +12519,16 @@ async function uploadAvatarFile(input){
   status.textContent='Завантаження...';
   status.style.color='var(--muted)';
   try{
-    // Аватарка — тоже обычный контент сайта. Сначала хранилище Supabase:
-    // оно переезжает к новому владельцу вместе с проектом, и кошелёк для
-    // него не нужен, то есть MetaMask не всплывает. Cloudinary и Pinata —
-    // запас на случай сбоя.
+    // Аватарка — тот же обычный контент, порядок тот же, что и у картинок
+    // постов: сначала Cloudinary с большим бесплатным лимитом, потом
+    // Supabase, потом Pinata. Кошелёк ни одному не нужен, поэтому
+    // MetaMask при загрузке фото не всплывает.
     let url='';
     try{
-      url=await uploadToSupabase(file);
+      url=await uploadToCloudinary(file);
     }catch(e1){
       try{
-        url=await uploadToCloudinary(file);
+        url=await uploadToSupabase(file);
       }catch(e2){
         url=await uploadToPinataOnly(file);
       }
