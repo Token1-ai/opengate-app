@@ -65,8 +65,10 @@ module.exports = async function handler(req, res) {
       return;
     }
 
-    // Cap response size (metadata JSON should always be tiny)
-    const MAX_BYTES = 1024 * 1024; // 1MB
+    // Обмеження розміру. Раніше стояв 1 МБ з розрахунку на текстові
+    // метадані, але через цей же ендпоінт ходять і картинки NFT, а вони
+    // бувають і по кілька мегабайт — такі просто відкидались з помилкою.
+    const MAX_BYTES = 8 * 1024 * 1024; // 8MB
     const buf = await upstream.arrayBuffer();
     if (buf.byteLength > MAX_BYTES) {
       res.status(502).json({ error: 'Upstream response too large' });
@@ -75,7 +77,13 @@ module.exports = async function handler(req, res) {
 
     const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=300'); // short cache — third-party data can change
+    // Адреса в IPFS рахується з самого вмісту, тому за нею ніколи не може
+    // опинитись інший файл — таке можна кешувати хоч на рік. Решта може
+    // змінитись, їй лишаємо короткий кеш.
+    const isIpfs = /\/ipfs\/(Qm[1-9A-HJ-NP-Za-km-z]{44}|baf[a-z0-9]{20,})/.test(target) || target.startsWith('ipfs://');
+    res.setHeader('Cache-Control', isIpfs
+      ? 'public, max-age=31536000, immutable'
+      : 'public, max-age=300');
     res.status(200).send(Buffer.from(buf));
   } catch (e) {
     res.status(502).json({ error: 'Fetch failed: ' + (e.message || 'unknown error') });

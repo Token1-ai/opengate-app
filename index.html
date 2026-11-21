@@ -14049,6 +14049,12 @@ function getIPFSGateways(hash){
   return [
     ...(own?[own]:[]),
     'https://gateway.pinata.cloud/ipfs/'+hash,
+    // Наш сервер как ещё один путь к той же картинке. Он нужен для тех,
+    // у кого провайдер или расширение режут публичные шлюзы, и он отдаёт
+    // уже скачанное со своего кеша, а адрес в IPFS неизменна по своей
+    // природе, поэтому кеш стоит на год. Участвует в общей гонке: кто
+    // ответил первым, тот и показался.
+    '/api/nft-proxy?url='+encodeURIComponent('https://gateway.pinata.cloud/ipfs/'+hash),
     'https://ipfs.io/ipfs/'+hash,
     'https://dweb.link/ipfs/'+hash,
     'https://w3s.link/ipfs/'+hash,
