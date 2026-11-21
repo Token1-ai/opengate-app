@@ -14022,13 +14022,16 @@ async function resolveIPFS(uri){
   return uri;
 }
 
-// 4 IPFS gateways tried in order until one works
+// IPFS gateways raced until one answers
 function getIPFSGateways(hash){
+  // cloudflare-ipfs.com убран: Cloudflare закрыла свой публичный шлюз,
+  // он всегда отваливался и только тормозил перебор.
   return [
     'https://gateway.pinata.cloud/ipfs/'+hash,
-    'https://cloudflare-ipfs.com/ipfs/'+hash,
     'https://ipfs.io/ipfs/'+hash,
     'https://dweb.link/ipfs/'+hash,
+    'https://w3s.link/ipfs/'+hash,
+    'https://4everland.io/ipfs/'+hash,
   ];
 }
 
