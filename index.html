@@ -10920,7 +10920,8 @@ async function checkPassType(){
     else if(silverBal > 0n) passType = 'silver';
     // Update if changed
     if(currentUser && currentUser.pass_type !== passType){
-      await sb.from('users').update({pass_type: passType}).eq('wallet', userAddr);
+      // Записує сервер — він сам перевіряє пропуск у BNB Chain
+      await socialCall('syncPass', {wallet: userAddr});
       currentUser = {...currentUser, pass_type: passType};
       if(passType !== 'free') showToast('Pass detected: ' + passType + ' ✓', 'ok');
     }
@@ -12104,7 +12105,7 @@ async function createPost(){
   const btn=document.getElementById('postBtn');
   btn.disabled=true; btn.textContent='Posting...';
   try{
-    await sb.from('posts').insert({author_wallet:userAddr,content,image_urls:pendingImages});
+    await socialCall('post',{content,image_urls:pendingImages});
     pendingImages = [];
     renderImgPreviews();
     // Check if any follower has bell on for this user
@@ -12257,11 +12258,9 @@ async function likePost(postId,authorWallet,btn){
   if(userAddr===authorWallet.toLowerCase()){showToast("Can't like your own post",'err');return;}
   const liked=btn.classList.contains('liked');
   if(liked){
-    await sb.from('likes').delete().eq('post_id',postId).eq('liker_wallet',userAddr);
-    // Count real likes from likes table
-    const {count:realCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
-    const c=realCount||0;
-    await sb.from('posts').update({likes_count:c}).eq('id',postId);
+    let c=0;
+    try{ const r=await socialCall('unlike',{post_id:postId}); c=r.likes_count||0; }
+    catch(e){ showToast((e.message||'Failed').slice(0,50),'err'); return; }
     btn.classList.remove('liked'); btn.querySelector('span').textContent='🤍';
     const cntEl2=document.getElementById('cnt-'+postId);
     if(cntEl2) cntEl2.textContent=c;
@@ -12269,6 +12268,8 @@ async function likePost(postId,authorWallet,btn){
   }
   btn.disabled=true;
   try{
+    // вхід ДО оплати — щоб підпис не вискочив уже після відправки GATE
+    await socialEnsure();
     await switchToLitVM();
     const freshSigner=await provider.getSigner();
     const rewards=new ethers.Contract(GATE_REWARDS,REWARDS_ABI,freshSigner);
@@ -12280,12 +12281,9 @@ async function likePost(postId,authorWallet,btn){
     showToast('Sending 0.1 GATE to author...','ok');
     const tx=await gate.transfer(authorWallet,rewardAmt);
     await tx.wait();
-    await sb.from('likes').insert({post_id:postId,liker_wallet:userAddr,tx_hash:tx.hash});
+    const lr=await socialCall('like',{post_id:postId,tx_hash:tx.hash});
     await createNotif(authorWallet,'like',postId);
-    // Count real likes from likes table
-    const {count:realCount}=await sb.from('likes').select('*',{count:'exact',head:true}).eq('post_id',postId);
-    const c=realCount||1;
-    await sb.from('posts').update({likes_count:c}).eq('id',postId);
+    const c=lr.likes_count||1;
     // Update UI
     btn.classList.add('liked');
     btn.querySelector('span').textContent='❤️';
@@ -12384,7 +12382,7 @@ async function quickFollow(wallet, btn){
     // Check if already following
     const {data:existing}=await sb.from('follows').select('id').eq('follower_wallet',userAddr).eq('following_wallet',wallet).single();
     if(existing){btn.textContent='✓';btn.style.color='var(--green)';return;}
-    await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});
+    await socialCall('follow',{wallet});
     await createNotif(wallet,'follow');
     btn.textContent='✓';
     btn.style.color='var(--green)';
@@ -12397,14 +12395,14 @@ async function toggleFollow(wallet,btn){
   if(!userAddr){showToast('Connect wallet first','err');return;}
   const f=btn.classList.contains('following');
   if(f){
-    await sb.from('follows').delete().eq('follower_wallet',userAddr).eq('following_wallet',wallet);
+    try{ await socialCall('unfollow',{wallet}); }catch(e){ showToast((e.message||'Failed').slice(0,50),'err'); return; }
     btn.textContent='Follow';btn.classList.remove('following');
     removeBellNotif(wallet);
     // Update follower count on page
     const fcEl=document.querySelector('.pstat-n');
     // Just reload profile to update counts
   } else {
-    await sb.from('follows').insert({follower_wallet:userAddr,following_wallet:wallet});
+    try{ await socialCall('follow',{wallet}); }catch(e){ showToast((e.message||'Failed').slice(0,50),'err'); return; }
     btn.textContent='Following';btn.classList.add('following');
     await createNotif(wallet,'follow');
     showToast('Following! ✓','ok');
@@ -12641,8 +12639,7 @@ async function saveProfile(){
     const updates={username,bio,avatar_url,cover_url,website,twitter};
     if(nft_contract) updates.nft_avatar_contract=nft_contract;
     if(nft_token) updates.nft_avatar_token_id=nft_token;
-    const {error}=await sb.from('users').update(updates).eq('wallet',userAddr);
-    if(error)throw error;
+    await socialCall('profile',updates);
     currentUser={...currentUser,username,bio,avatar_url,cover_url,website,twitter};
     updateCompAv();closeEditModal();showToast('Profile saved ✓','ok');loadProfile();
   }catch(e){showToast('Username may already be taken','err');}
@@ -13892,7 +13889,7 @@ async function sendChallenge(){
     var betAmt=challMode==='free'?'0':amt;
     var betTok=challMode==='free'?'FREE':challToken;
     await sb.from('battleship_games').insert({player1_wallet:userAddr,bet_amount:betAmt,bet_token:betTok,status:'waiting',challenge_to:challTarget});
-    await sb.from('notifications').insert({to_wallet:challTarget,from_wallet:userAddr,type:'challenge'});
+    await socialCall('notify',{to_wallet:challTarget,type:'challenge'});
     var myName=currentUser&&currentUser.username?currentUser.username:sAddr(userAddr);
     var betInfo=challMode==='free'?'Free Play':amt+' '+challToken;
     // Письмо в личные сообщения — приятное дополнение, а не главный путь:
@@ -13930,7 +13927,7 @@ async function declineChallenge(fromWallet,notifId,event){
   try{
     var {data:games}=await sb.from('battleship_games').select('*').eq('status','waiting').eq('player1_wallet',fromWallet).limit(1);
     if(games&&games[0])await sb.from('battleship_games').update({status:'cancelled'}).eq('id',games[0].id);
-    if(notifId)await sb.from('notifications').update({read:true}).eq('id',notifId);
+    if(notifId){ try{ await socialCall('markRead',{id:notifId}); }catch(e){} }
     showToast('Challenge declined','ok');
     loadNotifications();
   }catch(e){}
@@ -15271,10 +15268,10 @@ async function loadNotifications(){
     });
   }catch(e){el.innerHTML='<div class="app-empty">Failed to load</div>';}
 }
-async function markRead(id){await sb.from('notifications').update({read:true}).eq('id',id);updateNotifBadge();}
+async function markRead(id){try{await socialCall('markRead',{id});}catch(e){}updateNotifBadge();}
 async function markAllRead(){
   if(!userAddr)return;
-  await sb.from('notifications').update({read:true}).eq('to_wallet',userAddr).eq('read',false);
+  try{ await socialCall('markAllRead',{}); }catch(e){}
   await updateNotifBadge();
   loadNotifications();
 }
@@ -15306,7 +15303,7 @@ async function updateUnreadBadge(){
   const db=document.getElementById('drawerUnreadBadge');
   if(db){if(count>0){db.style.display='inline';db.textContent=count;}else db.style.display='none';}
 }
-async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===toWallet)return;try{await sb.from('notifications').insert({to_wallet:toWallet,from_wallet:userAddr,type,post_id:postId||undefined});}catch(e){}}
+async function createNotif(toWallet,type,postId=null){if(!userAddr||userAddr===toWallet)return;try{await socialCall('notify',{to_wallet:toWallet,type,post_id:postId||undefined});}catch(e){}}
 
 // ── LAUNCHPAD ──
 let ltOpts={ltMint:false,ltBurn:false,ltPause:false};
@@ -16297,6 +16294,47 @@ async function dmCall(action,payload,silent){
   return res.body;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SOCIAL — усі записи соцмережі (пости, лайки, підписки, коментарі, профіль,
+// сповіщення, групи) йдуть через серверну функцію "social", а не напряму в
+// базу. Раніше база дозволяла будь-кому видаляти чужі пости й міняти чужі
+// профілі. Вхід — той самий, що й у повідомленнях: один підпис на пристрої
+// на 30 днів, далі все працює без підписів.
+// ═══════════════════════════════════════════════════════════════════════════
+var SOCIAL_URL = SUPABASE_URL + '/functions/v1/social';
+
+// Переконатись, що вхід є (за потреби — попросить один підпис).
+// Викликати ПЕРЕД платними діями, щоб підпис не вискочив після оплати.
+async function socialEnsure(){
+  if(_dmTokenGet()) return true;
+  await dmLogin();
+  return true;
+}
+
+async function socialCall(action,payload){
+  const send=async function(body){
+    const r=await fetch(SOCIAL_URL,{method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY,'apikey':SUPABASE_KEY},
+      body:JSON.stringify(body)});
+    let b={}; try{ b=await r.json(); }catch(e){}
+    return {status:r.status,body:b};
+  };
+  if(action==='syncPass'){ // без входу — сервер сам дивиться пропуск у блокчейні
+    const res=await send(Object.assign({action},payload||{}));
+    if(res.status!==200) throw new Error((res.body&&res.body.error)||'Request failed');
+    return res.body;
+  }
+  let tok=_dmTokenGet();
+  if(!tok) tok=await dmLogin();
+  let res=await send(Object.assign({action,token:tok},payload||{}));
+  if(res.status===401){            // токен застарів — один раз входимо заново
+    _dmTokenClear();
+    res=await send(Object.assign({action,token:await dmLogin()},payload||{}));
+  }
+  if(res.status!==200) throw new Error((res.body&&res.body.error)||'Request failed');
+  return res.body;
+}
+
 function subscribeToConversations(){
   if(!userAddr||convsRealtimeChannel) return;
 
@@ -16714,7 +16752,7 @@ async function joinCurrentGroup(){
       await callGroupAction('joinGate',{group_id:g.id});
     } else {
       // обычная группа — прямое вступление (RLS разрешает role='member')
-      await sb.from('group_members').upsert({group_id:g.id, wallet:userAddr, role:'member'}, {onConflict:'group_id,wallet'});
+      await socialCall('groupJoin',{group_id:g.id});
     }
     showToast('Joined! 🎉','ok');
     // обновить счётчик и открыть заново
@@ -16865,9 +16903,8 @@ async function toggleReaction(msgId,emoji,btn){
   if(!userAddr){ showToast('Connect wallet to react','err'); return; }
   try{
     // проверяем, стоит ли уже такая реакция
-    const {data:existing}=await sb.from('group_message_reactions').select('id').eq('message_id',msgId).eq('wallet',userAddr).eq('emoji',emoji).maybeSingle();
-    if(existing){ await sb.from('group_message_reactions').delete().eq('id',existing.id); }
-    else{ await sb.from('group_message_reactions').insert({message_id:msgId,wallet:userAddr,emoji:emoji}); }
+    // сервер сам вмикає/вимикає реакцію
+    await socialCall('groupReact',{message_id:msgId,emoji:emoji});
     loadGroupMessages();
   }catch(e){ showToast('Reaction failed','err'); }
 }
@@ -16917,7 +16954,7 @@ async function loadPollResults(p){
 async function votePoll(pollId, idx){
   if(!userAddr){ showToast('Connect wallet to vote','err'); return; }
   try{
-    await sb.from('group_poll_votes').insert({poll_id:pollId,wallet:userAddr,option_idx:idx});
+    await socialCall('vote',{poll_id:pollId,option_idx:idx});
     const p=(await sb.from('group_polls').select('*').eq('id',pollId).maybeSingle()).data;
     if(p) loadPollResults(p);
   }catch(e){ showToast('Already voted or failed','err'); }
@@ -16974,7 +17011,7 @@ async function sendGroupMessage(){
       clearGroupImage();
     } else {
       // текст — напрямую (RLS разрешает)
-      await sb.from('group_messages').insert({group_id:_currentGroup.id, author_wallet:userAddr, content:text, reply_to:_groupReplyTo});
+      await socialCall('groupMsg',{group_id:_currentGroup.id, content:text, reply_to:_groupReplyTo});
     }
     input.value=''; cancelGroupReply();
     // всегда перезагружаем список (realtime тоже сработает, но не полагаемся только на него)
@@ -16988,8 +17025,8 @@ async function toggleGroupLike(msgId, btn){
   const span=btn.querySelector('span'); const n=parseInt(span.textContent)||0;
   const liked=btn.style.color.includes('gold');
   try{
-    if(liked){ await sb.from('group_message_likes').delete().eq('message_id',msgId).eq('wallet',userAddr); btn.style.color='var(--muted)'; span.textContent=Math.max(0,n-1); }
-    else{ await sb.from('group_message_likes').insert({message_id:msgId,wallet:userAddr}); btn.style.color='var(--gold)'; span.textContent=n+1; }
+    if(liked){ await socialCall('groupUnlike',{message_id:msgId}); btn.style.color='var(--muted)'; span.textContent=Math.max(0,n-1); }
+    else{ await socialCall('groupLike',{message_id:msgId}); btn.style.color='var(--gold)'; span.textContent=n+1; }
   }catch(e){ /* дубль лайка — игнор */ }
 }
 
@@ -17152,11 +17189,8 @@ async function deletePost(postId,btn){
   if(!confirm('Delete this post?')) return;
   try{
     btn.disabled=true;
-    // Delete likes first
-    await sb.from('likes').delete().eq('post_id',postId);
-    // Delete post
-    const {error}=await sb.from('posts').delete().eq('id',postId).eq('author_wallet',userAddr);
-    if(error) throw error;
+    // Сервер сам перевіряє, що пост ваш, і видаляє його разом з лайками
+    await socialCall('deletePost',{post_id:postId});
     showToast('Post deleted ✓','ok');
     loadPosts();
   }catch(e){
@@ -17378,7 +17412,7 @@ async function submitComment(postId){
   if(!content){showToast('Write something first','err');return;}
   inp.value='';
   try{
-    await sb.from('comments').insert({post_id:postId,author_wallet:userAddr,content});
+    await socialCall('comment',{post_id:postId,content});
     // Notify post author
     const {data:post}=await sb.from('posts').select('author_wallet').eq('id',postId).single();
     if(post&&post.author_wallet!==userAddr) await createNotif(post.author_wallet,'comment',postId);
@@ -17390,7 +17424,7 @@ async function deleteComment(commentId,postId,btn){
   if(!userAddr) return;
   try{
     btn.disabled=true;
-    await sb.from('comments').delete().eq('id',commentId).eq('author_wallet',userAddr);
+    await socialCall('deleteComment',{comment_id:commentId});
     await loadComments(postId);
   }catch(e){showToast('Failed to delete','err');btn.disabled=false;}
 }
