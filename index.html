@@ -361,6 +361,22 @@ footer{padding:48px 24px 32px;border-top:1px solid var(--border);display:flex;fl
 .footer-links a{font-size:13px;color:var(--muted);transition:color .2s;}
 .footer-links a:hover{color:var(--text);}
 
+/* CONTRACTS BY CHAIN (landing / security block)
+   Один ряд на мережу: назва мережі ліворуч, посилання на контракти
+   праворуч. Кожне посилання веде в оглядач САМЕ ТІЄЇ мережі, а не
+   завжди в BscScan — інакше людина тисне й бачить порожню сторінку. */
+.cc-wrap{display:flex;flex-direction:column;gap:14px;margin-top:22px;text-align:left;}
+.cc-row{display:grid;grid-template-columns:116px 1fr;gap:14px;align-items:baseline;
+  padding-bottom:12px;border-bottom:1px solid var(--border);}
+.cc-row:last-child{border-bottom:none;padding-bottom:0;}
+.cc-chain{font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.04em;text-transform:uppercase;}
+.cc-links{display:flex;flex-wrap:wrap;gap:6px 16px;}
+.cc-links a{font-size:13px;color:var(--muted);transition:color .2s;white-space:nowrap;}
+.cc-links a:hover{color:var(--text);}
+@media(max-width:560px){
+  .cc-row{grid-template-columns:1fr;gap:7px;}
+}
+
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .2s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
@@ -1069,15 +1085,74 @@ async function smartConnectWallet(){
       <h2 class="section-title fade">Not audited yet — and we say so</h2>
       <p class="fade" style="font-size:15px;color:var(--muted);line-height:1.75;">
         No outside security firm has audited these contracts. We would rather tell you than let you assume otherwise.
-        What you can do instead: every contract address is public, so you can open it on BscScan and read the code
-        before you spend anything. Never put in money you cannot afford to lose.
+        What you can do instead: every contract address below is public, so you can open it in the explorer of its own
+        network and read the code before you spend anything. Never put in money you cannot afford to lose.
       </p>
-      <div class="footer-links" style="display:flex;justify-content:center;gap:18px;margin-top:18px;flex-wrap:wrap;">
-        <a href="https://bscscan.com/address/0xCF2B61D76F2140D8270e612918DEE1501EcC637C" target="_blank" rel="noopener noreferrer">Gold Pass</a>
-        <a href="https://bscscan.com/address/0x543a0Bd90387768BE17E038ff685be7DD8d9791A" target="_blank" rel="noopener noreferrer">Silver Pass</a>
-        <a href="https://bscscan.com/address/0x9740e2C9214965d68A731b1af49Ed1b5814664ff" target="_blank" rel="noopener noreferrer">Launchpad</a>
-        <a href="https://bscscan.com/address/0x8923bF72154A10af579030162C6F945Df2F1b351" target="_blank" rel="noopener noreferrer">Trading pools</a>
-        <a href="https://bscscan.com/address/0x78D7211915D15446230f3Fb0cC8469cD57Aa29Bf" target="_blank" rel="noopener noreferrer">NFT market</a>
+      <div class="cc-wrap fade">
+
+        <div class="cc-row">
+          <span class="cc-chain">BNB Chain</span>
+          <span class="cc-links">
+            <a href="https://bscscan.com/address/0xCF2B61D76F2140D8270e612918DEE1501EcC637C" target="_blank" rel="noopener noreferrer">Gold Pass</a>
+            <a href="https://bscscan.com/address/0x543a0Bd90387768BE17E038ff685be7DD8d9791A" target="_blank" rel="noopener noreferrer">Silver Pass</a>
+            <a href="https://bscscan.com/address/0x9740e2C9214965d68A731b1af49Ed1b5814664ff" target="_blank" rel="noopener noreferrer">Launchpad</a>
+            <a href="https://bscscan.com/address/0x8923bF72154A10af579030162C6F945Df2F1b351" target="_blank" rel="noopener noreferrer">Trading pools</a>
+            <a href="https://bscscan.com/address/0x78D7211915D15446230f3Fb0cC8469cD57Aa29Bf" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://bscscan.com/address/0xAAeffd9dC63e8E59c1865bd42f054b83a6998224" target="_blank" rel="noopener noreferrer">NFT factory</a>
+            <a href="https://bscscan.com/address/0xcC072333E5d43E2521F7C5a0da26312a3E44b2ff" target="_blank" rel="noopener noreferrer">Token factory</a>
+            <a href="https://bscscan.com/address/0xa51bc530BCa50D8D658f5c185156904fFBe41994" target="_blank" rel="noopener noreferrer">Battleship</a>
+            <a href="https://bscscan.com/address/0x7a2808690be859aD786dC3C43001d42550f39BEF" target="_blank" rel="noopener noreferrer">Gold Battleship</a>
+          </span>
+        </div>
+
+        <div class="cc-row">
+          <span class="cc-chain">Polygon</span>
+          <span class="cc-links">
+            <a href="https://polygonscan.com/address/0x73b149defe4164484d3da166cAFB75d2CB40d997" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://polygonscan.com/address/0x3229Ed7458EDf915113C70bE1BcfcAA08869C51C" target="_blank" rel="noopener noreferrer">NFT factory</a>
+            <a href="https://polygonscan.com/address/0x3E345EF72d29D9e46E1E713b3d4f7AEf8b02E453" target="_blank" rel="noopener noreferrer">Token factory</a>
+            <a href="https://polygonscan.com/address/0x9E723b339dA57f046435239dac168003f90B1B20" target="_blank" rel="noopener noreferrer">Battleship</a>
+            <a href="https://polygonscan.com/address/0xb21482cFd2b5A7a35A85fF4193501CDEDFDdB7dd" target="_blank" rel="noopener noreferrer">Gold Battleship</a>
+          </span>
+        </div>
+
+        <div class="cc-row">
+          <span class="cc-chain">Base</span>
+          <span class="cc-links">
+            <a href="https://basescan.org/address/0xba774172f7bb0a2E9BEc9B53D7a55267A3107F5E" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://basescan.org/address/0x3eCad12b461931f78f4237660dADc068f89C6b49" target="_blank" rel="noopener noreferrer">NFT factory</a>
+            <a href="https://basescan.org/address/0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143" target="_blank" rel="noopener noreferrer">Token factory</a>
+            <a href="https://basescan.org/address/0xc4844EBDACE533D7b98C730ad06aF57376eCbf12" target="_blank" rel="noopener noreferrer">Battleship</a>
+            <a href="https://basescan.org/address/0x2b7b9d98404Fa0b5F0ffcAB89387373B98268acE" target="_blank" rel="noopener noreferrer">Gold Battleship</a>
+          </span>
+        </div>
+
+        <div class="cc-row">
+          <span class="cc-chain">Arbitrum</span>
+          <span class="cc-links">
+            <a href="https://arbiscan.io/address/0x73b149defe4164484d3da166cAFB75d2CB40d997" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://arbiscan.io/address/0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143" target="_blank" rel="noopener noreferrer">NFT factory</a>
+            <a href="https://arbiscan.io/address/0xeaDF62931f8ef2Ec546E77fBC5E56F1B3157Af89" target="_blank" rel="noopener noreferrer">Token factory</a>
+          </span>
+        </div>
+
+        <div class="cc-row">
+          <span class="cc-chain">zkLitVM</span>
+          <span class="cc-links">
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xf383B2e7ad25D3f7f9cEcB68f4fe60049a3Ee8af" target="_blank" rel="noopener noreferrer">GATE token</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x4c1B51bbef77344B7671E94082E032a62237737A" target="_blank" rel="noopener noreferrer">Staking</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xF80a8ea1324679C95E81BDf056FC29ad7E8A7Cb0" target="_blank" rel="noopener noreferrer">NFT market</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x25375207779012f869E267fb4A657185AEd959C0" target="_blank" rel="noopener noreferrer">NFT studio</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x07b49A05C2a2cf2B11cA5796Fcad250E9Bc2D38f" target="_blank" rel="noopener noreferrer">Token launchpad</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xB11D6faE283a8aa6D815Ad6Dc3ec953E4A037143" target="_blank" rel="noopener noreferrer">Battleship</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x5c2279eC7f2A0b717f2EDff068cD2bC65C79D855" target="_blank" rel="noopener noreferrer">Dice</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x05007cA22f2e86Ffe8eF2fE3B19b323A5B4B01F6" target="_blank" rel="noopener noreferrer">Lending</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xCF2B61D76F2140D8270e612918DEE1501EcC637C" target="_blank" rel="noopener noreferrer">Faucet</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0x156DCCFe6C64DC9BE20d3D17778cC9DA7c96957D" target="_blank" rel="noopener noreferrer">Merlin NFT</a>
+            <a href="https://explorer.testnet.liteforge.zeeve.net/address/0xbc165C392FcB309CAFe7D60F77eE7D9E7A828eD7" target="_blank" rel="noopener noreferrer">Arcanix NFT</a>
+          </span>
+        </div>
+
       </div>
     </div>
   </section>
