@@ -11888,22 +11888,17 @@ async function uploadToCloudinary(file){
   return json.secure_url;
 }
 
-async function uploadToPinata(file){
-  // Try all 3 services in parallel — use whichever succeeds first
-  try{
-    const result=await Promise.any([
-      uploadToSupabase(file),
-      uploadToPinataOnly(file),
-      uploadToCloudinary(file)
-    ]);
-    return result;
-  }catch(e){
-    // All failed in parallel — try each sequentially as last resort
-    try{ return await uploadToSupabase(file); }catch(e1){}
-    try{ return await uploadToCloudinary(file); }catch(e2){}
-    try{ return await uploadToPinataOnly(file); }catch(e3){}
-    throw new Error('All upload methods failed');
-  }
+// Картинка в посте — обычный контент сайта, а не NFT: её адрес лежит
+// в нашей же базе, и менять его мы можем когда угодно. Поэтому IPFS ей
+// не нужен. Кладём в хранилище Supabase: оно уезжает к новому владельцу
+// вместе с проектом, не требует отдельного аккаунта и не стоит денег за
+// хранение. Pinata и Cloudinary остаются запасом на случай сбоя.
+async function uploadPostImage(file){
+  try{ return await uploadToSupabase(file); }catch(e){}
+  try{ return await Promise.any([uploadToCloudinary(file),uploadToPinataOnly(file)]); }catch(e){}
+  try{ return await uploadToCloudinary(file); }catch(e2){}
+  try{ return await uploadToPinataOnly(file); }catch(e3){}
+  throw new Error('All upload methods failed');
 }
 
 function checkImgUpload(){
@@ -11987,7 +11982,7 @@ async function handleImages(input){
   for(let file of files){
     try{
       file=await compressImageIfNeeded(file,1.2*1024*1024);
-      const url=await uploadToPinata(file);
+      const url=await uploadPostImage(file);
       pendingImages.push(url);
       _todayImgCount++;
       uploaded++;
@@ -12518,15 +12513,16 @@ async function uploadAvatarFile(input){
   status.textContent='Завантаження...';
   status.style.color='var(--muted)';
   try{
-    // Avatar upload goes ONLY to Cloudinary — no wallet, no Supabase, no IPFS
-    // This prevents MetaMask from being triggered
+    // Аватарка — тоже обычный контент сайта. Сначала хранилище Supabase:
+    // оно переезжает к новому владельцу вместе с проектом, и кошелёк для
+    // него не нужен, то есть MetaMask не всплывает. Cloudinary и Pinata —
+    // запас на случай сбоя.
     let url='';
     try{
-      url=await uploadToCloudinary(file);
+      url=await uploadToSupabase(file);
     }catch(e1){
-      // Fallback to Supabase storage (no wallet needed, just HTTP)
       try{
-        url=await uploadToSupabase(file);
+        url=await uploadToCloudinary(file);
       }catch(e2){
         url=await uploadToPinataOnly(file);
       }
