@@ -4387,6 +4387,19 @@ const ERC721_ABI = [
 // Про "подписку на X": по-настоящему её проверить нельзя, для этого нужен
 // платный доступ от самого X. Кнопка открывает наш профиль и после этого
 // разблокирует минт — это барьер от случайных, а не проверка.
+// Наши собственные картинки лежат и в IPFS, и прямо на сайте — байт в байт
+// одно и то же. В метаданных NFT стоит ipfs://, чтобы кошельки и маркеты
+// видели вечный адрес, не привязанный к домену. Но тянуть их через чужой
+// шлюз по 3-6 секунд незачем: если хеш наш, сайт берёт свою копию мгновенно,
+// а ipfs:// остаётся запасным путём.
+var OG_OWN_IPFS={
+  'QmbsrKMF7iXTPKcbjoePAyuuEdpxgBVY1vjWyyvpbEgNZg':'/gold-pass.png',
+  'QmczKxi97ezj9FWZDkC9LuEwg6R5ipaTuxtbiatymV6PYp':'/silver-pass.png',
+  'QmcLqYM4GfBPgXKTnTyJj1YHNpYHzJJdWk6vJCLnRSRKRu':'/arcanix.jpg',
+  'QmUXG8N3cVv5Ygr62ntFTt1kwiKuD6bRNUiwUc8PjJWrq9':'/merlin.jpg'
+};
+// try/catch намеренно: эта функция вызывается при отрисовке каждой
+// картинки, и она не имеет права уронить показ, что бы ни случилось выше.
 var ARCANIX_ADDR='0xbc165C392FcB309CAFe7D60F77eE7D9E7A828eD7';
 var ARCANIX_ABI=['function mint()','function totalSupply() view returns(uint256)','function mintOpen() view returns(bool)','function balanceOf(address) view returns(uint256)','function canMint(address) view returns(bool)','function nextMintAt(address) view returns(uint256)'];
 var _arcanixTokenId=null;   // номер своего токена — для окна продажи
@@ -12483,11 +12496,11 @@ async function loadNFTAvatar(){
     const nftAbi=['function tokenURI(uint256) view returns(string)'];
     const nft=new ethers.Contract(contract,nftAbi,p);
     let uri=await nft.tokenURI(tokenId);
-    if(uri.startsWith('ipfs://')) uri='https://gateway.pinata.cloud/ipfs/'+uri.slice(7);
+    if(uri.startsWith('ipfs://')) uri=ogOwnCopy(uri.slice(7))||('https://gateway.pinata.cloud/ipfs/'+uri.slice(7));
     const res=await fetch(uri);
     const meta=await res.json();
     let img=meta.image||'';
-    if(img.startsWith('ipfs://')) img='https://gateway.pinata.cloud/ipfs/'+img.slice(7);
+    if(img.startsWith('ipfs://')) img=ogOwnCopy(img.slice(7))||('https://gateway.pinata.cloud/ipfs/'+img.slice(7));
     preview.innerHTML=`<img loading="lazy" decoding="async" src="${img}" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);margin-top:8px;" onerror="this.parentElement.innerHTML='<div style=color:var(--red);font-size:12px;>Could not load NFT image</div>'"/>`;
     document.getElementById('editAvatar').value=img;
     showToast('NFT loaded! ✓','ok');
@@ -14010,12 +14023,16 @@ function getCachedNFTImg(key){
 }
 function setCachedNFTImg(key,url){_nftImgCache[key]={url,t:Date.now()};}
 
+function ogOwnCopy(hash){
+  try{ return OG_OWN_IPFS[(hash||'').split(/[/?#]/)[0]]||null; }catch(e){ return null; }
+}
+
 async function resolveIPFS(uri){
   if(!uri) return '';
   if(uri.startsWith('data:')) return uri;
   if(uri.startsWith('ipfs://')){
     const hash=uri.slice(7);
-    return 'https://gateway.pinata.cloud/ipfs/'+hash;
+    return ogOwnCopy(hash) || 'https://gateway.pinata.cloud/ipfs/'+hash;
   }
   if(uri.startsWith('https://ipfs.io/ipfs/')) return uri.replace('https://ipfs.io/ipfs/','https://gateway.pinata.cloud/ipfs/');
   if(uri.startsWith('https://cloudflare-ipfs.com/')) return uri.replace('https://cloudflare-ipfs.com/','https://gateway.pinata.cloud/');
@@ -14026,7 +14043,9 @@ async function resolveIPFS(uri){
 function getIPFSGateways(hash){
   // cloudflare-ipfs.com убран: Cloudflare закрыла свой публичный шлюз,
   // он всегда отваливался и только тормозил перебор.
+  const own=ogOwnCopy(hash);
   return [
+    ...(own?[own]:[]),
     'https://gateway.pinata.cloud/ipfs/'+hash,
     'https://ipfs.io/ipfs/'+hash,
     'https://dweb.link/ipfs/'+hash,
